@@ -1,4 +1,4 @@
-# mobile
+# conecta_parana
 
 A new Flutter project.
 
