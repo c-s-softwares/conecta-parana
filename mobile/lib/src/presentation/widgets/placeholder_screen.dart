@@ -21,13 +21,13 @@ class PlaceholderScreen extends StatelessWidget {
 
             const SizedBox(height: 12),
             Text('Ambiente: ${Environment.name}',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 8),
             Text(
               Environment.apiBaseUrl,
-              style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+              style: const TextStyle(fontSize: 14, color: Colors.blueGrey),
             ),
           ],
         ),
