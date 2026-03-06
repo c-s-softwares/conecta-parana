@@ -1,0 +1,134 @@
+name: Deploy Staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "O que deployar"
+        required: true
+        default: all
+        type: choice
+        options:
+          - backend
+          - admin
+          - mobile
+          - all
+
+jobs:
+  deploy-backend:
+    name: deploy-backend (staging)
+    if: ${{ inputs.target == 'backend' || inputs.target == 'all' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login no GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build e push imagem backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/conecta-parana-backend:staging
+
+      - name: Deploy na VM via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /opt/conecta-parana/staging
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker compose -f docker-compose.staging.yml pull backend
+            docker compose -f docker-compose.staging.yml up -d backend
+            docker compose -f docker-compose.staging.yml exec -T backend npx prisma migrate deploy
+
+  deploy-admin:
+    name: deploy-admin (staging)
+    if: ${{ inputs.target == 'admin' || inputs.target == 'all' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login no GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build e push imagem admin
+        uses: docker/build-push-action@v5
+        with:
+          context: ./admin
+          file: ./admin/Dockerfile
+          push: true
+          build-args: |
+            ENVIRONMENT=staging
+          tags: ghcr.io/${{ github.repository_owner }}/conecta-parana-admin:staging
+
+      - name: Deploy na VM via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /opt/conecta-parana/staging
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker compose -f docker-compose.staging.yml pull admin
+            docker compose -f docker-compose.staging.yml up -d admin
+
+  build-mobile:
+    name: build-mobile (staging)
+    if: ${{ inputs.target == 'mobile' || inputs.target == 'all' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: flutter pub get
+
+      - name: Build APK (dev)
+        working-directory: mobile
+        run: flutter build apk --flavor dev -t lib/main_dev.dart --dart-define=API_BASE_URL=https://api-staging.conectaparana.com.br
+
+      - name: Criar GitHub Release (pre-release)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: staging-${{ github.sha }}
+          name: "Staging — ${{ github.sha }}"
+          prerelease: true
+          body: |
+            Build de teste gerada via deploy manual de staging.
+            Aponta para: https://api-staging.conectaparana.com.br
+            Commit: ${{ github.sha }}
+            Disparado por: ${{ github.actor }}
+          files: |
+            mobile/build/app/outputs/flutter-apk/app-dev-release.apk
