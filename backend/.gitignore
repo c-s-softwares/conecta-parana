@@ -35,6 +35,9 @@ lerna-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# Prisma
+prisma/migrations/**/migration_lock.toml
+
 # dotenv environment variable files
 .env
 .env.development.local
