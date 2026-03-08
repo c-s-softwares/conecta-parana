@@ -1,6 +1,8 @@
 services:
   db:
-    image: postgis/postgis:16-3.4
+    build:
+      context: ./infra
+      dockerfile: Dockerfile.postgis
     container_name: conecta_db
     ports:
       - "5432:5432"
@@ -12,9 +14,10 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-      interval: 5s
-      timeout: 5s
+      interval: 10s
+      timeout: 10s
       retries: 5
+      start_period: 60s
     networks:
       - conecta_network
 
