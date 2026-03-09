@@ -1,5 +1,7 @@
-export const environment = {
+import { Environment } from './environment.type';
+
+export const environment: Environment = {
   production: true,
-  name: 'production' as const,
+  name: 'production',
   apiUrl: 'https://api.conectaparana.com.br',
 };
