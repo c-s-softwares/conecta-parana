@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 import { environment } from '../environments/environment';
-import { Environment } from '../environments/environment.type';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -32,5 +31,4 @@ describe('App', () => {
       'bg-yellow-100 text-yellow-800',
     );
   });
-
 });

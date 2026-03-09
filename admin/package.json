@@ -9,7 +9,9 @@
     "test": "ng test",
     "test:mutation": "stryker run",
     "e2e": "playwright test --config e2e/playwright.config.ts",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "lint:fix": "ng lint --fix",
+    "format": "npx prettier --write \"src/**/*.{ts,html,css,json}\""
   },
   "private": true,
   "packageManager": "npm@11.8.0",
