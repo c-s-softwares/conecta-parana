@@ -4,15 +4,15 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: "O que deployar"
+        description: "Frente para deploy:"
         required: true
-        default: all
+        default: todas
         type: choice
         options:
           - backend
           - admin
           - mobile
-          - all
+          - todas
 
 permissions:
   contents: write
@@ -21,7 +21,7 @@ permissions:
 jobs:
   deploy-db:
     name: deploy-db (staging)
-    if: ${{ inputs.target == 'backend' || inputs.target == 'all' }}
+    if: ${{ inputs.target == 'backend' || inputs.target == 'todas' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -64,7 +64,7 @@ jobs:
 
   deploy-backend:
     name: deploy-backend (staging)
-    if: ${{ inputs.target == 'backend' || inputs.target == 'all' }}
+    if: ${{ inputs.target == 'backend' || inputs.target == 'todas' }}
     needs: deploy-db
     runs-on: ubuntu-latest
 
@@ -109,7 +109,7 @@ jobs:
 
   deploy-admin:
     name: deploy-admin (staging)
-    if: ${{ inputs.target == 'admin' || inputs.target == 'all' }}
+    if: ${{ inputs.target == 'admin' || inputs.target == 'todas' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -154,7 +154,7 @@ jobs:
 
   build-mobile:
     name: build-mobile (staging)
-    if: ${{ inputs.target == 'mobile' || inputs.target == 'all' }}
+    if: ${{ inputs.target == 'mobile' || inputs.target == 'todas' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -173,7 +173,7 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Install dependencies
+      - name: Insttodas dependencies
         working-directory: mobile
         run: flutter pub get
 
