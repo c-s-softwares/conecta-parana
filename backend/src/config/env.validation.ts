@@ -9,4 +9,6 @@ export const envValidationSchema = Joi.object({
   THROTTLE_TTL: Joi.number().default(60000),
   THROTTLE_LIMIT: Joi.number().default(100),
   CORS_ORIGIN: Joi.string().required(),
+  REDIS_URL: Joi.string().uri().default('redis://localhost:6379'),
+  GLITCHTIP_DSN: Joi.string().uri().allow('').default(''),
 });

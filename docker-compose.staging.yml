@@ -18,6 +18,20 @@ services:
     networks:
       - conecta_staging_network
 
+  redis:
+    image: redis:7-alpine
+    container_name: conecta_redis_staging
+    restart: always
+    volumes:
+      - redis_staging:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - conecta_staging_network
+
   backend:
     image: ghcr.io/${GITHUB_ORG}/conecta-parana-backend:staging
     container_name: conecta_backend_staging
@@ -26,10 +40,14 @@ services:
       - "3000:3000"
     environment:
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      REDIS_URL: redis://redis:6379
+      GLITCHTIP_DSN: ${GLITCHTIP_DSN}
       NODE_ENV: staging
       PORT: 3000
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - conecta_staging_network
@@ -45,6 +63,7 @@ services:
 
 volumes:
   postgres_staging:
+  redis_staging:
 
 networks:
   conecta_staging_network:

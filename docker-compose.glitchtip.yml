@@ -1,0 +1,107 @@
+services:
+  glitchtip-db:
+    image: postgres:16-alpine
+    container_name: conecta_glitchtip_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${GLITCHTIP_DB_USER:-glitchtip}
+      POSTGRES_PASSWORD: ${GLITCHTIP_DB_PASSWORD}
+      POSTGRES_DB: ${GLITCHTIP_DB_NAME:-glitchtip}
+    volumes:
+      - glitchtip_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${GLITCHTIP_DB_USER:-glitchtip}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - glitchtip_network
+
+  glitchtip-redis:
+    image: redis:7-alpine
+    container_name: conecta_glitchtip_redis
+    restart: always
+    volumes:
+      - glitchtip_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - glitchtip_network
+
+  glitchtip-migrate:
+    image: glitchtip/glitchtip:latest
+    container_name: conecta_glitchtip_migrate
+    command: ./bin/run-migrate.sh
+    environment:
+      DATABASE_URL: postgres://${GLITCHTIP_DB_USER:-glitchtip}:${GLITCHTIP_DB_PASSWORD}@glitchtip-db:5432/${GLITCHTIP_DB_NAME:-glitchtip}
+      REDIS_URL: redis://glitchtip-redis:6379/0
+      SECRET_KEY: ${GLITCHTIP_SECRET_KEY}
+    depends_on:
+      glitchtip-db:
+        condition: service_healthy
+      glitchtip-redis:
+        condition: service_healthy
+    networks:
+      - glitchtip_network
+
+  glitchtip-web:
+    image: glitchtip/glitchtip:latest
+    container_name: conecta_glitchtip_web
+    restart: always
+    ports:
+      - "8080:8000"
+    environment:
+      DATABASE_URL: postgres://${GLITCHTIP_DB_USER:-glitchtip}:${GLITCHTIP_DB_PASSWORD}@glitchtip-db:5432/${GLITCHTIP_DB_NAME:-glitchtip}
+      REDIS_URL: redis://glitchtip-redis:6379/0
+      SECRET_KEY: ${GLITCHTIP_SECRET_KEY}
+      PORT: "8000"
+      GLITCHTIP_DOMAIN: ${GLITCHTIP_DOMAIN:-http://localhost:8080}
+      DEFAULT_FROM_EMAIL: noreply@conectaparana.com.br
+      EMAIL_URL: consolemail://
+      ENABLE_USER_REGISTRATION: "false"
+      ENABLE_ORGANIZATION_CREATION: "false"
+    depends_on:
+      glitchtip-db:
+        condition: service_healthy
+      glitchtip-redis:
+        condition: service_healthy
+      glitchtip-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/_health/')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - glitchtip_network
+
+  glitchtip-worker:
+    image: glitchtip/glitchtip:latest
+    container_name: conecta_glitchtip_worker
+    restart: always
+    command: ./bin/run-celery-with-beat.sh
+    environment:
+      DATABASE_URL: postgres://${GLITCHTIP_DB_USER:-glitchtip}:${GLITCHTIP_DB_PASSWORD}@glitchtip-db:5432/${GLITCHTIP_DB_NAME:-glitchtip}
+      REDIS_URL: redis://glitchtip-redis:6379/0
+      SECRET_KEY: ${GLITCHTIP_SECRET_KEY}
+    depends_on:
+      glitchtip-db:
+        condition: service_healthy
+      glitchtip-redis:
+        condition: service_healthy
+      glitchtip-migrate:
+        condition: service_completed_successfully
+    networks:
+      - glitchtip_network
+
+volumes:
+  glitchtip_db_data:
+  glitchtip_redis_data:
+
+networks:
+  glitchtip_network:
+    driver: bridge
