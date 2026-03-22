@@ -1,15 +1,27 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { AppModule } from './app.module';
+import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
+import { AppModule } from './app.module';
+import { ForbiddenException } from '@nestjs/common';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.use(helmet() as never);
+  app.use(helmet());
+
+  const configService = app.get(ConfigService);
+  const allowedOrigins = configService.get<string>('CORS_ORIGIN')?.split(',').map((origin) => origin.trim()) ?? [];
 
   app.enableCors({
-    origin: process.env.CORS_ORIGIN,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new ForbiddenException(`Origin ${origin} not allowed by CORS`), false);
+      }
+    },
   });
 
   const config = new DocumentBuilder()
@@ -21,7 +33,7 @@ async function bootstrap(): Promise<void> {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = process.env.PORT ?? 3000;
+  const port = configService.get<number>('PORT') ?? 3000;
   await app.listen(port);
 }
 
