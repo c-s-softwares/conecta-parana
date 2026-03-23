@@ -19,23 +19,25 @@ model HealthCheck {
 }
 
 model City {
-  id_city Int @id @default(autoincrement())
-  nome String
+  cityId Int @id @default(autoincrement()) @map("city_id")
+  name String
   state String
 
   users User[]
+  @@map("cities")
 }
 
 model User {
-  id_user Int @id @default(autoincrement())
+  userId Int @id @default(autoincrement()) @map("user_id")
   name String 
   email String @unique 
   password String
   role Role @default(USUARIO)
-  id_city Int 
+  cityId Int? @map("city_id") 
 
-  city City @relation(fields: [id_city], references: [id_city])
-  Refresh_tokens Refresh_token[]
+  city City? @relation(fields: [cityId], references: [cityId])
+  refresh_tokens RefreshToken[]
+  @@map("users")
 }
 
 enum Role {
@@ -43,11 +45,12 @@ enum Role {
   USUARIO
 }
 
-model Refresh_token {
-  id_refresh_token Int @id @default(autoincrement())
-  token String
-  expires_at DateTime
-  user_id Int
+model RefreshToken {
+  RefreshTokenId Int @id @default(autoincrement()) @map("refresh_token_id")
+  token String @unique
+  expiresAt DateTime @map("expires_at")
+  userId Int @map("user_id")
 
-  user User @relation(fields: [user_id], references: [id_user])
+  user User @relation(fields: [userId], references: [userId])
+  @@map("refresh_tokens")
 }
