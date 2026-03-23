@@ -24,14 +24,21 @@ async function bootstrap(): Promise<void> {
   app.use(helmet());
 
   const configService = app.get(ConfigService);
-  const allowedOrigins = configService.get<string>('CORS_ORIGIN')?.split(',').map((origin) => origin.trim()) ?? [];
+  const allowedOrigins =
+    configService
+      .get<string>('CORS_ORIGIN')
+      ?.split(',')
+      .map((origin) => origin.trim()) ?? [];
 
   app.enableCors({
     origin: (origin, callback) => {
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new ForbiddenException(`Origin ${origin} not allowed by CORS`), false);
+        callback(
+          new ForbiddenException(`Origin ${origin} not allowed by CORS`),
+          false,
+        );
       }
     },
   });
