@@ -17,3 +17,40 @@ model HealthCheck {
 
   @@map("health_checks")
 }
+
+model City {
+  id Int @id @default(autoincrement())
+  name String
+  state String
+
+  users User[]
+  @@map("cities")
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  name String 
+  email String @unique 
+  password String
+  role Role @default(USUARIO)
+  cityId Int? @map("city_id") 
+
+  city City? @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  refresh_tokens RefreshToken[]
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  USUARIO
+}
+
+model RefreshToken {
+  id Int @id @default(autoincrement())
+  token String @unique
+  expiresAt DateTime @map("expires_at")
+  userId Int @map("user_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade )
+  @@map("refresh_tokens")
+}
