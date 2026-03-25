@@ -35,7 +35,7 @@ model User {
   role Role @default(USUARIO)
   cityId Int? @map("city_id") 
 
-  city City? @relation(fields: [cityId], references: [id])
+  city City? @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   refresh_tokens RefreshToken[]
   @@map("users")
 }
@@ -51,6 +51,6 @@ model RefreshToken {
   expiresAt DateTime @map("expires_at")
   userId Int @map("user_id")
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade )
   @@map("refresh_tokens")
 }
