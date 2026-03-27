@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './config/prisma.module';
+import { RedisCacheModule } from './config/redis-cache.module';
 import { envValidationSchema } from './config/env.validation';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthModule } from './modules/auth/auth.module';
@@ -28,6 +29,7 @@ import { AuthModule } from './modules/auth/auth.module';
     }),
     PrismaModule,
     AuthModule,
+    RedisCacheModule,
   ],
   controllers: [AppController],
   providers: [
