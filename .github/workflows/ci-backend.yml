@@ -118,3 +118,4 @@ jobs:
           CORS_ORIGIN: http://localhost:3000
           THROTTLE_TTL: 60000
           THROTTLE_LIMIT: 100
+          JWT_SECRET: ci-test-secret-not-used-in-production
