@@ -52,10 +52,10 @@ describe('AppController', () => {
 
   describe('getAdminTest', () => {
     it('should return admin access message', () => {
-      // Guards são testados separadamente (roles.guard.spec.ts / jwt-auth.guard.spec.ts)
-      // Aqui testamos apenas a lógica do método do controller
       const result = appController.getAdminTest();
-      expect(result).toEqual({ message: 'Acesso admin autorizado com sucesso' });
+      expect(result).toEqual({
+        message: 'Acesso admin autorizado com sucesso',
+      });
     });
   });
 });

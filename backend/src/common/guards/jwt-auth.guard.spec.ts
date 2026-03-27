@@ -4,9 +4,9 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
-// A chave do fix: o objeto `mockRequest` é criado UMA vez e reutilizado,
-// então quando o guard faz request['user'] = payload, o teste vê a mesma referência.
-const makeMockContext = (authHeader?: string): { context: ExecutionContext; request: Record<string, unknown> } => {
+const makeMockContext = (
+  authHeader?: string,
+): { context: ExecutionContext; request: Record<string, unknown> } => {
   const request: Record<string, unknown> = {
     headers: { authorization: authHeader },
     user: undefined,
@@ -55,12 +55,16 @@ describe('JwtAuthGuard', () => {
   describe('quando o token está ausente', () => {
     it('deve lançar UnauthorizedException sem header Authorization', async () => {
       const { context } = makeMockContext(undefined);
-      await expect(guard.canActivate(context)).rejects.toThrow(UnauthorizedException);
+      await expect(() => guard.canActivate(context)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('deve lançar UnauthorizedException com header malformado (sem Bearer)', async () => {
       const { context } = makeMockContext('Basic some-token');
-      await expect(guard.canActivate(context)).rejects.toThrow(UnauthorizedException);
+      await expect(() => guard.canActivate(context)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
@@ -69,7 +73,9 @@ describe('JwtAuthGuard', () => {
       jwtService.verifyAsync.mockRejectedValue(new Error('jwt expired'));
 
       const { context } = makeMockContext('Bearer expired-token');
-      await expect(guard.canActivate(context)).rejects.toThrow(UnauthorizedException);
+      await expect(() => guard.canActivate(context)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
@@ -81,6 +87,7 @@ describe('JwtAuthGuard', () => {
       const { context } = makeMockContext('Bearer my-token');
       await guard.canActivate(context);
 
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(jwtService.verifyAsync).toHaveBeenCalledWith('my-token', {
         secret: 'test-secret',
       });

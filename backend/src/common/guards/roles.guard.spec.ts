@@ -41,9 +41,7 @@ describe('RolesGuard', () => {
 
   describe('quando endpoint requer role ADMIN', () => {
     beforeEach(() => {
-      jest
-        .spyOn(reflector, 'getAllAndOverride')
-        .mockReturnValue([Role.ADMIN]);
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([Role.ADMIN]);
     });
 
     it('deve permitir acesso para usuário com role ADMIN', () => {
@@ -101,9 +99,7 @@ describe('RolesGuard', () => {
 
   describe('mensagem de erro', () => {
     it('deve incluir a role requerida na mensagem de ForbiddenException', () => {
-      jest
-        .spyOn(reflector, 'getAllAndOverride')
-        .mockReturnValue([Role.ADMIN]);
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([Role.ADMIN]);
 
       const context = mockExecutionContext({ sub: '2', role: Role.USUARIO });
 

@@ -27,7 +27,10 @@ export class AppController {
   @ApiOperation({ summary: 'Endpoint de teste — acesso restrito a ADMIN' })
   @ApiResponse({ status: 200, description: 'Acesso permitido para ADMIN' })
   @ApiResponse({ status: 401, description: 'Token ausente ou inválido' })
-  @ApiResponse({ status: 403, description: 'Acesso negado — role insuficiente' })
+  @ApiResponse({
+    status: 403,
+    description: 'Acesso negado — role insuficiente',
+  })
   getAdminTest(): { message: string } {
     return { message: 'Acesso admin autorizado com sucesso' };
   }
