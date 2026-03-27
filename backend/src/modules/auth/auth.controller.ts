@@ -5,6 +5,7 @@ import {
   Body,
   UseGuards,
   Request,
+  HttpCode,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -33,6 +34,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @HttpCode(200)
   @ApiOperation({ summary: 'Autenticar usuário' })
   @ApiResponse({ status: 200, description: 'Autenticação bem-sucedida' })
   @ApiResponse({ status: 401, description: 'Credenciais inválidas' })
@@ -41,6 +43,7 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @HttpCode(200)
   @ApiOperation({ summary: 'Gerar novo token de acesso usando refresh token' })
   @ApiResponse({
     status: 200,
