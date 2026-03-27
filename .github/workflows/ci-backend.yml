@@ -119,4 +119,4 @@ jobs:
           THROTTLE_TTL: 60000
           THROTTLE_LIMIT: 100
           JWT_SECRET: secret_de_teste_do_ci_conecta_parana
-          REFRESH_TOKEN_SECRET: refresh_secret_de_teste_do_ci
+          JWT_REFRESH_SECRET: refresh_secret_de_teste_do_ci
