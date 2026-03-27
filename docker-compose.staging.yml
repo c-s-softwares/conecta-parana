@@ -38,10 +38,11 @@ services:
     restart: always
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
       REDIS_URL: redis://redis:6379
-      GLITCHTIP_DSN: ${GLITCHTIP_DSN}
       NODE_ENV: staging
       PORT: 3000
     depends_on:
