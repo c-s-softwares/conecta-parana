@@ -50,8 +50,11 @@ export class NewsPage extends CrudPage<NewsFormValues> {
     super.openForm();
     this.linkType.set('external');
   }
+  // TODO: generalizar para função getError reutilizável se fizer sentido para outros componentes também
+  get titleTouched(): boolean {
+    return this.form.controls.title.touched;
+  }
 
-  // TODO: generalizar para função getError reutilizável
   get titleError(): string {
     const ctrl = this.form.controls.title;
     if (ctrl.hasError('required')) return 'Título é obrigatório.';
@@ -60,10 +63,23 @@ export class NewsPage extends CrudPage<NewsFormValues> {
     return '';
   }
 
+  get descriptionTouched(): boolean {
+    return this.form.controls.description.touched;
+  }
+
+  get descriptionError(): string {
+    const ctrl = this.form.controls.description;
+    if (ctrl.hasError('required')) return 'Descrição é obrigatória.';
+    return '';
+  }
+
+  get linkUrlTouched(): boolean {
+    return this.form.controls.linkUrl.touched;
+  }
+
   get urlError(): string {
     const ctrl = this.form.controls.linkUrl;
     if (ctrl.hasError('required')) return 'Url é obrigatória.';
-    console.log(ctrl.errors)
     if (ctrl.hasError('pattern'))
       return 'Url da notícia inválida: necessário começar com "https://"';
     return '';

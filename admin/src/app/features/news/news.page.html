@@ -8,7 +8,7 @@
         label="Título"
         fieldId="title"
         [required]="true"
-        [showError]="form.controls.title.touched && !!titleError"
+        [showError]="titleTouched && !!titleError"
         [errorMessage]="titleError"
       >
         <input
@@ -24,8 +24,8 @@
         label="Descrição"
         fieldId="description"
         [required]="true"
-        [showError]="form.controls.description.touched && form.controls.description.hasError('required')"
-        errorMessage="Descrição é obrigatória."
+        [showError]="descriptionTouched && !!descriptionError"
+        [errorMessage]="descriptionError"
       >
         <textarea
           id="description"
@@ -70,7 +70,7 @@
             label="URL"
             fieldId="linkUrl"
             [required]="true"
-            [showError]="form.controls.linkUrl.touched && !!urlError"
+            [showError]="linkUrlTouched && !!urlError"
             [errorMessage]="urlError"
           >
             <input
