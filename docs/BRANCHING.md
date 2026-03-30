@@ -55,7 +55,7 @@ tipo: descrição curta
 Exemplos:
 
 ```
-feat: add user registration endpoint
+feature: add user registration endpoint
 fix: correct geolocation query on PostGIS
 docs: update setup guide
 refactor: extract validation pipe to shared module

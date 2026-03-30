@@ -1,0 +1,115 @@
+@if (view() === 'list') {
+  <app-page-header title="NOTÍCIAS" buttonLabel="Criar notícia" (create)="openForm()" />
+  <!-- TODO: listar notícias da API -->
+} @else {
+  <app-form-container title="CRIAR NOTÍCIA">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
+      <app-form-field
+        label="Título"
+        fieldId="title"
+        [required]="true"
+        [showError]="titleTouched && !!titleError"
+        [errorMessage]="titleError"
+      >
+        <input
+          id="title"
+          formControlName="title"
+          type="text"
+          placeholder="Digite o título da notícia"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </app-form-field>
+
+      <app-form-field
+        label="Descrição"
+        fieldId="description"
+        [required]="true"
+        [showError]="descriptionTouched && !!descriptionError"
+        [errorMessage]="descriptionError"
+      >
+        <textarea
+          id="description"
+          formControlName="description"
+          rows="3"
+          placeholder="Digite a descrição da notícia"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+        ></textarea>
+      </app-form-field>
+      <div class="grid grid-cols-2 gap-4">
+        <fieldset>
+          <legend class="mb-1 text-sm font-bold text-gray-800">
+            Tipo de link <span class="text-red-600">*</span>
+          </legend>
+
+          <!-- Trocar para radio único estilizado (liga/desliga) -->
+          <div class="space-y-1">
+            <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <input
+                type="radio"
+                formControlName="linkType"
+                value="external"
+                (change)="onLinkTypeChange()"
+                class="cursor-pointer"
+              />
+              Link externo
+            </label>
+            <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <input
+                type="radio"
+                formControlName="linkType"
+                value="internal"
+                (change)="onLinkTypeChange()"
+                class="cursor-pointer"
+              />
+              Link interno
+            </label>
+          </div>
+        </fieldset>
+
+        @if (linkType() === 'external') {
+          <app-form-field
+            label="URL"
+            fieldId="linkUrl"
+            [required]="true"
+            [showError]="linkUrlTouched && !!urlError"
+            [errorMessage]="urlError"
+          >
+            <input
+              id="linkUrl"
+              formControlName="linkUrl"
+              type="text"
+              placeholder="Digite o link URL da notícia"
+              class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </app-form-field>
+        }
+      </div>
+
+      <div class="flex items-center gap-2">
+        <input
+          id="isActive"
+          formControlName="isActive"
+          type="checkbox"
+          class="h-4 w-4 rounded border-gray-400 cursor-pointer"
+        />
+        <label for="isActive" class="text-sm font-medium text-gray-800 cursor-pointer">Notícia ativa</label>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button
+          type="button"
+          (click)="closeForm()"
+          class="rounded-lg bg-btn-cancel px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-cancel-hover cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="rounded-lg bg-btn-create px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-create-hover cursor-pointer"
+        >
+          Criar
+        </button>
+      </div>
+    </form>
+  </app-form-container>
+}

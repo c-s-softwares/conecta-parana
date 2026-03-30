@@ -1,34 +1,22 @@
 import { TestBed } from '@angular/core/testing';
+import { RouterModule } from '@angular/router';
 import { App } from './app';
-import { environment } from '../environments/environment';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [App],
+      imports: [App, RouterModule.forRoot([])],
     }).compileComponents();
   });
 
-  it('should render title', async () => {
+  it('deve criar o app', () => {
     const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Conecta Paraná Admin');
+    expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('should display the environment badge', () => {
-    // Badge de produção
-    environment.name = 'production';
-    let fixture = TestBed.createComponent(App);
-    expect(fixture.componentInstance['environmentBadgeClass']()).toBe(
-      'bg-green-100 text-green-800',
-    );
-
-    // Badge de staging
-    environment.name = 'staging';
-    fixture = TestBed.createComponent(App);
-    expect(fixture.componentInstance['environmentBadgeClass']()).toBe(
-      'bg-yellow-100 text-yellow-800',
-    );
+  it('deve renderizar router-outlet', () => {
+    const fixture = TestBed.createComponent(App);
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('router-outlet')).toBeTruthy();
   });
 });

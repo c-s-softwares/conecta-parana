@@ -1,0 +1,7 @@
+<div class="flex h-screen bg-shell-bg">
+  <app-sidebar [items]="navItems" (logout)="onLogout()" />
+
+  <main class="m-2 flex-1 overflow-y-auto rounded-lg bg-content-bg p-8">
+    <router-outlet />
+  </main>
+</div>

@@ -1,3 +1,18 @@
-/* You can add global styles to this file, and also import other style files */
-
 @import 'tailwindcss';
+
+@theme {
+  --color-primary: #3b82f6;
+  --color-primary-dark: #2563eb;
+  --color-sidebar: #87ceeb;
+  --color-sidebar-text: #1e293b;
+  --color-sidebar-hover: #6bb8d9;
+  --color-sidebar-active: #2563eb;
+  --color-content-bg: #4a8daa;
+  --color-shell-bg: #5a6577;
+  --color-form-bg: #c8c8c8;
+  --color-input-bg: #e0e0e0;
+  --color-btn-cancel: #c22f2f;
+  --color-btn-cancel-hover: #9c1c1c;
+  --color-btn-create: #16a34a;
+  --color-btn-create-hover: #15803d;
+}
