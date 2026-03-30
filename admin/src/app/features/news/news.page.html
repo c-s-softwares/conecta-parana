@@ -1,0 +1,124 @@
+@if (view() === 'list') {
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-white">NOTÍCIAS</h1>
+    <button
+      type="button"
+      (click)="openForm()"
+      class="rounded-lg bg-white px-4 py-2 text-md font-semibold text-gray-900 transition hover:bg-gray-200 cursor-pointer"
+    >
+      Criar notícia
+    </button>
+  </div>
+} @else {
+  <div class="mx-auto max-w-[700px] rounded-lg bg-form-bg p-8">
+    <h1 class="mb-6 text-xl font-bold text-gray-900">CRIAR NOTÍCIA</h1>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
+      <div>
+        <label for="title" class="mb-1 block text-sm font-bold text-gray-800">
+          Título <span class="text-red-600">*</span>
+        </label>
+        <input
+          id="title"
+          formControlName="title"
+          type="text"
+          placeholder="Digite o título da notícia"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+        @if (form.controls.title.touched && form.controls.title.hasError('required')) {
+          <p class="mt-1 text-xs text-red-600">Título é obrigatório.</p>
+        }
+      </div>
+
+      <div>
+        <label for="description" class="mb-1 block text-sm font-bold text-gray-800">
+          Descrição <span class="text-red-600">*</span>
+        </label>
+        <textarea
+          id="description"
+          formControlName="description"
+          rows="3"
+          placeholder="Digite a descrição da notícia"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+        ></textarea>
+        @if (form.controls.description.touched && form.controls.description.hasError('required')) {
+          <p class="mt-1 text-xs text-red-600">Descrição é obrigatória.</p>
+        }
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <fieldset>
+          <legend class="mb-1 text-sm font-bold text-gray-800">
+            Tipo de link <span class="text-red-600">*</span>
+          </legend>
+          <div class="space-y-1">
+            <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <input
+                type="radio"
+                formControlName="linkType"
+                value="external"
+                (change)="onLinkTypeChange()"
+                class="cursor-pointer"
+              />
+              Link externo
+            </label>
+            <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+              <input
+                type="radio"
+                formControlName="linkType"
+                value="internal"
+                (change)="onLinkTypeChange()"
+                class="cursor-pointer"
+              />
+              Link interno
+            </label>
+          </div>
+        </fieldset>
+
+        @if (linkType() === 'external') {
+          <div>
+            <label for="linkUrl" class="mb-1 block text-sm font-bold text-gray-800">
+              URL <span class="text-red-600">*</span>
+            </label>
+            <input
+              id="linkUrl"
+              formControlName="linkUrl"
+              type="text"
+              placeholder="Digite o link URL da notícia"
+              class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            @if (form.controls.linkUrl.touched && form.controls.linkUrl.hasError('required')) {
+              <p class="mt-1 text-xs text-red-600">URL é obrigatória.</p>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="flex items-center gap-2">
+        <input
+          id="isActive"
+          formControlName="isActive"
+          type="checkbox"
+          class="h-4 w-4 rounded border-gray-400 cursor-pointer"
+        />
+        <label for="isActive" class="text-sm font-medium text-gray-800 cursor-pointer">Notícia ativa</label>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button
+          type="button"
+          (click)="closeForm()"
+          class="rounded-lg bg-btn-cancel px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-cancel-hover cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="rounded-lg bg-btn-create px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-create-hover cursor-pointer"
+        >
+          Criar
+        </button>
+      </div>
+    </form>
+  </div>
+}
