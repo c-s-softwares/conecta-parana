@@ -1,40 +1,72 @@
 import { Component, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { CrudPage } from '../../shared/utils/crud-page';
+import { PageHeader } from '../../shared/components/page-header';
+import { FormContainer } from '../../shared/components/form-container';
+import { FormField } from '../../shared/components/form-field';
+import { ApiService } from '../../core/services/api.service';
+import { noSpecialChars } from '../../shared/validators/no-special-chars.validator';
+import { generateSlug } from '../../shared/utils/slug';
+
+interface NewsFormValues {
+  title: string;
+  description: string;
+  linkType: 'internal' | 'external';
+  linkUrl: string;
+  isActive: boolean;
+}
 
 @Component({
   selector: 'app-news-page',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, PageHeader, FormContainer, FormField],
   templateUrl: './news.page.html',
 })
-export class NewsPage {
+export class NewsPage extends CrudPage<NewsFormValues> {
   private readonly fb = inject(FormBuilder);
+  private readonly api = inject(ApiService);
 
-  protected readonly view = signal<'list' | 'form'>('list');
   protected readonly linkType = signal<'external' | 'internal'>('external');
 
   protected readonly form = this.fb.nonNullable.group({
-    title: ['', Validators.required],
+    title: ['', [Validators.required, noSpecialChars()]],
     description: ['', Validators.required],
     linkType: ['external' as 'internal' | 'external'],
     linkUrl: [''],
     isActive: [true],
   });
 
-  openForm(): void {
-    this.form.reset({
+  protected defaultFormValues(): NewsFormValues {
+    return {
       title: '',
       description: '',
       linkType: 'external',
       linkUrl: '',
       isActive: true,
-    });
-    this.linkType.set('external');
-    this.view.set('form');
+    };
   }
 
-  closeForm(): void {
-    this.view.set('list');
+  override openForm(): void {
+    super.openForm();
+    this.linkType.set('external');
+  }
+
+  // TODO: generalizar para função getError reutilizável
+  get titleError(): string {
+    const ctrl = this.form.controls.title;
+    if (ctrl.hasError('required')) return 'Título é obrigatório.';
+    if (ctrl.hasError('specialChars'))
+      return 'Título não pode conter caracteres especiais.';
+    return '';
+  }
+
+  get urlError(): string {
+    const ctrl = this.form.controls.linkUrl;
+    if (ctrl.hasError('required')) return 'Url é obrigatória.';
+    console.log(ctrl.errors)
+    if (ctrl.hasError('pattern'))
+      return 'Url da notícia inválida: necessário começar com "https://"';
+    return '';
   }
 
   onLinkTypeChange(): void {
@@ -45,7 +77,7 @@ export class NewsPage {
 
   onSubmit(): void {
     if (this.linkType() === 'external') {
-      this.form.controls.linkUrl.setValidators(Validators.required);
+      this.form.controls.linkUrl.setValidators([Validators.required, Validators.pattern(/^https:\/\//)]);
       this.form.controls.linkUrl.updateValueAndValidity();
     } else {
       this.form.controls.linkUrl.clearValidators();
@@ -59,23 +91,15 @@ export class NewsPage {
 
     const raw = this.form.getRawValue();
     if (raw.linkType === 'internal') {
-      raw.linkUrl = this.generateSlug(raw.title);
+      raw.linkUrl = generateSlug(raw.title);
     }
 
-    console.log('Notícia criada:', raw);
-    this.view.set('list');
+    this.api.create('news', raw).subscribe(() => {
+      this.view.set('list');
+    });
   }
 
-  protected generateSlug(title: string): string {
-    return (
-      '/' +
-      title
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-')
-    );
+  protected generateSlugPreview(title: string): string {
+    return generateSlug(title);
   }
 }
