@@ -9,7 +9,7 @@ export class AppController {
 
   @Get('health')
   @UseInterceptors(CacheInterceptor)
-  @CacheTTL(30_000) // 30 segundos
+  @CacheTTL(30_000)
   @ApiOperation({ summary: 'Health check do serviço (cached 30s)' })
   @ApiResponse({ status: 200, description: 'Serviço está operacional' })
   getHealth(): { status: string; timestamp: string; environment: string } {
