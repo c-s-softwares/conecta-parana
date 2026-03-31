@@ -155,9 +155,13 @@
         <p class="mb-1 text-sm font-bold text-gray-800">Fotos</p>
         <div
           class="flex cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-gray-400 bg-input-bg px-4 py-6 text-sm text-gray-500 transition-colors hover:border-primary hover:text-primary"
+          role="button"
+          tabindex="0"
           (dragover)="onDragOver($event)"
           (drop)="onDrop($event)"
           (click)="photoInput.click()"
+          (keydown.enter)="photoInput.click()"
+          (keydown.space)="photoInput.click()"
         >
           <span>📎 Arraste ou clique para adicionar fotos</span>
           <input
