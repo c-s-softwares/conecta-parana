@@ -1,0 +1,81 @@
+@if (view() === 'list') {
+  <app-page-header
+    title="POSTAGENS"
+    buttonLabel="Criar postagem"
+    (create)="openForm()"
+  />
+  <!-- TODO: listar postagens da API -->
+} @else {
+  <app-form-container title="CRIAR POSTAGEM">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
+      <app-form-field
+        label="Título"
+        fieldId="title"
+        [required]="true"
+        [showError]="titleTouched && !!titleError"
+        [errorMessage]="titleError"
+      >
+        <input
+          id="title"
+          formControlName="title"
+          type="text"
+          placeholder="Digite o título da postagem"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </app-form-field>
+
+      <app-form-field
+        label="Descrição"
+        fieldId="description"
+        [required]="true"
+        [showError]="descriptionTouched && !!descriptionError"
+        [errorMessage]="descriptionError"
+      >
+        <textarea
+          id="description"
+          formControlName="description"
+          rows="4"
+          placeholder="Digite a descrição da postagem"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+        ></textarea>
+      </app-form-field>
+
+      <app-form-field
+        label="Categoria"
+        fieldId="category"
+        [required]="true"
+        [showError]="categoryTouched && !!categoryError"
+        [errorMessage]="categoryError"
+      >
+        <select
+          id="category"
+          formControlName="category"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+        >
+          <option value="">Selecione a categoria da postagem</option>
+
+          @for (category of categories; track category.value) {
+            <option [value]="category.value">{{ category.label }}</option>
+          }
+        </select>
+      </app-form-field>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button
+          type="button"
+          (click)="closeForm()"
+          class="rounded-lg bg-btn-cancel px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-cancel-hover cursor-pointer"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="submit"
+          class="rounded-lg bg-btn-create px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-create-hover cursor-pointer"
+        >
+          Criar
+        </button>
+      </div>
+    </form>
+  </app-form-container>
+}

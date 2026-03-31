@@ -12,6 +12,11 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/news/news.routes').then((m) => m.NEWS_ROUTES),
       },
+      {
+        path: 'posts',
+        loadChildren: () =>
+          import('./features/posts/posts.routes').then((m) => m.POSTS_ROUTES),
+      }
     ],
   },
 ];
