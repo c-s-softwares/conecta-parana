@@ -1,0 +1,150 @@
+@if (view() === 'list') {
+  <app-page-header title="LOCAIS" buttonLabel="Criar local" (create)="openForm()" />
+  <!-- TODO: listar locais da API -->
+} @else {
+  <app-form-container title="CRIAR LOCAL">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
+
+      <div class="grid grid-cols-2 gap-4">
+        <app-form-field
+          label="Nome"
+          fieldId="name"
+          [required]="true"
+          [showError]="nameTouched && !!nameError"
+          [errorMessage]="nameError"
+        >
+          <input
+            id="name"
+            formControlName="name"
+            type="text"
+            placeholder="Digite o título do evento"
+            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </app-form-field>
+
+        <app-form-field
+          label="Telefone"
+          fieldId="phone"
+          [required]="false"
+          [showError]="false"
+          errorMessage=""
+        >
+          <input
+            id="phone"
+            formControlName="phone"
+            type="text"
+            placeholder="Digite o título do evento"
+            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </app-form-field>
+      </div>
+
+      <app-form-field
+        label="Descrição"
+        fieldId="description"
+        [required]="false"
+        [showError]="false"
+        errorMessage=""
+      >
+        <input
+          id="description"
+          formControlName="description"
+          type="text"
+          placeholder="Digite a descrição do local"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </app-form-field>
+
+      <div class="grid grid-cols-2 gap-4">
+        <app-form-field
+          label="Latitude"
+          fieldId="latitude"
+          [required]="true"
+          [showError]="latitudeTouched && !!latitudeError"
+          [errorMessage]="latitudeError"
+        >
+          <input
+            id="latitude"
+            formControlName="latitude"
+            type="text"
+            placeholder="Digite a latitude"
+            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </app-form-field>
+
+        <app-form-field
+          label="Longitude"
+          fieldId="longitude"
+          [required]="true"
+          [showError]="longitudeTouched && !!longitudeError"
+          [errorMessage]="longitudeError"
+        >
+          <input
+            id="longitude"
+            formControlName="longitude"
+            type="text"
+            placeholder="Digite a longitude"
+            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </app-form-field>
+      </div>
+
+      <app-form-field
+        label="Categoria"
+        fieldId="category"
+        [required]="true"
+        [showError]="categoryTouched && !!categoryError"
+        [errorMessage]="categoryError"
+      >
+        <select
+          id="category"
+          formControlName="category"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="">Selecione a categoria do local</option>
+        </select>
+      </app-form-field>
+
+      <app-form-field
+        label="Foto(s) do Local"
+        fieldId="photos"
+        [required]="true"
+        [showError]="photosTouched && !!photosError"
+        [errorMessage]="photosError"
+      >
+        <div
+          class="w-full rounded-md border-2 border-dashed border-gray-300 bg-input-bg px-3 py-6 text-sm text-gray-500 text-center cursor-pointer hover:border-primary transition-colors"
+          (click)="fileInput.click()"
+        >
+          📎 Arraste ou clique para adicionar fotos
+          <input
+            #fileInput
+            id="photos"
+            type="file"
+            multiple
+            accept="image/*"
+            class="hidden"
+            (change)="onPhotosChange($event)"
+          />
+        </div>
+      </app-form-field>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button
+          type="button"
+          (click)="closeForm()"
+          class="rounded-lg bg-btn-cancel px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-cancel-hover cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="rounded-lg bg-btn-create px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-create-hover cursor-pointer"
+        >
+          Criar
+        </button>
+      </div>
+
+    </form>
+  </app-form-container>
+}
