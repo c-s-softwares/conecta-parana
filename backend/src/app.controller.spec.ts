@@ -47,7 +47,7 @@ describe('AppController', () => {
   });
 
   describe('health', () => {
-    it('should return health check with status ok', () => {
+    it('deve retornar health check com status ok', () => {
       const result = appController.getHealth();
       expect(result).toHaveProperty('status', 'ok');
       expect(result).toHaveProperty('timestamp');
