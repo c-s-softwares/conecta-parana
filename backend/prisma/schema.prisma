@@ -41,6 +41,7 @@ model User {
   refresh_tokens RefreshToken[]
   events Event[] 
   photos Photo[]
+  likes Like[]
 
   @@map("users")
 }
@@ -76,6 +77,7 @@ model Event{
   user User @relation(fields: [userId], references: [id], onDelete: Cascade )
 
   photos Photo[]
+  likes Like[]
 
   @@map("events")
 }
@@ -85,13 +87,26 @@ model Photo {
   url String @unique
 
   eventId Int? @map("event_id")
-  userId Int  @map("user_id")
+  userId Int @map("user_id")
 
   event Event? @relation(fields: [eventId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  user  User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("photos")
 }
+
+model Like {
+  id Int @id @default(autoincrement())
+
+  userId Int @map("user_id")
+  eventId Int? @map("event_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event? @relation(fields: [eventId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("likes")
+}
+
 
 
 
