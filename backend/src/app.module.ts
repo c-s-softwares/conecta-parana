@@ -9,6 +9,7 @@ import { envValidationSchema } from './config/env.validation';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthModule } from './modules/auth/auth.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { PinoLoggerModule } from './config/logger.module';
 
 @Module({
   imports: [
