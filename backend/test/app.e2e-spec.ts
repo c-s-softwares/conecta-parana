@@ -26,14 +26,35 @@ describe('AppController (e2e)', () => {
     await app.close();
   });
 
-  it('/health (GET)', () => {
+  describe('/health (GET)', () => {
+    it('deve retornar 200 com status ok', () => {
+      return request(app.getHttpServer())
+        .get('/health')
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).toHaveProperty('status', 'ok');
+          expect(res.body).toHaveProperty('timestamp');
+          expect(res.body).toHaveProperty('environment');
+        });
+    });
+  });
+
+  it('deve retornar x-request-id no response quando enviado no header', () => {
+    return request(app.getHttpServer())
+      .get('/health')
+      .set('x-request-id', 'test-e2e-123')
+      .expect(200)
+      .expect((res) => {
+        expect(res.headers['x-request-id']).toBe('test-e2e-123');
+      });
+  });
+
+  it('deve gerar x-request-id no response quando não enviado', () => {
     return request(app.getHttpServer())
       .get('/health')
       .expect(200)
       .expect((res) => {
-        expect(res.body).toHaveProperty('status', 'ok');
-        expect(res.body).toHaveProperty('timestamp');
-        expect(res.body).toHaveProperty('environment');
+        expect(res.headers['x-request-id']).toMatch(UUID_V4_REGEX);
       });
   });
 

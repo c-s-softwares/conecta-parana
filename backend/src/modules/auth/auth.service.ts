@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcryptjs';
+import { hash, compare } from 'bcryptjs';
 import { PrismaService } from '../../config/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -27,7 +27,7 @@ export class AuthService {
       throw new ConflictException('Email já cadastrado');
     }
 
-    const hashed = await bcrypt.hash(dto.password, 10);
+    const hashed = await hash(dto.password, 10);
 
     const user = await this.prisma.client.user.create({
       data: {
@@ -49,7 +49,7 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
-    const passwordMatch = await bcrypt.compare(dto.password, user.password);
+    const passwordMatch = await compare(dto.password, user.password);
 
     if (!passwordMatch) {
       throw new UnauthorizedException('Credenciais inválidas');
