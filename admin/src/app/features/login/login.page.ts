@@ -51,7 +51,7 @@ export class LoginPage {
       return;
     }
 
-    const { email, password, rememberMe } = this.form.getRawValue();
+    const { email, rememberMe } = this.form.getRawValue();
 
     this.auth.login(email).subscribe((user) => {
       if (rememberMe) this.auth.saveToken(user.token);
