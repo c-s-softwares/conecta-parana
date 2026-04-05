@@ -30,7 +30,7 @@ describe('LoginPage', () => {
 
   it('deve criar o componente e renderizar o formulário', () => {
     expect(component).toBeTruthy();
-    expect(el.querySelector('app-form-container')).toBeTruthy();
+    expect(el.querySelector('.login-card')).toBeTruthy();
   });
 
   describe('emailError / emailTouched', () => {
