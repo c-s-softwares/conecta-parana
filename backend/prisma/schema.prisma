@@ -113,7 +113,7 @@ model Like {
 
 model Favorite {
   id Int @id @default(autoincrement())
-  createdAt DateTime @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
   userId Int @map("user_id")
   eventId Int? @map("event_id")
@@ -128,7 +128,7 @@ model Notification {
   id Int @id @default(autoincrement())
   title String
   description String
-  isRead Boolean @map("is_read")
+  isRead Boolean @default(false) @map("is_read")
 
   userId Int @map("user_id")
   eventId Int? @map("event_id")
