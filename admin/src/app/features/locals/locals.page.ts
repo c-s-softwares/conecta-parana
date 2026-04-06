@@ -4,7 +4,6 @@ import { CrudPage } from '../../shared/utils/crud-page';
 import { PageHeader } from '../../shared/components/page-header';
 import { FormContainer } from '../../shared/components/form-container';
 import { FormField } from '../../shared/components/form-field';
-import { ApiService } from '../../core/services/api.service';
 
 interface LocalFormValues {
   name: string;
@@ -16,6 +15,10 @@ interface LocalFormValues {
   photos: FileList | null;
 }
 
+interface Local extends LocalFormValues {
+  id: string;
+}
+
 @Component({
   selector: 'app-locals-page',
   standalone: true,
@@ -24,7 +27,14 @@ interface LocalFormValues {
 })
 export class LocalsPage extends CrudPage<LocalFormValues> {
   private readonly fb = inject(FormBuilder);
-  private readonly api = inject(ApiService);
+
+  protected readonly categories = [
+    'Restaurante', 'Hotel', 'Ponto Turístico', 'Parque',
+    'Shopping', 'Hospital', 'Escola', 'Igreja', 'Museu', 'Outro',
+  ];
+
+  // ID do local sendo editado (null = criação)
+  protected editingId = signal<string | null>(null);
 
   protected readonly form = this.fb.nonNullable.group({
     name:        ['', Validators.required],
@@ -37,74 +47,96 @@ export class LocalsPage extends CrudPage<LocalFormValues> {
   });
 
   protected defaultFormValues(): LocalFormValues {
-    return {
-      name: '',
-      phone: '',
-      description: '',
-      latitude: '',
-      longitude: '',
-      category: '',
-      photos: null,
-    };
+    return { name: '', phone: '', description: '', latitude: '', longitude: '', category: '', photos: null };
   }
 
-  // --- Touched ---
-
-  get nameTouched(): boolean      { return this.form.controls.name.touched; }
-  get latitudeTouched(): boolean  { return this.form.controls.latitude.touched; }
-  get longitudeTouched(): boolean { return this.form.controls.longitude.touched; }
-  get categoryTouched(): boolean  { return this.form.controls.category.touched; }
-  get photosTouched(): boolean    { return this.form.controls.photos.touched; }
-
-  // --- Errors ---
-
-  get nameError(): string {
-    const ctrl = this.form.controls.name;
-    if (ctrl.hasError('required')) return 'Nome é obrigatório.';
-    return '';
+  // --- Lista ---
+  protected getLocals(): Local[] {
+    return JSON.parse(localStorage.getItem('locais') ?? '[]');
   }
 
-  get latitudeError(): string {
-    const ctrl = this.form.controls.latitude;
-    if (ctrl.hasError('required')) return 'Latitude é obrigatória.';
-    return '';
+  // --- Abrir formulário de edição ---
+  protected openEdit(local: Local): void {
+    this.editingId.set(local.id);
+
+    // Photos não é serializável, então remove o required ao editar
+    this.form.controls.photos.clearValidators();
+    this.form.controls.photos.updateValueAndValidity();
+
+    this.form.patchValue({
+      name:        local.name,
+      phone:       local.phone,
+      description: local.description,
+      latitude:    local.latitude,
+      longitude:   local.longitude,
+      category:    local.category,
+    });
+
+    this.view.set('form');
   }
 
-  get longitudeError(): string {
-    const ctrl = this.form.controls.longitude;
-    if (ctrl.hasError('required')) return 'Longitude é obrigatória.';
-    return '';
+  // --- Fechar formulário (override para limpar estado de edição) ---
+  override closeForm(): void {
+    this.editingId.set(null);
+    this.restorePhotosValidator();
+    super.closeForm();
   }
 
-  get categoryError(): string {
-    const ctrl = this.form.controls.category;
-    if (ctrl.hasError('required')) return 'Categoria é obrigatória.';
-    return '';
+  // --- Deletar ---
+  protected deleteLocal(id: string): void {
+    if (!confirm('Tem certeza que deseja excluir este local?')) return;
+    const updated = this.getLocals().filter(l => l.id !== id);
+    localStorage.setItem('locais', JSON.stringify(updated));
   }
 
-  get photosError(): string {
-    const ctrl = this.form.controls.photos;
-    if (ctrl.hasError('required')) return 'Adicione ao menos uma foto.';
-    return '';
-  }
-
-  // --- Ações ---
-
-  onPhotosChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files?.length) {
-      this.form.controls.photos.setValue(input.files);
-    }
-  }
-
+  // --- Submit (criar ou editar) ---
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    this.api.create('locals', this.form.getRawValue()).subscribe(() => {
-      this.view.set('list');
-    });
+    const raw = this.form.getRawValue();
+    const toSave = { ...raw, photos: null };
+    const existing = this.getLocals();
+    const id = this.editingId();
+
+    if (id) {
+      // Edição
+      const index = existing.findIndex(l => l.id === id);
+      if (index !== -1) existing[index] = { ...existing[index], ...toSave };
+    } else {
+      // Criação
+      existing.push({ ...toSave, id: crypto.randomUUID() });
+    }
+
+    localStorage.setItem('locais', JSON.stringify(existing));
+    this.editingId.set(null);
+    this.restorePhotosValidator();
+    this.view.set('list');
+  }
+
+  private restorePhotosValidator(): void {
+    this.form.controls.photos.setValidators(Validators.required);
+    this.form.controls.photos.updateValueAndValidity();
+  }
+
+  // --- Touched ---
+  get nameTouched()      { return this.form.controls.name.touched; }
+  get latitudeTouched()  { return this.form.controls.latitude.touched; }
+  get longitudeTouched() { return this.form.controls.longitude.touched; }
+  get categoryTouched()  { return this.form.controls.category.touched; }
+  get photosTouched()    { return this.form.controls.photos.touched; }
+
+  // --- Errors ---
+  get nameError():      string { return this.form.controls.name.hasError('required')      ? 'Nome é obrigatório.'        : ''; }
+  get latitudeError():  string { return this.form.controls.latitude.hasError('required')  ? 'Latitude é obrigatória.'    : ''; }
+  get longitudeError(): string { return this.form.controls.longitude.hasError('required') ? 'Longitude é obrigatória.'   : ''; }
+  get categoryError():  string { return this.form.controls.category.hasError('required')  ? 'Categoria é obrigatória.'   : ''; }
+  get photosError():    string { return this.form.controls.photos.hasError('required')    ? 'Adicione ao menos uma foto.' : ''; }
+
+  onPhotosChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) this.form.controls.photos.setValue(input.files);
   }
 }

@@ -1,147 +1,133 @@
 @if (view() === 'list') {
   <app-page-header title="LOCAIS" buttonLabel="Criar local" (create)="openForm()" />
-  <!-- TODO: listar locais da API -->
+
+  @let locals = getLocals();
+
+  @if (locals.length === 0) {
+    <div class="mt-10 text-center text-gray-400 text-sm">
+      Nenhum local cadastrado ainda.
+    </div>
+  } @else {
+    <div class="mt-6 overflow-x-auto rounded-lg border border-gray-200">
+      <table class="w-full text-sm text-left">
+        <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
+          <tr>
+            <th class="px-4 py-3">Nome</th>
+            <th class="px-4 py-3">Categoria</th>
+            <th class="px-4 py-3">Telefone</th>
+            <th class="px-4 py-3">Latitude</th>
+            <th class="px-4 py-3">Longitude</th>
+            <th class="px-4 py-3 text-right">Ações</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          @for (local of locals; track local.id) {
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="px-4 py-3 font-medium text-gray-900">{{ local.name }}</td>
+              <td class="px-4 py-3 text-gray-600">{{ local.category }}</td>
+              <td class="px-4 py-3 text-gray-600">{{ local.phone || '—' }}</td>
+              <td class="px-4 py-3 text-gray-600">{{ local.latitude }}</td>
+              <td class="px-4 py-3 text-gray-600">{{ local.longitude }}</td>
+              <td class="px-4 py-3 text-right">
+                <div class="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    (click)="openEdit(local)"
+                    class="rounded-md bg-blue-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-600 transition-colors cursor-pointer"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    (click)="deleteLocal(local.id)"
+                    class="rounded-md bg-red-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-600 transition-colors cursor-pointer"
+                  >
+                    Excluir
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
 } @else {
-  <app-form-container title="CRIAR LOCAL">
+  <app-form-container [title]="editingId() ? 'EDITAR LOCAL' : 'CRIAR LOCAL'">
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
 
       <div class="grid grid-cols-2 gap-4">
-        <app-form-field
-          label="Nome"
-          fieldId="name"
-          [required]="true"
-          [showError]="nameTouched && !!nameError"
-          [errorMessage]="nameError"
-        >
-          <input
-            id="name"
-            formControlName="name"
-            type="text"
-            placeholder="Digite o título do evento"
-            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+        <app-form-field label="Nome" fieldId="name" [required]="true"
+          [showError]="nameTouched && !!nameError" [errorMessage]="nameError">
+          <input id="name" formControlName="name" type="text"
+            placeholder="Digite o nome do local"
+            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary" />
         </app-form-field>
 
-        <app-form-field
-          label="Telefone"
-          fieldId="phone"
-          [required]="false"
-          [showError]="false"
-          errorMessage=""
-        >
-          <input
-            id="phone"
-            formControlName="phone"
-            type="text"
-            placeholder="Digite o título do evento"
-            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+        <app-form-field label="Telefone" fieldId="phone" [required]="false"
+          [showError]="false" errorMessage="">
+          <input id="phone" formControlName="phone" type="text"
+            placeholder="Digite o telefone"
+            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary" />
         </app-form-field>
       </div>
 
-      <app-form-field
-        label="Descrição"
-        fieldId="description"
-        [required]="false"
-        [showError]="false"
-        errorMessage=""
-      >
-        <input
-          id="description"
-          formControlName="description"
-          type="text"
+      <app-form-field label="Descrição" fieldId="description" [required]="false"
+        [showError]="false" errorMessage="">
+        <input id="description" formControlName="description" type="text"
           placeholder="Digite a descrição do local"
-          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
-        />
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary" />
       </app-form-field>
 
       <div class="grid grid-cols-2 gap-4">
-        <app-form-field
-          label="Latitude"
-          fieldId="latitude"
-          [required]="true"
-          [showError]="latitudeTouched && !!latitudeError"
-          [errorMessage]="latitudeError"
-        >
-          <input
-            id="latitude"
-            formControlName="latitude"
-            type="text"
+        <app-form-field label="Latitude" fieldId="latitude" [required]="true"
+          [showError]="latitudeTouched && !!latitudeError" [errorMessage]="latitudeError">
+          <input id="latitude" formControlName="latitude" type="text"
             placeholder="Digite a latitude"
-            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary" />
         </app-form-field>
 
-        <app-form-field
-          label="Longitude"
-          fieldId="longitude"
-          [required]="true"
-          [showError]="longitudeTouched && !!longitudeError"
-          [errorMessage]="longitudeError"
-        >
-          <input
-            id="longitude"
-            formControlName="longitude"
-            type="text"
+        <app-form-field label="Longitude" fieldId="longitude" [required]="true"
+          [showError]="longitudeTouched && !!longitudeError" [errorMessage]="longitudeError">
+          <input id="longitude" formControlName="longitude" type="text"
             placeholder="Digite a longitude"
-            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary" />
         </app-form-field>
       </div>
 
-      <app-form-field
-        label="Categoria"
-        fieldId="category"
-        [required]="true"
-        [showError]="categoryTouched && !!categoryError"
-        [errorMessage]="categoryError"
-      >
-        <select
-          id="category"
-          formControlName="category"
-          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
-        >
+      <app-form-field label="Categoria" fieldId="category" [required]="true"
+        [showError]="categoryTouched && !!categoryError" [errorMessage]="categoryError">
+        <select id="category" formControlName="category"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary">
           <option value="">Selecione a categoria do local</option>
+          @for (cat of categories; track cat) {
+            <option [value]="cat">{{ cat }}</option>
+          }
         </select>
       </app-form-field>
 
-      <app-form-field
-        label="Foto(s) do Local"
-        fieldId="photos"
-        [required]="true"
-        [showError]="photosTouched && !!photosError"
-        [errorMessage]="photosError"
-      >
+      <!-- Campo de foto: só exibe em criação, ou em edição se quiser trocar -->
+      <app-form-field label="Foto(s) do Local" fieldId="photos"
+        [required]="!editingId()"
+        [showError]="photosTouched && !!photosError" [errorMessage]="photosError">
         <div
           class="w-full rounded-md border-2 border-dashed border-gray-300 bg-input-bg px-3 py-6 text-sm text-gray-500 text-center cursor-pointer hover:border-primary transition-colors"
-          (click)="fileInput.click()"
-        >
-          📎 Arraste ou clique para adicionar fotos
-          <input
-            #fileInput
-            id="photos"
-            type="file"
-            multiple
-            accept="image/*"
-            class="hidden"
-            (change)="onPhotosChange($event)"
-          />
+          (click)="fileInput.click()">
+          📎 {{ editingId() ? 'Clique para substituir as fotos (opcional)' : 'Arraste ou clique para adicionar fotos' }}
+          <input #fileInput id="photos" type="file" multiple accept="image/*"
+            class="hidden" (change)="onPhotosChange($event)" />
         </div>
       </app-form-field>
 
       <div class="flex justify-end gap-3 pt-2">
-        <button
-          type="button"
-          (click)="closeForm()"
-          class="rounded-lg bg-btn-cancel px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-cancel-hover cursor-pointer"
-        >
+        <button type="button" (click)="closeForm()"
+          class="rounded-lg bg-btn-cancel px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-cancel-hover cursor-pointer">
           Cancelar
         </button>
-        <button
-          type="submit"
-          class="rounded-lg bg-btn-create px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-create-hover cursor-pointer"
-        >
-          Criar
+        <button type="submit"
+          class="rounded-lg bg-btn-create px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-create-hover cursor-pointer">
+          {{ editingId() ? 'Salvar' : 'Criar' }}
         </button>
       </div>
 
