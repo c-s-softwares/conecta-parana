@@ -1,0 +1,101 @@
+@if (view() === 'list') {
+  <app-page-header
+    title="ADMINISTRADORES"
+    buttonLabel="Criar superadmin"
+    (create)="openForm()"
+  />
+} @else {
+  <app-form-container title="CRIAR SUPERADMIN">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
+      <app-form-field
+        label="Nome"
+        fieldId="name"
+        [required]="true"
+        [showError]="nameTouched && !!nameError"
+        [errorMessage]="nameError"
+      >
+        <input
+          id="name"
+          formControlName="name"
+          type="text"
+          placeholder="Digite o nome do superadmin"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </app-form-field>
+
+      <div class="grid grid-cols-2 gap-4">
+        <app-form-field
+          label="Email"
+          fieldId="email"
+          [required]="true"
+          [showError]="emailTouched && !!emailError"
+          [errorMessage]="emailError"
+        >
+          <input
+            id="email"
+            formControlName="email"
+            type="email"
+            placeholder="Digite o email"
+            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </app-form-field>
+
+        <app-form-field
+          label="Senha"
+          fieldId="password"
+          [required]="true"
+          [showError]="passwordTouched && !!passwordError"
+          [errorMessage]="passwordError"
+        >
+          <input
+            id="password"
+            formControlName="password"
+            type="password"
+            placeholder="Digite a senha"
+            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </app-form-field>
+      </div>
+
+      <app-form-field
+        label="Cidade"
+        fieldId="cityId"
+        [required]="true"
+        [showError]="cityTouched && !!cityError"
+        [errorMessage]="cityError"
+      >
+        <select
+          id="cityId"
+          formControlName="cityId"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="">Selecione a cidade</option>
+          @for (city of cities(); track city.value) {
+            <option [value]="city.value">{{ city.label }}</option>
+          }
+        </select>
+      </app-form-field>
+
+      <div class="rounded-lg bg-input-bg p-4 text-sm text-gray-700">
+        O administrador so terá acesso a cidade escolhida!
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button
+          type="button"
+          (click)="closeForm()"
+          class="rounded-lg bg-btn-cancel px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-cancel-hover cursor-pointer"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="submit"
+          class="rounded-lg bg-btn-create px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-create-hover cursor-pointer"
+        >
+          Criar superadmin
+        </button>
+      </div>
+    </form>
+  </app-form-container>
+}

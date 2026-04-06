@@ -17,6 +17,12 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/events/events.routes').then((m) => m.EVENTS_ROUTES),
       },
+      {
+        path: 'superadmin',
+        loadChildren: () =>
+          import('./features/superadmin/superadmin.routes').then((m) => m.SUPERADMIN_ROUTES,
+          ),
+      },
     ],
   },
 ];
