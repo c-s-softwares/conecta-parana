@@ -21,7 +21,8 @@ const STORAGE_KEY = 'notifications';
   templateUrl: 'notification.page.html',
 })
 
-export class NotificationComponent extends CrudPage<NotificationFormValues> {
+export class NotificationComponent extends CrudPage<NotificationFormValues> implements OnInit {
+
   private readonly fb = inject(FormBuilder);
   private editingId = signal<string | null>(null);
 
@@ -128,6 +129,6 @@ export class NotificationComponent extends CrudPage<NotificationFormValues> {
   }
 
   ngOnInit(): void {
-    (window as any).notification = this;
+    (window as unknown as Record<string, unknown>)['notification'] = this;
   }
 }
