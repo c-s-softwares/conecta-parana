@@ -3,6 +3,11 @@ import { Shell } from './core/layout/shell';
 
 export const routes: Routes = [
   {
+    path: 'login',
+    loadChildren: () =>
+      import('./features/login/login.routes').then((m) => m.LOGIN_ROUTES),
+  },
+  {
     path: '',
     component: Shell,
     children: [
@@ -24,4 +29,5 @@ export const routes: Routes = [
       },
     ],
   },
+  { path: '**', redirectTo: 'login' },
 ];
