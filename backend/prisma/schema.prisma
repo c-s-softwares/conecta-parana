@@ -26,6 +26,7 @@ model City {
   users  User[]
   news   News[]
   locals Local[]
+  events Events[]
 
   @@map("cities")
 }
@@ -53,15 +54,6 @@ enum Role {
   USUARIO
 }
 
-model RefreshToken {
-  id Int @id @default(autoincrement())
-  token String @unique
-  expiresAt DateTime @map("expires_at")
-  userId Int @map("user_id")
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade )
-  @@map("refresh_tokens")
-}
 model News {
   id          Int     @id @default(autoincrement()) @map("news_id")
   title       String
@@ -77,16 +69,19 @@ model News {
 }
 
 model Post {
-  id          Int     @id @default(autoincrement()) @map("post_id")
+  id          Int     @id @default(autoincrement())
   title       String
   description String
+  favorites   Boolean
+  likes       Int
+  notifications Boolean
   isActive    Boolean @map("is_active")
 
   @@map("posts")
 }
 
 model Category {
-  id   Int    @id @default(autoincrement()) @map("category_id")
+  id   Int    @id @default(autoincrement())
   name String
   icon String
 
@@ -96,11 +91,13 @@ model Category {
 }
 
 model Local {
-  id              Int    @id @default(autoincrement()) @map("local_id")
+  id              Int    @id @default(autoincrement())
   name            String
   description     String
   address         String
   phone           String
+  lagitude        String
+  longitude       String
   cityId          Int    @map("city_id")
   categoryId      Int    @map("category_id")
   createdByUserId Int    @map("created_by_user_id")
