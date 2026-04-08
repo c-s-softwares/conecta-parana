@@ -70,13 +70,14 @@ model Event{
   type String
   status String
   eventDate DateTime @map("event_date")
-  coordinates String
 
   cityId Int @map("city_id")
   userId Int @map("user_id")
+  //localId Int? @map("local_id")
 
   city City @relation(fields: [cityId], references: [id], onDelete: Cascade )
   user User @relation(fields: [userId], references: [id], onDelete: Cascade )
+  //local Local? @relation(fields: [localId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   photos Photo[]
   likes Like[]
@@ -92,9 +93,11 @@ model Photo {
 
   eventId Int? @map("event_id")
   userId Int @map("user_id")
+  //localId Int? @map("local_id")
 
   event Event? @relation(fields: [eventId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  //local Local? @relation(fields: [localId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@map("photos")
 }
@@ -104,9 +107,13 @@ model Like {
 
   userId Int @map("user_id")
   eventId Int? @map("event_id")
-
+  //postId Int? @map("post_id")
+  //newsId Int? @map("news_id")
+  
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   event Event? @relation(fields: [eventId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  //post Post? @relation(fields: [postId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  //news News? @relation(fields: [newsId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@map("likes")
 }
@@ -117,10 +124,14 @@ model Favorite {
 
   userId Int @map("user_id")
   eventId Int? @map("event_id")
+  //postId Int? @map("post_id")
+  //newsId Int? @map("news_id")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   event Event? @relation(fields: [eventId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-
+  //post Post? @relation(fields: [postId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  //news News? @relation(fields: [newsId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  
   @@map("favorites")
 }
 
@@ -132,9 +143,11 @@ model Notification {
 
   userId Int @map("user_id")
   eventId Int? @map("event_id")
+  //postId Int? @map("post_id")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   event Event? @relation(fields: [eventId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  //post Post? @relation(fields: [postId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@map("notifications")
 }
