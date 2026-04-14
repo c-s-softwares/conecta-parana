@@ -6,8 +6,9 @@ import { AuthService } from '../services/auth.service';
 const PUBLIC_PATHS = ['/auth/login', '/auth/refresh'];
 
 /**
- * Attaches `Authorization: Bearer <token>` to outgoing requests, except for the
- * public auth endpoints (login and refresh) which must never carry a stale token.
+ * @description
+ * Adiciona o cabeçalho `Authorization: Bearer <token>` nas requisições de saída,
+ * menos nos endpoints públicos de autenticação (login e refresh).
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   if (PUBLIC_PATHS.some((path) => req.url.includes(path))) {

@@ -12,16 +12,15 @@ import { AuthService } from '../services/auth.service';
 
 const SKIP_PATHS = ['/auth/login', '/auth/refresh'];
 
-// Shared state for coordinating concurrent 401s during a single refresh cycle.
 let isRefreshing = false;
 const refreshedToken$ = new BehaviorSubject<string | null>(null);
 
 /**
- * Handles auth-related HTTP failures:
- * - 401 on any authenticated request → try one refresh, replay the request.
- * - 401 on /auth/refresh → force logout.
- * - Any error on /auth/login or /auth/refresh → propagate untouched so the
- *   calling service maps it to a user-facing AuthError.
+ * @description
+ * Trata falhas HTTP relacionadas à autenticação:
+ * - 401 em qualquer requisição autenticada - renova o token e reexecuta a requisição.
+ * - 401 em /auth/refresh - força logout.
+ * - Qualquer erro em /auth/login ou /auth/refresh - propaga sem alteração para que o serviço trate o erro.
  */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
@@ -51,7 +50,6 @@ function handle401(
   auth: AuthService,
 ): Observable<HttpEvent<unknown>> {
   if (isRefreshing) {
-    // Queue this request until the in-flight refresh resolves.
     return refreshedToken$.pipe(
       filter((token): token is string => token !== null),
       take(1),

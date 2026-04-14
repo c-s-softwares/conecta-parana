@@ -4,8 +4,9 @@ import { CanActivateFn, CanMatchFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 /**
- * Protects authenticated routes: user must be logged in AND have ADMIN role.
- * Non-admin users are logged out and bounced to /login with a reason flag.
+ * @description
+ * Protege rotas autenticadas: o usuário deve estar logado e ter a função ADMIN.
+ * Usuários sem a função ADMIN são deslogados e redirecionados para /login.
  */
 export const authGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
@@ -24,8 +25,9 @@ export const authGuard: CanActivateFn = () => {
 };
 
 /**
- * Prevents an already-authenticated admin from seeing the login page —
- * sends them straight to /posts instead.
+ * @description
+ * Impede que um administrador já autenticado acesse a página de login —
+ * redireciona direto para /posts.
  */
 export const loginGuard: CanMatchFn = () => {
   const auth = inject(AuthService);

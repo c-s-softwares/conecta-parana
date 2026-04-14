@@ -25,39 +25,40 @@ export class AuthService {
   private readonly baseUrl = environment.apiUrl;
 
   /**
-   * Performs login against the backend. On success: stores tokens (localStorage
-   * if rememberMe, else sessionStorage), fetches /auth/me, validates ADMIN role.
+   * @description
+   * Realiza o login no backend. Em caso de sucesso: armazena os tokens (localStorage
+   * se rememberMe, senão sessionStorage), busca /auth/me e valida a função ADMIN.
    */
   login(email: string, password: string, rememberMe: boolean): Observable<AuthUser> {
-    return this.http
-      .post<LoginResponse>(`${this.baseUrl}/auth/login`, { email, password })
-      .pipe(
-        tap((res) => this.persistTokens(res.access_token, res.refresh_token, rememberMe)),
-        switchMap(() => this.loadCurrentUser()),
-        tap((user) => {
-          if (user.role !== 'ADMIN') {
-            this.clearStorage();
-            this._currentUser.set(null);
-            throw new AuthError('forbidden_role');
-          }
-        }),
-        catchError((err: unknown) => throwError(() => this.mapError(err))),
-      );
-  }
-
-  /**
-   * Fetches the current user from /auth/me using whatever token is already stored.
-   * Used both by login() and by the app initializer after a reload.
-   */
-  loadCurrentUser(): Observable<AuthUser> {
-    return this.http.get<AuthUser>(`${this.baseUrl}/auth/me`).pipe(
-      tap((user) => this._currentUser.set(user)),
+    return this.http.post<LoginResponse>(`${this.baseUrl}/auth/login`, { email, password }).pipe(
+      tap((res) => this.persistTokens(res.access_token, res.refresh_token, rememberMe)),
+      switchMap(() => this.loadCurrentUser()),
+      tap((user) => {
+        if (user.role !== 'ADMIN') {
+          this.clearStorage();
+          this._currentUser.set(null);
+          throw new AuthError('forbidden_role');
+        }
+      }),
+      catchError((err: unknown) => throwError(() => this.mapError(err))),
     );
   }
 
   /**
-   * Exchanges the stored refresh_token for a new pair. Returns the new access_token
-   * so the error interceptor can replay the original request.
+   * @description
+   * Busca o usuário atual em /auth/me usando o token já armazenado.
+   * Usado pelo login() e pelo inicializador da aplicação após recarregamento da página.
+   */
+  loadCurrentUser(): Observable<AuthUser> {
+    return this.http
+      .get<AuthUser>(`${this.baseUrl}/auth/me`)
+      .pipe(tap((user) => this._currentUser.set(user)));
+  }
+
+  /**
+   * @description
+   * Troca o refresh_token armazenado por um novo par de tokens. Retorna o novo access_token
+   * para que o interceptor de erros possa reexecutar a requisição original.
    */
   refresh(): Observable<string> {
     const refreshToken = this.getRefreshToken();
@@ -75,6 +76,10 @@ export class AuthService {
       );
   }
 
+  /**
+   * @description
+   * Limpa o storage e seta o usuário atual como nulo para garantir o logout corretamente.
+   */
   logout(reason: LogoutReason = 'manual'): void {
     this.clearStorage();
     this._currentUser.set(null);
@@ -87,18 +92,17 @@ export class AuthService {
   }
 
   getAccessToken(): string | null {
-    return (
-      localStorage.getItem(ACCESS_TOKEN_KEY) ?? sessionStorage.getItem(ACCESS_TOKEN_KEY)
-    );
+    return localStorage.getItem(ACCESS_TOKEN_KEY) ?? sessionStorage.getItem(ACCESS_TOKEN_KEY);
   }
 
   getRefreshToken(): string | null {
-    return (
-      localStorage.getItem(REFRESH_TOKEN_KEY) ?? sessionStorage.getItem(REFRESH_TOKEN_KEY)
-    );
+    return localStorage.getItem(REFRESH_TOKEN_KEY) ?? sessionStorage.getItem(REFRESH_TOKEN_KEY);
   }
 
-  /** Ensures the in-memory user signal matches the role persisted by the backend. */
+  /**
+   * @description
+   * Atualiza o usuário em memória com os dados vindos do backend.
+   */
   setCurrentUser(user: AuthUser | null): void {
     this._currentUser.set(user);
   }

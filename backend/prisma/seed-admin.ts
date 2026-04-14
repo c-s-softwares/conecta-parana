@@ -8,7 +8,7 @@ const adapter = new PrismaPg({
 
 const prisma = new PrismaClient({ adapter });
 
-/** 
+/**
  * @description
  * Captura os valores de seed via .env, criptografa a senha recebida,
  * atualiza ou cria um usuário com os valores informados.

@@ -5,9 +5,10 @@ import { catchError } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 
 /**
- * Runs once at bootstrap. If a token is already stored (from a previous session),
- * we hit /auth/me to rehydrate the current user signal before the router evaluates
- * any guard. On failure the stale tokens are cleared via logout('expired').
+ * @description
+ * Executa uma vez na inicialização da aplicação. Se houver um token salvo de uma sessão anterior,
+ * consulta /auth/me para restaurar o usuário atual antes de qualquer guard avaliar as rotas.
+ * Em caso de falha, os tokens são removidos via logout('expired').
  */
 export const provideAuthInitializer = () =>
   provideAppInitializer(() => {
