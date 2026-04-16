@@ -15,9 +15,8 @@ export class Shell {
     { label: 'Notícias', route: '/news', icon: 'newspaper' },
     { label: 'Locais', route: '/locals', icon: 'map-pin' },
     { label: 'Notificações', route: '/notifications', icon: 'bell' },
-
-    // TODO: a tela de criar adm so aparecerá para SuperAdmins / AdminGeral
     { label: 'Administradores', route: '/superadmin', icon: 'pencil-square' },
+    // TODO: a tela de criar adm so aparecerá para SuperAdmins / AdminGeral
   ];
 
   onLogout(): void {

@@ -20,8 +20,7 @@ export const routes: Routes = [
       {
         path: 'superadmin',
         loadChildren: () =>
-          import('./features/superadmin/superadmin.routes').then((m) => m.SUPERADMIN_ROUTES,
-          ),
+          import('./features/superadmin/superadmin.routes').then((m) => m.SUPERADMIN_ROUTES),
       },
     ],
   },

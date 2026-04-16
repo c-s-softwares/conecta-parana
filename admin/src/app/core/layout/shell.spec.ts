@@ -30,11 +30,11 @@ describe('Shell', () => {
     expect(el.querySelector('router-outlet')).toBeTruthy();
   });
 
-  it('deve ter 5 navItems com labels, rotas e ícones corretos', () => {
+  it('deve ter 6 navItems com labels, rotas e ícones corretos', () => {
     const items = component['navItems'];
-    expect(items).toHaveLength(5);
+    expect(items).toHaveLength(6);
 
-    const expectedLabels = ['Postagens', 'Eventos', 'Notícias', 'Locais', 'Notificações'];
+    const expectedLabels = ['Postagens', 'Eventos', 'Notícias', 'Locais', 'Notificações', 'Administradores'];
     expect(items.map((i) => i.label)).toEqual(expectedLabels);
 
     for (const item of items) {
@@ -43,8 +43,8 @@ describe('Shell', () => {
     }
   });
 
-  it('deve renderizar 5 links na sidebar', () => {
-    expect(el.querySelectorAll('app-sidebar a').length).toBe(5);
+  it('deve renderizar 6 links na sidebar', () => {
+    expect(el.querySelectorAll('app-sidebar a').length).toBe(6);
   });
 
   it('onLogout deve logar no console', () => {

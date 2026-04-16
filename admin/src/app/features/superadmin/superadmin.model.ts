@@ -4,3 +4,6 @@ export interface SuperadminForm {
   password: string;
   cityId: string;
 }
+export interface AdministratorItem extends SuperadminForm {
+  id: number;
+}
