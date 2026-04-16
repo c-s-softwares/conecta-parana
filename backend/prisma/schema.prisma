@@ -18,37 +18,36 @@ model HealthCheck {
   @@map("health_checks")
 }
 
-
 model City {
-  id Int @id @default(autoincrement())
-  name String
+  id    Int    @id @default(autoincrement())
+  name  String
   state String
 
-  users User[]
-  events Event[]
-  news   News[]  //
+  users  User[]
+  news   News[]
   locals Local[]
+  events Event[]
 
   @@map("cities")
 }
 
 model User {
-  id Int @id @default(autoincrement())
-  name String 
-  email String @unique 
+  id       Int    @id @default(autoincrement())
+  name     String
+  email    String  @unique
   password String
-  role Role @default(USUARIO)
-  cityId Int? @map("city_id") 
+  role     Role    @default(USUARIO)
+  cityId   Int?    @map("city_id")
 
-  city City? @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  city           City?          @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   refresh_tokens RefreshToken[]
-  events Event[] 
-  photos Photo[]
-  likes Like[]
-  favorites Favorite[]
-  notifications Notification[]
-  suggestions Suggestion[]
-  locals Local[]
+  events         Event[]
+  photos         Photo[]
+  likes          Like[]
+  favorites      Favorite[]
+  notifications  Notification[]
+  suggestions    Suggestion[]
+  locals         Local[]
 
   @@map("users")
 }
@@ -59,7 +58,7 @@ enum Role {
 }
 
 model News {
-  id          Int     @id @default(autoincrement()) 
+  id          Int     @id @default(autoincrement())
   title       String
   description String
   type        String
@@ -67,10 +66,9 @@ model News {
   isActive    Boolean @map("is_active")
   cityId      Int     @map("city_id")
 
-  city City @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-
+  city      City       @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   favorites Favorite[]
-  likes Like[]
+  likes     Like[]
 
   @@map("news")
 }
@@ -80,9 +78,10 @@ model Post {
   title       String
   description String
   isActive    Boolean @map("is_active")
-  favorite  Favorite[]
-  notifications  Notification[]
-  likes Like[]
+
+  favorites     Favorite[]
+  notifications Notification[]
+  likes         Like[]
 
   @@map("posts")
 }
@@ -98,20 +97,20 @@ model Category {
 }
 
 model Local {
-  id              Int    @id @default(autoincrement())
-  name            String
-  description     String
-  address         String
-  phone           String
-  latitude        String
-  longitude       String
-  cityId          Int    @map("city_id")
-  categoryId      Int    @map("category_id")
-  createdByUserId Int    @map("created_by_user_id")
+  id          Int    @id @default(autoincrement())
+  name        String
+  description String
+  address     String
+  phone       String
+  latitude    Float
+  longitude   Float
+  cityId      Int    @map("city_id")
+  categoryId  Int    @map("category_id")
+  userId      Int    @map("user_id")
 
-  city          City     @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  category      Category @relation(fields: [categoryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  createdByUser User     @relation(fields: [createdByUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  city     City     @relation(fields: [cityId],     references: [id], onDelete: Restrict, onUpdate: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  user     User     @relation(fields: [userId],     references: [id], onDelete: Cascade,  onUpdate: Cascade)
 
   photos Photo[]
   events Event[]
@@ -120,7 +119,7 @@ model Local {
 }
 
 model Suggestion {
-  id      Int    @id @default(autoincrement()) @map("suggestion_id")
+  id      Int    @id @default(autoincrement())
   subject String
   message String
   status  String
@@ -132,49 +131,50 @@ model Suggestion {
 }
 
 model RefreshToken {
-  id Int @id @default(autoincrement())
-  token String @unique
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
   expiresAt DateTime @map("expires_at")
-  userId Int @map("user_id")
+  userId    Int      @map("user_id")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade )
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("refresh_tokens")
 }
 
-model Event{
-  id Int @id @default(autoincrement())
-  title String
+model Event {
+  id          Int      @id @default(autoincrement())
+  title       String
   description String
-  type String
-  status String
-  eventDate DateTime @map("event_date")
+  type        String
+  status      String
+  eventDate   DateTime @map("event_date")
 
-  cityId Int @map("city_id")
-  userId Int @map("user_id")
+  cityId  Int  @map("city_id")
+  userId  Int  @map("user_id")
   localId Int? @map("local_id")
 
-  city City @relation(fields: [cityId], references: [id], onDelete: Cascade )
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade )
+  city  City   @relation(fields: [cityId],  references: [id], onDelete: Cascade)
+  user  User   @relation(fields: [userId],  references: [id], onDelete: Cascade)
   local Local? @relation(fields: [localId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
-  photos Photo[]
-  likes Like[]
-  favorites Favorite[]
+  photos        Photo[]
+  likes         Like[]
+  favorites     Favorite[]
   notifications Notification[]
 
   @@map("events")
 }
 
 model Photo {
-  id Int @id @default(autoincrement())
-  url String @unique
+  id      Int    @id @default(autoincrement())
+  url     String @unique
 
   eventId Int? @map("event_id")
-  userId Int @map("user_id")
+  userId  Int  @map("user_id")
   localId Int? @map("local_id")
 
   event Event? @relation(fields: [eventId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  User   @relation(fields: [userId],  references: [id], onDelete: Cascade)
   local Local? @relation(fields: [localId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@map("photos")
@@ -183,49 +183,49 @@ model Photo {
 model Like {
   id Int @id @default(autoincrement())
 
-  userId Int @map("user_id")
+  userId  Int  @map("user_id")
   eventId Int? @map("event_id")
-  postId Int? @map("post_id")
-  newsId Int? @map("news_id")
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId  Int? @map("post_id")
+  newsId  Int? @map("news_id")
+
+  user  User   @relation(fields: [userId],  references: [id], onDelete: Cascade)
   event Event? @relation(fields: [eventId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  post Post? @relation(fields: [postId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  news News? @relation(fields: [newsId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  post  Post?  @relation(fields: [postId],  references: [id], onDelete: Restrict, onUpdate: Cascade)
+  news  News?  @relation(fields: [newsId],  references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@map("likes")
 }
 
 model Favorite {
-  id Int @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now()) @map("created_at")
 
-  userId Int @map("user_id")
+  userId  Int  @map("user_id")
   eventId Int? @map("event_id")
-  postId Int? @map("post_id")
-  newsId Int? @map("news_id")
+  postId  Int? @map("post_id")
+  newsId  Int? @map("news_id")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  User   @relation(fields: [userId],  references: [id], onDelete: Cascade)
   event Event? @relation(fields: [eventId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  post Post? @relation(fields: [postId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  news News? @relation(fields: [newsId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  
+  post  Post?  @relation(fields: [postId],  references: [id], onDelete: Restrict, onUpdate: Cascade)
+  news  News?  @relation(fields: [newsId],  references: [id], onDelete: Restrict, onUpdate: Cascade)
+
   @@map("favorites")
 }
 
 model Notification {
-  id Int @id @default(autoincrement())
-  title String
+  id          Int     @id @default(autoincrement())
+  title       String
   description String
-  isRead Boolean @default(false) @map("is_read")
+  isRead      Boolean @default(false) @map("is_read")
 
-  userId Int @map("user_id")
+  userId  Int  @map("user_id")
   eventId Int? @map("event_id")
-  postId Int? @map("post_id")
+  postId  Int? @map("post_id")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  User   @relation(fields: [userId],  references: [id], onDelete: Cascade)
   event Event? @relation(fields: [eventId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  post Post? @relation(fields: [postId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  post  Post?  @relation(fields: [postId],  references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@map("notifications")
 }
