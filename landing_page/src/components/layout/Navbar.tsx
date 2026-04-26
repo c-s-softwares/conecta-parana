@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { FiMenu, FiX } from 'react-icons/fi'
 import Button from '../ui/Button'
 
+type Props = { onOpenContact: () => void }
+
 const links = [
   { label: 'Para Prefeituras', href: '#gov' },
   { label: 'Para Cidadãos', href: '#citizen' },
@@ -9,7 +11,7 @@ const links = [
   { label: 'Tecnologia', href: '#stack' },
 ]
 
-export default function Navbar() {
+export default function Navbar({ onOpenContact }: Props) {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -28,7 +30,7 @@ export default function Navbar() {
       <div className="max-w-[1200px] mx-auto flex items-center justify-between h-[68px]">
         <a href="#" className="flex items-center gap-[10px] no-underline">
           <img
-            src="/assets/paranalogo.png"
+            src="/assets/parana-logo.png"
             alt="Paraná"
             className="h-7 w-auto brightness-0 invert opacity-90"
           />
@@ -45,7 +47,7 @@ export default function Navbar() {
               {link.label}
             </a>
           ))}
-          <Button as="a" href="#contact" size="sm">
+          <Button size="sm" onClick={onOpenContact}>
             Solicitar demo
           </Button>
         </div>
@@ -75,7 +77,7 @@ export default function Navbar() {
             </a>
           ))}
           <div className="py-5">
-            <Button as="a" href="#contact" size="sm">
+            <Button size="sm" onClick={() => { setMenuOpen(false); onOpenContact() }}>
               Solicitar demo
             </Button>
           </div>
