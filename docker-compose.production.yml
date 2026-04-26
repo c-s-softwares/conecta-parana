@@ -62,6 +62,15 @@ services:
     networks:
       - conecta_prod_network
 
+  landing:
+    image: ghcr.io/${GITHUB_ORG}/conecta-parana-landing:latest
+    container_name: conecta_landing_prod
+    restart: always
+    ports:
+      - "80:80"
+    networks:
+      - conecta_prod_network
+
 volumes:
   postgres_prod:
   redis_prod:
