@@ -67,7 +67,7 @@ services:
     container_name: conecta_landing_prod
     restart: always
     ports:
-      - "80:80"
+      - "4202:80"
     networks:
       - conecta_prod_network
 

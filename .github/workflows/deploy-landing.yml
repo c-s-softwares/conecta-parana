@@ -1,0 +1,61 @@
+name: Deploy Landing Page
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "landing_page/**"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  deploy-landing:
+    name: deploy-landing (production)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login no GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build e push imagem landing
+        uses: docker/build-push-action@v5
+        with:
+          context: ./landing_page
+          file: ./landing_page/Dockerfile
+          push: true
+          platforms: linux/arm64
+          build-args: |
+            VITE_EMAILJS_SERVICE_ID=${{ secrets.VITE_EMAILJS_SERVICE_ID }}
+            VITE_EMAILJS_TEMPLATE_ID=${{ secrets.VITE_EMAILJS_TEMPLATE_ID }}
+            VITE_EMAILJS_PUBLIC_KEY=${{ secrets.VITE_EMAILJS_PUBLIC_KEY }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/conecta-parana-landing:latest
+            ghcr.io/${{ github.repository_owner }}/conecta-parana-landing:${{ github.sha }}
+
+      - name: Deploy na VM via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd /opt/conecta-parana/production
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker compose -f docker-compose.production.yml pull landing
+            docker compose -f docker-compose.production.yml up -d landing
