@@ -1,0 +1,55 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-brand-dark:   oklch(17% 0.045 168);
+  --color-brand-mid:    oklch(26% 0.06 168);
+  --color-brand-teal:   oklch(50% 0.14 168);
+  --color-brand-teal2:  oklch(60% 0.13 168);
+  --color-citizen-blue: oklch(50% 0.13 215);
+  --color-citizen-bg:   oklch(97% 0.008 215);
+  --color-neutral-100:  oklch(98% 0.004 168);
+  --color-neutral-200:  oklch(93% 0.008 168);
+  --color-neutral-400:  oklch(70% 0.015 168);
+  --color-neutral-600:  oklch(48% 0.015 168);
+  --color-neutral-800:  oklch(28% 0.02 168);
+
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: #fff;
+  color: oklch(28% 0.02 168);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes overlay-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+@keyframes modal-out {
+  from { opacity: 1; transform: translateY(0)    scale(1);    }
+  to   { opacity: 0; transform: translateY(18px) scale(0.97); }
+}
