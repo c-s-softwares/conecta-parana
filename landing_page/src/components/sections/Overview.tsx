@@ -1,4 +1,4 @@
-import { FiSettings, FiBell, FiBarChart2, FiSmartphone, FiMapPin, FiCheckCircle } from 'react-icons/fi'
+import { FiSettings, FiBarChart2, FiSmartphone, FiMapPin } from 'react-icons/fi'
 import SectionTag from '../ui/SectionTag'
 
 const adminFeatures = [
