@@ -1,0 +1,129 @@
+@if (view() === 'list') {
+  <app-page-header
+    title="ADMINISTRADORES"
+    buttonLabel="Criar administrador"
+    (create)="openForm()"
+  />
+
+  <ng-template #administratorRow let-item>
+    <div class="flex items-center gap-2">
+      <h3 class="truncate text-sm font-bold text-gray-900">{{ item.name }}</h3>
+
+      <span class="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+        {{ getCityLabel(item.cityId) }}
+      </span>
+    </div>
+
+    <p class="mt-1 truncate text-xs text-gray-600">{{ item.email }}</p>
+  </ng-template>
+
+  <app-entity-list
+    [items]="items()"
+    [rowTemplate]="administratorRow"
+    (edit)="openEditForm($any($event))"
+    (delete)="confirmDelete($any($event))"
+  />
+} @else {
+  <app-form-container [title]="isEditing ? 'EDITAR ADMINISTRADOR' : 'CRIAR ADMINISTRADOR'">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
+      <app-form-field
+        label="Nome"
+        fieldId="name"
+        [required]="true"
+        [showError]="nameTouched && !!nameError"
+        [errorMessage]="nameError"
+      >
+        <input
+          id="name"
+          formControlName="name"
+          type="text"
+          placeholder="Digite o nome do administrador"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </app-form-field>
+
+      <div class="grid grid-cols-2 gap-4">
+        <app-form-field
+          label="Email"
+          fieldId="email"
+          [required]="true"
+          [showError]="emailTouched && !!emailError"
+          [errorMessage]="emailError"
+        >
+          <input
+            id="email"
+            formControlName="email"
+            type="email"
+            placeholder="Digite o email"
+            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </app-form-field>
+
+        <app-form-field
+          label="Senha"
+          fieldId="password"
+          [required]="true"
+          [showError]="passwordTouched && !!passwordError"
+          [errorMessage]="passwordError"
+        >
+          <input
+            id="password"
+            formControlName="password"
+            type="password"
+            placeholder="Digite a senha"
+            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </app-form-field>
+      </div>
+
+      <app-form-field
+        label="Cidade"
+        fieldId="cityId"
+        [required]="true"
+        [showError]="cityTouched && !!cityError"
+        [errorMessage]="cityError"
+      >
+        <select
+          id="cityId"
+          formControlName="cityId"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="">Selecione a cidade do administrador</option>
+
+          @for (city of cities(); track city.value) {
+            <option [value]="city.value">{{ city.label }}</option>
+          }
+        </select>
+      </app-form-field>
+
+      <div class="mt-2 rounded-lg bg-input-bg p-4 text-sm text-gray-700">
+        O administrador só terá acesso a cidade escolhida!!
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button
+          type="button"
+          (click)="closeForm()"
+          class="rounded-lg bg-btn-cancel px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-cancel-hover cursor-pointer"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="submit"
+          class="rounded-lg bg-btn-create px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-create-hover cursor-pointer"
+        >
+          {{ isEditing ? 'Salvar' : 'Criar administrador' }}
+        </button>
+      </div>
+    </form>
+  </app-form-container>
+}
+
+<app-confirm-dialog
+  [visible]="!!deletingItem()"
+  title="Excluir administrador"
+  message="Tem certeza que deseja excluir este administrador? (Esta ação não pode ser desfeita.)"
+  (confirmed)="executeDelete()"
+  (cancelled)="cancelDelete()"
+/>

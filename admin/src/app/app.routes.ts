@@ -36,6 +36,11 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/posts/posts.routes').then((m) => m.POSTS_ROUTES),
       },
+      {
+        path: 'superadmin',
+        loadChildren: () =>
+          import('./features/superadmin/superadmin.routes').then((m) => m.SUPERADMIN_ROUTES),
+      },
     ],
   },
   { path: '**', redirectTo: 'login' },
