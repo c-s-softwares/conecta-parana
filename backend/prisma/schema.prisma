@@ -73,6 +73,7 @@ model Event{
   description String
   type String
   status String
+  coordinates String
   eventDate DateTime @map("event_date")
 
   cityId Int @map("city_id")
@@ -201,11 +202,10 @@ model Local {
   description String
   address     String
   phone       String
-  latitude    Float
-  longitude   Float
+  coordinates Unsupported("geometry(Point, 4326)")?
   cityId      Int    @map("city_id")
   categoryId  Int    @map("category_id")
-  userId      Int    @map("user_id")
+  userId      Int    @map("created_by_user_id")
 
   city     City     @relation(fields: [cityId],     references: [id], onDelete: Restrict, onUpdate: Cascade)
   category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
