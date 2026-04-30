@@ -1,5 +1,6 @@
 import Button from '../ui/Button'
 import StatCard from '../ui/StatCard'
+import { FaArrowRightLong } from 'react-icons/fa6'
 
 const stats = [
   { value: '399', label: 'municípios no Paraná' },
@@ -37,19 +38,20 @@ export default function Hero() {
         <h1 className="text-[clamp(2.8rem,6vw,5.2rem)] font-extrabold text-white leading-[1.1] tracking-[-0.03em] max-w-[820px] mb-6 text-balance">
           Informação pública,{' '}
           <br />
-          <em className="not-italic text-brand-teal2">do jeito certo</em> —
+          <em className="not-italic text-brand-teal2">do jeito certo</em>,
           <br />
           em cada cidade.
         </h1>
 
-        <p className="text-[clamp(1rem,2vw,1.2rem)] text-white/60 max-w-[560px] mb-10 leading-[1.7]">
-          Uma plataforma unificada para prefeituras gerenciarem e cidadãos acessarem comunicados,
-          eventos, locais e alertas — de Paiçandu ao estado inteiro.
+        <p className="text-[clamp(1rem,2vw,1.2rem)] text-white/60 max-w-[650px] mb-10 leading-[1.7]">
+          Uma plataforma unificada para que prefeituras gerenciem e cidadãos
+          acessem comunicados, eventos, locais, alertas e muito mais. <br/> 
+          — de Maringá ao estado inteiro.
         </p>
 
         <div className="flex gap-4 flex-wrap mb-20">
-          <Button as="a" href="#gov">Para Prefeituras →</Button>
-          <Button as="a" href="#citizen" variant="outline">Para Cidadãos →</Button>
+          <Button as="a" href="#gov">Para Prefeituras <FaArrowRightLong /></Button>
+          <Button as="a" href="#citizen" variant="outline">Para Cidadãos <FaArrowRightLong /></Button>
         </div>
 
         <div className="flex gap-12 flex-wrap pt-8 border-t border-white/[0.08]">
