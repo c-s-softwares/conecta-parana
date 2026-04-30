@@ -22,6 +22,11 @@ export const routes: Routes = [
           import('./features/news/news.routes').then((m) => m.NEWS_ROUTES),
       },
       {
+        path: 'locals',
+        loadChildren: () =>
+          import('./features/locals/locals.routes').then((m) => m.LOCALS_ROUTES),
+      },
+      {
         path: 'notifications',
         loadChildren: () =>
           import('./features/notification/notification.routes').then((m) => m.NOTIFICATION_ROUTES),
