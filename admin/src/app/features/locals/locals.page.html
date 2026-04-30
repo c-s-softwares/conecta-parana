@@ -108,17 +108,19 @@
       </app-form-field>
 
       <!-- Campo de foto: só exibe em criação, ou em edição se quiser trocar -->
-      <app-form-field label="Foto(s) do Local" fieldId="photos"
-        [required]="!editingId()"
-        [showError]="photosTouched && !!photosError" [errorMessage]="photosError">
-        <div
-          class="w-full rounded-md border-2 border-dashed border-gray-300 bg-input-bg px-3 py-6 text-sm text-gray-500 text-center cursor-pointer hover:border-primary transition-colors"
-          (click)="fileInput.click()">
-          📎 {{ editingId() ? 'Clique para substituir as fotos (opcional)' : 'Arraste ou clique para adicionar fotos' }}
-          <input #fileInput id="photos" type="file" multiple accept="image/*"
-            class="hidden" (change)="onPhotosChange($event)" />
-        </div>
-      </app-form-field>
+      <!-- Campo de foto: só exibe em criação, ou em edição se quiser trocar -->
+<app-form-field label="Foto(s) do Local" fieldId="photos"
+  [required]="!editingId()"
+  [showError]="photosTouched && !!photosError" [errorMessage]="photosError">
+  <button
+    type="button"
+    class="w-full rounded-md border-2 border-dashed border-gray-300 bg-input-bg px-3 py-6 text-sm text-gray-500 text-center cursor-pointer hover:border-primary transition-colors"
+    (click)="fileInput.click()">
+    📎 {{ editingId() ? 'Clique para substituir as fotos (opcional)' : 'Arraste ou clique para adicionar fotos' }}
+    <input #fileInput id="photos" type="file" multiple accept="image/*"
+      class="hidden" (change)="onPhotosChange($event)" />
+  </button>
+</app-form-field>
 
       <div class="flex justify-end gap-3 pt-2">
         <button type="button" (click)="closeForm()"
