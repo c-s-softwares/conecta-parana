@@ -1,0 +1,49 @@
+.login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-content-bg);
+}
+
+.login-card {
+  background-color: var(--color-sidebar);
+  border-radius: 1rem;
+  padding: 2rem 1.75rem 2rem;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.login-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.login-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.login-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-sidebar-text);
+  margin: 0;
+}
+
+.login-badge {
+  background-color: var(--color-sidebar-text);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 4px 16px;
+  border-radius: 9999px;
+}

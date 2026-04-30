@@ -4,29 +4,53 @@ import { CrudPage } from '../../shared/utils/crud-page';
 import { PageHeader } from '../../shared/components/page-header';
 import { FormContainer } from '../../shared/components/form-container';
 import { FormField } from '../../shared/components/form-field';
+import { EntityList } from '../../shared/components/entity-list';
+import { ConfirmDialog } from '../../shared/components/confirm-dialog';
 import { ApiService } from '../../core/services/api.service';
 import { noSpecialChars } from '../../shared/validators/no-special-chars.validator';
 import { generateSlug } from '../../shared/utils/slug';
+import { NewsForm, NewsItem } from './news.model';
 
-interface NewsFormValues {
-  title: string;
-  description: string;
-  linkType: 'internal' | 'external';
-  linkUrl: string;
-  isActive: boolean;
-}
+const MOCK_NEWS: NewsItem[] = [
+  {
+    id: 1,
+    title: 'Nova linha de ônibus interurbano conecta Maringá e Londrina',
+    description: 'A partir de maio, uma nova linha de transporte coletivo vai ligar as duas maiores cidades do norte do Paraná com horários ampliados.',
+    linkType: 'external',
+    linkUrl: 'https://exemplo.com/onibus-interurbano',
+    isActive: true,
+  },
+  {
+    id: 2,
+    title: 'Programa de vacinação ampliado para toda a região metropolitana',
+    description: 'Secretaria de Saúde anuncia ampliação da campanha de vacinação com novos postos em 12 municípios da região metropolitana de Curitiba.',
+    linkType: 'internal',
+    linkUrl: '/programa-de-vacinacao-ampliado-para-toda-a-regiao-metropolitana',
+    isActive: true,
+  },
+  {
+    id: 3,
+    title: 'Festival cultural de inverno cancelado por questões orçamentárias',
+    description: 'O festival que aconteceria em julho foi cancelado. A prefeitura informou que os recursos serão redirecionados para obras de infraestrutura.',
+    linkType: 'external',
+    linkUrl: 'https://exemplo.com/festival-cancelado',
+    isActive: false,
+  },
+];
 
 @Component({
   selector: 'app-news-page',
   standalone: true,
-  imports: [ReactiveFormsModule, PageHeader, FormContainer, FormField],
+  imports: [ReactiveFormsModule, PageHeader, FormContainer, FormField, EntityList, ConfirmDialog],
   templateUrl: './news.page.html',
 })
-export class NewsPage extends CrudPage<NewsFormValues> {
+export class NewsPage extends CrudPage<NewsForm> {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(ApiService);
 
   protected readonly linkType = signal<'external' | 'internal'>('external');
+  readonly items = signal<NewsItem[]>(MOCK_NEWS);
+  readonly deletingItem = signal<NewsItem | null>(null);
 
   protected readonly form = this.fb.nonNullable.group({
     title: ['', [Validators.required, noSpecialChars()]],
@@ -36,7 +60,7 @@ export class NewsPage extends CrudPage<NewsFormValues> {
     isActive: [true],
   });
 
-  protected defaultFormValues(): NewsFormValues {
+  protected defaultFormValues(): NewsForm {
     return {
       title: '',
       description: '',
@@ -50,7 +74,29 @@ export class NewsPage extends CrudPage<NewsFormValues> {
     super.openForm();
     this.linkType.set('external');
   }
-  // TODO: generalizar para função getError reutilizável se fizer sentido para outros componentes também
+
+  openEditForm(item: NewsItem): void {
+    this.editingId.set(item.id);
+    this.form.patchValue(item);
+    this.linkType.set(item.linkType);
+    this.view.set('form');
+  }
+
+  confirmDelete(item: NewsItem): void {
+    this.deletingItem.set(item);
+  }
+
+  cancelDelete(): void {
+    this.deletingItem.set(null);
+  }
+
+  executeDelete(): void {
+    const item = this.deletingItem();
+    if (!item) return;
+    this.items.update((list) => list.filter((n) => n.id !== item.id));
+    this.deletingItem.set(null);
+  }
+
   get titleTouched(): boolean {
     return this.form.controls.title.touched;
   }
@@ -110,9 +156,21 @@ export class NewsPage extends CrudPage<NewsFormValues> {
       raw.linkUrl = generateSlug(raw.title);
     }
 
-    this.api.create('news', raw).subscribe(() => {
-      this.view.set('list');
-    });
+    const id = this.editingId();
+    if (id) {
+      this.items.update((list) =>
+        list.map((n) => (n.id === id ? { ...n, ...raw } : n))
+      );
+    } else {
+      this.api.create('news', raw).subscribe(() => {
+        this.view.set('list');
+      })
+      const newItem: NewsItem = { ...raw, id: Date.now() };
+      this.items.update((list) => [...list, newItem]);
+    }
+
+    this.editingId.set(null);
+    this.view.set('list');
   }
 
   protected generateSlugPreview(title: string): string {

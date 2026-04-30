@@ -1,0 +1,84 @@
+<app-page-header title="NOTIFICAÇÕES" buttonLabel="Criar notificação" (create)="openForm()" />
+
+@if (view() === 'form') {
+  <app-form-container title="CRIAR NOTIFICAÇÃO">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <app-form-field
+          label="Título"
+          fieldId="title"
+          [required]="true"
+          [showError]="titleTouched && !!titleError"
+          [errorMessage]="titleError"
+        >
+          <input
+            id="title"
+            formControlName="title"
+            type="text"
+            placeholder="Digite o título"
+            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </app-form-field>
+
+        <app-form-field
+          label="Categoria"
+          fieldId="type"
+          [required]="true"
+        >
+          <select
+            id="type"
+            formControlName="type"
+            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="" disabled>Selecione a categoria...</option>
+            <option value="event">Evento</option>
+            <option value="post">Postagem</option>
+            <option value="news">Notícia</option>
+            <option value="system">Sistema</option>
+          </select>
+        </app-form-field>
+      </div>
+
+      <app-form-field
+        label="Descrição"
+        fieldId="description"
+        [required]="true"
+        [showError]="descriptionTouched && !!descriptionError"
+        [errorMessage]="descriptionError"
+      >
+        <textarea
+          id="description"
+          formControlName="description"
+          rows="4"
+          placeholder="Digite a descrição da notificação"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+        ></textarea>
+      </app-form-field>
+
+      <div class="bg-[#FFF9C4] border-l-4 border-[#FBC02D] p-4 flex items-start gap-3 rounded-r-lg">
+        <span class="text-lg">⚠️</span>
+        <p class="text-sm text-gray-700 leading-relaxed">
+          Esta notificação será enviada para todos os usuários da sua cidade.
+        </p>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button
+          type="button"
+          (click)="closeForm()"
+          class="rounded-lg bg-btn-cancel px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-cancel-hover cursor-pointer"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="rounded-lg bg-btn-create px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-create-hover cursor-pointer"
+        >
+          Enviar Notificação
+        </button>
+      </div>
+
+    </form>
+  </app-form-container>
+}

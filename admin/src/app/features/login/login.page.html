@@ -1,0 +1,77 @@
+<div class="login-wrapper">
+  <div class="login-card">
+
+    <div class="login-header">
+      <img src="paranalogo.png" alt="Conecta Paraná" class="login-avatar" />
+      <h1 class="login-title">Conecta Paraná</h1>
+      <span class="login-badge">Painel Administrativo</span>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
+
+      <app-form-field
+        label="Email"
+        fieldId="email"
+        [required]="true"
+        [showError]="emailTouched && !!emailError"
+        [errorMessage]="emailError"
+      >
+        <input
+          id="email"
+          formControlName="email"
+          type="email"
+          placeholder="Digite o Email"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </app-form-field>
+
+      <app-form-field
+        label="Senha"
+        fieldId="password"
+        [required]="true"
+        [showError]="passwordTouched && !!passwordError"
+        [errorMessage]="passwordError"
+      >
+        <input
+          id="password"
+          formControlName="password"
+          type="password"
+          placeholder="Digite a Senha"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </app-form-field>
+
+      <div class="flex items-center gap-2">
+        <input
+          id="rememberMe"
+          formControlName="rememberMe"
+          type="checkbox"
+          class="h-4 w-4 rounded border-gray-400 cursor-pointer"
+        />
+        <label for="rememberMe" class="text-sm font-bold text-gray-800 cursor-pointer">
+          Manter conectado
+        </label>
+      </div>
+
+      @if (errorMessage(); as msg) {
+        <div
+          role="alert"
+          class="rounded-md border border-btn-cancel/40 bg-btn-cancel/10 px-3 py-2 text-sm font-semibold text-btn-cancel"
+        >
+          {{ msg }}
+        </div>
+      }
+
+      <div class="flex justify-center pt-1">
+        <button
+          type="submit"
+          [disabled]="loading()"
+          class="rounded-lg bg-sidebar-text px-10 py-2 text-sm font-bold text-white transition-colors hover:bg-sidebar-active cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {{ loading() ? 'Entrando...' : 'Entrar' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

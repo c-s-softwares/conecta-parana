@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../../config/prisma.service';
-import * as bcrypt from 'bcryptjs';
+import { hash } from 'bcryptjs';
 
 const mockPrisma = {
   client: {
@@ -89,7 +89,7 @@ describe('AuthService', () => {
 
   describe('login', () => {
     it('deve retornar tokens quando credenciais são válidas', async () => {
-      const hashed = await bcrypt.hash('senha123', 10);
+      const hashed = await hash('senha123', 10);
       mockPrisma.client.user.findUnique.mockResolvedValue({
         id: 1,
         email: 'joao@email.com',
@@ -116,7 +116,7 @@ describe('AuthService', () => {
     });
 
     it('deve lançar UnauthorizedException se senha for incorreta', async () => {
-      const hashed = await bcrypt.hash('outrasenha', 10);
+      const hashed = await hash('outrasenha', 10);
       mockPrisma.client.user.findUnique.mockResolvedValue({
         id: 1,
         email: 'joao@email.com',

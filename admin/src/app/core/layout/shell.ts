@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavItem, Sidebar } from './sidebar';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-shell',
@@ -9,6 +10,8 @@ import { NavItem, Sidebar } from './sidebar';
   templateUrl: './shell.html',
 })
 export class Shell {
+  private readonly auth = inject(AuthService);
+
   protected readonly navItems: NavItem[] = [
     { label: 'Postagens', route: '/posts', icon: 'pencil-square' },
     { label: 'Eventos', route: '/events', icon: 'calendar-days' },
@@ -18,6 +21,6 @@ export class Shell {
   ];
 
   onLogout(): void {
-    console.log('Logout');
+    this.auth.logout('manual');
   }
 }

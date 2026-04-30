@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { Logger } from 'nestjs-pino';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
-import { ForbiddenException, ValidationPipe } from '@nestjs/common';
+import { ForbiddenException } from '@nestjs/common';
 import { SentryExceptionFilter } from './common/sentry-exception.filter';
 
 const glitchtipDsn = process.env.GLITCHTIP_DSN;
@@ -47,13 +47,6 @@ async function bootstrap(): Promise<void> {
       }
     },
   });
-
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-    }),
-  );
 
   // Filter global de exceções enviadas para o GlitchTip
   const { httpAdapter } = app.get(HttpAdapterHost);

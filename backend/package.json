@@ -24,7 +24,9 @@
     "prisma:generate": "npx prisma generate",
     "prisma:migrate:dev": "npx prisma migrate dev",
     "prisma:migrate:deploy": "npx prisma migrate deploy",
-    "prisma:studio": "npx prisma studio"
+    "prisma:studio": "npx prisma studio",
+    "dev:seed:admin": "ts-node -r tsconfig-paths/register src/seeders/seed-admin.ts",
+    "seed:admin": "node dist/seeders/seed-admin.js"
   },
   "dependencies": {
     "@keyv/redis": "^5.1.6",

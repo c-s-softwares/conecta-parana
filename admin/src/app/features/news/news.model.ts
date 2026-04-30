@@ -5,3 +5,7 @@ export interface NewsForm {
   linkUrl: string;
   isActive: boolean;
 }
+
+export interface NewsItem extends NewsForm {
+  id: number;
+}

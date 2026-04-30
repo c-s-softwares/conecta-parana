@@ -1,8 +1,30 @@
 @if (view() === 'list') {
   <app-page-header title="NOTÍCIAS" buttonLabel="Criar notícia" (create)="openForm()" />
-  <!-- TODO: listar notícias da API -->
+
+  <ng-template #newsRow let-item>
+    <div class="flex items-center gap-2">
+      <h3 class="truncate text-sm font-bold text-gray-900">{{ item.title }}</h3>
+      <span
+        class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
+        [class]="item.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+      >
+        {{ item.isActive ? 'Ativa' : 'Inativa' }}
+      </span>
+      <span class="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+        {{ item.linkType === 'external' ? 'Externo' : 'Interno' }}
+      </span>
+    </div>
+    <p class="mt-1 truncate text-xs text-gray-600">{{ item.description }}</p>
+  </ng-template>
+
+  <app-entity-list
+    [items]="items()"
+    [rowTemplate]="newsRow"
+    (edit)="openEditForm($any($event))"
+    (delete)="confirmDelete($any($event))"
+  />
 } @else {
-  <app-form-container title="CRIAR NOTÍCIA">
+  <app-form-container [title]="isEditing ? 'EDITAR NOTÍCIA' : 'CRIAR NOTÍCIA'">
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
       <app-form-field
         label="Título"
@@ -41,7 +63,6 @@
             Tipo de link <span class="text-red-600">*</span>
           </legend>
 
-          <!-- Trocar para radio único estilizado (liga/desliga) -->
           <div class="space-y-1">
             <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
               <input
@@ -107,9 +128,17 @@
           type="submit"
           class="rounded-lg bg-btn-create px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-create-hover cursor-pointer"
         >
-          Criar
+          {{ isEditing ? 'Salvar' : 'Criar' }}
         </button>
       </div>
     </form>
   </app-form-container>
 }
+
+<app-confirm-dialog
+  [visible]="!!deletingItem()"
+  title="Excluir notícia"
+  message="Tem certeza que deseja excluir esta notícia? Esta ação não pode ser desfeita."
+  (confirmed)="executeDelete()"
+  (cancelled)="cancelDelete()"
+/>

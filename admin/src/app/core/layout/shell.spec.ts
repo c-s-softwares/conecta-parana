@@ -1,6 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { RouterModule } from '@angular/router';
 import { Shell } from './shell';
+import { AuthService } from '../services/auth.service';
 
 describe('Shell', () => {
   let fixture: ComponentFixture<Shell>;
@@ -12,6 +15,7 @@ describe('Shell', () => {
 
     await TestBed.configureTestingModule({
       imports: [Shell, RouterModule.forRoot([])],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Shell);
@@ -47,8 +51,12 @@ describe('Shell', () => {
     expect(el.querySelectorAll('app-sidebar a').length).toBe(5);
   });
 
-  it('onLogout deve logar no console', () => {
+  it('onLogout deve chamar AuthService.logout com motivo manual', () => {
+    const auth = TestBed.inject(AuthService);
+    const spy = vi.spyOn(auth, 'logout').mockImplementation(() => undefined);
+
     component.onLogout();
-    expect(console.log).toHaveBeenCalledWith('Logout');
+
+    expect(spy).toHaveBeenCalledWith('manual');
   });
 });

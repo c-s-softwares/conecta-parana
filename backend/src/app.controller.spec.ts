@@ -1,8 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { RolesGuard } from './common/guards/roles.guard';
+import { Reflector } from '@nestjs/core';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -12,6 +16,16 @@ describe('AppController', () => {
       controllers: [AppController],
       providers: [
         AppService,
+        RolesGuard,
+        Reflector,
+        {
+          provide: JwtAuthGuard,
+          useValue: { canActivate: jest.fn().mockReturnValue(true) },
+        },
+        {
+          provide: JwtService,
+          useValue: { verifyAsync: jest.fn() },
+        },
         {
           provide: ConfigService,
           useValue: {
