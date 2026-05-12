@@ -10,7 +10,7 @@ A pasta `/onboarding` centraliza links para vídeos guia (hospedados no YouTube)
 
 ### Setup e Dúvidas Gerais
 
-**Link**: [Assista no YouTube](https://youtu.be/Y7VBuIEpyVU)
+**Link**: [Assista no YouTube](https://youtu.be/AZiXKGK3O0w)
 
 Vídeo completo que detalha o processo de setup inicial e a arquitetura do projeto. Essencial para novos desenvolvedores.
 
@@ -21,6 +21,7 @@ Vídeo completo que detalha o processo de setup inicial e a arquitetura do proje
 - Orquestração com Docker Compose para infraestrutura (PostgreSQL, Redis)
 - Estrutura do monorepo e backend: módulos NestJS, validações com Zod, Prisma ORM
 - Desenvolvimento do frontend (Admin): estrutura Angular, rotas e comunicação com API
+- Desenvolvimento do frontend (Mobile) : instalação, estrutura Flutter, inicialização da aplicação (via chrome e emulador)
 - Fluxo de trabalho e boas práticas: documentação, estratégias de branches e padrões de código
 
 **Público-alvo**: Todos os novos desenvolvedores, independentemente da especialidade (backend, frontend, mobile ou DevOps).
