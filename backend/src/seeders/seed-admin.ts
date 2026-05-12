@@ -1,6 +1,8 @@
+import 'dotenv/config';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient, Role } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { generateId } from '../common/utils/ulid.util';
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
@@ -25,7 +27,7 @@ async function main() {
   const user = await prisma.user.upsert({
     where: { email },
     update: { role: Role.ADMIN, password: hashed, name },
-    create: { email, name, password: hashed, role: Role.ADMIN },
+    create: { id: generateId('usr_'), email, name, password: hashed, role: Role.ADMIN },
     select: { id: true, email: true, name: true, role: true },
   });
 
