@@ -19,8 +19,8 @@ export type TablePrefix =
 /**
  * GER A UM ULID com prefixo
  * O TOtal e de 30 char (4 chars prefix + 26 chars ULID).
- * @param prefix 
- * @returns 
+ * @param prefix
+ * @returns
  **/
 export function generateId(prefix: TablePrefix): string {
   return `${prefix}${ulid()}`;

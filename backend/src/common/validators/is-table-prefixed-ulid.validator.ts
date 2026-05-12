@@ -14,12 +14,9 @@ export class IsTablePrefixedUlidConstraint implements ValidatorConstraintInterfa
 
     const prefix = args.constraints[0] as TablePrefix;
 
-
     if (!value.startsWith(prefix)) return false;
 
-
     if (value.length !== 30) return false;
-
 
     const ulidPart = value.slice(4);
     const ulidRegex = /^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$/i;
@@ -27,13 +24,16 @@ export class IsTablePrefixedUlidConstraint implements ValidatorConstraintInterfa
     return ulidRegex.test(ulidPart);
   }
 
-  defaultMessage(args: ValidationArguments) {
+  defaultMessage() {
     return 'invalid_id_format';
   }
 }
 
-export function IsTablePrefixedUlid(prefix: TablePrefix, validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+export function IsTablePrefixedUlid(
+  prefix: TablePrefix,
+  validationOptions?: ValidationOptions,
+) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
       propertyName: propertyName,

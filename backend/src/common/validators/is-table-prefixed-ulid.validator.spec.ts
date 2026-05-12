@@ -23,7 +23,9 @@ describe('IsTablePrefixedUlid', () => {
 
     const errors = validator.validateSync(dto);
     expect(errors.length).toBe(1);
-    expect(errors[0].constraints?.isTablePrefixedUlid).toBe('invalid_id_format');
+    expect(errors[0].constraints?.isTablePrefixedUlid).toBe(
+      'invalid_id_format',
+    );
   });
 
   it('should fail if length is invalid', () => {
@@ -32,7 +34,9 @@ describe('IsTablePrefixedUlid', () => {
 
     const errors = validator.validateSync(dto);
     expect(errors.length).toBe(1);
-    expect(errors[0].constraints?.isTablePrefixedUlid).toBe('invalid_id_format');
+    expect(errors[0].constraints?.isTablePrefixedUlid).toBe(
+      'invalid_id_format',
+    );
   });
 
   it('should fail if ULID contains invalid Base32 characters', () => {
@@ -41,6 +45,8 @@ describe('IsTablePrefixedUlid', () => {
 
     const errors = validator.validateSync(dto);
     expect(errors.length).toBe(1);
-    expect(errors[0].constraints?.isTablePrefixedUlid).toBe('invalid_id_format');
+    expect(errors[0].constraints?.isTablePrefixedUlid).toBe(
+      'invalid_id_format',
+    );
   });
 });

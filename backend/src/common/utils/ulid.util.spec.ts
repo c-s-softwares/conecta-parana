@@ -1,4 +1,4 @@
-import { generateId, TablePrefix } from './ulid.util';
+import { generateId } from './ulid.util';
 
 describe('UlidUtil', () => {
   it('deve gerar um ID com o prefixo e comprimento corretos', () => {
