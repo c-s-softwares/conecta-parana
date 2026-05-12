@@ -70,7 +70,7 @@ export class AuthController {
     description: 'Token de autenticação inválido ou expirado',
   })
   me(@Request() req: ExpressRequest) {
-    const user = req['user'] as { sub: number };
+    const user = req['user'] as { sub: string };
     return this.authService.getMe(user.sub);
   }
 }

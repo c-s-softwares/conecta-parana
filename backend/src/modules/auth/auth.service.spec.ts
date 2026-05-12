@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+﻿import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -50,7 +50,7 @@ describe('AuthService', () => {
     it('deve criar um usuário com senha hasheada', async () => {
       mockPrisma.client.user.findUnique.mockResolvedValue(null);
       mockPrisma.client.user.create.mockResolvedValue({
-        id: 1,
+        id: 'usr_mock_id',
         name: 'João',
         email: 'joao@email.com',
         role: 'USUARIO',
@@ -63,7 +63,7 @@ describe('AuthService', () => {
       });
 
       expect(result).toEqual({
-        id: 1,
+        id: 'usr_mock_id',
         name: 'João',
         email: 'joao@email.com',
         role: 'USUARIO',
@@ -73,7 +73,7 @@ describe('AuthService', () => {
 
     it('deve lançar ConflictException se email já existir', async () => {
       mockPrisma.client.user.findUnique.mockResolvedValue({
-        id: 1,
+        id: 'usr_mock_id',
         email: 'joao@email.com',
       });
 
@@ -91,7 +91,7 @@ describe('AuthService', () => {
     it('deve retornar tokens quando credenciais são válidas', async () => {
       const hashed = await hash('senha123', 10);
       mockPrisma.client.user.findUnique.mockResolvedValue({
-        id: 1,
+        id: 'usr_mock_id',
         email: 'joao@email.com',
         password: hashed,
         role: 'USUARIO',
@@ -118,7 +118,7 @@ describe('AuthService', () => {
     it('deve lançar UnauthorizedException se senha for incorreta', async () => {
       const hashed = await hash('outrasenha', 10);
       mockPrisma.client.user.findUnique.mockResolvedValue({
-        id: 1,
+        id: 'usr_mock_id',
         email: 'joao@email.com',
         password: hashed,
         role: 'USUARIO',
@@ -135,11 +135,11 @@ describe('AuthService', () => {
       mockPrisma.client.refreshToken.findUnique.mockResolvedValue({
         token: 'valid_token',
         expiresAt: new Date(Date.now() + 100000),
-        userId: 1,
+        userid: 'usr_mock_id',
       });
       mockPrisma.client.refreshToken.delete.mockResolvedValue({});
       mockPrisma.client.user.findUniqueOrThrow.mockResolvedValue({
-        id: 1,
+        id: 'usr_mock_id',
         email: 'joao@email.com',
         role: 'USUARIO',
       });
@@ -164,7 +164,7 @@ describe('AuthService', () => {
       mockPrisma.client.refreshToken.findUnique.mockResolvedValue({
         token: 'expired_token',
         expiresAt: new Date(Date.now() - 100000),
-        userId: 1,
+        userid: 'usr_mock_id',
       });
 
       await expect(service.refresh('expired_token')).rejects.toThrow(
@@ -176,16 +176,16 @@ describe('AuthService', () => {
   describe('getMe', () => {
     it('deve retornar dados do usuário sem a senha', async () => {
       mockPrisma.client.user.findUniqueOrThrow.mockResolvedValue({
-        id: 1,
+        id: 'usr_mock_id',
         name: 'João',
         email: 'joao@email.com',
         role: 'USUARIO',
       });
 
-      const result = await service.getMe(1);
+      const result = await service.getMe('usr_mock_id');
 
       expect(result).toEqual({
-        id: 1,
+        id: 'usr_mock_id',
         name: 'João',
         email: 'joao@email.com',
         role: 'USUARIO',
@@ -194,3 +194,4 @@ describe('AuthService', () => {
     });
   });
 });
+
