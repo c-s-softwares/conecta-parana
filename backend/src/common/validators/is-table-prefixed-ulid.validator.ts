@@ -1,0 +1,45 @@
+import {
+  registerDecorator,
+  ValidationOptions,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+  ValidationArguments,
+} from 'class-validator';
+import { TablePrefix } from '../utils/ulid.util';
+
+@ValidatorConstraint({ name: 'isTablePrefixedUlid', async: false })
+export class IsTablePrefixedUlidConstraint implements ValidatorConstraintInterface {
+  validate(value: any, args: ValidationArguments) {
+    if (typeof value !== 'string') return false;
+
+    const prefix = args.constraints[0] as TablePrefix;
+
+
+    if (!value.startsWith(prefix)) return false;
+
+
+    if (value.length !== 30) return false;
+
+
+    const ulidPart = value.slice(4);
+    const ulidRegex = /^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$/i;
+
+    return ulidRegex.test(ulidPart);
+  }
+
+  defaultMessage(args: ValidationArguments) {
+    return 'invalid_id_format';
+  }
+}
+
+export function IsTablePrefixedUlid(prefix: TablePrefix, validationOptions?: ValidationOptions) {
+  return function (object: Object, propertyName: string) {
+    registerDecorator({
+      target: object.constructor,
+      propertyName: propertyName,
+      options: validationOptions,
+      constraints: [prefix],
+      validator: IsTablePrefixedUlidConstraint,
+    });
+  };
+}
