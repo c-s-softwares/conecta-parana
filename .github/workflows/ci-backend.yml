@@ -103,8 +103,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run migrations
-        run: npx prisma migrate deploy
+      - name: Sync database schema
+        run: npx prisma db push --force-reset
         env:
           DATABASE_URL: postgresql://conecta_test:conecta_test@localhost:5432/conecta_parana_test
 
