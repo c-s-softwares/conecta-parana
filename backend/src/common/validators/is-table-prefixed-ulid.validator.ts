@@ -5,7 +5,9 @@ import {
   ValidatorConstraintInterface,
   ValidationArguments,
 } from 'class-validator';
-import { TablePrefix } from '../utils/ulid.util';
+import { TablePrefix } from '../types/ulid.types';
+
+export const INVALID_ID_FORMAT = 'invalid_id_format';
 
 @ValidatorConstraint({ name: 'isTablePrefixedUlid', async: false })
 export class IsTablePrefixedUlidConstraint implements ValidatorConstraintInterface {
@@ -25,7 +27,7 @@ export class IsTablePrefixedUlidConstraint implements ValidatorConstraintInterfa
   }
 
   defaultMessage() {
-    return 'invalid_id_format';
+    return INVALID_ID_FORMAT;
   }
 }
 
