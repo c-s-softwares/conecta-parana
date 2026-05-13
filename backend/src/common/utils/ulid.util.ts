@@ -1,5 +1,7 @@
 import { ulid } from 'ulid';
-import { TablePrefix } from '../types/ulid.types';
+import { TABLE_PREFIX } from '../types/ulid.types';
+
+export type TablePrefix = (typeof TABLE_PREFIX)[keyof typeof TABLE_PREFIX];
 
 /**
  * Essa função gera um ULID com prefixo.

@@ -14,5 +14,3 @@ export const TABLE_PREFIX = {
   PHOTO: 'pho_',
   REFRESH_TOKEN: 'rfk_',
 } as const;
-
-export type TablePrefix = (typeof TABLE_PREFIX)[keyof typeof TABLE_PREFIX];
