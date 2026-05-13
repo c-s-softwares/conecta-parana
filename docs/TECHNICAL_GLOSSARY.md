@@ -24,6 +24,10 @@ Este documento detalha a infraestrutura e as ferramentas tecnológicas que suste
 - **Definição:** Documentação interativa de todos os endpoints da API.
 - **Contexto de uso:** Acessível via rota `/api/docs` para consulta dos desenvolvedores.
 
+### ULID Prefixado
+- **Definição:** Identificador Único Universal Ordenável Lexicograficamente (Universally Unique Lexicographically Sortable Identifier) quem tem um prefixo de 4 caracteres que indica a entidade (ex: `usr_01HZX...`).
+- **Contexto de uso:** Chave primária padrão em todas as tabelas e referências de chave estrangeira, garantindo formatação type-safe e ordenação baseada no tempo sem depender de autoincrementos do banco.
+
 ### Design Token
 - **Definição:** Unidade atômica do design system que mapeia uma decisão de design (cor, tipografia, espaçamento, raio, sombra) a um **nome semântico independente de implementação**. Um token desacopla o *valor* (ex: `#006733`) da *intenção* (ex: `color/mobile/primary/default`), permitindo que diferentes plataformas (web, Flutter, iOS) consumam os mesmos valores sem duplicação.
 - **Contexto de uso:** Todos os tokens do projeto estão definidos no [Figma — Designs Conecta Paraná](https://www.figma.com/design/xys9bh2mEhMSAnRd8ZuQe8/) e documentados em [docs/DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md). São organizados em três camadas: **Base** (valores raw), **Semântica** (intenção por frente: Mobile, Admin, Landing) e **Componente** (uso específico).
