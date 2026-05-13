@@ -10,6 +10,7 @@ import { PrismaService } from '../../config/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { generateId } from '../../common/utils/ulid.util';
+import { TABLE_PREFIX } from '../../common/types/ulid.types';
 
 @Injectable()
 export class AuthService {
@@ -32,7 +33,7 @@ export class AuthService {
 
     const user = await this.prisma.client.user.create({
       data: {
-        id: generateId('usr_'),
+        id: generateId(TABLE_PREFIX.USER),
         name: dto.name,
         email: dto.email,
         password: hashed,
@@ -102,7 +103,7 @@ export class AuthService {
 
     await this.prisma.client.refreshToken.create({
       data: {
-        id: generateId('rfk_'),
+        id: generateId(TABLE_PREFIX.REFRESH_TOKEN),
         token: refreshToken,
         userId,
         expiresAt,

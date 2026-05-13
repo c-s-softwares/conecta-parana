@@ -1,10 +1,19 @@
-﻿import { Test, TestingModule } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../../config/prisma.service';
 import { hash } from 'bcryptjs';
+import { TABLE_PREFIX } from '../../common/types/ulid.types';
+
+const MOCK_USER = {
+  id: `${TABLE_PREFIX.USER}mock_id`,
+  name: 'João',
+  email: 'joao@email.com',
+  password: 'hashed_password',
+  role: 'USUARIO',
+};
 
 const mockPrisma = {
   client: {
@@ -50,37 +59,37 @@ describe('AuthService', () => {
     it('deve criar um usuário com senha hasheada', async () => {
       mockPrisma.client.user.findUnique.mockResolvedValue(null);
       mockPrisma.client.user.create.mockResolvedValue({
-        id: 'usr_mock_id',
-        name: 'João',
-        email: 'joao@email.com',
-        role: 'USUARIO',
+        id: MOCK_USER.id,
+        name: MOCK_USER.name,
+        email: MOCK_USER.email,
+        role: MOCK_USER.role,
       });
 
       const result = await service.register({
-        name: 'João',
-        email: 'joao@email.com',
+        name: MOCK_USER.name,
+        email: MOCK_USER.email,
         password: 'senha123',
       });
 
       expect(result).toEqual({
-        id: 'usr_mock_id',
-        name: 'João',
-        email: 'joao@email.com',
-        role: 'USUARIO',
+        id: MOCK_USER.id,
+        name: MOCK_USER.name,
+        email: MOCK_USER.email,
+        role: MOCK_USER.role,
       });
       expect(mockPrisma.client.user.create).toHaveBeenCalledTimes(1);
     });
 
     it('deve lançar ConflictException se email já existir', async () => {
       mockPrisma.client.user.findUnique.mockResolvedValue({
-        id: 'usr_mock_id',
-        email: 'joao@email.com',
+        id: MOCK_USER.id,
+        email: MOCK_USER.email,
       });
 
       await expect(
         service.register({
-          name: 'João',
-          email: 'joao@email.com',
+          name: MOCK_USER.name,
+          email: MOCK_USER.email,
           password: 'senha123',
         }),
       ).rejects.toThrow(ConflictException);
@@ -91,15 +100,13 @@ describe('AuthService', () => {
     it('deve retornar tokens quando credenciais são válidas', async () => {
       const hashed = await hash('senha123', 10);
       mockPrisma.client.user.findUnique.mockResolvedValue({
-        id: 'usr_mock_id',
-        email: 'joao@email.com',
+        ...MOCK_USER,
         password: hashed,
-        role: 'USUARIO',
       });
       mockPrisma.client.refreshToken.create.mockResolvedValue({});
 
       const result = await service.login({
-        email: 'joao@email.com',
+        email: MOCK_USER.email,
         password: 'senha123',
       });
 
@@ -111,21 +118,19 @@ describe('AuthService', () => {
       mockPrisma.client.user.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.login({ email: 'joao@email.com', password: 'senha123' }),
+        service.login({ email: MOCK_USER.email, password: 'senha123' }),
       ).rejects.toThrow(UnauthorizedException);
     });
 
     it('deve lançar UnauthorizedException se senha for incorreta', async () => {
       const hashed = await hash('outrasenha', 10);
       mockPrisma.client.user.findUnique.mockResolvedValue({
-        id: 'usr_mock_id',
-        email: 'joao@email.com',
+        ...MOCK_USER,
         password: hashed,
-        role: 'USUARIO',
       });
 
       await expect(
-        service.login({ email: 'joao@email.com', password: 'senha123' }),
+        service.login({ email: MOCK_USER.email, password: 'senha123' }),
       ).rejects.toThrow(UnauthorizedException);
     });
   });
@@ -135,13 +140,13 @@ describe('AuthService', () => {
       mockPrisma.client.refreshToken.findUnique.mockResolvedValue({
         token: 'valid_token',
         expiresAt: new Date(Date.now() + 100000),
-        userid: 'usr_mock_id',
+        userId: MOCK_USER.id,
       });
       mockPrisma.client.refreshToken.delete.mockResolvedValue({});
       mockPrisma.client.user.findUniqueOrThrow.mockResolvedValue({
-        id: 'usr_mock_id',
-        email: 'joao@email.com',
-        role: 'USUARIO',
+        id: MOCK_USER.id,
+        email: MOCK_USER.email,
+        role: MOCK_USER.role,
       });
       mockPrisma.client.refreshToken.create.mockResolvedValue({});
 
@@ -164,7 +169,7 @@ describe('AuthService', () => {
       mockPrisma.client.refreshToken.findUnique.mockResolvedValue({
         token: 'expired_token',
         expiresAt: new Date(Date.now() - 100000),
-        userid: 'usr_mock_id',
+        userId: MOCK_USER.id,
       });
 
       await expect(service.refresh('expired_token')).rejects.toThrow(
@@ -176,19 +181,19 @@ describe('AuthService', () => {
   describe('getMe', () => {
     it('deve retornar dados do usuário sem a senha', async () => {
       mockPrisma.client.user.findUniqueOrThrow.mockResolvedValue({
-        id: 'usr_mock_id',
-        name: 'João',
-        email: 'joao@email.com',
-        role: 'USUARIO',
+        id: MOCK_USER.id,
+        name: MOCK_USER.name,
+        email: MOCK_USER.email,
+        role: MOCK_USER.role,
       });
 
-      const result = await service.getMe('usr_mock_id');
+      const result = await service.getMe(MOCK_USER.id);
 
       expect(result).toEqual({
-        id: 'usr_mock_id',
-        name: 'João',
-        email: 'joao@email.com',
-        role: 'USUARIO',
+        id: MOCK_USER.id,
+        name: MOCK_USER.name,
+        email: MOCK_USER.email,
+        role: MOCK_USER.role,
       });
       expect(result).not.toHaveProperty('password');
     });
