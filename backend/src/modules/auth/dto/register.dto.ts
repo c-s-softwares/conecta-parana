@@ -1,5 +1,4 @@
 import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
-import { IsTablePrefixedUlid } from '../../../common/validators/is-table-prefixed-ulid.validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterDto {

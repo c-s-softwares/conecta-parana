@@ -15,4 +15,4 @@ export const TABLE_PREFIX = {
   REFRESH_TOKEN: 'rfk_',
 } as const;
 
-export type TablePrefix = typeof TABLE_PREFIX[keyof typeof TABLE_PREFIX];
+export type TablePrefix = (typeof TABLE_PREFIX)[keyof typeof TABLE_PREFIX];
