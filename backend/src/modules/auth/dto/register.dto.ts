@@ -18,6 +18,6 @@ export class RegisterDto {
 
   @ApiProperty({ example: 'cit_01HZX3Y4Q9F8TAB1C2DKEYH9MN', required: false })
   @IsOptional()
-  @IsTablePrefixedUlid('cit_')
+  @IsString()
   cityId?: string;
 }
