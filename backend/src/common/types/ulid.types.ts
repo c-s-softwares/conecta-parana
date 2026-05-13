@@ -1,0 +1,18 @@
+export const TABLE_PREFIX = {
+  USER: 'usr_',
+  CITY: 'cit_',
+  EVENT: 'evt_',
+  POST: 'pst_',
+  NEWS: 'nws_',
+  LOCAL: 'loc_',
+  CATEGORY: 'cat_',
+  HEALTH_CHECK: 'hlt_',
+  SUGGESTION: 'sgt_',
+  NOTIFICATION: 'nfy_',
+  LIKE: 'lke_',
+  FAVORITE: 'fav_',
+  PHOTO: 'pho_',
+  REFRESH_TOKEN: 'rfk_',
+} as const;
+
+export type TablePrefix = typeof TABLE_PREFIX[keyof typeof TABLE_PREFIX];
