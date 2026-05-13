@@ -82,6 +82,29 @@ flowchart LR
     style G fill:#fff3e0,stroke:#e65100
 ```
 
+## Padrão de Identificadores (ULIDs)
+
+Todas as chaves primárias do sistema utilizam ULIDs (Universally Unique Lexicographically Sortable Identifier) prefixados no formato `prefix_01HZX...`. Esta estrutura garante identificadores globais, únicos, ordenáveis e type-safe na manipulação de chaves entre front-end e back-end.
+
+A tabela abaixo define a Fonte de Verdade para o mapeamento Entidade -> Prefixo:
+
+| Model / Entidade | Prefixo ULID | Exemplo |
+|---|---|---|
+| User | `usr_` | `usr_01H...` |
+| City | `cit_` | `cit_01H...` |
+| Event | `evt_` | `evt_01H...` |
+| Post | `pst_` | `pst_01H...` |
+| News | `nws_` | `nws_01H...` |
+| Local | `loc_` | `loc_01H...` |
+| Category | `cat_` | `cat_01H...` |
+| HealthCheck | `hlt_` | `hlt_01H...` |
+| Suggestion | `sgt_` | `sgt_01H...` |
+| Notification | `nfy_` | `nfy_01H...` |
+| Like | `lke_` | `lke_01H...` |
+| Favorite | `fav_` | `fav_01H...` |
+| Photo | `pho_` | `pho_01H...` |
+| RefreshToken | `rfk_` | `rfk_01H...` |
+
 ## Ambientes
 
 | Ambiente | Compose file | Descrição |

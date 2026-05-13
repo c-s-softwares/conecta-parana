@@ -5,7 +5,7 @@ import { Role } from '@prisma/client';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 export type JwtPayload = {
-  sub: number;
+  sub: string;
   email: string;
   role: Role;
 };

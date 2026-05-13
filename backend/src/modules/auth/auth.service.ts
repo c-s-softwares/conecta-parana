@@ -9,6 +9,8 @@ import { hash, compare } from 'bcryptjs';
 import { PrismaService } from '../../config/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { generateId } from '../../common/utils/ulid.util';
+import { TABLE_PREFIX } from '../../common/types/ulid.types';
 
 @Injectable()
 export class AuthService {
@@ -31,9 +33,11 @@ export class AuthService {
 
     const user = await this.prisma.client.user.create({
       data: {
+        id: generateId(TABLE_PREFIX.USER),
         name: dto.name,
         email: dto.email,
         password: hashed,
+        ...(dto.cityId && { cityId: dto.cityId }),
       },
     });
 
@@ -76,7 +80,7 @@ export class AuthService {
     return this.generateTokens(user.id, user.email, user.role);
   }
 
-  async getMe(userId: number) {
+  async getMe(userId: string) {
     const user = await this.prisma.client.user.findUniqueOrThrow({
       where: { id: userId },
     });
@@ -84,7 +88,7 @@ export class AuthService {
     return { id: user.id, name: user.name, email: user.email, role: user.role };
   }
 
-  private async generateTokens(userId: number, email: string, role: string) {
+  private async generateTokens(userId: string, email: string, role: string) {
     const payload = { sub: userId, email, role };
 
     const accessToken = this.jwt.sign(payload);
@@ -99,6 +103,7 @@ export class AuthService {
 
     await this.prisma.client.refreshToken.create({
       data: {
+        id: generateId(TABLE_PREFIX.REFRESH_TOKEN),
         token: refreshToken,
         userId,
         expiresAt,

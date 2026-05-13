@@ -19,6 +19,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { JwtPayload } from './strategies/jwt.strategy';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -70,7 +71,7 @@ export class AuthController {
     description: 'Token de autenticação inválido ou expirado',
   })
   me(@Request() req: ExpressRequest) {
-    const user = req['user'] as { sub: number };
+    const user = req['user'] as JwtPayload;
     return this.authService.getMe(user.sub);
   }
 }
