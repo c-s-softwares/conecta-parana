@@ -1,5 +1,7 @@
 import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { TABLE_PREFIX } from '../../../common/types/ulid.types';
+import { IsTablePrefixedUlid } from '../../../common/validators/is-table-prefixed-ulid.validator';
 
 export class RegisterDto {
   @ApiProperty({ example: 'Johnny CuteBottom' })
@@ -17,6 +19,6 @@ export class RegisterDto {
 
   @ApiProperty({ example: 'cit_01HZX3Y4Q9F8TAB1C2DKEYH9MN', required: false })
   @IsOptional()
-  @IsString()
+  @IsTablePrefixedUlid(TABLE_PREFIX.CITY)
   cityId?: string;
 }

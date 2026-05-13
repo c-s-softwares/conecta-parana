@@ -5,7 +5,7 @@ import {
   ValidatorConstraintInterface,
   ValidationArguments,
 } from 'class-validator';
-import { TablePrefix } from '../types/ulid.types';
+import { TablePrefix } from '../utils/ulid.util';
 
 export const INVALID_ID_FORMAT = 'invalid_id_format';
 
