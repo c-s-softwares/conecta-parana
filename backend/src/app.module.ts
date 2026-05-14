@@ -6,7 +6,8 @@ import { AppService } from './app.service';
 import { PrismaModule } from './config/prisma.module';
 import { RedisCacheModule } from './config/redis-cache.module';
 import { envValidationSchema } from './config/env.validation';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { CustomThrottlerGuard } from './common/guards/throttler.guard';
 import { AuthModule } from './modules/auth/auth.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { PinoLoggerModule } from './config/logger.module';
@@ -40,7 +41,7 @@ import { PinoLoggerModule } from './config/logger.module';
     AppService,
     {
       provide: APP_GUARD as string,
-      useClass: ThrottlerGuard,
+      useClass: CustomThrottlerGuard,
     },
   ],
 })
