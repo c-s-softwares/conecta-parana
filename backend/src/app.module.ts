@@ -9,6 +9,7 @@ import { envValidationSchema } from './config/env.validation';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthModule } from './modules/auth/auth.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { CidadesModule } from './modules/cidades/cidades.module';
 import { PinoLoggerModule } from './config/logger.module';
 
 @Module({
@@ -33,6 +34,7 @@ import { PinoLoggerModule } from './config/logger.module';
     PrismaModule,
     AuthModule,
     AdminModule,
+    CidadesModule,
     RedisCacheModule,
   ],
   controllers: [AppController],
