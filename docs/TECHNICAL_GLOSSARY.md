@@ -38,5 +38,6 @@ Este documento detalha a infraestrutura e as ferramentas tecnológicas que suste
   - `spacing/s` → 16px
   - `radius/sm` → 8px
 - **Equivalências:** Cada token possui mapeamento explícito para CSS Custom Property, Tailwind config key e Flutter ThemeData — ver tabelas em `DESIGN_SYSTEM.md`.
+### Convenções de DTO
 
 <!-- Adicione mais termos conforme necessário -->
