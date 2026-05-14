@@ -1,12 +1,18 @@
-# Guia de Implementação CRUD - Conecta Paraná
+# Template CRUD Genérico - Conecta Paraná
 
-Este documento descreve o padrão oficial para criação de novos módulos CRUD utilizando a infraestrutura genérica do projeto.
+Este documento descreve o padrão oficial para criação de novos módulos CRUD utilizando a infraestrutura genérica do projeto, replicando o padrão do módulo **Cidades**.
 
 ---
 
 ## 1. Arquitetura de Herança (DRY)
 
-```
+Para evitar repetição de código, utilizamos classes base que já implementam as operações padrão (GET, POST, PATCH, DELETE).
+
+- **Service**: Estende `BaseCrudService`
+- **Controller**: Estende `BaseCrudController`
+
+### Estrutura de Referência
+```text
 src/modules/cidades/
 ├── dto/
 │   ├── request/
@@ -15,14 +21,10 @@ src/modules/cidades/
 │   └── response/
 │       └── cidade-response.dto.ts ← Interface de retorno
 ├── cidades.controller.ts          ← Rotas + Guards + Swagger
-├── cidades.service.ts         ← Lógica de negócio + Prisma
-├── cidades.service.spec.ts    ← Testes unitários
-└── cidades.module.ts          ← Módulo NestJS
+├── cidades.service.ts             ← Lógica de negócio + Prisma
+├── cidades.service.spec.ts        ← Testes unitários
+└── cidades.module.ts              ← Módulo NestJS
 ```
-Para evitar repetição de código, utilizamos classes base que já implementam as operações padrão (GET, POST, PATCH, DELETE).
-
-- **Service**: Estende `BaseCrudService`
-- **Controller**: Estende `BaseCrudController`
 
 ---
 
@@ -47,15 +49,27 @@ Os DTOs devem ficar em subpastas dentro do módulo:
 ## 3. Passo a Passo para Novo Módulo
 
 ### 1. Criar a Pasta e o Módulo
-Crie a estrutura básica e registre o módulo no `app.module.ts`.
+Você pode copiar o módulo `cidades/` ou criar do zero.
+```bash
+cp -r src/modules/cidades src/modules/<novo-modulo>
+```
 
-### 2. Definir DTOs
+### 2. Renomear arquivos e classes
+- `cidades.service.ts` → `<novo-modulo>.service.ts`
+- `CidadesService` → `<NovoModulo>Service`
+- `CreateCidadeDto` → `Create<NovoModulo>Dto`
+- etc.
+
+### 3. Definir DTOs
 Crie o `CreateDto` e o `ResponseDto`. O `UpdateDto` deve usar `PartialType`:
 ```typescript
 export class UpdateXDto extends PartialType(CreateXDto) {}
 ```
+- Adicionar/remover campos conforme a entidade.
+- Manter `@ApiProperty` em **todos** os campos.
+- Aplicar `@Transform` conforme convenção.
 
-### 3. Implementar o Service
+### 4. Implementar o Service
 ```typescript
 @Injectable()
 export class XService extends BaseCrudService<XResponse, CreateXDto, UpdateXDto> {
@@ -69,7 +83,7 @@ export class XService extends BaseCrudService<XResponse, CreateXDto, UpdateXDto>
 }
 ```
 
-### 4. Implementar o Controller
+### 5. Implementar o Controller
 ```typescript
 @ApiTags('x')
 @Controller('x')
@@ -78,23 +92,65 @@ export class XController extends BaseCrudController<XResponse, CreateXDto, Updat
     super(xService);
   }
 
-  // o baseController já provê a documentação básica ('Criar Registro', etc)
-  // oo ponto de customização e tipagem para o Swagger deve ser o seu CreateXDto e UpdateXDto.
+  // O BaseCrudController já provê a documentação básica e endpoints.
   // Realize o 'override' apenas quando precisar customizar a lógica interna de uma rota.
 }
 ```
 
+### 6. Registrar no `app.module.ts`
+```typescript
+import { <NovoModulo>Module } from './modules/<novo-modulo>/<novo-modulo>.module';
+
+@Module({
+  imports: [
+    // ... existentes
+    <NovoModulo>Module,
+  ],
+})
+```
+
+### 7. Criar Migration (se necessário)
+```bash
+# Dentro do container Docker:
+npx prisma migrate dev --name <descricao>
+```
+
 ---
 
-## 4. Segurança por Padrão
+## 4. Checklist de Validação
+
+- [ ] `@ApiProperty` em todos os campos do DTO
+- [ ] `@Transform` para normalização (trim, lowercase, uppercase)
+- [ ] `PartialType` no UpdateDto
+- [ ] Resposta paginada com `{ items, total, page, pageSize }`
+- [ ] Soft delete com `deletedAt` (quando aplicável)
+- [ ] Guards de autorização (`JwtAuthGuard`, `RolesGuard`) em rotas protegidas
+- [ ] `@ApiBearerAuth()` em rotas protegidas
+- [ ] ID gerado com `generateId(TABLE_PREFIX.<ENTIDADE>)`
+- [ ] Testes unitários no service (`*.spec.ts`)
+- [ ] `npm test` passando
+- [ ] `npm run lint` limpo
+- [ ] Swagger documentado em `/api/docs`
+
+---
+
+## 5. Padrão de Endpoints e Segurança
 
 - **Público**: `findAll` e `findOne` são públicos por herança.
 - **Admin**: `create`, `update` e `remove` exigem `@AdminRoute()` na base.
 - Se precisar mudar a segurança, sobrescreva o método no controller filho com os guards desejados.
 
+| Método | Path | Auth | Descrição |
+|--------|------|------|-----------|
+| `GET` | `/<modulo>` | Público | Listar com paginação |
+| `GET` | `/<modulo>/:id` | Público | Buscar por ID |
+| `POST` | `/<modulo>` | Admin | Criar |
+| `PATCH` | `/<modulo>/:id` | Admin | Atualizar parcialmente |
+| `DELETE` | `/<modulo>/:id` | Admin | Soft delete |
+
 ---
 
-## 5. Formato de Respostas
+## 6. Formato de Respostas
 
 ### Sucesso (Paginado)
 ```json
@@ -106,7 +162,16 @@ export class XController extends BaseCrudController<XResponse, CreateXDto, Updat
 }
 ```
 
-### Erro de Validação
+### Padrão de Erros
+
+| Código | `error` | Quando |
+|--------|---------|--------|
+| 400 | `validation_failed` | Campos inválidos no body |
+| 400 | `invalid_id_format` | ULID com formato inválido |
+| 404 | — | Entidade não encontrada |
+| 409 | `<entidade>_exists` | Duplicata (unique constraint) |
+
+**Exemplo de Erro de Validação:**
 ```json
 {
   "statusCode": 400,
