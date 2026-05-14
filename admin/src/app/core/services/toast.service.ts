@@ -1,4 +1,7 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HotToastService } from '@ngxpert/hot-toast';
+
+import { ToastActionComponent, ToastActionData } from '../components/toast-action/toast-action.component';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -7,29 +10,20 @@ export interface ToastAction {
   callback: () => void;
 }
 
-export interface Toast {
-  id: number;
-  type: ToastType;
-  message: string;
-  action?: ToastAction;
-}
-
-let nextId = 0;
-
 @Injectable({ providedIn: 'root' })
 export class ToastService {
-  readonly toasts = signal<Toast[]>([]);
+  private readonly hot = inject(HotToastService);
 
   show(type: ToastType, message: string, action?: ToastAction, durationMs = 5000): void {
-    const id = ++nextId;
-    this.toasts.update((list) => [...list, { id, type, message, action }]);
-
-    if (!action) {
-      setTimeout(() => this.dismiss(id), durationMs);
+    if (action) {
+      this.hot.error(ToastActionComponent, {
+        data: { message, label: action.label, callback: action.callback } satisfies ToastActionData,
+        autoClose: true,
+        dismissible: true,
+      });
+      return;
     }
-  }
 
-  dismiss(id: number): void {
-    this.toasts.update((list) => list.filter((t) => t.id !== id));
+    this.hot[type](message, { duration: durationMs });
   }
 }
