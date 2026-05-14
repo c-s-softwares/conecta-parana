@@ -7,6 +7,7 @@ import { ToastService } from './app/core/services/toast.service';
 bootstrapApplication(App, appConfig)
   .then((appRef) => {
     if (!environment.production) {
+      // eslint-disable-next-line
       (window as any).__toast = appRef.injector.get(ToastService);
       console.info(
         '[dev] ToastService exposto em window.__toast\n' +
