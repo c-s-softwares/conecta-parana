@@ -19,15 +19,18 @@ model HealthCheck {
 }
 
 model City {
-  id String @id
-  name String
-  state String
+  id        String    @id
+  name      String
+  state     String    @db.VarChar(2)
+  createdAt DateTime  @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
 
   users User[]
   events Event[]
   news   News[]
   locals Local[] 
 
+  @@unique([name, state])
   @@map("cities")
 }
 
