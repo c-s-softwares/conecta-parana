@@ -6,7 +6,11 @@ import { ConfigService } from '@nestjs/config';
 import { Logger } from 'nestjs-pino';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
-import { BadRequestException, ForbiddenException, ValidationPipe } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  ValidationPipe,
+} from '@nestjs/common';
 import { SentryExceptionFilter } from './common/sentry-exception.filter';
 
 const glitchtipDsn = process.env.GLITCHTIP_DSN;
