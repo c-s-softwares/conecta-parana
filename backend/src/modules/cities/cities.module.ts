@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
-import { CidadesService } from './cidades.service';
-import { CidadesController } from './cidades.controller';
+import { CitiesService } from './cities.service';
+import { CitiesController } from './cities.controller';
 import { PrismaModule } from '../../config/prisma.module';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [PrismaModule, AuthModule],
-  controllers: [CidadesController],
-  providers: [CidadesService],
-  exports: [CidadesService],
+  controllers: [CitiesController],
+  providers: [CitiesService],
+  exports: [CitiesService],
 })
-export class CidadesModule {}
+export class CitiesModule {}

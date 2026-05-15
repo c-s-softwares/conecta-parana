@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsString, Length, MaxLength, MinLength } from 'class-validator';
 
-export class CreateCidadeDto {
+export class CreateCityDto {
   @ApiProperty({ example: 'Paiçandu', minLength: 2, maxLength: 100 })
   @IsString()
   @Transform(({ value }: { value: unknown }) =>
@@ -10,7 +10,7 @@ export class CreateCidadeDto {
   )
   @MinLength(2)
   @MaxLength(100)
-  nome!: string;
+  name!: string;
 
   @ApiProperty({ example: 'PR', description: 'Sigla do estado (2 caracteres)' })
   @IsString()
@@ -18,5 +18,5 @@ export class CreateCidadeDto {
     typeof value === 'string' ? value.trim().toUpperCase() : value,
   )
   @Length(2, 2)
-  estado!: string;
+  state!: string;
 }
