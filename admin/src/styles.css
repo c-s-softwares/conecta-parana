@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import '@ngxpert/hot-toast/styles.css';
 
 @theme {
   --color-primary: #3b82f6;

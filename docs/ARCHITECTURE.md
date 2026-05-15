@@ -119,6 +119,40 @@ A tabela abaixo define a Fonte de Verdade para o mapeamento Entidade -> Prefixo:
 - **Plataforma:** Linux/arm64 (build via QEMU + Buildx)
 - **Servidor:** VM acessada via SSH
 
+## Mapeamento HTTP → comportamento UI (web-admin)
+
+O `error.interceptor.ts` normaliza todos os erros HTTP em um objeto `AppError { status, message, details }` e decide se dispara um Toast ou repassa silenciosamente ao componente.
+
+### Resolução de mensagem (ordem de prioridade)
+
+1. `error.error?.code` → `ERROR_CODE_MAP`
+2. `error.status` → `STATUS_MAP`
+3. Fallback genérico
+
+### Tabela de comportamento por status
+
+| Status | Toast PT-BR | Repassado ao componente |
+|---|---|---|
+| 401 (chamada autenticada) | "Sessão expirada, faça login novamente." (apenas se refresh falhar) | Não — refresh automático transparente |
+| 400 | Nenhum | Sim — `AppError` com `details` para destacar campos no form |
+| 403 | "Acesso negado." | Sim — `AppError` |
+| 404 | Nenhum | Sim — `AppError` com `details` para exibir "não encontrado" |
+| 429 | Mensagem vinda do backend (`error.error.message`) | Sim — `AppError` |
+| 5xx | "Erro do servidor. Tente novamente em instantes." | Sim — `AppError` |
+| 0 / rede | "Sem conexão com o servidor." + botão "Tentar novamente" | Sim — `AppError` |
+
+Codes planejados:
+
+| Code | Status HTTP | Mensagem PT-BR |
+|---|---|---|
+| `unauthenticated` | 401 | "Sessão expirada, faça login novamente." |
+| `role_denied` | 403 | "Acesso negado para este papel." |
+| `city_scope_denied` | 403 | "Você só pode atuar na sua cidade." |
+| `validation_failed` | 400 | Passthrough sem toast |
+| `too_many_attempts` | 429 | Mensagem vinda do backend |
+
+---
+
 ## Estrutura do monorepo
 
 ```

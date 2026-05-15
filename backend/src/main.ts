@@ -6,7 +6,11 @@ import { ConfigService } from '@nestjs/config';
 import { Logger } from 'nestjs-pino';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
-import { ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  ValidationPipe,
+} from '@nestjs/common';
 import { SentryExceptionFilter } from './common/sentry-exception.filter';
 
 const glitchtipDsn = process.env.GLITCHTIP_DSN;
@@ -51,6 +55,21 @@ async function bootstrap(): Promise<void> {
   // Filter global de exceções enviadas para o GlitchTip
   const { httpAdapter } = app.get(HttpAdapterHost);
   app.useGlobalFilters(new SentryExceptionFilter(httpAdapter));
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      exceptionFactory: (errors) =>
+        new BadRequestException({
+          code: 'validation_failed',
+          message: errors
+            .flatMap((e) => Object.values(e.constraints ?? {}))
+            .filter(Boolean),
+        }),
+    }),
+  );
 
   const config = new DocumentBuilder()
     .setTitle('Conecta Paraná API')
