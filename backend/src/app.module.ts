@@ -10,7 +10,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { CustomThrottlerGuard } from './common/guards/throttler.guard';
 import { AuthModule } from './modules/auth/auth.module';
 import { AdminModule } from './modules/admin/admin.module';
-import { CidadesModule } from './modules/cidades/cidades.module';
+import { CitiesModule } from './modules/cities/cities.module';
 import { PinoLoggerModule } from './config/logger.module';
 
 @Module({
@@ -35,7 +35,7 @@ import { PinoLoggerModule } from './config/logger.module';
     PrismaModule,
     AuthModule,
     AdminModule,
-    CidadesModule,
+    CitiesModule,
     RedisCacheModule,
   ],
   controllers: [AppController],

@@ -1,6 +1,5 @@
-export interface CidadeResponse {
+export interface CityResponse {
   id: string;
-  nome: string;
-  estado: string;
-  createdAt: Date;
+  name: string;
+  state: string;
 }
