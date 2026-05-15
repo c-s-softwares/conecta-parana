@@ -2,12 +2,16 @@ import {
   Controller,
   Get,
   Post,
-  Patch,
+  Put,
   Delete,
   Body,
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
+  Inject,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -15,36 +19,48 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { Role } from '@prisma/client';
-import { CidadesService } from './cidades.service';
-import { CidadeResponse } from './dto/response/cidade-response.dto';
-import { CreateCidadeDto } from './dto/request/create-cidade.dto';
-import { UpdateCidadeDto } from './dto/request/update-cidade.dto';
-import { PaginationQueryDto } from '../../common/dto/request/pagination-query.dto';
+import {
+  CacheInterceptor,
+  CacheTTL,
+  CACHE_MANAGER,
+} from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
+import { CitiesService } from './cities.service';
+import { CityResponse } from './dto/response/city-response.dto';
+import { CreateCityDto } from './dto/request/create-city.dto';
+import { UpdateCityDto } from './dto/request/update-city.dto';
+import { FindCitiesQueryDto } from './dto/request/find-cities-query.dto';
+import { CACHE_TTL_1_HOUR } from '../../common/constants/cache.constants';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
 import { BaseCrudController } from '../../common/controllers/base-crud.controller';
 
-@ApiTags('cidades')
-@Controller('cidades')
-export class CidadesController extends BaseCrudController<
-  CidadeResponse,
-  CreateCidadeDto,
-  UpdateCidadeDto
+@ApiTags('cities')
+@Controller('cities')
+export class CitiesController extends BaseCrudController<
+  CityResponse,
+  CreateCityDto,
+  UpdateCityDto
 > {
-  constructor(private readonly cidadesService: CidadesService) {
-    super(cidadesService);
+  constructor(
+    private readonly citiesService: CitiesService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {
+    super(citiesService);
   }
 
   @Get()
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(CACHE_TTL_1_HOUR)
   @ApiOperation({ summary: 'Listar cidades com paginação' })
   @ApiResponse({ status: 200, description: 'Lista paginada de cidades' })
-  override findAll(@Query() query: PaginationQueryDto) {
+  override findAll(@Query() query: FindCitiesQueryDto) {
     return super.findAll(query);
   }
 
   @Get(':id')
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(CACHE_TTL_1_HOUR)
   @ApiOperation({ summary: 'Buscar cidade por ID' })
   @ApiResponse({ status: 200, description: 'Cidade encontrada' })
   @ApiResponse({ status: 404, description: 'Cidade não encontrada' })
@@ -53,34 +69,42 @@ export class CidadesController extends BaseCrudController<
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Criar cidade' })
   @ApiResponse({ status: 201, description: 'Cidade criada com sucesso' })
   @ApiResponse({ status: 409, description: 'Cidade já existe' })
-  override create(@Body() dto: CreateCidadeDto) {
-    return super.create(dto);
+  async create(@Body() dto: CreateCityDto) {
+    const result = await super.create(dto);
+    await this.clearCache();
+    return result;
   }
 
-  @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @Put(':id')
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Atualizar cidade' })
   @ApiResponse({ status: 200, description: 'Cidade atualizada com sucesso' })
   @ApiResponse({ status: 404, description: 'Cidade não encontrada' })
-  override update(@Param('id') id: string, @Body() dto: UpdateCidadeDto) {
-    return super.update(id, dto);
+  async update(@Param('id') id: string, @Body() dto: UpdateCityDto) {
+    const result = await super.update(id, dto);
+    await this.clearCache();
+    return result;
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Deletar cidade' })
   @ApiResponse({ status: 204, description: 'Cidade deletada com sucesso' })
-  override remove(@Param('id') id: string) {
-    return super.remove(id);
+  @ApiResponse({ status: 409, description: 'Cidade possui conteúdo associado' })
+  async remove(@Param('id') id: string) {
+    const result = await super.remove(id);
+    await this.clearCache();
+    return result;
+  }
+  private async clearCache() {
+    await this.cacheManager.del('/cities');
   }
 }
