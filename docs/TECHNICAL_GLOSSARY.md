@@ -66,5 +66,15 @@ Este documento detalha a infraestrutura e as ferramentas tecnológicas que suste
 ```
 - DTOs: `PaginationQueryDto` (query params), `PaginatedResponseDto<T>` (resposta).
 - `page` default `1`, `pageSize` default `10`, máximo `100`.
+### Design Token
+- **Definição:** Unidade atômica do design system que mapeia uma decisão de design (cor, tipografia, espaçamento, raio, sombra) a um **nome semântico independente de implementação**. Um token desacopla o *valor* (ex: `#006733`) da *intenção* (ex: `color/mobile/primary/default`), permitindo que diferentes plataformas (web, Flutter, iOS) consumam os mesmos valores sem duplicação.
+- **Contexto de uso:** Todos os tokens do projeto estão definidos no [Figma — Designs Conecta Paraná](https://www.figma.com/design/xys9bh2mEhMSAnRd8ZuQe8/) e documentados em [docs/DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md). São organizados em três camadas: **Base** (valores raw), **Semântica** (intenção por frente: Mobile, Admin, Landing) e **Componente** (uso específico).
+- **Exemplos:**
+  - `color/mobile/primary/default` → `#006733` (Verde Paraná)
+  - `color/admin/surface/sidebar` → `#002E1D`
+  - `typography/h1` → Sora 40px Bold
+  - `spacing/s` → 16px
+  - `radius/sm` → 8px
+- **Equivalências:** Cada token possui mapeamento explícito para CSS Custom Property, Tailwind config key e Flutter ThemeData — ver tabelas em `DESIGN_SYSTEM.md`.
 
 <!-- Adicione mais termos conforme necessário -->
