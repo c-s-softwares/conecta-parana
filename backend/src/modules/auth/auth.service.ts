@@ -27,7 +27,7 @@ export class AuthService {
 
     if (exists) {
       throw new ConflictException({
-        error: 'email_exists',
+        code: 'email_exists',
         message: 'Email já cadastrado',
       });
     }

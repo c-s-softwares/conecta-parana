@@ -6,7 +6,7 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/config/prisma.service';
 import { generateId } from '../src/common/utils/ulid.util';
 import { TABLE_PREFIX } from '../src/common/types/ulid.types';
-import { ValidationExceptionFilter } from '../src/common/filters/validation-exception.filter';
+import { BadRequestException } from '@nestjs/common';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication<App>;
@@ -26,9 +26,17 @@ describe('Auth (e2e)', () => {
         transform: true,
         whitelist: true,
         forbidNonWhitelisted: true,
+        exceptionFactory: (errors) => {
+          return new BadRequestException({
+            code: 'validation_failed',
+            message: errors.map((err) => ({
+              field: err.property,
+              errors: Object.values(err.constraints || {}),
+            })),
+          });
+        },
       }),
     );
-    app.useGlobalFilters(new ValidationExceptionFilter());
     await app.init();
 
     prisma = app.get<PrismaService>(PrismaService);
@@ -98,8 +106,8 @@ describe('Auth (e2e)', () => {
       .expect(409);
 
     // 409(email ja esxite)
-    const body = response.body as { error: string };
-    expect(body.error).toBe('email_exists');
+    const body = response.body as { code: string };
+    expect(body.code).toBe('email_exists');
   });
 
   it('POST /auth/register —  retornar 400 sem cityId', async () => {
@@ -112,8 +120,8 @@ describe('Auth (e2e)', () => {
       })
       .expect(400);
 
-    const body = response.body as { error: string };
-    expect(body.error).toBe('Bad Request');
+    const body = response.body as { code: string };
+    expect(body.code).toBe('validation_failed');
   });
 
   it('POST /auth/login — deve retornar tokens', async () => {
