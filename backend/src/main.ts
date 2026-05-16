@@ -12,6 +12,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { SentryExceptionFilter } from './common/sentry-exception.filter';
+import { API_ERROR_CODE, apiError } from './common/errors/api-error';
 
 const glitchtipDsn = process.env.GLITCHTIP_DSN;
 if (glitchtipDsn) {
@@ -62,12 +63,14 @@ async function bootstrap(): Promise<void> {
       whitelist: true,
       forbidNonWhitelisted: true,
       exceptionFactory: (errors) =>
-        new BadRequestException({
-          code: 'validation_failed',
-          message: errors
-            .flatMap((e) => Object.values(e.constraints ?? {}))
-            .filter(Boolean),
-        }),
+        new BadRequestException(
+          apiError(
+            API_ERROR_CODE.VALIDATION_FAILED,
+            errors
+              .flatMap((e) => Object.values(e.constraints ?? {}))
+              .filter(Boolean),
+          ),
+        ),
     }),
   );
 
