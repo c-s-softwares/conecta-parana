@@ -60,11 +60,12 @@ export function apiError(
   code: ApiErrorCode,
   detail: string[] = [],
 ): ApiErrorBody {
-  if (code === API_ERROR_CODE.ROLE_DENIED) {
-    return { code, message: roleDeniedMessage(detail) };
+  switch (code) {
+    case API_ERROR_CODE.ROLE_DENIED:
+      return { code, message: roleDeniedMessage(detail) };
+    case API_ERROR_CODE.VALIDATION_FAILED:
+      return { code, message: detail };
+    default:
+      return { code, message: STATIC_MESSAGE[code] };
   }
-  if (code === API_ERROR_CODE.VALIDATION_FAILED) {
-    return { code, message: detail };
-  }
-  return { code, message: STATIC_MESSAGE[code] };
 }
