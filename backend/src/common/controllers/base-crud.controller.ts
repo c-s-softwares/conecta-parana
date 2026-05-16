@@ -12,6 +12,7 @@ import {
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { BaseCrudService } from '../services/base-crud.service';
 import { PaginationQueryDto } from '../dto/request/pagination-query.dto';
+import { AdminRoute } from '../decorators/admin-route.decorator';
 
 /**
  * controler generico.
@@ -45,6 +46,7 @@ export abstract class BaseCrudController<TResponse, TCreateDto, TUpdateDto> {
   }
 
   @Post()
+  @AdminRoute()
   @ApiOperation({ summary: 'Criar novo registro' })
   @ApiResponse({ status: 201, description: 'Criado com sucesso' })
   create(@Body() dto: TCreateDto) {
@@ -52,6 +54,7 @@ export abstract class BaseCrudController<TResponse, TCreateDto, TUpdateDto> {
   }
 
   @Patch(':id')
+  @AdminRoute()
   @ApiOperation({ summary: 'Atualizar registro' })
   @ApiResponse({ status: 200, description: 'Atualizado com sucesso' })
   @ApiResponse({ status: 404, description: 'Registro não encontrado' })
@@ -60,6 +63,7 @@ export abstract class BaseCrudController<TResponse, TCreateDto, TUpdateDto> {
   }
 
   @Delete(':id')
+  @AdminRoute()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Remover registro' })
   @ApiResponse({ status: 204, description: 'Removido com sucesso' })
