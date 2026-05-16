@@ -29,7 +29,7 @@ describe('RolesGuard', () => {
     });
 
     it('deve permitir acesso (rota pública)', () => {
-      const context = mockExecutionContext({ role: Role.USUARIO });
+      const context = mockExecutionContext({ role: Role.CIDADAO });
       expect(guard.canActivate(context)).toBe(true);
     });
 
@@ -55,8 +55,8 @@ describe('RolesGuard', () => {
       expect(guard.canActivate(context)).toBe(true);
     });
 
-    it('deve lançar ForbiddenException para usuário com role USUARIO', () => {
-      const context = mockExecutionContext({ sub: '2', role: Role.USUARIO });
+    it('deve lançar ForbiddenException para usuário com role CIDADAO', () => {
+      const context = mockExecutionContext({ sub: '2', role: Role.CIDADAO });
       expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
     });
 
@@ -96,7 +96,7 @@ describe('RolesGuard', () => {
     beforeEach(() => {
       jest
         .spyOn(reflector, 'getAllAndOverride')
-        .mockReturnValue([Role.ADMIN, Role.USUARIO]);
+        .mockReturnValue([Role.ADMIN, Role.CIDADAO]);
     });
 
     it('deve permitir acesso para ADMIN', () => {
@@ -104,8 +104,8 @@ describe('RolesGuard', () => {
       expect(guard.canActivate(context)).toBe(true);
     });
 
-    it('deve permitir acesso para USUARIO', () => {
-      const context = mockExecutionContext({ sub: '2', role: Role.USUARIO });
+    it('deve permitir acesso para CIDADAO', () => {
+      const context = mockExecutionContext({ sub: '2', role: Role.CIDADAO });
       expect(guard.canActivate(context)).toBe(true);
     });
   });
@@ -114,7 +114,7 @@ describe('RolesGuard', () => {
     it('deve incluir a role requerida na mensagem de ForbiddenException', () => {
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([Role.ADMIN]);
 
-      const context = mockExecutionContext({ sub: '2', role: Role.USUARIO });
+      const context = mockExecutionContext({ sub: '2', role: Role.CIDADAO });
 
       expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
       expect(() => guard.canActivate(context)).toThrow('ADMIN');
