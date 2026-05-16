@@ -1,10 +1,10 @@
-# Template CRUD Genérico - Conecta Paraná
+# Guia de Implementação CRUD - Conecta Paraná
 
-Guia passo a passo para criar novos módulos CRUD replicando o padrão do módulo **Cidades**.
+Este documento descreve o padrão oficial para criação de novos módulos CRUD utilizando a infraestrutura genérica do projeto.
 
 ---
 
-## Estrutura de Referência
+## 1. Arquitetura de Herança (DRY)
 
 ```
 src/modules/cidades/
@@ -19,94 +19,109 @@ src/modules/cidades/
 ├── cidades.service.spec.ts    ← Testes unitários
 └── cidades.module.ts          ← Módulo NestJS
 ```
+Para evitar repetição de código, utilizamos classes base que já implementam as operações padrão (GET, POST, PATCH, DELETE).
+
+- **Service**: Estende `BaseCrudService`
+- **Controller**: Estende `BaseCrudController`
 
 ---
 
-## Passo a Passo
+## 2. Convenções de DTO
 
-### 1. Copiar o módulo `cidades/`
+### Localização
+Os DTOs devem ficar em subpastas dentro do módulo:
+`src/modules/<modulo>/dto/request/` e `src/modules/<modulo>/dto/response/`
 
-```bash
-cp -r src/modules/cidades src/modules/<novo-modulo>
-```
+### Transformações (@Transform)
+- **Strings**: `.trim()`
+- **Email**: `.trim().toLowerCase()`
+- **Siglas**: `.trim().toUpperCase()`
+- **Tipagem**: Sempre `({ value }: { value: unknown })`.
 
-### 2. Renomear arquivos e classes
+### Swagger (@ApiProperty)
+- Obrigatório em todos os campos.
+- Sempre incluir `example`.
 
-- `cidades.service.ts` → `<novo-modulo>.service.ts`
-- `CidadesService` → `<NovoModulo>Service`
-- `CreateCidadeDto` → `Create<NovoModulo>Dto`
-- etc.
+---
 
-### 3. Ajustar DTOs (Customização Principal)
+## 3. Passo a Passo para Novo Módulo
 
-Este é o passo mais importante para definir o comportamento do seu módulo:
-- Defina os campos, validações (`class-validator`) e tipos.
-- Adicione `@ApiProperty` em **todos** os campos para o Swagger.
-- O `BaseController` herdará automaticamente essas definições para a documentação.
-- Aplique `@Transform` conforme convenção (ex: trim, lowercase).
+### 1. Criar a Pasta e o Módulo
+Crie a estrutura básica e registre o módulo no `app.module.ts`.
 
-### 4. Ajustar Service
-
-- Alterar o model Prisma (`this.prisma.client.<entidade>`).
-- Atualizar `TABLE_PREFIX` para o prefixo correto da tabela (ver `ulid.types.ts`).
-- Ajustar mapeamento de resposta (`toResponse()`).
-
-### 5. Ajustar Controller
-
-- Alterar `@ApiTags('...')` e `@Controller('...')`.
-- **Importante**: O `BaseController` já provê documentação básica e rotas.
-- Realize o `override` de métodos **apenas** quando houver necessidade de customizar a lógica, segurança ou comportamento da rota. Não sobrescreva apenas para mudar textos do Swagger.
-
-### 6. Registrar no `app.module.ts`
-
+### 2. Definir DTOs
+Crie o `CreateDto` e o `ResponseDto`. O `UpdateDto` deve usar `PartialType`:
 ```typescript
-import { <NovoModulo>Module } from './modules/<novo-modulo>/<novo-modulo>.module';
+export class UpdateXDto extends PartialType(CreateXDto) {}
+```
 
-@Module({
-  imports: [
-    // ... existentes
-    <NovoModulo>Module,
-  ],
-})
+### 3. Implementar o Service
+```typescript
+@Injectable()
+export class XService extends BaseCrudService<XResponse, CreateXDto, UpdateXDto> {
+  constructor(prisma: PrismaService) {
+    super(prisma, TABLE_PREFIX.X);
+  }
+
+  protected toResponse(entity: any): XResponse {
+    return { ...entity }; // Mapeamento manual aqui
+  }
+}
+```
+
+### 4. Implementar o Controller
+```typescript
+@ApiTags('x')
+@Controller('x')
+export class XController extends BaseCrudController<XResponse, CreateXDto, UpdateXDto> {
+  constructor(private readonly xService: XService) {
+    super(xService);
+  }
+
+  // Override apenas para tipagem do Swagger ou customização de rota
+  @Post()
+  @ApiOperation({ summary: 'Criar X' })
+  override create(@Body() dto: CreateXDto) {
+    return super.create(dto);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Atualizar X' })
+  override update(@Param('id') id: string, @Body() dto: UpdateXDto) {
+    return super.update(id, dto);
+  }
+}
 ```
 
 ---
 
-## Checklist de Validação
+## 4. Segurança por Padrão
 
-- [ ] `@ApiProperty` em todos os campos do DTO
-- [ ] `@Transform` para normalização (trim, lowercase, uppercase)
-- [ ] `PartialType` no UpdateDto
-- [ ] Resposta paginada com `{ items, total, page, pageSize }`
-- [ ] Guards de autorização (`JwtAuthGuard`, `RolesGuard`) em rotas protegidas
-- [ ] `@ApiBearerAuth()` em rotas protegidas
-- [ ] ID gerado com `generateId(TABLE_PREFIX.<ENTIDADE>)`
-- [ ] Testes unitários no service (`*.spec.ts`)
-- [ ] `npm test` passando
-- [ ] `npm run lint` limpo
+- **Público**: `findAll` e `findOne` são públicos por herança.
+- **Admin**: `create`, `update` e `remove` exigem `@AdminRoute()` na base.
+- Se precisar mudar a segurança, sobrescreva o método no controller filho com os guards desejados.
 
 ---
 
-## Padrão de Endpoints
+## 5. Formato de Respostas
 
-| Método | Path | Auth | Descrição |
-|--------|------|------|-----------|
-| `GET` | `/<modulo>` | Público | Listar com paginação |
-| `GET` | `/<modulo>/:id` | Público | Buscar por ID |
-| `POST` | `/<modulo>` | Admin | Criar |
-| `PATCH` | `/<modulo>/:id` | Admin | Atualizar parcialmente |
-| `DELETE` | `/<modulo>/:id` | Admin | Remoção física |
+### Sucesso (Paginado)
+```json
+{
+  "items": [],
+  "total": 42,
+  "page": 1,
+  "pageSize": 10
+}
+```
 
----
-
-## Padrão de Erros
-
-A API utiliza o formato padrão do NestJS. O `exceptionFactory` produz um array de strings planas para mensagens de validação.
-
-| Código | Mensagem (`message`) | Quando |
-|--------|----------------------|--------|
-| 400 | `["campo deve ser email"]` | Erro de validação (strings planas) |
-| 401 | `Unauthorized` | Token ausente ou inválido |
-| 403 | `Forbidden resource` | Usuário sem permissão (ex: não é ADMIN) |
-| 404 | `Not Found` | Registro não encontrado |
-| 409 | `Conflict` | Duplicata de campo único no banco |
+### Erro de Validação
+```json
+{
+  "statusCode": 400,
+  "code": "validation_failed",
+  "message": [
+    { "field": "email", "errors": ["email must be an email"] }
+  ]
+}
+```
