@@ -36,6 +36,12 @@ android {
             versionNameSuffix = "-dev"
             resValue("string", "app_name", "Conecta Paraná DEV")
         }
+
+        create("staging") {
+            dimension = "environment"
+            applicationIdSuffix = ".staging"
+            resValue("string", "app_name", "Conecta Paraná STAGING")
+        }
         
         create("prod") {
             dimension = "environment"
