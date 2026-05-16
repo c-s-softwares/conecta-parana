@@ -6,7 +6,8 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/config/prisma.service';
 import { generateId } from '../src/common/utils/ulid.util';
 import { TABLE_PREFIX } from '../src/common/types/ulid.types';
-import { BadRequestException } from '@nestjs/common';
+
+import { validationPipeConfig } from '../src/config/validation-pipe.config';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication<App>;
@@ -21,22 +22,7 @@ describe('Auth (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        exceptionFactory: (errors) => {
-          return new BadRequestException({
-            code: 'validation_failed',
-            message: errors.map((err) => ({
-              field: err.property,
-              errors: Object.values(err.constraints || {}),
-            })),
-          });
-        },
-      }),
-    );
+    app.useGlobalPipes(new ValidationPipe(validationPipeConfig));
     await app.init();
 
     prisma = app.get<PrismaService>(PrismaService);
