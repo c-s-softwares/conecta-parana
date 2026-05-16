@@ -21,7 +21,7 @@ export class RolesGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    // Sem @Roles() no endpoint → rota pública (sem restrição de role)
+    // Sem @Roles() no endpoint -> rota pública (sem restrição de role)
     if (!requiredRoles || requiredRoles.length === 0) {
       return true;
     }
