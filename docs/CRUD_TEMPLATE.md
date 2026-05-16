@@ -78,18 +78,9 @@ export class XController extends BaseCrudController<XResponse, CreateXDto, Updat
     super(xService);
   }
 
-  // Override apenas para tipagem do Swagger ou customização de rota
-  @Post()
-  @ApiOperation({ summary: 'Criar X' })
-  override create(@Body() dto: CreateXDto) {
-    return super.create(dto);
-  }
-
-  @Patch(':id')
-  @ApiOperation({ summary: 'Atualizar X' })
-  override update(@Param('id') id: string, @Body() dto: UpdateXDto) {
-    return super.update(id, dto);
-  }
+  // o baseController já provê a documentação básica ('Criar Registro', etc)
+  // oo ponto de customização e tipagem para o Swagger deve ser o seu CreateXDto e UpdateXDto.
+  // Realize o 'override' apenas quando precisar customizar a lógica interna de uma rota.
 }
 ```
 
@@ -121,7 +112,7 @@ export class XController extends BaseCrudController<XResponse, CreateXDto, Updat
   "statusCode": 400,
   "code": "validation_failed",
   "message": [
-    { "field": "email", "errors": ["email must be an email"] }
+    "email must be an email"
   ]
 }
 ```
