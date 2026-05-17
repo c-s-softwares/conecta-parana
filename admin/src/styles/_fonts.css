@@ -1,0 +1,31 @@
+/* ============================================================================
+   Design System - Fontes (Admin)
+   Self-host (subset latin) das fontes do Design System, servidas a partir de
+   public/fonts (raiz `/fonts/...`). Sora e Plus Jakarta Sans sao fontes
+   variaveis: um unico arquivo cobre os pesos 400 a 700.
+   Famílias consumidas via tokens: --font-display, --font-body, --font-mono.
+   ========================================================================== */
+
+@font-face {
+  font-family: 'Sora';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/sora-latin-var.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/plus-jakarta-sans-latin-var.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin-400.woff2') format('woff2');
+}
