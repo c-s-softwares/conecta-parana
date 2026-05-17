@@ -5,15 +5,15 @@ import { PageHeader } from '../../shared/components/page-header';
 import { FormContainer } from '../../shared/components/form-container';
 import { FormField } from '../../shared/components/form-field';
 import { noSpecialChars } from '../../shared/validators/no-special-chars.validator';
-import { Post, PostForm } from './posts.model';
+import { Communicate, CommunicateForm } from './communicates.model';
 
-interface PostFormValues {
+interface CommunicateFormValues {
   title: string;
   description: string;
-  category: PostForm['category'] | '';
+  category: CommunicateForm['category'] | '';
 }
 
-const MOCK_POSTS: Post[] = [
+const MOCK_COMMUNICATES: Communicate[] = [
   {
     id: 1,
     title: 'Feira cultural na praça central',
@@ -38,15 +38,15 @@ const MOCK_POSTS: Post[] = [
 ];
 
 @Component({
-  selector: 'app-posts-page',
+  selector: 'app-communicates-page',
   standalone: true,
   imports: [ReactiveFormsModule, PageHeader, FormContainer, FormField],
-  templateUrl: './posts.page.html',
+  templateUrl: './communicates.page.html',
 })
-export class PostsPage extends CrudPage<PostFormValues> {
+export class CommunicatesPage extends CrudPage<CommunicateFormValues> {
   private readonly fb = inject(FormBuilder);
 
-  readonly posts = signal<Post[]>(MOCK_POSTS);
+  readonly communicates = signal<Communicate[]>(MOCK_COMMUNICATES);
 
   readonly categories = [
     { value: 'evento', label: 'Evento' },
@@ -57,10 +57,10 @@ export class PostsPage extends CrudPage<PostFormValues> {
   readonly form = this.fb.nonNullable.group({
     title: ['', [Validators.required, noSpecialChars()]],
     description: ['', [Validators.required]],
-    category: ['' as PostForm['category'] | '', [Validators.required]],
+    category: ['' as CommunicateForm['category'] | '', [Validators.required]],
   });
 
-  protected defaultFormValues(): PostFormValues {
+  protected defaultFormValues(): CommunicateFormValues {
     return {
       title: '',
       description: '',
@@ -89,7 +89,7 @@ export class PostsPage extends CrudPage<PostFormValues> {
   }
 
   get formTitle(): string {
-    return this.editingId() === null ? 'CRIAR POSTAGEM' : 'EDITAR POSTAGEM';
+    return this.editingId() === null ? 'CRIAR COMUNICADO' : 'EDITAR COMUNICADO';
   }
 
   get submitButtonLabel(): string {
@@ -135,26 +135,26 @@ export class PostsPage extends CrudPage<PostFormValues> {
     return '';
   }
 
-  onEdit(post: Post): void {
-    this.editingId.set(post.id);
+  onEdit(communicate: Communicate): void {
+    this.editingId.set(communicate.id);
 
     this.form.reset({
-      title: post.title,
-      description: post.description,
-      category: post.category,
+      title: communicate.title,
+      description: communicate.description,
+      category: communicate.category,
     });
 
     this.view.set('form');
   }
 
   onDelete(id: number): void {
-    const confirmed = window.confirm('Deseja realmente excluir esta postagem?');
+    const confirmed = window.confirm('Deseja realmente excluir este comunicado?');
 
     if (!confirmed) {
       return;
     }
 
-    this.posts.update((list) => list.filter((post) => post.id !== id));
+    this.communicates.update((list) => list.filter((communicate) => communicate.id !== id));
   }
 
   onSubmit(): void {
@@ -167,27 +167,27 @@ export class PostsPage extends CrudPage<PostFormValues> {
     const currentEditingId = this.editingId();
 
     if (currentEditingId !== null) {
-      this.posts.update((list) =>
-        list.map((post) =>
-          post.id === currentEditingId
+      this.communicates.update((list) =>
+        list.map((communicate) =>
+          communicate.id === currentEditingId
             ? {
-                ...post,
+                ...communicate,
                 title: raw.title,
                 description: raw.description,
-                category: raw.category as PostForm['category'],
+                category: raw.category as CommunicateForm['category'],
               }
-            : post,
+            : communicate,
         ),
       );
     } else {
-      const newPost: Post = {
+      const newCommunicate: Communicate = {
         id: Date.now(),
         title: raw.title,
         description: raw.description,
-        category: raw.category as PostForm['category'],
+        category: raw.category as CommunicateForm['category'],
       };
 
-      this.posts.update((list) => [...list, newPost]);
+      this.communicates.update((list) => [...list, newCommunicate]);
     }
 
     this.closeForm();

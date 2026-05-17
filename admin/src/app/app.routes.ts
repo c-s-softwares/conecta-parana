@@ -43,9 +43,9 @@ export const routes: Routes = [
           import('./features/events/events.routes').then((m) => m.EVENTS_ROUTES),
       },
       {
-        path: 'posts',
+        path: 'communicates',
         loadChildren: () =>
-          import('./features/posts/posts.routes').then((m) => m.POSTS_ROUTES),
+          import('./features/communicates/communicates.routes').then((m) => m.COMMUNICATES_ROUTES),
       },
       {
         path: 'admins',
