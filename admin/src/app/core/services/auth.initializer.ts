@@ -2,6 +2,7 @@ import { inject, provideAppInitializer } from '@angular/core';
 import { firstValueFrom, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
+import { decodeJwt } from '../../shared/utils/jwt';
 import { AuthService } from './auth.service';
 
 /**
@@ -14,6 +15,11 @@ export const provideAuthInitializer = () =>
   provideAppInitializer(() => {
     const auth = inject(AuthService);
     if (!auth.hasStoredToken()) {
+      return Promise.resolve();
+    }
+    if (!decodeJwt(auth.getAccessToken())) {
+      // Token armazenado corrompido/malformado: limpa e redireciona para /login
+      auth.logout('expired');
       return Promise.resolve();
     }
     return firstValueFrom(
