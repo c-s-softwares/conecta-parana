@@ -93,7 +93,13 @@ describe('LoginPage', () => {
 
     it('deve chamar auth.login com email, senha e rememberMe', () => {
       const spy = vi.spyOn(authService, 'login').mockReturnValue(
-        of({ id: 1, name: 'Admin', email: 'test@test.com', role: 'ADMIN' as const }),
+        of({
+          id: 'usr_1',
+          name: 'Admin',
+          email: 'test@test.com',
+          role: 'ADMIN' as const,
+          cityId: null,
+        }),
       );
       const router = TestBed.inject(Router);
       const navSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
@@ -102,10 +108,10 @@ describe('LoginPage', () => {
       component.onSubmit();
 
       expect(spy).toHaveBeenCalledWith('test@test.com', '12345678', true);
-      expect(navSpy).toHaveBeenCalledWith('/posts');
+      expect(navSpy).toHaveBeenCalledWith('/dashboard');
     });
 
-    it('deve exibir "Credenciais inválidas" quando o serviço falhar com invalid_credentials', () => {
+    it('deve exibir "Email ou senha inválidos" quando o serviço falhar com invalid_credentials', () => {
       vi.spyOn(authService, 'login').mockReturnValue(
         throwError(() => new AuthError('invalid_credentials')),
       );
@@ -113,7 +119,18 @@ describe('LoginPage', () => {
       fillForm();
       component.onSubmit();
 
-      expect(component['errorMessage']()).toBe('Credenciais inválidas.');
+      expect(component['errorMessage']()).toBe('Email ou senha inválidos.');
+    });
+
+    it('deve exibir mensagem de rate-limit quando too_many_attempts', () => {
+      vi.spyOn(authService, 'login').mockReturnValue(
+        throwError(() => new AuthError('too_many_attempts')),
+      );
+
+      fillForm();
+      component.onSubmit();
+
+      expect(component['errorMessage']()).toBe('Muitas tentativas. Aguarde alguns minutos.');
     });
 
     it('deve exibir mensagem de servidor fora do ar quando server_unreachable', () => {
