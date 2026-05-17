@@ -7,7 +7,7 @@ import { FormField } from '../../shared/components/form-field';
 import { EntityList } from '../../shared/components/entity-list';
 import { ConfirmDialog } from '../../shared/components/confirm-dialog';
 import { ApiService } from '../../core/services/api.service';
-import { AdministratorItem, SuperadminForm } from './superadmin.model';
+import { AdministratorItem, AdminForm } from './admins.model';
 
 const MOCK_ADMINISTRATORS: AdministratorItem[] = [
   {
@@ -34,7 +34,7 @@ const MOCK_ADMINISTRATORS: AdministratorItem[] = [
 ];
 
 @Component({
-  selector: 'app-superadmin-page',
+  selector: 'app-admins-page',
   standalone: true,
   imports: [
     ReactiveFormsModule,
@@ -44,9 +44,9 @@ const MOCK_ADMINISTRATORS: AdministratorItem[] = [
     EntityList,
     ConfirmDialog,
   ],
-  templateUrl: './superadmin.page.html',
+  templateUrl: './admins.page.html',
 })
-export class SuperadminPage extends CrudPage<SuperadminForm> {
+export class AdminsPage extends CrudPage<AdminForm> {
   private readonly fb = inject(FormBuilder);
   private readonly api = inject(ApiService);
 
@@ -66,7 +66,7 @@ export class SuperadminPage extends CrudPage<SuperadminForm> {
     cityId: ['', Validators.required],
   });
 
-  protected defaultFormValues(): SuperadminForm {
+  protected defaultFormValues(): AdminForm {
     return {
       name: '',
       email: '',

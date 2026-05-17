@@ -1,27 +1,38 @@
 import { inject, provideAppInitializer } from '@angular/core';
 import { firstValueFrom, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-
+import { decodeJwt } from '../../shared/utils/jwt';
 import { AuthService } from './auth.service';
 
 /**
  * @description
- * Executa uma vez na inicialização da aplicação. Se houver um token salvo de uma sessão anterior,
- * consulta /auth/me para restaurar o usuário atual antes de qualquer guard avaliar as rotas.
- * Em caso de falha, os tokens são removidos via logout('expired').
+ * Restaura a sessão anterior: havendo token salvo e decodificável, consulta
+ * /auth/me para repor o usuário atual. 
+ * 
+ * Token corrompido/malformado ou /auth/me falhando resultam em logout('expired').
+ */
+export function restoreSession(auth: AuthService): Promise<unknown> {
+  if (!auth.hasStoredToken()) {
+    return Promise.resolve();
+  }
+  if (!decodeJwt(auth.getAccessToken())) {
+    auth.logout('expired');
+    return Promise.resolve();
+  }
+  return firstValueFrom(
+    auth.loadCurrentUser().pipe(
+      catchError(() => {
+        auth.logout('expired');
+        return of(null);
+      }),
+    ),
+  );
+}
+
+/**
+ * @description
+ * Executa restoreSession uma vez na inicialização da aplicação, antes de
+ * qualquer guard avaliar as rotas.
  */
 export const provideAuthInitializer = () =>
-  provideAppInitializer(() => {
-    const auth = inject(AuthService);
-    if (!auth.hasStoredToken()) {
-      return Promise.resolve();
-    }
-    return firstValueFrom(
-      auth.loadCurrentUser().pipe(
-        catchError(() => {
-          auth.logout('expired');
-          return of(null);
-        }),
-      ),
-    );
-  });
+  provideAppInitializer(() => restoreSession(inject(AuthService)));
