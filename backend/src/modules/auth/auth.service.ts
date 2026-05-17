@@ -7,8 +7,8 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { hash, compare } from 'bcryptjs';
 import { PrismaService } from '../../config/prisma.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/request/register.dto';
+import { LoginDto } from './dto/request/login.dto';
 import { generateId } from '../../common/utils/ulid.util';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 
@@ -26,7 +26,10 @@ export class AuthService {
     });
 
     if (exists) {
-      throw new ConflictException('Email já cadastrado');
+      throw new ConflictException({
+        code: 'email_exists',
+        message: 'Email já cadastrado',
+      });
     }
 
     const hashed = await hash(dto.password, 10);
@@ -37,11 +40,11 @@ export class AuthService {
         name: dto.name,
         email: dto.email,
         password: hashed,
-        ...(dto.cityId && { cityId: dto.cityId }),
+        cityId: dto.cityId,
       },
     });
 
-    return { id: user.id, name: user.name, email: user.email, role: user.role };
+    return { id: user.id, name: user.name, email: user.email };
   }
 
   async login(dto: LoginDto) {

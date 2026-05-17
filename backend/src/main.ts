@@ -6,12 +6,9 @@ import { ConfigService } from '@nestjs/config';
 import { Logger } from 'nestjs-pino';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
-import {
-  BadRequestException,
-  ForbiddenException,
-  ValidationPipe,
-} from '@nestjs/common';
+import { ForbiddenException, ValidationPipe } from '@nestjs/common';
 import { SentryExceptionFilter } from './common/sentry-exception.filter';
+import { validationPipeConfig } from './config/validation-pipe.config';
 
 const glitchtipDsn = process.env.GLITCHTIP_DSN;
 if (glitchtipDsn) {
@@ -56,20 +53,7 @@ async function bootstrap(): Promise<void> {
   const { httpAdapter } = app.get(HttpAdapterHost);
   app.useGlobalFilters(new SentryExceptionFilter(httpAdapter));
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      exceptionFactory: (errors) =>
-        new BadRequestException({
-          code: 'validation_failed',
-          message: errors
-            .flatMap((e) => Object.values(e.constraints ?? {}))
-            .filter(Boolean),
-        }),
-    }),
-  );
+  app.useGlobalPipes(new ValidationPipe(validationPipeConfig));
 
   const config = new DocumentBuilder()
     .setTitle('Conecta Paraná API')
