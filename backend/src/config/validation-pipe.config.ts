@@ -10,8 +10,8 @@ export const validationPipeConfig: ValidationPipeOptions = {
       apiError(
         API_ERROR_CODE.VALIDATION_FAILED,
         errors
-        .flatMap((e) => Object.values(e.constraints ?? {}))
-        .filter(Boolean),
-      )
+          .flatMap((e) => Object.values(e.constraints ?? {}))
+          .filter(Boolean),
+      ),
     ),
 };
