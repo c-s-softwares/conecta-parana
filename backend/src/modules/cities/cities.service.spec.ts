@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { CitiesService } from './cities.service';
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
@@ -28,6 +29,10 @@ const mockPrisma = {
   },
 };
 
+const mockCache = {
+  del: jest.fn(),
+};
+
 describe('CitiesService', () => {
   let service: CitiesService;
 
@@ -36,6 +41,7 @@ describe('CitiesService', () => {
       providers: [
         CitiesService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: CACHE_MANAGER, useValue: mockCache },
       ],
     }).compile();
 
@@ -71,11 +77,11 @@ describe('CitiesService', () => {
       const result = await service.findAll({ search: 'Pai' });
 
       expect(result.page).toBe(1);
-      expect(result.pageSize).toBe(20);
+      expect(result.pageSize).toBe(10);
       expect(mockPrisma.client.city.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           skip: 0,
-          take: 20,
+          take: 10,
           where: expect.objectContaining({
             deletedAt: null,
             name: { contains: 'Pai', mode: 'insensitive' },
