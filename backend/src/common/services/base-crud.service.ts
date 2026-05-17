@@ -1,4 +1,5 @@
 import { NotFoundException, ConflictException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../config/prisma.service';
 import { generateId } from '../utils/ulid.util';
 import { TABLE_PREFIX } from '../types/ulid.types';
@@ -7,6 +8,10 @@ import { PaginatedResponseDto } from '../dto/response/paginated-response.dto';
 
 type TablePrefix = (typeof TABLE_PREFIX)[keyof typeof TABLE_PREFIX];
 
+/**
+ * interface(contrato mínimo que todo delegate do prisma implementa.(o primsa gera tipos unicos para cada entidade)
+ * cada model prisma gera tipos unicos, como o basecrud é generico, precisamos garantir que cada model tenha esses 6(7) metodos
+ */
 interface PrismaDelegate {
   findMany(args: unknown): Promise<unknown[]>;
   findFirst(args: unknown): Promise<unknown>;
@@ -17,7 +22,9 @@ interface PrismaDelegate {
 }
 
 export interface BaseCrudConfig {
+  /* prefixo da tabela */
   tablePrefix: TablePrefix;
+  /*nnome da entidade*/
   entityName: string;
   duplicateErrorKey?: string;
   notFoundErrorKey?: string;
@@ -28,14 +35,15 @@ export abstract class BaseCrudService<TResponse, TCreateDto, TUpdateDto> {
   constructor(
     protected readonly prisma: PrismaService,
     protected readonly config: BaseCrudConfig,
-  ) {}
-
+  ) {} //classe abstrata, pede essas 2 configs, sendo o prisma daquela entidade e da propripa entidade, basecrud nao consegue ter acesso direto ao prisma, pois ele é generico
+  //metodos abstratos, para cada entidade filha definir como funciona
+  // retorna a entidade (ex: this.prisma.client.city)
   protected abstract getDelegate(): PrismaDelegate;
   protected abstract toResponse(entity: unknown): TResponse;
   protected abstract toCreateData(dto: TCreateDto): Record<string, unknown>;
   protected abstract toUpdateData(dto: TUpdateDto): Record<string, unknown>;
 
-  // Hooks for customization in subclasses
+  // hooks
   protected buildBaseWhere(): Record<string, unknown> {
     return this.config.softDelete ? { deletedAt: null } : {};
   }
@@ -43,12 +51,24 @@ export abstract class BaseCrudService<TResponse, TCreateDto, TUpdateDto> {
   protected buildSearchWhere(
     query: PaginationQueryDto,
   ): Record<string, unknown> {
+    void query;
     return {};
   }
 
-  protected async checkBeforeDelete(id: string): Promise<void> {}
-  protected async afterSave(entity: unknown): Promise<void> {}
-  protected async afterDelete(id: string): Promise<void> {}
+  protected checkBeforeDelete(id: string): Promise<void> {
+    void id;
+    return Promise.resolve();
+  }
+
+  protected afterSave(entity: unknown): Promise<void> {
+    void entity;
+    return Promise.resolve();
+  }
+
+  protected afterDelete(id: string): Promise<void> {
+    void id;
+    return Promise.resolve();
+  }
 
   async findAll(
     query: PaginationQueryDto,
@@ -106,8 +126,11 @@ export abstract class BaseCrudService<TResponse, TCreateDto, TUpdateDto> {
 
       await this.afterSave(entity);
       return this.toResponse(entity);
-    } catch (error: any) {
-      if (error.code === 'P2002') {
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
         throw new ConflictException(
           this.config.duplicateErrorKey || 'duplicate_record',
         );
@@ -138,8 +161,11 @@ export abstract class BaseCrudService<TResponse, TCreateDto, TUpdateDto> {
 
       await this.afterSave(updated);
       return this.toResponse(updated);
-    } catch (error: any) {
-      if (error.code === 'P2002') {
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
         throw new ConflictException(
           this.config.duplicateErrorKey || 'duplicate_record',
         );

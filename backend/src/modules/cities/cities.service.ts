@@ -95,10 +95,12 @@ export class CitiesService extends BaseCrudService<
   }
 
   protected async afterSave(entity: unknown): Promise<void> {
+    void entity;
     await this.cacheManager.del('/cities');
   }
 
   protected async afterDelete(id: string): Promise<void> {
+    void id;
     await this.cacheManager.del('/cities');
   }
 }
