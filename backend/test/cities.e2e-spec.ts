@@ -4,7 +4,6 @@ import request from 'supertest';
 import { Server } from 'http';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/config/prisma.service';
-import { ValidationExceptionFilter } from './../src/common/filters/validation-exception.filter';
 import { JwtService } from '@nestjs/jwt';
 
 describe('Cities (e2e)', () => {
@@ -29,7 +28,6 @@ describe('Cities (e2e)', () => {
         transform: true,
       }),
     );
-    app.useGlobalFilters(new ValidationExceptionFilter());
 
     prisma = moduleFixture.get<PrismaService>(PrismaService);
     jwtService = moduleFixture.get<JwtService>(JwtService);
