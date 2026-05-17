@@ -1,6 +1,11 @@
 import { Routes } from '@angular/router';
 import { Shell } from './core/layout/shell';
-import { authGuard, loginGuard } from './core/guards/auth.guard';
+import {
+  adminGuard,
+  authenticatedGuard,
+  loginGuard,
+  superAdminGuard,
+} from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -12,10 +17,11 @@ export const routes: Routes = [
   {
     path: '',
     component: Shell,
-    canActivate: [authGuard],
-    canActivateChild: [authGuard],
+    canActivate: [authenticatedGuard, adminGuard],
+    canActivateChild: [authenticatedGuard, adminGuard],
     children: [
       { path: '', redirectTo: 'posts', pathMatch: 'full' },
+      { path: 'dashboard', redirectTo: 'posts', pathMatch: 'full' }, 
       {
         path: 'news',
         loadChildren: () =>
@@ -42,9 +48,10 @@ export const routes: Routes = [
           import('./features/posts/posts.routes').then((m) => m.POSTS_ROUTES),
       },
       {
-        path: 'superadmin',
+        path: 'admins',
+        canActivate: [superAdminGuard],
         loadChildren: () =>
-          import('./features/superadmin/superadmin.routes').then((m) => m.SUPERADMIN_ROUTES),
+          import('./features/admins/admins.routes').then((m) => m.ADMINS_ROUTES),
       },
     ],
   },
