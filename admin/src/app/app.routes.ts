@@ -3,14 +3,14 @@ import { Shell } from './core/layout/shell';
 import {
   adminGuard,
   authenticatedGuard,
-  loginGuard,
   superAdminGuard,
+  unauthenticatedGuard,
 } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
-    path: 'login',
-    canMatch: [loginGuard],
+    path: '',
+    canMatch: [unauthenticatedGuard],
     loadChildren: () =>
       import('./features/login/login.routes').then((m) => m.LOGIN_ROUTES),
   },
@@ -21,7 +21,7 @@ export const routes: Routes = [
     canActivateChild: [authenticatedGuard, adminGuard],
     children: [
       { path: '', redirectTo: 'posts', pathMatch: 'full' },
-      { path: 'dashboard', redirectTo: 'posts', pathMatch: 'full' }, 
+      { path: 'dashboard', redirectTo: 'posts', pathMatch: 'full' },
       {
         path: 'news',
         loadChildren: () =>
@@ -55,5 +55,5 @@ export const routes: Routes = [
       },
     ],
   },
-  { path: '**', redirectTo: 'login' },
+  { path: '**', redirectTo: '' },
 ];
