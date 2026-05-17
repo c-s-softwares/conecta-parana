@@ -158,6 +158,22 @@ O backend devolve `{ code, message }`: `code` é o identificador de máquina; `m
 | `city_scope_denied` | 403 | Admin municipal atuando em recurso de outra cidade |
 | `city_required` | 400 | Super Admin sem informar `cityId` no payload |
 
+### Web Admin: rotas e guards
+
+O JWT é decodificado no cliente (`admin/src/app/shared/utils/jwt.ts`) apenas para roteamento e UI condicional; toda autorização de fato continua no backend (`RolesGuard`/`CityScopeGuard`). O `cityId` não vem em `/auth/me`, então o `AuthService` o extrai do access token.
+
+Guards funcionais em `core/guards/auth.guard.ts`:
+
+| Rota | Guard exigido | Ao negar |
+|---|---|---|
+| `/` (visitante) | `unauthenticatedGuard` (`CanMatch`) | Já autenticado: o match falha e o roteador cai no shell (área logada) |
+| Shell: `/posts`, `/events`, `/news`, `/locals`, `/notifications`, `/dashboard` | `authenticatedGuard` e `adminGuard` | Sem sessão: vai para `/` com `returnUrl`. Sem ADMIN: toast, logout e volta para `/` |
+| `/admins` | `superAdminGuard` (além de authenticated e admin) | ADMIN municipal: toast e redireciona para `/dashboard` |
+
+O login é servido na raiz (`/`), não em `/login`. `/dashboard` é um atalho que redireciona para `/posts`.
+
+> Os tokens ficam em `localStorage` quando "Lembrar-me" está marcado, senão em `sessionStorage`. Se o storage escolhido estiver indisponível, o `AuthService` cai para `sessionStorage` com aviso silencioso no console.
+
 ## Mapeamento HTTP para comportamento UI (web-admin)
 
 O `error.interceptor.ts` normaliza todos os erros HTTP em um objeto `AppError { status, message, details }` e decide se dispara um Toast ou repassa silenciosamente ao componente.
