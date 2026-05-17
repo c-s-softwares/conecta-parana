@@ -1,5 +1,5 @@
+import 'package:conectaparana/core/auth/auth_gate.dart';
 import 'package:conectaparana/core/theme/app_theme.dart';
-import 'package:conectaparana/shared/widgets/placeholder_screen.dart';
 import 'package:flutter/material.dart';
 
 class App extends StatelessWidget {
@@ -13,7 +13,7 @@ class App extends StatelessWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
-      home: const PlaceholderScreen(),
+      home: const AuthGate(),
     );
   }
 }
