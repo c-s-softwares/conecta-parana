@@ -19,9 +19,9 @@ class Avatar extends StatelessWidget {
       child: Container(
         width: size,
         height: size,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           shape: BoxShape.circle,
-          color: const Color(0xFF006733),
+          color: Color(0xFF006733),
         ),
         child: imageUrl != null
             ? ClipOval(
@@ -30,7 +30,7 @@ class Avatar extends StatelessWidget {
                   width: size,
                   height: size,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _buildInitials(),
+                  errorBuilder: (_, e, s) => _buildInitials(),
                 ),
               )
             : _buildInitials(),

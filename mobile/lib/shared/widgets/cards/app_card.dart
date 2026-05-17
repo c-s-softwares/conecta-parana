@@ -80,7 +80,7 @@ class AppCard extends StatelessWidget {
               : Container(
                   height: 140,
                   width: double.infinity,
-                  color: const Color(0xFF006733).withOpacity(0.15),
+                  color: const Color(0xFF006733).withValues(alpha: 0.15),
                   child: const Icon(Icons.event, color: Color(0xFF006733), size: 32),
                 ),
         ),
@@ -175,7 +175,7 @@ class AppCard extends StatelessWidget {
                 : Container(
                     height: 80,
                     width: 80,
-                    color: labelColor.withOpacity(0.15),
+                    color: labelColor.withValues(alpha: 0.15),
                     child: Icon(placeholderIcon, color: labelColor, size: 24),
                   ),
           ),

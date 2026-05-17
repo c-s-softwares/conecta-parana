@@ -152,8 +152,8 @@ class _StyleguideScreenState extends State<StyleguideScreen> {
               context,
               title: 'Opções',
               children: [
-                ListTile(leading: const Icon(Icons.share), title: const Text('Compartilhar')),
-                ListTile(leading: const Icon(Icons.flag_outlined), title: const Text('Denunciar')),
+                const ListTile(leading: Icon(Icons.share), title: Text('Compartilhar')),
+                const ListTile(leading: Icon(Icons.flag_outlined), title: Text('Denunciar')),
               ],
             ),
           ),

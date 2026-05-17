@@ -142,7 +142,7 @@ void main() {
 
     testWidgets('mostra o título do card de evento', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+      const MaterialApp(
           home: Scaffold(
             body: AppCard(
               variant: AppCardVariant.event,
@@ -157,7 +157,7 @@ void main() {
 
     testWidgets('mostra o título do card de comunicado', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: AppCard(
               variant: AppCardVariant.announcement,
@@ -172,7 +172,7 @@ void main() {
 
     testWidgets('mostra o título do card de notícia', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: AppCard(
               variant: AppCardVariant.news,
@@ -187,7 +187,7 @@ void main() {
 
     testWidgets('mostra o título do card de local', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: AppCard(
               variant: AppCardVariant.local,

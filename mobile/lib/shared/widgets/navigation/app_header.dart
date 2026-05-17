@@ -46,7 +46,7 @@ class _AppHeaderState extends State<AppHeader> {
   Widget _buildDefault() {
     return Row(
       children: [
-        Image.asset('assets/images/paranalogo.png', height: 32, errorBuilder: (_, __, ___) {
+        Image.asset('assets/images/paranalogo.png', height: 32, errorBuilder: (context, e, s) {
           return Container(
             width: 32,
             height: 32,
@@ -66,20 +66,20 @@ class _AppHeaderState extends State<AppHeader> {
               color: const Color(0xFFFFF0EE),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Row(
+            child: const Row(
               children: [
-                const Icon(Icons.location_on_outlined, size: 14, color: Color(0xFF006733)),
-                const SizedBox(width: 4),
+                Icon(Icons.location_on_outlined, size: 14, color: Color(0xFF006733)),
+                SizedBox(width: 4),
                 Text(
-                  widget.cityName,
-                  style: const TextStyle(
+                  'Cidade',
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF006733),
                   ),
                 ),
-                const SizedBox(width: 4),
-                const Icon(Icons.keyboard_arrow_down, size: 16, color: Color(0xFF006733)),
+                SizedBox(width: 4),
+                Icon(Icons.keyboard_arrow_down, size: 16, color: Color(0xFF006733)),
               ],
             ),
           ),
@@ -139,11 +139,11 @@ class _AppHeaderState extends State<AppHeader> {
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: const Color(0xFF006733), width: 1.5),
+                borderSide: const BorderSide(color: Color(0xFF006733), width: 1.5),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: const Color(0xFF006733), width: 1.5),
+                borderSide: const BorderSide(color: Color(0xFF006733), width: 1.5),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
