@@ -21,29 +21,35 @@ export function genReqId(req: IncomingMessage, res?: ServerResponse): string {
   return reqId;
 }
 
-export function pinoLoggerFactory(config: ConfigService): Params {
-  const isDev = config.get<string>('NODE_ENV') === 'development';
+function envPinoOptions(env: string | undefined): Record<string, unknown> {
+  switch (env) {
+    case 'development':
+      return {
+        transport: {
+          target: 'pino-pretty',
+          options: {
+            colorize: true,
+            singleLine: true,
+            translateTime: 'SYS:HH:MM:ss.l',
+            ignore: 'pid,hostname',
+          },
+        },
+        level: 'debug',
+      };
+    case 'test':
+      // Silencia o ruído de request logs durante os testes e2e.
+      return { level: 'silent' };
+    default:
+      return { level: 'info' };
+  }
+}
 
+export function pinoLoggerFactory(config: ConfigService): Params {
   return {
     pinoHttp: {
       genReqId,
       autoLogging: true,
-      ...(isDev
-        ? {
-            transport: {
-              target: 'pino-pretty',
-              options: {
-                colorize: true,
-                singleLine: true,
-                translateTime: 'SYS:HH:MM:ss.l',
-                ignore: 'pid,hostname',
-              },
-            },
-            level: 'debug',
-          }
-        : {
-            level: 'info',
-          }),
+      ...envPinoOptions(config.get<string>('NODE_ENV')),
     },
   };
 }
