@@ -34,11 +34,11 @@ describe('Shell', () => {
     expect(el.querySelector('router-outlet')).toBeTruthy();
   });
 
-  it('deve ter 6 navItems com labels, rotas e ícones corretos', () => {
+  it('deve ter 7 navItems com labels, rotas e ícones corretos', () => {
     const items = component['navItems'];
-    expect(items).toHaveLength(6);
+    expect(items).toHaveLength(7);
 
-    const expectedLabels = ['Postagens', 'Eventos', 'Notícias', 'Locais', 'Notificações', 'Administradores'];
+    const expectedLabels = ['Dashboard', 'Comunicados', 'Eventos', 'Notícias', 'Locais', 'Notificações', 'Administradores'];
     expect(items.map((i) => i.label)).toEqual(expectedLabels);
 
     for (const item of items) {
@@ -47,8 +47,8 @@ describe('Shell', () => {
     }
   });
 
-  it('deve renderizar 6 links na sidebar', () => {
-    expect(el.querySelectorAll('app-sidebar a').length).toBe(6);
+  it('deve renderizar 7 links na sidebar', () => {
+    expect(el.querySelectorAll('app-sidebar a').length).toBe(7);
   });
 
   it('onLogout deve chamar AuthService.logout com motivo manual', () => {

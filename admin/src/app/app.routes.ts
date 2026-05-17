@@ -15,7 +15,21 @@ export const routes: Routes = [
     canActivate: [authGuard],
     canActivateChild: [authGuard],
     children: [
-      { path: '', redirectTo: 'posts', pathMatch: 'full' },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      {
+        path: 'communicates',
+        loadChildren: () =>
+          import('./features/communicates/communicates.routes').then(
+            (m) => m.COMMUNICATES_ROUTES,
+          ),
+      },
+      {
+        path: 'dashboard',
+        loadChildren: () =>
+          import('./features/dashboard/dashboard.routes').then(
+            (m) => m.DASHBOARD_ROUTES,
+          ),
+      },
       {
         path: 'news',
         loadChildren: () =>
@@ -35,11 +49,6 @@ export const routes: Routes = [
         path: 'events',
         loadChildren: () =>
           import('./features/events/events.routes').then((m) => m.EVENTS_ROUTES),
-      },
-      {
-        path: 'posts',
-        loadChildren: () =>
-          import('./features/posts/posts.routes').then((m) => m.POSTS_ROUTES),
       },
       {
         path: 'superadmin',

@@ -23,6 +23,12 @@ interface EventsFormValues {
   local_id: string;
 }
 
+/**
+ * @deprecated Não é mais roteado. Substituído por placeholder
+ * enquanto o design não é implementado.
+ *
+ * Mantido apenas como referência de lógica
+ */
 @Component({
   selector: 'app-events-page',
   standalone: true,

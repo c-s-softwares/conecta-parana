@@ -1,9 +1,9 @@
-export interface PostForm {
+export interface CommunicateForm {
   title: string;
   description: string;
   category: 'evento' | 'noticia' | 'comunicado';
 }
 
-export interface Post extends PostForm {
+export interface Communicate extends CommunicateForm {
   id: number;
 }

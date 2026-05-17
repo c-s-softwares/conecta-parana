@@ -33,6 +33,12 @@ const MOCK_ADMINISTRATORS: AdministratorItem[] = [
   },
 ];
 
+/**
+ * @deprecated Não é mais roteado. Substituído por placeholder
+ * enquanto o design não é implementado.
+ *
+ * Mantido apenas como referência de lógica
+ */
 @Component({
   selector: 'app-superadmin-page',
   standalone: true,

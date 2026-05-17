@@ -38,6 +38,12 @@ const MOCK_NEWS: NewsItem[] = [
   },
 ];
 
+/**
+ * @deprecated Não é mais roteado. Substituído por placeholder
+ * enquanto o design não é implementado.
+ *
+ * Mantido apenas como referência de lógica
+ */
 @Component({
   selector: 'app-news-page',
   standalone: true,

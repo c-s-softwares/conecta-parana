@@ -102,7 +102,7 @@ describe('LoginPage', () => {
       component.onSubmit();
 
       expect(spy).toHaveBeenCalledWith('test@test.com', '12345678', true);
-      expect(navSpy).toHaveBeenCalledWith('/posts');
+      expect(navSpy).toHaveBeenCalledWith('/communicates');
     });
 
     it('deve exibir "Credenciais inválidas" quando o serviço falhar com invalid_credentials', () => {

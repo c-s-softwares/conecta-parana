@@ -27,14 +27,14 @@ export const authGuard: CanActivateFn = () => {
 /**
  * @description
  * Impede que um administrador já autenticado acesse a página de login —
- * redireciona direto para /posts.
+ * redireciona direto para /communicates.
  */
 export const loginGuard: CanMatchFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
   if (auth.isAuthenticated() && auth.isAdmin()) {
-    return router.createUrlTree(['/posts']);
+    return router.createUrlTree(['/communicates']);
   }
   return true;
 };

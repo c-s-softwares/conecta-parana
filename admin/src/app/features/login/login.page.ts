@@ -61,7 +61,7 @@ export class LoginPage {
     this.auth.login(email, password, rememberMe).subscribe({
       next: () => {
         this.loading.set(false);
-        this.router.navigateByUrl('/posts');
+        this.router.navigateByUrl('/communicates');
       },
       error: (err: unknown) => {
         this.loading.set(false);

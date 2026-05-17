@@ -13,7 +13,8 @@ export class Shell {
   private readonly auth = inject(AuthService);
 
   protected readonly navItems: NavItem[] = [
-    { label: 'Postagens', route: '/posts', icon: 'pencil-square' },
+    { label: 'Dashboard', route: '/dashboard', icon: 'calendar-days' },
+    { label: 'Comunicados', route: '/communicates', icon: 'pencil-square' },
     { label: 'Eventos', route: '/events', icon: 'calendar-days' },
     { label: 'Notícias', route: '/news', icon: 'newspaper' },
     { label: 'Locais', route: '/locals', icon: 'map-pin' },
