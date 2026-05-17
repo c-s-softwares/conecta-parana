@@ -1,7 +1,6 @@
 import { inject, provideAppInitializer } from '@angular/core';
 import { firstValueFrom, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-
 import { decodeJwt } from '../../shared/utils/jwt';
 import { AuthService } from './auth.service';
 
@@ -18,7 +17,7 @@ export const provideAuthInitializer = () =>
       return Promise.resolve();
     }
     if (!decodeJwt(auth.getAccessToken())) {
-      // Token armazenado corrompido/malformado: limpa e redireciona para /login
+      // Token armazenado corrompido/malformado: limpa e redireciona para a raiz
       auth.logout('expired');
       return Promise.resolve();
     }

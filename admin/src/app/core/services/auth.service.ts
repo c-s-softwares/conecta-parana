@@ -2,7 +2,6 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, catchError, map, switchMap, tap, throwError } from 'rxjs';
-
 import { environment } from '../../../environments/environment';
 import { decodeJwt } from '../../shared/utils/jwt';
 import { AuthError, AuthUser, LoginResponse } from './auth.model';
@@ -86,14 +85,14 @@ export class AuthService {
 
   /**
    * @description
-   * Logout local: limpa o storage, zera o usuário e navega para /login.
+   * Logout local: limpa o storage, zera o usuário e navega para a raiz.
    */
   logout(reason: LogoutReason = 'manual'): void {
     this.revokeOnServer('/auth/logout');
     this.clearStorage();
     this._currentUser.set(null);
     const extras = reason === 'manual' ? undefined : { queryParams: { reason } };
-    this.router.navigate(['/login'], extras);
+    this.router.navigate(['/'], extras);
   }
 
   hasStoredToken(): boolean {
