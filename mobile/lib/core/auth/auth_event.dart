@@ -1,0 +1,4 @@
+enum AuthEvent {
+  adminNotAllowed,
+  sessionExpired,
+}

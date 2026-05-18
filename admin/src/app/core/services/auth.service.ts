@@ -2,13 +2,15 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, catchError, map, switchMap, tap, throwError } from 'rxjs';
-
 import { environment } from '../../../environments/environment';
+import { decodeJwt } from '../../shared/utils/jwt';
 import { AuthError, AuthUser, LoginResponse } from './auth.model';
 
 const ACCESS_TOKEN_KEY = 'auth.access_token';
 const REFRESH_TOKEN_KEY = 'auth.refresh_token';
 const STORAGE_MODE_KEY = 'auth.storage_mode';
+
+type MeResponse = Omit<AuthUser, 'cityId'>;
 
 export type LogoutReason = 'manual' | 'expired' | 'forbidden';
 
@@ -21,6 +23,10 @@ export class AuthService {
   readonly currentUser = this._currentUser.asReadonly();
   readonly isAuthenticated = computed(() => this._currentUser() !== null);
   readonly isAdmin = computed(() => this._currentUser()?.role === 'ADMIN');
+  readonly isSuperAdmin = computed(() => {
+    const user = this._currentUser();
+    return user?.role === 'ADMIN' && user.cityId === null;
+  });
 
   private readonly baseUrl = environment.apiUrl;
 
@@ -46,13 +52,14 @@ export class AuthService {
 
   /**
    * @description
-   * Busca o usuário atual em /auth/me usando o token já armazenado.
-   * Usado pelo login() e pelo inicializador da aplicação após recarregamento da página.
+   * Busca o usuário atual em /auth/me usando o token já armazenado e mescla o
+   * `cityId` decodificado do access token (o backend não retorna cityId no /me).
    */
   loadCurrentUser(): Observable<AuthUser> {
-    return this.http
-      .get<AuthUser>(`${this.baseUrl}/auth/me`)
-      .pipe(tap((user) => this._currentUser.set(user)));
+    return this.http.get<MeResponse>(`${this.baseUrl}/auth/me`).pipe(
+      map((me) => this.buildUser(me)),
+      tap((user) => this._currentUser.set(user)),
+    );
   }
 
   /**
@@ -78,13 +85,14 @@ export class AuthService {
 
   /**
    * @description
-   * Limpa o storage e seta o usuário atual como nulo para garantir o logout corretamente.
+   * Logout local: limpa o storage, zera o usuário e navega para a raiz.
    */
   logout(reason: LogoutReason = 'manual'): void {
+    this.revokeOnServer('/auth/logout');
     this.clearStorage();
     this._currentUser.set(null);
     const extras = reason === 'manual' ? undefined : { queryParams: { reason } };
-    this.router.navigate(['/login'], extras);
+    this.router.navigate(['/'], extras);
   }
 
   hasStoredToken(): boolean {
@@ -92,11 +100,11 @@ export class AuthService {
   }
 
   getAccessToken(): string | null {
-    return localStorage.getItem(ACCESS_TOKEN_KEY) ?? sessionStorage.getItem(ACCESS_TOKEN_KEY);
+    return this.safeGet(localStorage, ACCESS_TOKEN_KEY) ?? this.safeGet(sessionStorage, ACCESS_TOKEN_KEY);
   }
 
   getRefreshToken(): string | null {
-    return localStorage.getItem(REFRESH_TOKEN_KEY) ?? sessionStorage.getItem(REFRESH_TOKEN_KEY);
+    return this.safeGet(localStorage, REFRESH_TOKEN_KEY) ?? this.safeGet(sessionStorage, REFRESH_TOKEN_KEY);
   }
 
   /**
@@ -107,28 +115,76 @@ export class AuthService {
     this._currentUser.set(user);
   }
 
+  private buildUser(me: MeResponse): AuthUser {
+    const claims = decodeJwt(this.getAccessToken());
+    return {
+      ...me,
+      id: me.id || (claims?.sub ?? ''),
+      cityId: claims?.cityId ?? null,
+    };
+  }
+
+  private revokeOnServer(path: string): void {
+    const refreshToken = this.getRefreshToken();
+    this.http
+      .post(`${this.baseUrl}${path}`, { refresh_token: refreshToken })
+      .subscribe({ error: () => undefined });
+  }
+
   private persistTokens(accessToken: string, refreshToken: string, rememberMe: boolean): void {
     this.clearStorage();
-    const store = rememberMe ? localStorage : sessionStorage;
-    store.setItem(ACCESS_TOKEN_KEY, accessToken);
-    store.setItem(REFRESH_TOKEN_KEY, refreshToken);
-    store.setItem(STORAGE_MODE_KEY, rememberMe ? 'local' : 'session');
+    const primary = rememberMe ? localStorage : sessionStorage;
+    if (this.writeTokens(primary, accessToken, refreshToken, rememberMe)) {
+      return;
+    }
+    // Storage primário indisponível (ex: modo anônimo estrito). 
+    // Cai para sessionStorage com aviso silencioso; a sessão dura apenas a aba atual.
+    console.warn('[auth] storage primário indisponível; usando sessionStorage como fallback.');
+    this.writeTokens(sessionStorage, accessToken, refreshToken, false);
+  }
+
+  private writeTokens(
+    store: Storage,
+    accessToken: string,
+    refreshToken: string,
+    rememberMe: boolean,
+  ): boolean {
+    try {
+      store.setItem(ACCESS_TOKEN_KEY, accessToken);
+      store.setItem(REFRESH_TOKEN_KEY, refreshToken);
+      store.setItem(STORAGE_MODE_KEY, rememberMe ? 'local' : 'session');
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private readStorageMode(): 'local' | 'session' {
     return (
-      (localStorage.getItem(STORAGE_MODE_KEY) as 'local' | null) ??
-      (sessionStorage.getItem(STORAGE_MODE_KEY) as 'session' | null) ??
+      (this.safeGet(localStorage, STORAGE_MODE_KEY) as 'local' | null) ??
+      (this.safeGet(sessionStorage, STORAGE_MODE_KEY) as 'session' | null) ??
       'local'
     );
   }
 
   private clearStorage(): void {
     [localStorage, sessionStorage].forEach((store) => {
-      store.removeItem(ACCESS_TOKEN_KEY);
-      store.removeItem(REFRESH_TOKEN_KEY);
-      store.removeItem(STORAGE_MODE_KEY);
+      [ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, STORAGE_MODE_KEY].forEach((key) => {
+        try {
+          store.removeItem(key);
+        } catch {
+          // Storage indisponível, nada acontece.
+        }
+      });
     });
+  }
+
+  private safeGet(store: Storage, key: string): string | null {
+    try {
+      return store.getItem(key);
+    } catch {
+      return null;
+    }
   }
 
   private mapError(err: unknown): AuthError {
@@ -136,6 +192,7 @@ export class AuthService {
     if (err instanceof HttpErrorResponse) {
       if (err.status === 0) return new AuthError('server_unreachable');
       if (err.status === 401) return new AuthError('invalid_credentials');
+      if (err.status === 429) return new AuthError('too_many_attempts');
     }
     return new AuthError('unknown');
   }
