@@ -5,6 +5,7 @@ import { CitiesService } from './cities.service';
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 import { Prisma } from '@prisma/client';
+import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
 
 const MOCK_CITY_ID = `${TABLE_PREFIX.CITY}01HZX3Y4Q9F8TAB1C2DKEYH9MN`;
 
@@ -192,7 +193,7 @@ describe('CitiesService', () => {
       });
 
       await expect(service.remove(MOCK_CITY_ID)).rejects.toThrow(
-        new ConflictException('city_has_content'),
+        new ConflictException(apiError(API_ERROR_CODE.CITY_HAS_CONTENT)),
       );
     });
   });
