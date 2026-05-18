@@ -14,7 +14,8 @@ const MOCK_USER = {
   name: 'João',
   email: 'joao@email.com',
   password: 'hashed_password',
-  role: 'USUARIO',
+  role: 'CIDADAO',
+  cityId: null,
 };
 
 const mockPrisma = {
@@ -28,6 +29,7 @@ const mockPrisma = {
       findUnique: jest.fn(),
       create: jest.fn(),
       delete: jest.fn(),
+      deleteMany: jest.fn(),
     },
   },
 };
@@ -207,6 +209,60 @@ describe('AuthService', () => {
         role: MOCK_USER.role,
       });
       expect(result).not.toHaveProperty('password');
+    });
+  });
+
+  describe('logout', () => {
+    it('deve deletar o refresh token do banco de dados (idempotente)', async () => {
+      mockPrisma.client.refreshToken.deleteMany.mockResolvedValue({ count: 1 });
+
+      await expect(service.logout('any_token')).resolves.not.toThrow();
+
+      expect(mockPrisma.client.refreshToken.deleteMany).toHaveBeenCalledWith({
+        where: { token: 'any_token' },
+      });
+    });
+  });
+
+  describe('logoutAll', () => {
+    it('deve revogar todos os refresh tokens do usuário quando a senha for válida', async () => {
+      const hashed = await hash('senha123', 10);
+      mockPrisma.client.user.findUnique.mockResolvedValue({
+        ...MOCK_USER,
+        password: hashed,
+      });
+      mockPrisma.client.refreshToken.deleteMany.mockResolvedValue({ count: 2 });
+
+      await expect(
+        service.logoutAll(MOCK_USER.id, { password: 'senha123' }),
+      ).resolves.not.toThrow();
+
+      expect(mockPrisma.client.user.findUnique).toHaveBeenCalledWith({
+        where: { id: MOCK_USER.id },
+      });
+      expect(mockPrisma.client.refreshToken.deleteMany).toHaveBeenCalledWith({
+        where: { userId: MOCK_USER.id },
+      });
+    });
+
+    it('deve lançar UnauthorizedException se o usuário não for encontrado', async () => {
+      mockPrisma.client.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.logoutAll(MOCK_USER.id, { password: 'senha123' }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('deve lançar UnauthorizedException se a senha estiver incorreta', async () => {
+      const hashed = await hash('senha123', 10);
+      mockPrisma.client.user.findUnique.mockResolvedValue({
+        ...MOCK_USER,
+        password: hashed,
+      });
+
+      await expect(
+        service.logoutAll(MOCK_USER.id, { password: 'senha_errada' }),
+      ).rejects.toThrow(UnauthorizedException);
     });
   });
 });

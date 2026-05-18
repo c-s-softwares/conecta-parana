@@ -9,6 +9,7 @@ import { hash, compare } from 'bcryptjs';
 import { PrismaService } from '../../config/prisma.service';
 import { RegisterDto } from './dto/request/register.dto';
 import { LoginDto } from './dto/request/login.dto';
+import { LogoutAllDto } from './dto/request/logout-all.dto';
 import { generateId } from '../../common/utils/ulid.util';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 
@@ -62,7 +63,7 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
-    return this.generateTokens(user.id, user.email, user.role);
+    return this.generateTokens(user.id, user.email, user.role, user.cityId);
   }
 
   async refresh(token: string) {
@@ -80,7 +81,7 @@ export class AuthService {
       where: { id: stored.userId },
     });
 
-    return this.generateTokens(user.id, user.email, user.role);
+    return this.generateTokens(user.id, user.email, user.role, user.cityId);
   }
 
   async getMe(userId: string) {
@@ -91,8 +92,44 @@ export class AuthService {
     return { id: user.id, name: user.name, email: user.email, role: user.role };
   }
 
-  private async generateTokens(userId: string, email: string, role: string) {
-    const payload = { sub: userId, email, role };
+  async logout(token: string): Promise<void> {
+    await this.prisma.client.refreshToken.deleteMany({
+      where: { token },
+    });
+  }
+
+  async logoutAll(userId: string, dto: LogoutAllDto): Promise<void> {
+    const user = await this.prisma.client.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException({
+        code: 'unauthenticated',
+        message: 'Usuário não autenticado',
+      });
+    }
+
+    const passwordMatch = await compare(dto.password, user.password);
+
+    if (!passwordMatch) {
+      throw new UnauthorizedException({
+        code: 'invalid_password',
+        message: 'Senha incorreta',
+      });
+    }
+
+    await this.prisma.client.refreshToken.deleteMany({
+      where: { userId },
+    });
+  }
+  private async generateTokens(
+    userId: string,
+    email: string,
+    role: string,
+    cityId: string | null,
+  ) {
+    const payload = { sub: userId, email, role, cityId };
 
     const accessToken = this.jwt.sign(payload);
 
