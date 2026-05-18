@@ -14,6 +14,9 @@ export const API_ERROR_CODE = {
   CITY_REQUIRED: 'city_required',
   VALIDATION_FAILED: 'validation_failed',
   TOO_MANY_ATTEMPTS: 'too_many_attempts',
+  CITY_NOT_FOUND: 'city_not_found',
+  CITY_DUPLICATE: 'city_duplicate',
+  CITY_HAS_CONTENT: 'city_has_content',
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];
@@ -35,6 +38,9 @@ const STATIC_MESSAGE: Record<StaticCode, string> = {
   [API_ERROR_CODE.CITY_SCOPE_DENIED]:  'ADMIN só pode atuar em sua própria cidade',
   [API_ERROR_CODE.CITY_REQUIRED]:      'Super Admin deve informar a cidade (cityId) no payload',
   [API_ERROR_CODE.TOO_MANY_ATTEMPTS]:  'Muitas tentativas. Aguarde e tente novamente.',
+  [API_ERROR_CODE.CITY_NOT_FOUND]:     'Cidade não encontrada',
+  [API_ERROR_CODE.CITY_DUPLICATE]:     'Cidade já cadastrada',
+  [API_ERROR_CODE.CITY_HAS_CONTENT]:   'Cidade possui conteúdo associado',
 };
 
 // Função para manter a(s) role(s) exigida(s) dentro do motivo.
