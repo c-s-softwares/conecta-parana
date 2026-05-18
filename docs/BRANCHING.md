@@ -55,12 +55,12 @@ tipo: descrição curta
 Exemplos:
 
 ```
-feature: add user registration endpoint
-fix: correct geolocation query on PostGIS
+feature(admin): add user registration endpoint
+fix(backend): correct geolocation query on PostGIS
+refactor(landing): extract validation pipe to shared module
+test(mobile): add e2e tests for auth flow
+chore(backend): upgrade Prisma to v7.5
 docs: update setup guide
-refactor: extract validation pipe to shared module
-test: add e2e tests for auth flow
-chore: upgrade Prisma to v7.5
 ci: add mutation testing to backend pipeline
 ```
 

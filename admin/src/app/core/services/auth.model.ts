@@ -4,13 +4,14 @@ export interface LoginForm {
   rememberMe: boolean;
 }
 
-export type UserRole = 'ADMIN' | 'USUARIO';
+export type UserRole = 'ADMIN' | 'CIDADAO';
 
 export interface AuthUser {
-  id: number;
+  id: string;
   name: string;
   email: string;
   role: UserRole;
+  cityId: string | null;
 }
 
 export interface LoginResponse {
@@ -18,8 +19,17 @@ export interface LoginResponse {
   refresh_token: string;
 }
 
+export interface JwtClaims {
+  sub: string;
+  email: string;
+  role: UserRole;
+  cityId: string | null;
+  exp?: number;
+}
+
 export type AuthErrorKind =
   | 'invalid_credentials'
+  | 'too_many_attempts'
   | 'server_unreachable'
   | 'forbidden_role'
   | 'unknown';

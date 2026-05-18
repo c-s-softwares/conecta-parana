@@ -1,49 +1,28 @@
-# Nome e descrição do projeto.
 name: conectaparana
 description: "Plataforma multi-cidade para o estado do Paraná"
-# Esta linha impede que o pacote seja publicado acidentalmente em pub.dev
 publish_to: 'none'
-
-# Define a versão e número de build da aplicação
-# Formato: três números separados por pontos, seguido de um número de build opcional com +
-# Em Android: build-name é versionName e build-number é versionCode
-# Em iOS: build-name é CFBundleShortVersionString e build-number é CFBundleVersion
-# Em Windows: build-name é usado nas partes principal, menor e patch da versão do produto
 version: 1.0.0+1
 
 environment:
   sdk: ^3.11.0
 
-# Dependências que o pacote precisa para funcionar
 dependencies:
   flutter:
     sdk: flutter
+  flutter_secure_storage: ^9.0.0
+  jwt_decoder: ^2.0.1
+  dio: ^5.0.0
 
   cupertino_icons: ^1.0.8
 
-# Dependências de desenvolvimento.
 dev_dependencies:
   flutter_test:
     sdk: flutter
   integration_test:
     sdk: flutter
-  # Conjunto de lints recomendados (ativados em analysis_options.yaml)
   flutter_lints: ^6.0.0
 
 flutter:
-
-  # Inclui a fonte Material Icons para usar ícones da classe Icons
   uses-material-design: true
-
-  # Para adicionar assets, descomente e liste aqui:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
-
-  # Para adicionar fontes customizadas, descomente a seção abaixo:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
+  assets:
+    - assets/images/

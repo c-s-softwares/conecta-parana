@@ -86,7 +86,7 @@ flowchart LR
 
 Todas as chaves primárias do sistema utilizam ULIDs (Universally Unique Lexicographically Sortable Identifier) prefixados no formato `prefix_01HZX...`. Esta estrutura garante identificadores globais, únicos, ordenáveis e type-safe na manipulação de chaves entre front-end e back-end.
 
-A tabela abaixo define a Fonte de Verdade para o mapeamento Entidade -> Prefixo:
+A tabela abaixo define a Fonte de Verdade para o mapeamento Entidade para Prefixo:
 
 | Model / Entidade | Prefixo ULID | Exemplo |
 |---|---|---|
@@ -116,30 +116,85 @@ A tabela abaixo define a Fonte de Verdade para o mapeamento Entidade -> Prefixo:
 ## Deploy
 
 - **Registry:** GitHub Container Registry (GHCR)
-- **Plataforma:** Linux/arm64 (build via QEMU + Buildx)
+- **Plataforma:** Linux/ARM64
 - **Servidor:** VM acessada via SSH
 
-## Mapeamento HTTP → comportamento UI (web-admin)
+## Autorização: roles e escopo por cidade
+
+O enum `Role` tem apenas dois valores: `ADMIN` e `CIDADAO`. O Super Admin não é uma role separada: é um `ADMIN` cujo JWT tem `cityId = null`. O JWT carrega `sub`, `email`, `role` e `cityId` (pode ser `null`).
+
+### Personas
+
+| Persona | role | cityId no JWT | Escopo |
+|---|---|---|---|
+| Cidadão | `CIDADAO` | qualquer / null | Operações públicas e o próprio perfil |
+| Admin municipal | `ADMIN` | `cit_XXX` | Escrita restrita à própria cidade |
+| Super Admin | `ADMIN` | `null` | Qualquer cidade (deve informar `cityId` no payload) |
+
+### Guards
+
+- `JwtAuthGuard`: autentica (401 `unauthenticated`).
+- `RolesGuard` (`@Roles(...)`): exige a role do endpoint (403 `role_denied`).
+- `CityScopeGuard` (`@RequireCityScope({ source?, field? })`): aplica o escopo de cidade. Lê o `cityId` do ator no JWT e o `cityId` alvo do request (`body`/`params`/`query`, padrão `body.cityId`). Roda após o `JwtAuthGuard`.
+
+### Matriz de permissões (CityScopeGuard)
+
+| Persona | cityId alvo | Resultado |
+|---|---|---|
+| Cidadão (`CIDADAO`) | qualquer | Liberado (escopo não se aplica; role tratada pelo `@Roles`) |
+| Super Admin | ausente | 400 `city_required` |
+| Super Admin | informado | Liberado |
+| Admin municipal | igual à própria cidade ou ausente | Liberado |
+| Admin municipal | diferente da própria cidade | 403 `city_scope_denied` |
+
+### Códigos de erro (contrato backend)
+
+O backend devolve `{ code, message }`: `code` é o identificador de máquina; `message` é o motivo em PT-BR. O `/admin` mapeia o `code` para a mensagem ao usuário (mapa próprio e independente).
+
+| Code | HTTP | Quando |
+|---|---|---|
+| `unauthenticated` | 401 | Token ausente, inválido ou expirado |
+| `role_denied` | 403 | Role insuficiente para o endpoint |
+| `city_scope_denied` | 403 | Admin municipal atuando em recurso de outra cidade |
+| `city_required` | 400 | Super Admin sem informar `cityId` no payload |
+
+### Web Admin: rotas e guards
+
+O JWT é decodificado no cliente (`admin/src/app/shared/utils/jwt.ts`) apenas para roteamento e UI condicional; toda autorização de fato continua no backend (`RolesGuard`/`CityScopeGuard`). O `cityId` não vem em `/auth/me`, então o `AuthService` o extrai do access token.
+
+Guards funcionais em `core/guards/auth.guard.ts`:
+
+| Rota | Guard exigido | Ao negar |
+|---|---|---|
+| `/` (visitante) | `unauthenticatedGuard` (`CanMatch`) | Já autenticado: o match falha e o roteador cai no shell (área logada) |
+| Shell: `/posts`, `/events`, `/news`, `/locals`, `/notifications`, `/dashboard` | `authenticatedGuard` e `adminGuard` | Sem sessão: vai para `/` com `returnUrl`. Sem ADMIN: toast, logout e volta para `/` |
+| `/admins` | `superAdminGuard` (além de authenticated e admin) | ADMIN municipal: toast e redireciona para `/dashboard` |
+
+O login é servido na raiz (`/`), não em `/login`. `/dashboard` é um atalho que redireciona para `/posts`.
+
+> Os tokens ficam em `localStorage` quando "Lembrar-me" está marcado, senão em `sessionStorage`. Se o storage escolhido estiver indisponível, o `AuthService` cai para `sessionStorage` com aviso silencioso no console.
+
+## Mapeamento HTTP para comportamento UI (web-admin)
 
 O `error.interceptor.ts` normaliza todos os erros HTTP em um objeto `AppError { status, message, details }` e decide se dispara um Toast ou repassa silenciosamente ao componente.
 
 ### Resolução de mensagem (ordem de prioridade)
 
-1. `error.error?.code` → `ERROR_CODE_MAP`
-2. `error.status` → `STATUS_MAP`
+1. `error.error?.code` - `ERROR_CODE_MAP`
+2. `error.status` - `STATUS_MAP`
 3. Fallback genérico
 
 ### Tabela de comportamento por status
 
 | Status | Toast PT-BR | Repassado ao componente |
 |---|---|---|
-| 401 (chamada autenticada) | "Sessão expirada, faça login novamente." (apenas se refresh falhar) | Não — refresh automático transparente |
-| 400 | Nenhum | Sim — `AppError` com `details` para destacar campos no form |
-| 403 | "Acesso negado." | Sim — `AppError` |
-| 404 | Nenhum | Sim — `AppError` com `details` para exibir "não encontrado" |
-| 429 | Mensagem vinda do backend (`error.error.message`) | Sim — `AppError` |
-| 5xx | "Erro do servidor. Tente novamente em instantes." | Sim — `AppError` |
-| 0 / rede | "Sem conexão com o servidor." + botão "Tentar novamente" | Sim — `AppError` |
+| 401 (chamada autenticada) | "Sessão expirada, faça login novamente." (apenas se refresh falhar) | Não - refresh automático transparente |
+| 400 | Nenhum | Sim - `AppError` com `details` para destacar campos no form |
+| 403 | "Acesso negado." | Sim - `AppError` |
+| 404 | Nenhum | Sim - `AppError` com `details` para exibir "não encontrado" |
+| 429 | Mensagem vinda do backend (`error.error.message`) | Sim - `AppError` |
+| 5xx | "Erro do servidor. Tente novamente em instantes." | Sim - `AppError` |
+| 0 / rede | "Sem conexão com o servidor." + botão "Tentar novamente" | Sim - `AppError` |
 
 Codes planejados:
 

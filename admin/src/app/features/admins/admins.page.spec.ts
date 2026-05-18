@@ -2,11 +2,11 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterModule } from '@angular/router';
 import { of } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
-import { SuperadminPage } from './superadmin.page';
+import { AdminsPage } from './admins.page';
 
-describe('SuperadminPage', () => {
-  let fixture: ComponentFixture<SuperadminPage>;
-  let component: SuperadminPage;
+describe('AdminsPage', () => {
+  let fixture: ComponentFixture<AdminsPage>;
+  let component: AdminsPage;
   let el: HTMLElement;
   let apiService: ApiService;
 
@@ -14,10 +14,10 @@ describe('SuperadminPage', () => {
     vi.spyOn(console, 'log').mockImplementation(() => undefined);
 
     await TestBed.configureTestingModule({
-      imports: [SuperadminPage, RouterModule.forRoot([])],
+      imports: [AdminsPage, RouterModule.forRoot([])],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(SuperadminPage);
+    fixture = TestBed.createComponent(AdminsPage);
     component = fixture.componentInstance;
     apiService = TestBed.inject(ApiService);
     el = fixture.nativeElement;
