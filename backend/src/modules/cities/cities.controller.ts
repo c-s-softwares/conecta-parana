@@ -1,7 +1,7 @@
 import {
   Controller,
   Post,
-  Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -49,7 +49,7 @@ export class CitiesController extends BaseCrudController<
     return super.create(dto);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @UseGuards(JwtAuthGuard, SuperAdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Atualizar cidade' })
