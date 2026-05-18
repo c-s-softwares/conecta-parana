@@ -7,12 +7,15 @@ import { PrismaService } from '../../config/prisma.service';
 import { hash } from 'bcryptjs';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 
+const MOCK_CITY_ID = `${TABLE_PREFIX.CITY}01HZX3Y4Q9F8TAB1C2DKEYH9MN`;
+
 const MOCK_USER = {
-  id: `${TABLE_PREFIX.USER}mock_id`,
+  id: `${TABLE_PREFIX.USER}mock_id_00000000000000000`,
   name: 'João',
   email: 'joao@email.com',
   password: 'hashed_password',
-  role: 'USUARIO',
+  role: 'CIDADAO',
+  cityId: null,
 };
 
 const mockPrisma = {
@@ -56,7 +59,7 @@ describe('AuthService', () => {
   });
 
   describe('register', () => {
-    it('deve criar um usuário com senha hasheada', async () => {
+    it('deve criar um usuário com senha hasheada e cityId', async () => {
       mockPrisma.client.user.findUnique.mockResolvedValue(null);
       mockPrisma.client.user.create.mockResolvedValue({
         id: MOCK_USER.id,
@@ -68,19 +71,27 @@ describe('AuthService', () => {
       const result = await service.register({
         name: MOCK_USER.name,
         email: MOCK_USER.email,
-        password: 'senha123',
+        password: 'Senha123',
+        cityId: MOCK_CITY_ID,
       });
 
       expect(result).toEqual({
         id: MOCK_USER.id,
         name: MOCK_USER.name,
         email: MOCK_USER.email,
-        role: MOCK_USER.role,
       });
+      expect(result).not.toHaveProperty('role');
       expect(mockPrisma.client.user.create).toHaveBeenCalledTimes(1);
+
+      expect(mockPrisma.client.user.create).toHaveBeenCalledWith({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        data: expect.objectContaining({
+          cityId: MOCK_CITY_ID,
+        }),
+      });
     });
 
-    it('deve lançar ConflictException se email já existir', async () => {
+    it('deve lançar ConflictException com error email_exists se email já existir', async () => {
       mockPrisma.client.user.findUnique.mockResolvedValue({
         id: MOCK_USER.id,
         email: MOCK_USER.email,
@@ -90,7 +101,8 @@ describe('AuthService', () => {
         service.register({
           name: MOCK_USER.name,
           email: MOCK_USER.email,
-          password: 'senha123',
+          password: 'Senha123',
+          cityId: MOCK_CITY_ID,
         }),
       ).rejects.toThrow(ConflictException);
     });

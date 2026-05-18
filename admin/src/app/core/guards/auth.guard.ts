@@ -1,40 +1,67 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, CanMatchFn, Router } from '@angular/router';
-
 import { AuthService } from '../services/auth.service';
+import { ToastService } from '../services/toast.service';
 
 /**
  * @description
- * Protege rotas autenticadas: o usuário deve estar logado e ter a função ADMIN.
- * Usuários sem a função ADMIN são deslogados e redirecionados para /login.
+ * Exige um usuário autenticado.
+ * 
+ * Sem sessão, redireciona para a raiz preservando a URL pretendida em returnUrl.
  */
-export const authGuard: CanActivateFn = () => {
+export const authenticatedGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  if (!auth.isAuthenticated()) {
-    return router.createUrlTree(['/login']);
+  if (auth.isAuthenticated()) {
+    return true;
   }
-
-  if (!auth.isAdmin()) {
-    auth.logout('forbidden');
-    return router.createUrlTree(['/login'], { queryParams: { reason: 'forbidden' } });
-  }
-
-  return true;
+  return router.createUrlTree(['/'], { queryParams: { returnUrl: state.url } });
 };
 
 /**
  * @description
- * Impede que um administrador já autenticado acesse a página de login —
- * redireciona direto para /posts.
+ * Exige a role ADMIN. 
+ * 
+ * Um usuário autenticado sem ADMIN é deslogado e redirecionado para a raiz com aviso de papel negado.
  */
-export const loginGuard: CanMatchFn = () => {
+export const adminGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
+  const toast = inject(ToastService);
 
-  if (auth.isAuthenticated() && auth.isAdmin()) {
-    return router.createUrlTree(['/posts']);
+  if (auth.isAdmin()) {
+    return true;
   }
-  return true;
+  toast.show('error', 'Acesso negado para este papel.');
+  auth.logout('forbidden');
+  return router.createUrlTree(['/'], { queryParams: { reason: 'forbidden' } });
+};
+
+/**
+ * @description
+ * Exige ser um Super Admin (ADMIN com cityId nulo). 
+ * 
+ * Administrador municipal é redirecionado para /dashboard com aviso de acesso restrito.
+ */
+export const superAdminGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const toast = inject(ToastService);
+
+  if (auth.isSuperAdmin()) {
+    return true;
+  }
+  toast.show('error', 'Acesso restrito ao Super Admin.');
+  return router.createUrlTree(['/dashboard']);
+};
+
+/**
+ * @description
+ * Libera a rota de login na raiz apenas para visitantes não autenticados.
+ * 
+ * Já autenticado, o match falha e o roteador cai no shell, que redireciona para a área logada.
+ */
+export const unauthenticatedGuard: CanMatchFn = () => {
+  return !inject(AuthService).isAuthenticated();
 };

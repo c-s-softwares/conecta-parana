@@ -15,9 +15,9 @@ import {
 } from '@nestjs/swagger';
 import type { Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
-import { RefreshDto } from './dto/refresh.dto';
+import { RegisterDto } from './dto/request/register.dto';
+import { LoginDto } from './dto/request/login.dto';
+import { RefreshDto } from './dto/request/refresh.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { JwtPayload } from './strategies/jwt.strategy';
 
@@ -29,7 +29,15 @@ export class AuthController {
   @Post('register')
   @ApiOperation({ summary: 'Cadastrar novo usuário' })
   @ApiResponse({ status: 201, description: 'Usuário criado com sucesso!' })
-  @ApiResponse({ status: 409, description: 'Email já cadastrado' })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Erro de validação (validation_failed) ou formato de ID inválido (invalid_id_format)',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Email já cadastrado (email_exists)',
+  })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }

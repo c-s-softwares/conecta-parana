@@ -112,6 +112,18 @@ describe('PinoLoggerModule', () => {
       expect(pinoHttp['level']).toBe('info');
     });
 
+    it('deve usar level silent sem transport em test', () => {
+      const mockConfig = {
+        get: jest.fn().mockReturnValue('test'),
+      } as unknown as ConfigService;
+
+      const result = pinoLoggerFactory(mockConfig);
+
+      const pinoHttp = result.pinoHttp as Record<string, unknown>;
+      expect(pinoHttp['transport']).toBeUndefined();
+      expect(pinoHttp['level']).toBe('silent');
+    });
+
     it('deve incluir autoLogging como true', () => {
       const mockConfig = {
         get: jest.fn().mockReturnValue('production'),

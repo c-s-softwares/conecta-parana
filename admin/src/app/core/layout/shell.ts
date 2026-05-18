@@ -18,8 +18,8 @@ export class Shell {
     { label: 'Notícias', route: '/news', icon: 'newspaper' },
     { label: 'Locais', route: '/locals', icon: 'map-pin' },
     { label: 'Notificações', route: '/notifications', icon: 'bell' },
-    { label: 'Administradores', route: '/superadmin', icon: 'pencil-square' },
-    // TODO: futuramente exibir a tela "criar Adm" apenas para superadministradores.
+    { label: 'Administradores', route: '/admins', icon: 'pencil-square' },
+    // TODO: futuramente exibir a tela "criar Adm" apenas para Super Admin.
   ];
 
   onLogout(): void {
