@@ -62,7 +62,7 @@ describe('Cities (e2e)', () => {
         name: 'Normal',
         email: 'normal@test.com',
         password: 'hash',
-        role: 'USUARIO',
+        role: 'CIDADAO',
         cityId: null,
       },
     });
