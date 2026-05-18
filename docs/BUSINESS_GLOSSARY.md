@@ -25,10 +25,15 @@ Cada termo deve seguir esta estrutura:
 - **Definição:** Usuário final da plataforma que acessa o _app mobile_. Pode visualizar locais, enviar sugestões e avaliações (quando logado).
 - **Contexto de uso:** Perfil de acesso no app mobile. Não possui permissões administrativas.
 
-### Usuário Administrador
+### Admin
 
-- **Definição:** Administrador responsável que acessa a plataforma _admin (web)_ por uma cidade específica. Pode moderar conteúdo, gerenciar locais e responder sugestões dentro da sua cidade.
+- **Definição:** Administrador municipal que acessa a plataforma _admin (web)_ no escopo de uma cidade específica. Tecnicamente é um usuário com role `ADMIN` e `cityId` definido. Pode moderar conteúdo, gerenciar locais e responder sugestões apenas dentro da sua cidade.
 - **Contexto de uso:** Perfil de acesso no painel admin web, com escopo limitado à cidade atribuída.
+
+### Super Admin
+
+- **Definição:** Administrador global da plataforma. Não é uma role separada: é um usuário com role `ADMIN` e `cityId` igual a `null` no JWT. Não fica restrito a uma cidade, podendo atuar em qualquer uma.
+- **Contexto de uso:** Perfil de acesso no painel admin web sem vínculo com cidade única. Usado para administração transversal (ex.: cadastro de cidades e de outros administradores).
 
 ### Local
 

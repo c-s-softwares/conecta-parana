@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormField } from '../../shared/components/form-field';
 import { AuthService } from '../../core/services/auth.service';
 import { AuthError, AuthErrorKind } from '../../core/services/auth.model';
@@ -16,6 +16,7 @@ export class LoginPage {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -61,7 +62,8 @@ export class LoginPage {
     this.auth.login(email, password, rememberMe).subscribe({
       next: () => {
         this.loading.set(false);
-        this.router.navigateByUrl('/posts');
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        this.router.navigateByUrl(returnUrl ?? '/dashboard');
       },
       error: (err: unknown) => {
         this.loading.set(false);
@@ -74,7 +76,9 @@ export class LoginPage {
     const kind: AuthErrorKind = err instanceof AuthError ? err.kind : 'unknown';
     switch (kind) {
       case 'invalid_credentials':
-        return 'Credenciais inválidas.';
+        return 'Email ou senha inválidos.';
+      case 'too_many_attempts':
+        return 'Muitas tentativas. Aguarde alguns minutos.';
       case 'server_unreachable':
         return 'Servidor fora do ar. Tente novamente em instantes.';
       case 'forbidden_role':

@@ -40,7 +40,7 @@ model User {
   name String 
   email String @unique 
   password String
-  role Role @default(USUARIO)
+  role Role @default(CIDADAO)
   cityId String? @map("city_id") 
 
   city City? @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
@@ -59,7 +59,7 @@ model User {
 
 enum Role {
   ADMIN
-  USUARIO
+  CIDADAO
 }
 
 model RefreshToken {
