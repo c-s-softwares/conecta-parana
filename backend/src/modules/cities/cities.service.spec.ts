@@ -137,7 +137,7 @@ describe('CitiesService', () => {
 
       await expect(
         service.create({ name: 'Paiçandu', state: 'PR' }),
-      ).rejects.toThrow(new ConflictException('city_duplicate'));
+      ).rejects.toThrow(new ConflictException('Cidade já cadastrada'));
     });
   });
 
@@ -165,7 +165,7 @@ describe('CitiesService', () => {
 
       await expect(
         service.update(MOCK_CITY_ID, { name: 'Paiçandu' }),
-      ).rejects.toThrow(new ConflictException('city_duplicate'));
+      ).rejects.toThrow(new ConflictException('Cidade já cadastrada'));
     });
   });
 
@@ -192,7 +192,7 @@ describe('CitiesService', () => {
       });
 
       await expect(service.remove(MOCK_CITY_ID)).rejects.toThrow(
-        new ConflictException('city_has_content'),
+        new ConflictException('Cidade possui conteúdo associado'),
       );
     });
   });

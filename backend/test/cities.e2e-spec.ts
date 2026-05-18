@@ -171,9 +171,9 @@ describe('Cities (e2e)', () => {
       .expect(409);
   });
 
-  it('should update a city (PUT /cities/:id)', async () => {
+  it('should update a city (PATCH /cities/:id)', async () => {
     await request(app.getHttpServer() as unknown as Server)
-      .put(`/cities/${testCityId}`)
+      .patch(`/cities/${testCityId}`)
       .set('Authorization', `Bearer ${superAdminToken}`)
       .send({ state: 'SP' })
       .expect(200);
@@ -222,7 +222,8 @@ describe('Cities (e2e)', () => {
       .expect(409);
 
     const body = res.body as Record<string, any>;
-    expect(body.message).toBe('city_has_content');
+    expect(body.code).toBe('city_has_content');
+    expect(body.message).toBe('Cidade possui conteúdo associado');
 
     await prisma.client.local.deleteMany({ where: { id: 'loc_test' } });
   });
