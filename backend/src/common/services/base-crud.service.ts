@@ -5,6 +5,7 @@ import { generateId } from '../utils/ulid.util';
 import { TABLE_PREFIX } from '../types/ulid.types';
 import { PaginationQueryDto } from '../dto/request/pagination-query.dto';
 import { PaginatedResponseDto } from '../dto/response/paginated-response.dto';
+import { apiError, ApiErrorCode } from '../errors/api-error';
 
 type TablePrefix = (typeof TABLE_PREFIX)[keyof typeof TABLE_PREFIX];
 
@@ -26,8 +27,8 @@ export interface BaseCrudConfig {
   tablePrefix: TablePrefix;
   /*nnome da entidade*/
   entityName: string;
-  duplicateErrorKey?: string;
-  notFoundErrorKey?: string;
+  duplicateErrorKey?: ApiErrorCode;
+  notFoundErrorKey?: ApiErrorCode;
   softDelete?: boolean;
 }
 
@@ -107,8 +108,9 @@ export abstract class BaseCrudService<TResponse, TCreateDto, TUpdateDto> {
 
     if (!entity) {
       throw new NotFoundException(
-        this.config.notFoundErrorKey ||
-          `${this.config.entityName} não encontrada`,
+        this.config.notFoundErrorKey
+          ? apiError(this.config.notFoundErrorKey)
+          : `${this.config.entityName} não encontrada`,
       );
     }
 
@@ -132,7 +134,9 @@ export abstract class BaseCrudService<TResponse, TCreateDto, TUpdateDto> {
         error.code === 'P2002'
       ) {
         throw new ConflictException(
-          this.config.duplicateErrorKey || 'duplicate_record',
+          this.config.duplicateErrorKey
+            ? apiError(this.config.duplicateErrorKey)
+            : 'duplicate_record',
         );
       }
       throw error;
@@ -148,8 +152,9 @@ export abstract class BaseCrudService<TResponse, TCreateDto, TUpdateDto> {
 
     if (!entity) {
       throw new NotFoundException(
-        this.config.notFoundErrorKey ||
-          `${this.config.entityName} não encontrada`,
+        this.config.notFoundErrorKey
+          ? apiError(this.config.notFoundErrorKey)
+          : `${this.config.entityName} não encontrada`,
       );
     }
 
@@ -167,7 +172,9 @@ export abstract class BaseCrudService<TResponse, TCreateDto, TUpdateDto> {
         error.code === 'P2002'
       ) {
         throw new ConflictException(
-          this.config.duplicateErrorKey || 'duplicate_record',
+          this.config.duplicateErrorKey
+            ? apiError(this.config.duplicateErrorKey)
+            : 'duplicate_record',
         );
       }
       throw error;
@@ -183,8 +190,9 @@ export abstract class BaseCrudService<TResponse, TCreateDto, TUpdateDto> {
 
     if (!entity) {
       throw new NotFoundException(
-        this.config.notFoundErrorKey ||
-          `${this.config.entityName} não encontrada`,
+        this.config.notFoundErrorKey
+          ? apiError(this.config.notFoundErrorKey)
+          : `${this.config.entityName} não encontrada`,
       );
     }
 

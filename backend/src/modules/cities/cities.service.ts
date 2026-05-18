@@ -8,6 +8,7 @@ import { CreateCityDto } from './dto/request/create-city.dto';
 import { UpdateCityDto } from './dto/request/update-city.dto';
 import { CityResponse } from './dto/response/city-response.dto';
 import { PaginationQueryDto } from '../../common/dto/request/pagination-query.dto';
+import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
 
 @Injectable()
 export class CitiesService extends BaseCrudService<
@@ -89,7 +90,7 @@ export class CitiesService extends BaseCrudService<
     if (cityWithRelations) {
       const { users, events, locals, news } = cityWithRelations._count;
       if (users > 0 || events > 0 || locals > 0 || news > 0) {
-        throw new ConflictException('city_has_content');
+        throw new ConflictException(apiError(API_ERROR_CODE.CITY_HAS_CONTENT));
       }
     }
   }
