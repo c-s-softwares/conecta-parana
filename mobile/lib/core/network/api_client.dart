@@ -21,7 +21,7 @@ class ApiClient {
     dio.interceptors.addAll([
       AuthInterceptor(),
       RefreshInterceptor(dio, refreshDio),
-      ErrorInterceptor(navigatorKey: navigatorKey),
+      ErrorInterceptor(dio: dio, navigatorKey: navigatorKey),
     ]);
   }
 

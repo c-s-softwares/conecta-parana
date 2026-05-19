@@ -8,11 +8,14 @@ class MockAuthService extends Mock implements AuthService {}
 
 class MockHandler extends Mock implements ErrorInterceptorHandler {}
 
+class MockDio extends Mock implements Dio {}
+
 class FakeDioException extends Fake implements DioException {}
 
 void main() {
   late MockAuthService auth;
   late MockHandler handler;
+  late MockDio dio;
   late String? shownMessage;
   late ErrorInterceptor interceptor;
 
@@ -23,9 +26,11 @@ void main() {
   setUp(() {
     auth = MockAuthService();
     handler = MockHandler();
+    dio = MockDio();
     shownMessage = null;
 
     interceptor = ErrorInterceptor(
+      dio: dio,
       authService: auth,
       onShowMessage: (msg) => shownMessage = msg,
     );

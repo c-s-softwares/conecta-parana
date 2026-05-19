@@ -3,17 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:conectaparana/core/auth/auth_service.dart';
 
 class ErrorInterceptor extends Interceptor {
+  final Dio dio;
   final GlobalKey<NavigatorState>? navigatorKey;
   final void Function(String message)? onShowMessage;
   final AuthService auth;
 
   ErrorInterceptor({
+    required this.dio,
     this.navigatorKey,
     this.onShowMessage,
     AuthService? authService,
   }) : auth = authService ?? AuthService.instance;
 
-  void _showSnackBar(String message) {
+  void _showSnackBar(String message, {SnackBarAction? action}) {
     if (onShowMessage != null) {
       onShowMessage!(message);
       return;
@@ -24,7 +26,7 @@ class ErrorInterceptor extends Interceptor {
 
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ).showSnackBar(SnackBar(content: Text(message), action: action));
   }
 
   bool _isValidationError(DioException err) {
@@ -52,7 +54,15 @@ class ErrorInterceptor extends Interceptor {
     final request = err.requestOptions;
 
     if (_isNetworkError(err)) {
-      _showSnackBar('Sem conexão com o servidor.');
+      _showSnackBar(
+        'Sem conexão com o servidor.',
+        action: SnackBarAction(
+          label: 'Tentar novamente',
+          onPressed: () async {
+            await dio.fetch(err.requestOptions);
+          },
+        ),
+      );
       return handler.next(err);
     }
 
