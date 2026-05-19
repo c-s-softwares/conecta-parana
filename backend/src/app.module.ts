@@ -11,6 +11,7 @@ import { CustomThrottlerGuard } from './common/guards/throttler.guard';
 import { AuthModule } from './modules/auth/auth.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { CitiesModule } from './modules/cities/cities.module';
+import { LocalsModule } from './modules/locals/locals.module';
 import { PinoLoggerModule } from './config/logger.module';
 
 @Module({
@@ -36,6 +37,7 @@ import { PinoLoggerModule } from './config/logger.module';
     AuthModule,
     AdminModule,
     CitiesModule,
+    LocalsModule,
     RedisCacheModule,
   ],
   controllers: [AppController],
