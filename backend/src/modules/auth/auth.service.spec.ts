@@ -14,7 +14,8 @@ const MOCK_USER = {
   name: 'João',
   email: 'joao@email.com',
   password: 'hashed_password',
-  role: 'USUARIO',
+  role: 'CIDADAO',
+  cityId: null,
 };
 
 const mockPrisma = {

@@ -62,7 +62,7 @@ export class AuthService {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
-    return this.generateTokens(user.id, user.email, user.role);
+    return this.generateTokens(user.id, user.email, user.role, user.cityId);
   }
 
   async refresh(token: string) {
@@ -80,7 +80,7 @@ export class AuthService {
       where: { id: stored.userId },
     });
 
-    return this.generateTokens(user.id, user.email, user.role);
+    return this.generateTokens(user.id, user.email, user.role, user.cityId);
   }
 
   async getMe(userId: string) {
@@ -91,8 +91,13 @@ export class AuthService {
     return { id: user.id, name: user.name, email: user.email, role: user.role };
   }
 
-  private async generateTokens(userId: string, email: string, role: string) {
-    const payload = { sub: userId, email, role };
+  private async generateTokens(
+    userId: string,
+    email: string,
+    role: string,
+    cityId: string | null,
+  ) {
+    const payload = { sub: userId, email, role, cityId };
 
     const accessToken = this.jwt.sign(payload);
 

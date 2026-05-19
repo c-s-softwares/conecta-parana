@@ -38,8 +38,8 @@ describe('AdminController (e2e)', () => {
         .expect(401);
     });
 
-    it('deve retornar 403 para usuário com role USUARIO', async () => {
-      const token = jwtService.sign({ sub: 2, role: Role.USUARIO });
+    it('deve retornar 403 para usuário com role CIDADAO', async () => {
+      const token = jwtService.sign({ sub: 2, role: Role.CIDADAO });
 
       return request(app.getHttpServer())
         .get('/admin/test')
