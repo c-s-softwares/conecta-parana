@@ -227,7 +227,7 @@ requisição autenticada → backend 401
                                               → SnackBar "Sessão expirada."
 ```
 
-Requisições paralelas que chegam durante um refresh em andamento entram em fila (`List<Completer>`) e são liberadas quando o refresh termina — o mesmo padrão de CPR-305 do web-admin.
+Requisições paralelas que chegam durante um refresh em andamento entram em fila (`List<Completer>`) e são liberadas quando o refresh termina — o mesmo padrão do web-admin.
 
 ### Tabela de comportamento por status (mobile)
 
