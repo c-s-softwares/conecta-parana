@@ -1408,6 +1408,325 @@
                 }
             ]
         }
+        ,
+        {
+            "name": "locals",
+            "description": "Endpoints do CRUD e busca geoespacial de locais",
+            "item": [
+                {
+                    "id": "e0a4f5d2-df08-410a-8bf8-d3c9fa57b9c9",
+                    "name": "Listar locais",
+                    "request": {
+                        "name": "Listar locais",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "locals"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [
+                                {
+                                    "disabled": false,
+                                    "description": {
+                                        "content": "Número da página",
+                                        "type": "text/plain"
+                                    },
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "disabled": false,
+                                    "description": {
+                                        "content": "Quantidade de itens por página",
+                                        "type": "text/plain"
+                                    },
+                                    "key": "pageSize",
+                                    "value": "10"
+                                },
+                                {
+                                    "disabled": true,
+                                    "description": {
+                                        "content": "Termo de busca textual (nome/descrição)",
+                                        "type": "text/plain"
+                                    },
+                                    "key": "search",
+                                    "value": ""
+                                }
+                            ],
+                            "variable": []
+                        },
+                        "method": "GET",
+                        "body": {},
+                        "auth": null
+                    },
+                    "response": [],
+                    "event": [],
+                    "protocolProfileBehavior": {
+                        "disableBodyPruning": true
+                    }
+                },
+                {
+                    "id": "c1f7a2d4-e6bf-49f8-be22-d3c9fa57c8d9",
+                    "name": "Busca geoespacial (Locais próximos)",
+                    "request": {
+                        "name": "Busca geoespacial (Locais próximos)",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "locals",
+                                "nearby"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [
+                                {
+                                    "disabled": false,
+                                    "description": {
+                                        "content": "Latitude (-90 a 90)",
+                                        "type": "text/plain"
+                                    },
+                                    "key": "lat",
+                                    "value": "-25.443"
+                                },
+                                {
+                                    "disabled": false,
+                                    "description": {
+                                        "content": "Longitude (-180 a 180)",
+                                        "type": "text/plain"
+                                    },
+                                    "key": "lng",
+                                    "value": "-49.239"
+                                },
+                                {
+                                    "disabled": false,
+                                    "description": {
+                                        "content": "Raio de busca em metros (máximo 50000)",
+                                        "type": "text/plain"
+                                    },
+                                    "key": "radius",
+                                    "value": "5000"
+                                },
+                                {
+                                    "disabled": true,
+                                    "description": {
+                                        "content": "Filtrar por Categoria ID (opcional)",
+                                        "type": "text/plain"
+                                    },
+                                    "key": "categoryId",
+                                    "value": ""
+                                }
+                            ],
+                            "variable": []
+                        },
+                        "method": "GET",
+                        "body": {},
+                        "auth": null
+                    },
+                    "response": [],
+                    "event": [],
+                    "protocolProfileBehavior": {
+                        "disableBodyPruning": true
+                    }
+                },
+                {
+                    "id": "fa2b3d9c-df08-410a-8bf8-d3c9fa57b9ea",
+                    "name": "Buscar local por ID",
+                    "request": {
+                        "name": "Buscar local por ID",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "locals",
+                                ":id"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": [
+                                {
+                                    "type": "any",
+                                    "value": "",
+                                    "key": "id",
+                                    "disabled": false,
+                                    "description": {
+                                        "content": "ID do local a ser buscado",
+                                        "type": "text/plain"
+                                    }
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "body": {},
+                        "auth": null
+                    },
+                    "response": [],
+                    "event": [],
+                    "protocolProfileBehavior": {
+                        "disableBodyPruning": true
+                    }
+                },
+                {
+                    "id": "d0f8a9e2-6357-4802-84dc-2edb16e0a1fb",
+                    "name": "Criar local",
+                    "request": {
+                        "name": "Criar local",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "locals"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "method": "POST",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"UPA Centro\",\n  \"description\": \"Unidade de Pronto Atendimento 24h\",\n  \"address\": \"Rua das Flores, 123 - Centro\",\n  \"phone\": \"(44) 3221-1234\",\n  \"latitude\": -25.4431,\n  \"longitude\": -49.2392,\n  \"cityId\": \"cit_01HZX3Y4Q9F8TAB1C2DKEYH9MN\",\n  \"categoryId\": \"cat_01HZX3Y4Q9F8TAB1C2DKEYH9XY\"\n}",
+                            "options": {
+                                "raw": {
+                                    "headerFamily": "json",
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{bearerToken}}"
+                                }
+                            ]
+                        }
+                    },
+                    "response": [],
+                    "event": [],
+                    "protocolProfileBehavior": {
+                        "disableBodyPruning": true
+                    }
+                },
+                {
+                    "id": "e0b4f8c2-4a62-4c4a-9be7-b9ba5c722f4f",
+                    "name": "Atualizar local",
+                    "request": {
+                        "name": "Atualizar local",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "locals",
+                                ":id"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": [
+                                {
+                                    "type": "any",
+                                    "value": "",
+                                    "key": "id",
+                                    "disabled": false,
+                                    "description": {
+                                        "content": "ID do local a ser atualizado",
+                                        "type": "text/plain"
+                                    }
+                                }
+                            ]
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "method": "PUT",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"UPA Centro Alterada\",\n  \"description\": \"Nova descrição do local\",\n  \"address\": \"Avenida Principal, 456\",\n  \"phone\": \"(44) 3221-9999\",\n  \"latitude\": -25.445,\n  \"longitude\": -49.240,\n  \"categoryId\": \"cat_01HZX3Y4Q9F8TAB1C2DKEYH9XY\"\n}",
+                            "options": {
+                                "raw": {
+                                    "headerFamily": "json",
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{bearerToken}}"
+                                }
+                            ]
+                        }
+                    },
+                    "response": [],
+                    "event": [],
+                    "protocolProfileBehavior": {
+                        "disableBodyPruning": true
+                    }
+                },
+                {
+                    "id": "6759c2ce-9fc6-4c76-a36d-7d590c80cd2b",
+                    "name": "Deletar local (Soft-delete)",
+                    "request": {
+                        "name": "Deletar local (Soft-delete)",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "locals",
+                                ":id"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": [
+                                {
+                                    "type": "any",
+                                    "value": "",
+                                    "key": "id",
+                                    "disabled": false,
+                                    "description": {
+                                        "content": "ID do local a ser removido",
+                                        "type": "text/plain"
+                                    }
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "body": {},
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{bearerToken}}"
+                                }
+                            ]
+                        }
+                    },
+                    "response": [],
+                    "event": [],
+                    "protocolProfileBehavior": {
+                        "disableBodyPruning": true
+                    }
+                }
+            ]
+        }
     ],
     "event": [],
     "variable": [
