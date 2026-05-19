@@ -53,7 +53,7 @@ graph TD
 |---|---|
 | **Backend** | NestJS 11, TypeScript, Prisma 7 (PrismaPg adapter), PostGIS, Swagger, Jest, Stryker |
 | **Admin** | Angular 21 (standalone components), TypeScript, Tailwind CSS, Vite, Jasmine + Karma, Playwright, Stryker |
-| **Mobile** | Flutter 3.11+, Dart
+| **Mobile** | Flutter 3.11+, Dart, Dio |
 | **Infra** | Docker, Docker Compose, PostgreSQL 16 + PostGIS, GHCR, GitHub Actions |
 
 ## Fluxo de dados
@@ -150,6 +150,50 @@ Codes planejados:
 | `city_scope_denied` | 403 | "Você só pode atuar na sua cidade." |
 | `validation_failed` | 400 | Passthrough sem toast |
 | `too_many_attempts` | 429 | Mensagem vinda do backend |
+
+---
+
+## Mapeamento HTTP → comportamento UI (mobile)
+
+O `ApiClient` (Dio) centraliza todas as requisições HTTP do app mobile. Três interceptors registrados em ordem tratam autenticação, refresh de token e erros:
+
+- `AuthInterceptor` — injeta `Authorization: Bearer <token>` em requisições marcadas com `extra: {'auth': true}`
+- `RefreshInterceptor` — intercepta 401, tenta renovar o token via `POST /auth/refresh` e refaz a requisição original de forma transparente; serializa requisições paralelas para evitar múltiplos refreshes simultâneos
+- `ErrorInterceptor` — mapeia códigos HTTP para mensagens PT-BR via `ScaffoldMessenger`
+
+### Fluxo de auto-refresh
+
+```
+requisição autenticada → backend 401
+  → RefreshInterceptor segura a requisição
+  → POST /auth/refresh
+    → ok: salva novos tokens, refaz requisição original → usuário não percebe nada
+    → 401: AuthService.logout(expired: true) → AuthGate redireciona para /login
+                                              → SnackBar "Sessão expirada."
+```
+
+Requisições paralelas que chegam durante um refresh em andamento entram em fila (`List<Completer>`) e são liberadas quando o refresh termina — o mesmo padrão de CPR-305 do web-admin.
+
+### Tabela de comportamento por status (mobile)
+
+| Status / Cenário | SnackBar PT-BR | Repassado ao componente |
+|---|---|---|
+| 401 em chamada autenticada | Nenhum — refresh automático transparente | Não |
+| 401 após refresh falhar | "Sessão expirada." + redireciona para /login | Não |
+| 400 `validation_failed` | Nenhum | Sim — componente destaca campos inválidos |
+| 404 em GET | Nenhum | Sim — tela exibe estado "não encontrado" com botão Voltar |
+| 403 | "Você não tem permissão para esta ação." | Não |
+| 429 | Mensagem vinda do backend | Não |
+| 5xx | "Erro do servidor. Tente novamente em instantes." | Não |
+| Falha de rede / timeout > 15s | "Sem conexão com o servidor." | Não |
+| Outros | "Erro inesperado. Tente novamente." | Não |
+
+### Observações
+
+- `validation_failed` nunca vira SnackBar — é repassado ao componente para destacar campos do formulário
+- `403 city_scope_denied` praticamente não ocorre no mobile (cidadão só lê e cria conteúdo próprio); se ocorrer, SnackBar genérico
+- Timeout global de 15s configurado em `connectTimeout`, `receiveTimeout` e `sendTimeout`
+- Base URL configurada por flavor via `--dart-define=API_BASE_URL=...` em tempo de compilação
 
 ---
 
