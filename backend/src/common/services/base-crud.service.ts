@@ -5,7 +5,7 @@ import { generateId } from '../utils/ulid.util';
 import { TABLE_PREFIX } from '../types/ulid.types';
 import { PaginationQueryDto } from '../dto/request/pagination-query.dto';
 import { PaginatedResponseDto } from '../dto/response/paginated-response.dto';
-import { apiError, ApiErrorCode } from '../errors/api-error';
+import { apiError, StaticCode } from '../errors/api-error';
 
 type TablePrefix = (typeof TABLE_PREFIX)[keyof typeof TABLE_PREFIX];
 
@@ -27,8 +27,8 @@ export interface BaseCrudConfig {
   tablePrefix: TablePrefix;
   /*nnome da entidade*/
   entityName: string;
-  duplicateErrorKey?: ApiErrorCode;
-  notFoundErrorKey?: ApiErrorCode;
+  duplicateErrorKey?: StaticCode;
+  notFoundErrorKey?: StaticCode;
   softDelete?: boolean;
 }
 

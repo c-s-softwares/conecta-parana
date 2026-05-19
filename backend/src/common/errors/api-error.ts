@@ -25,7 +25,7 @@ export type ApiErrorCode = (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];
 export type ApiErrorBody = { code: ApiErrorCode; message: string | string[] };
 
 // Códigos cujo motivo é fixo (não dependem de dado dinâmico).
-type StaticCode = Exclude<
+export type StaticCode = Exclude<
   ApiErrorCode,
   typeof API_ERROR_CODE.ROLE_DENIED | typeof API_ERROR_CODE.VALIDATION_FAILED
 >;
