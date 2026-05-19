@@ -1,5 +1,7 @@
 import 'package:conectaparana/core/auth/auth_service.dart';
 import 'package:conectaparana/core/config/environment.dart';
+import 'package:conectaparana/core/network/api_client.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 class PlaceholderScreen extends StatelessWidget {
@@ -7,6 +9,13 @@ class PlaceholderScreen extends StatelessWidget {
 
   Future<void> _logout() async {
     await AuthService.instance.logout();
+  }
+
+  Future<void> _testAuthCall() async {
+    await ApiClient.instance.dio.get(
+      '/auth/me',
+      options: Options(extra: {'auth': true}),
+    );
   }
 
   @override
@@ -21,24 +30,22 @@ class PlaceholderScreen extends StatelessWidget {
               'Conecta Paraná',
               style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
-
             const SizedBox(height: 12),
             Text(
               'Ambiente: ${Environment.name}',
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-
             const SizedBox(height: 8),
             Text(
               Environment.apiBaseUrl,
               style: const TextStyle(fontSize: 14, color: Colors.blueGrey),
             ),
-            Center(
-              child: ElevatedButton(
-                onPressed: _logout,
-                child: const Text('LOGOUT'),
-              ),
+
+            ElevatedButton(
+              onPressed: _testAuthCall,
+              child: const Text('TESTAR CHAMADA AUTENTICADA'),
             ),
+            ElevatedButton(onPressed: _logout, child: const Text('LOGOUT')),
           ],
         ),
       ),
