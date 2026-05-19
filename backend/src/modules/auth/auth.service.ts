@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -11,6 +12,7 @@ import { RegisterDto } from './dto/request/register.dto';
 import { LoginDto } from './dto/request/login.dto';
 import { generateId } from '../../common/utils/ulid.util';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
+import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
 
 @Injectable()
 export class AuthService {
@@ -30,6 +32,14 @@ export class AuthService {
         code: 'email_exists',
         message: 'Email já cadastrado',
       });
+    }
+
+    const city = await this.prisma.client.city.findFirst({
+      where: { id: dto.cityId, deletedAt: null },
+    });
+
+    if (!city) {
+      throw new NotFoundException(apiError(API_ERROR_CODE.CITY_NOT_FOUND));
     }
 
     const hashed = await hash(dto.password, 10);
