@@ -8,7 +8,23 @@ import 'package:flutter/material.dart';
 
 class AuthService {
   AuthService._();
-  static final AuthService instance = AuthService._();
+
+  static AuthService? _instance;
+
+  static AuthService get instance {
+    _instance ??= AuthService._();
+    return _instance!;
+  }
+
+  @visibleForTesting
+  static void overrideInstance(AuthService service) {
+    _instance = service;
+  }
+
+  @visibleForTesting
+  static void reset() {
+    _instance = null;
+  }
 
   final TokenStorage _storage = TokenStorage();
 
@@ -66,9 +82,12 @@ class AuthService {
     );
   }
 
-  Future<void> logout() async {
+  Future<void> logout({bool expired = false}) async {
     await _storage.clear();
     currentUser.value = null;
+    if (expired) {
+      _eventController.add(AuthEvent.sessionExpired);
+    }
   }
 
   Future<void> refresh() async {}
@@ -77,5 +96,25 @@ class AuthService {
 
   Future<void> logoutAll() async {
     await logout();
+  }
+
+  Future<String?> getAccessToken() async {
+    final tokens = await _storage.getTokens();
+    return tokens.$1;
+  }
+
+  Future<String?> getRefreshToken() async {
+    final tokens = await _storage.getTokens();
+    return tokens.$2;
+  }
+
+  Future<void> saveTokens({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
+    await _storage.saveTokens(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+    );
   }
 }
