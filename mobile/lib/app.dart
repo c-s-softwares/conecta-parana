@@ -1,3 +1,5 @@
+import 'package:conectaparana/core/auth/presentation/pages/login_screen.dart';
+import 'package:conectaparana/shared/widgets/styleguide_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:conectaparana/core/theme/app_theme.dart';
 import 'package:conectaparana/shared/widgets/pages/splash_page.dart';
@@ -15,6 +17,11 @@ class App extends StatelessWidget {
       theme: AppTheme.light,
       themeMode: ThemeMode.light,
       home: const SplashPage(),
+      routes: {
+        '/login':      (context) => const LoginScreen(),
+        '/home':       (context) => const StyleguideScreen(),
+        '/onboarding': (context) => const StyleguideScreen(),
+      },
     );
   }
 }

@@ -30,7 +30,7 @@ flutter:
   assets:
     - assets/images/
 
-jflutter_native_splash:
+flutter_native_splash:
   color: "#FFFFFF"
   image: "assets/images/paranalogo.png"
   android_12:
