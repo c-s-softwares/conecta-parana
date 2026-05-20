@@ -202,6 +202,7 @@ class _LoginScreenState extends State<LoginScreen> {
             textInputAction: TextInputAction.next,
             autofillHints: const [AutofillHints.username],
             onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
+            onChanged: (_) => setState(() => _emailError = null),
             decoration: _inputDecoration(
               hint: 'seu@email.com',
               icon: Icons.person_outline,
@@ -226,6 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
             autofillHints: const [AutofillHints.password],
             textInputAction: TextInputAction.done,
             onFieldSubmitted: (_) => _login(),
+            onChanged: (_) => setState(() => _passwordError = null),
             decoration: _inputDecoration(
               hint: '••••••••',
               errorText: _passwordError,
@@ -248,7 +250,7 @@ class _LoginScreenState extends State<LoginScreen> {
             width: double.infinity,
             height: 52,
             child: ElevatedButton(
-              onPressed: _isLoading ? null : _login,
+              onPressed: _isLoading || _emailError != null || _passwordError != null ? null : _login,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF006733),
                 foregroundColor: Colors.white,
