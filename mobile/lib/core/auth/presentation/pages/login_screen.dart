@@ -22,6 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _passwordError;
 
   bool _obscurePassword     = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -54,14 +55,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     if (!_validate()) return;
+    if (_isLoading) return; 
 
-    final fakeAccessToken  = generateFakeJwt();
-    final fakeRefreshToken = generateFakeJwt();
+    setState(() => _isLoading = true);
 
-    await AuthService.instance.login(
-      accessToken:  fakeAccessToken,
-      refreshToken: fakeRefreshToken,
-    );
+    try {
+      final fakeAccessToken  = generateFakeJwt();
+      final fakeRefreshToken = generateFakeJwt();
+
+      await AuthService.instance.login(
+        accessToken:  fakeAccessToken,
+        refreshToken: fakeRefreshToken,
+      );
+    } finally {
+      setState(() => _isLoading = true)
+      ;
+    }
   }
 
   @override
@@ -218,7 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
             width: double.infinity,
             height: 52,
             child: ElevatedButton(
-              onPressed: _login,
+              onPressed: _isLoading ? null : _login,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF006733),
                 foregroundColor: Colors.white,
@@ -226,13 +235,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   borderRadius: BorderRadius.circular(50),
                 ),
               ),
-              child: const Text(
-                'Entrar',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              child: _isLoading
+    ? const SizedBox(
+        width: 22,
+        height: 22,
+        child: CircularProgressIndicator(
+          color: Colors.white,
+          strokeWidth: 2.5,
+        ),
+      )
+    : const Text(
+        'Entrar',
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
             ),
           ),
           Align(
