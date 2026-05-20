@@ -24,6 +24,7 @@ import { PaginationQueryDto } from '../../common/dto/request/pagination-query.dt
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { BaseCrudController } from '../../common/controllers/base-crud.controller';
 
 @ApiTags('cidades')
@@ -38,6 +39,7 @@ export class CidadesController extends BaseCrudController<
   }
 
   @Get()
+  @Public()
   @ApiOperation({ summary: 'Listar cidades com paginação' })
   @ApiResponse({ status: 200, description: 'Lista paginada de cidades' })
   override findAll(@Query() query: PaginationQueryDto) {
@@ -45,6 +47,7 @@ export class CidadesController extends BaseCrudController<
   }
 
   @Get(':id')
+  @Public()
   @ApiOperation({ summary: 'Buscar cidade por ID' })
   @ApiResponse({ status: 200, description: 'Cidade encontrada' })
   @ApiResponse({ status: 404, description: 'Cidade não encontrada' })
