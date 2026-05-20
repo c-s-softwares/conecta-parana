@@ -5,24 +5,25 @@ import '../../../../../core/auth/auth_service.dart';
 import '../../../../dev/fakes/fake_jwt.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final Future<void> Function(String email, String senha)? mockLogin;
+
+  const LoginScreen({super.key, this.mockLogin});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-
-  final _emailController    = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _emailFocus         = FocusNode();
-  final _passwordFocus      = FocusNode();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
 
-  final _formKey       = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
   String? _emailError;
   String? _passwordError;
 
-  bool _obscurePassword     = true;
+  bool _obscurePassword = true;
   bool _isLoading = false;
 
   @override
@@ -35,23 +36,23 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   bool _validate() {
-  setState(() {
-    _emailError   = null;
-    _passwordError = null;
+    setState(() {
+      _emailError = null;
+      _passwordError = null;
 
-    final email = _emailController.text.trim();
-    final senha = _passwordController.text;
+      final email = _emailController.text.trim();
+      final senha = _passwordController.text;
 
-    if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
-      _emailError = 'Informe um email válido';
-    }
+      if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
+        _emailError = 'Informe um email válido';
+      }
 
-    if (senha.isEmpty) {
-      _passwordError = 'Informe a senha';
-    }
-  });
+      if (senha.isEmpty) {
+        _passwordError = 'Informe a senha';
+      }
+    });
 
-  return _emailError == null && _passwordError == null;
+    return _emailError == null && _passwordError == null;
   }
 
   Future<void> _login() async {
@@ -59,16 +60,26 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
-
     try {
-      final fakeAccessToken  = generateFakeJwt();
-      final fakeRefreshToken = generateFakeJwt();
+      if (widget.mockLogin != null) {
+        await widget.mockLogin!(
+          _emailController.text.trim(),
+          _passwordController.text,
+        );
+      } else {
+        final fakeAccessToken = generateFakeJwt();
+        final fakeRefreshToken = generateFakeJwt();
 
-      await AuthService.instance.login(
-        accessToken:  fakeAccessToken,
-        refreshToken: fakeRefreshToken,
-      );
+        await AuthService.instance.login(
+          accessToken: fakeAccessToken,
+          refreshToken: fakeRefreshToken,
+        );
+      } // ← fecha o else aqui
 
+      if (mounted) {
+        // ← AGORA ESTÁ FORA DO ELSE
+        Navigator.pushReplacementNamed(context, '/home');
+      }
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         _passwordController.clear();
@@ -98,12 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.white,
       body: AutofillGroup(
         child: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildHero(),
-              _buildForm(),
-            ],
-          ),
+          child: Column(children: [_buildHero(), _buildForm()]),
         ),
       ),
     );
@@ -167,11 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 12),
           const Text(
             'Acesse comunicados, serviços e alertas da sua cidade.',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-              height: 1.5,
-            ),
+            style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
           ),
         ],
       ),
@@ -194,11 +196,11 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 8),
           TextFormField(
-            controller:       _emailController,
-            focusNode:        _emailFocus,
-            keyboardType:     TextInputType.emailAddress,
-            textInputAction:  TextInputAction.next,
-            autofillHints:    const [AutofillHints.username],
+            controller: _emailController,
+            focusNode: _emailFocus,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+            autofillHints: const [AutofillHints.username],
             onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
             decoration: _inputDecoration(
               hint: 'seu@email.com',
@@ -218,11 +220,11 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 8),
           TextFormField(
-            controller:       _passwordController,
-            focusNode:        _passwordFocus,
-            obscureText:      _obscurePassword,
-            autofillHints:    const [AutofillHints.password],
-            textInputAction:  TextInputAction.done,
+            controller: _passwordController,
+            focusNode: _passwordFocus,
+            obscureText: _obscurePassword,
+            autofillHints: const [AutofillHints.password],
+            textInputAction: TextInputAction.done,
             onFieldSubmitted: (_) => _login(),
             decoration: _inputDecoration(
               hint: '••••••••',
@@ -255,27 +257,27 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               child: _isLoading
-    ? const SizedBox(
-        width: 22,
-        height: 22,
-        child: CircularProgressIndicator(
-          color: Colors.white,
-          strokeWidth: 2.5,
-        ),
-      )
-    : const Text(
-        'Entrar',
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.5,
+                      ),
+                    )
+                  : const Text(
+                      'Entrar',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
             ),
           ),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: () {}, 
+              onPressed: () {},
               child: const Text(
                 'Esqueceu a senha?',
                 style: TextStyle(
@@ -338,7 +340,7 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const Text('Não tem conta? '),
               GestureDetector(
-                onTap: () {}, 
+                onTap: () {},
                 child: const Text(
                   'Criar conta',
                   style: TextStyle(
@@ -364,7 +366,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-        
         ],
       ),
     );
@@ -373,19 +374,19 @@ class _LoginScreenState extends State<LoginScreen> {
   InputDecoration _inputDecoration({
     required String hint,
     IconData? icon,
-    Widget? suffix, 
+    Widget? suffix,
     String? errorText,
   }) {
     return InputDecoration(
-      hintText:   hint,
+      hintText: hint,
       errorText: errorText,
-      hintStyle:  const TextStyle(color: Colors.black38),
+      hintStyle: const TextStyle(color: Colors.black38),
       prefixIcon: icon != null
           ? Icon(icon, color: Colors.black38, size: 20)
           : null,
-      suffixIcon:     suffix,
-      filled:         true,
-      fillColor:      const Color(0xFFF5FAF7),
+      suffixIcon: suffix,
+      filled: true,
+      fillColor: const Color(0xFFF5FAF7),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(50),
