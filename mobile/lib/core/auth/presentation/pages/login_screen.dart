@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../../core/auth/auth_service.dart';
 import '../../../../dev/fakes/fake_jwt.dart';
 
@@ -15,6 +16,11 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _emailFocus         = FocusNode();
   final _passwordFocus      = FocusNode();
+
+  final _formKey       = GlobalKey<FormState>();
+  String? _emailError;
+  String? _passwordError;
+
   bool _obscurePassword     = true;
 
   @override
@@ -26,7 +32,29 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  bool _validate() {
+  setState(() {
+    _emailError   = null;
+    _passwordError = null;
+
+    final email = _emailController.text.trim();
+    final senha = _passwordController.text;
+
+    if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
+      _emailError = 'Informe um email válido';
+    }
+
+    if (senha.isEmpty) {
+      _passwordError = 'Informe a senha';
+    }
+  });
+
+  return _emailError == null && _passwordError == null;
+  }
+
   Future<void> _login() async {
+    if (!_validate()) return;
+
     final fakeAccessToken  = generateFakeJwt();
     final fakeRefreshToken = generateFakeJwt();
 
@@ -147,6 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
             decoration: _inputDecoration(
               hint: 'seu@email.com',
               icon: Icons.person_outline,
+              errorText: _emailError,
             ),
           ),
 
@@ -169,6 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
             onFieldSubmitted: (_) => _login(),
             decoration: _inputDecoration(
               hint: '••••••••',
+              errorText: _passwordError,
               suffix: TextButton(
                 onPressed: () =>
                     setState(() => _obscurePassword = !_obscurePassword),
@@ -193,7 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 backgroundColor: const Color(0xFF006733),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(50),
                 ),
               ),
               child: const Text(
@@ -205,6 +235,99 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () {}, 
+              child: const Text(
+                'Esqueceu a senha?',
+                style: TextStyle(
+                  color: Color(0xFF006733),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 8),
+          const Row(
+            children: [
+              Expanded(child: Divider()),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Text('ou', style: TextStyle(color: Colors.black38)),
+              ),
+              Expanded(child: Divider()),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: OutlinedButton(
+              onPressed: () {},
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFFDDDDDD)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(50),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SvgPicture.asset(
+                    'assets/images/googlelogo.svg',
+                    width: 20,
+                    height: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Continuar com Google',
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Não tem conta? '),
+              GestureDetector(
+                onTap: () {}, 
+                child: const Text(
+                  'Criar conta',
+                  style: TextStyle(
+                    color: Color(0xFF006733),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+          Center(
+            child: GestureDetector(
+              onTap: () {},
+              child: const Text(
+                'Ou acesse sem conta',
+                style: TextStyle(
+                  color: Color(0xFF006733),
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+            ),
+          ),
+        
         ],
       ),
     );
@@ -213,10 +336,12 @@ class _LoginScreenState extends State<LoginScreen> {
   InputDecoration _inputDecoration({
     required String hint,
     IconData? icon,
-    Widget? suffix,
+    Widget? suffix, 
+    String? errorText,
   }) {
     return InputDecoration(
       hintText:   hint,
+      errorText: errorText,
       hintStyle:  const TextStyle(color: Colors.black38),
       prefixIcon: icon != null
           ? Icon(icon, color: Colors.black38, size: 20)
@@ -226,15 +351,15 @@ class _LoginScreenState extends State<LoginScreen> {
       fillColor:      const Color(0xFFF5FAF7),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(50),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(50),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(50),
         borderSide: const BorderSide(color: Color(0xFF006733), width: 1.5),
       ),
     );
