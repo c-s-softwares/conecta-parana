@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:dio/dio.dart';
 import '../../../../../core/auth/auth_service.dart';
 import '../../../../dev/fakes/fake_jwt.dart';
 
@@ -55,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     if (!_validate()) return;
-    if (_isLoading) return; 
+    if (_isLoading) return;
 
     setState(() => _isLoading = true);
 
@@ -67,10 +68,28 @@ class _LoginScreenState extends State<LoginScreen> {
         accessToken:  fakeAccessToken,
         refreshToken: fakeRefreshToken,
       );
+
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        _passwordController.clear();
+        _passwordFocus.requestFocus();
+        _showSnackbar('Email ou senha inválidos.');
+      } else {
+        _showSnackbar('Sem conexão. Tente novamente.');
+      }
     } finally {
-      setState(() => _isLoading = true)
-      ;
+      setState(() => _isLoading = false);
     }
+  }
+
+  void _showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFF006733),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
