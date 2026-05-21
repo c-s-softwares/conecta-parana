@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class LogoutAllDto {
   @ApiProperty({
-    example: '123456',
+    example: 'senha123',
     description:
       'Senha atual do usuário para confirmar a revogação de todas as sessões',
   })

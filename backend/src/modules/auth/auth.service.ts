@@ -12,6 +12,7 @@ import { LoginDto } from './dto/request/login.dto';
 import { LogoutAllDto } from './dto/request/logout-all.dto';
 import { generateId } from '../../common/utils/ulid.util';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
+import { API_ERROR_CODE, apiError } from '../../common/errors/api-error';
 
 @Injectable()
 export class AuthService {
@@ -113,10 +114,7 @@ export class AuthService {
     const passwordMatch = await compare(dto.password, user.password);
 
     if (!passwordMatch) {
-      throw new UnauthorizedException({
-        code: 'invalid_password',
-        message: 'Senha incorreta',
-      });
+      throw new UnauthorizedException(apiError(API_ERROR_CODE.INVALID_PASSWORD));
     }
 
     await this.prisma.client.refreshToken.deleteMany({

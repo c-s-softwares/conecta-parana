@@ -17,6 +17,7 @@ export const API_ERROR_CODE = {
   CITY_NOT_FOUND: 'city_not_found',
   CITY_DUPLICATE: 'city_duplicate',
   CITY_HAS_CONTENT: 'city_has_content',
+  INVALID_PASSWORD: 'invalid_password',
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];
@@ -41,6 +42,7 @@ const STATIC_MESSAGE: Record<StaticCode, string> = {
   [API_ERROR_CODE.CITY_NOT_FOUND]:     'Cidade não encontrada',
   [API_ERROR_CODE.CITY_DUPLICATE]:     'Cidade já cadastrada',
   [API_ERROR_CODE.CITY_HAS_CONTENT]:   'Cidade possui conteúdo associado',
+  [API_ERROR_CODE.INVALID_PASSWORD]:   'Senha incorreta',
 };
 
 // Função para manter a(s) role(s) exigida(s) dentro do motivo.
