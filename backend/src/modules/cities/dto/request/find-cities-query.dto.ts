@@ -7,5 +7,5 @@ export class FindCitiesQueryDto extends PaginationQueryDto {
   })
   @IsString()
   @IsOptional()
-  search?: string;
+  declare search?: string;
 }
