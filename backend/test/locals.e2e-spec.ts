@@ -15,8 +15,6 @@ describe('Locals (e2e)', () => {
 
   let superAdminToken: string;
   let curitibaAdminToken: string;
-  // let maringaAdminToken: string;
-  // let normalToken: string;
 
   const curitibaId = `${TABLE_PREFIX.CITY}01HZX3Y4Q9F8TAB1C2DKEYH9C1`;
   const maringaId = `${TABLE_PREFIX.CITY}01HZX3Y4Q9F8TAB1C2DKEYH9M1`;
