@@ -114,7 +114,9 @@ export class AuthService {
     const passwordMatch = await compare(dto.password, user.password);
 
     if (!passwordMatch) {
-      throw new UnauthorizedException(apiError(API_ERROR_CODE.INVALID_PASSWORD));
+      throw new UnauthorizedException(
+        apiError(API_ERROR_CODE.INVALID_PASSWORD),
+      );
     }
 
     await this.prisma.client.refreshToken.deleteMany({
