@@ -10,6 +10,18 @@ import { CityResponse } from './dto/response/city-response.dto';
 import { PaginationQueryDto } from '../../common/dto/request/pagination-query.dto';
 import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
 
+interface RedisCacheClient {
+  keys(pattern: string): Promise<string[]>;
+  del(keys: string[]): Promise<number>;
+}
+
+interface RedisCacheStore {
+  _store?: {
+    client?: RedisCacheClient;
+    _client?: RedisCacheClient;
+  };
+}
+
 @Injectable()
 export class CitiesService extends BaseCrudService<
   CityResponse,
@@ -112,7 +124,8 @@ export class CitiesService extends BaseCrudService<
    */
   private async clearCache(): Promise<void> {
     try {
-      const store = (this.cacheManager as any).store;
+      const store = (this.cacheManager as unknown as { store: RedisCacheStore })
+        .store;
       const client = store?._store?.client || store?._store?._client;
 
       if (client) {

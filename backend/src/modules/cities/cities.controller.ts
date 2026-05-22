@@ -1,10 +1,12 @@
 import {
   Controller,
+  Get,
   Post,
   Patch,
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   UseInterceptors,
   HttpCode,
@@ -24,6 +26,8 @@ import { UpdateCityDto } from './dto/request/update-city.dto';
 import { CACHE_TTL_1_HOUR } from '../../common/constants/cache.constants';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
+import { Public } from '../../common/decorators/public.decorator';
+import { PaginationQueryDto } from '../../common/dto/request/pagination-query.dto';
 import { BaseCrudController } from '../../common/controllers/base-crud.controller';
 
 @ApiTags('cities')
@@ -37,6 +41,23 @@ export class CitiesController extends BaseCrudController<
 > {
   constructor(private readonly citiesService: CitiesService) {
     super(citiesService);
+  }
+
+  @Get()
+  @Public()
+  @ApiOperation({ summary: 'Listar cidades com paginação' })
+  @ApiResponse({ status: 200, description: 'Lista paginada de cidades' })
+  override findAll(@Query() query: PaginationQueryDto) {
+    return super.findAll(query);
+  }
+
+  @Get(':id')
+  @Public()
+  @ApiOperation({ summary: 'Buscar cidade por ID' })
+  @ApiResponse({ status: 200, description: 'Cidade encontrada' })
+  @ApiResponse({ status: 404, description: 'Cidade não encontrada' })
+  override findOne(@Param('id') id: string) {
+    return super.findOne(id);
   }
 
   @Post()
