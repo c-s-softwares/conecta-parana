@@ -28,6 +28,7 @@ flutter doctor
 5. Clique em **Run**
 
 > Peça ajuda ao time se travar no setup do emulador.
+
 ### Limpeza inicial (primeira execução)
 
 Execute antes de rodar o projeto pela primeira vez:
@@ -38,6 +39,7 @@ flutter pub get
 ```
 
 > Isso evita erros de cache e build.
+
 ### Via CLI
 
 ```bash
@@ -47,6 +49,7 @@ flutter run --flavor dev -t lib/main_dev.dart --dart-define=API_BASE_URL=http://
 ```
 
 > `10.0.2.2` é o alias do emulador Android para o `localhost` da máquina host.
+
 ## Rodar no celular físico (Android)
 
 1. Ative o **Modo Desenvolvedor** no celular
@@ -76,11 +79,11 @@ cp .config_dev.example.json .config_dev.json
 
 O projeto possui três ambientes:
 
-| Flavor | Uso | API
-|---|---| --- |
-| dev | Desenvolvimento local | API rodando na máquina do dev
-| staging | Homologação / QA  | API de testes/homologação
-| prod | Build final publicado | API oficial publicada
+| Flavor  | Uso                   | API                           |
+| ------- | --------------------- | ----------------------------- |
+| dev     | Desenvolvimento local | API rodando na máquina do dev |
+| staging | Homologação / QA      | API de testes/homologação     |
+| prod    | Build final publicado | API oficial publicada         |
 
 > Use **apenas o flavor `dev`** para desenvolvimento. O flavor `prod` existe somente para geração do pacote final de produção.
 
@@ -117,11 +120,73 @@ mobile/
 ├── test/                  # Testes unitários
 └── integration_test/      # Testes de integração
 ```
+
 ## Decisões técnicas
+
 - **Flutter 3.11+** com Dart 3.11+
-- **Flavors** dev/prod com entry points separados (`main_dev.dart`, `main_staging.dart`, `main_prod.dart`)
+- **Flavors** dev/staging/prod com entry points separados (`main_dev.dart`, `main_staging.dart`, `main_prod.dart`)
 - **API_BASE_URL** passada via `--dart-define` no build
 - Arquitetura organizada em `core/`, `data/`, `domain/`, `features/`, `services/`, `shared/`
+
+## Armazenamento seguro de tokens (M-07)
+
+Os tokens de autenticação (access token e refresh token) são armazenados utilizando o pacote flutter_secure_storage.
+
+#### Motivação:
+
+- Armazenamento criptografado pelo sistema operacional
+- Uso do Android Keystore e iOS Keychain
+- Evita exposição de tokens em storages não seguros (ex: SharedPreferences)
+- Segue boas práticas de segurança para aplicações mobile
+
+#### Responsabilidades do storage:
+
+- Persistir tokens após login
+- Restaurar sessão ao abrir o app
+- Remover tokens no logout
+- Limpar tokens inválidos ou corrompidos automaticamente
+
+## Role guard defensivo (bloqueio de ADMIN)
+
+O aplicativo mobile é destinado **apenas a usuários finais (cidadãos)**.
+
+Usuários com role **ADMIN** não podem utilizar o app mobile.
+
+Se o JWT contiver:
+
+```bahs
+role = ADMIN
+```
+
+O fluxo será:
+
+1. Login é interrompido
+2. Tokens são removidos do storage
+3. Usuário permanece deslogado
+4. O app exibe mensagem orientando o uso do painel web administrativo
+
+#### Motivação:
+
+- Administração deve ocorrer exclusivamente via painel web
+- Evita uso indevido do app por perfis administrativos
+- Proteção adicional contra configurações incorretas do backend
+
+## Restauração segura de sessão
+
+Na inicialização do app, o AuthService tenta restaurar a sessão salva.
+
+#### Caso os tokens armazenados estejam:
+
+- expirados
+- inválidos
+- corrompidos
+- com formato inesperado
+
+#### O app automaticamente:
+
+- remove os tokens do storage
+- evita crash na inicialização
+- mantém o usuário deslogado
 
 ## Fluxo de Inicialização e Árvore de Decisão de Rotas (Boot Logic)
 
