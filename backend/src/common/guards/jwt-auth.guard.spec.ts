@@ -3,6 +3,7 @@ import { ExecutionContext } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { Reflector } from '@nestjs/core';
 
 const makeMockContext = (
   authHeader?: string,
@@ -13,8 +14,10 @@ const makeMockContext = (
   };
 
   const context = {
-    switchToHttp: () => ({
-      getRequest: () => request,
+    getHandler: jest.fn().mockReturnValue({}),
+    getClass: jest.fn().mockReturnValue({}),
+    switchToHttp: jest.fn().mockReturnValue({
+      getRequest: jest.fn().mockReturnValue(request),
     }),
   } as unknown as ExecutionContext;
 
@@ -25,6 +28,7 @@ describe('JwtAuthGuard', () => {
   let guard: JwtAuthGuard;
   let jwtService: jest.Mocked<JwtService>;
   let configService: jest.Mocked<ConfigService>;
+  let reflector: jest.Mocked<Reflector>;
 
   beforeEach(() => {
     jwtService = {
@@ -35,7 +39,11 @@ describe('JwtAuthGuard', () => {
       get: jest.fn().mockReturnValue('test-secret'),
     } as unknown as jest.Mocked<ConfigService>;
 
-    guard = new JwtAuthGuard(jwtService, configService);
+    reflector = {
+      getAllAndOverride: jest.fn(),
+    } as unknown as jest.Mocked<Reflector>;
+
+    guard = new JwtAuthGuard(jwtService, configService, reflector);
   });
 
   describe('quando o token é válido', () => {

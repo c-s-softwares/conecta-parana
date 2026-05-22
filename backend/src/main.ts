@@ -55,15 +55,17 @@ async function bootstrap(): Promise<void> {
 
   app.useGlobalPipes(new ValidationPipe(validationPipeConfig));
 
-  const config = new DocumentBuilder()
-    .setTitle('Conecta Paraná API')
-    .setDescription('API do sistema Conecta Paraná')
-    .setVersion('0.1.0')
-    .addBearerAuth()
-    .build();
+  if (configService.get<string>('NODE_ENV') !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('Conecta Paraná API')
+      .setDescription('API do sistema Conecta Paraná')
+      .setVersion('0.1.0')
+      .addBearerAuth()
+      .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
   const port = configService.get<number>('PORT') ?? 3000;
   await app.listen(port);

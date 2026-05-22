@@ -8,6 +8,7 @@ import { RedisCacheModule } from './config/redis-cache.module';
 import { envValidationSchema } from './config/env.validation';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { CustomThrottlerGuard } from './common/guards/throttler.guard';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { AuthModule } from './modules/auth/auth.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { CidadesModule } from './modules/cidades/cidades.module';
@@ -42,8 +43,12 @@ import { PinoLoggerModule } from './config/logger.module';
   providers: [
     AppService,
     {
-      provide: APP_GUARD as string,
+      provide: APP_GUARD,
       useClass: CustomThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
     },
   ],
 })

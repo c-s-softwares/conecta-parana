@@ -2,12 +2,14 @@ import { Controller, Get, UseInterceptors } from '@nestjs/common';
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AppService } from './app.service';
+import { Public } from './common/decorators/public.decorator';
 
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get('health')
+  @Public()
   @UseInterceptors(CacheInterceptor)
   @CacheTTL(30_000)
   @ApiOperation({ summary: 'Health check do serviço (cached 30s)' })

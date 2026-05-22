@@ -21,9 +21,9 @@ import { CidadeResponse } from './dto/response/cidade-response.dto';
 import { CreateCidadeDto } from './dto/request/create-cidade.dto';
 import { UpdateCidadeDto } from './dto/request/update-cidade.dto';
 import { PaginationQueryDto } from '../../common/dto/request/pagination-query.dto';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { BaseCrudController } from '../../common/controllers/base-crud.controller';
 
 @ApiTags('cidades')
@@ -38,6 +38,7 @@ export class CidadesController extends BaseCrudController<
   }
 
   @Get()
+  @Public()
   @ApiOperation({ summary: 'Listar cidades com paginação' })
   @ApiResponse({ status: 200, description: 'Lista paginada de cidades' })
   override findAll(@Query() query: PaginationQueryDto) {
@@ -45,6 +46,7 @@ export class CidadesController extends BaseCrudController<
   }
 
   @Get(':id')
+  @Public()
   @ApiOperation({ summary: 'Buscar cidade por ID' })
   @ApiResponse({ status: 200, description: 'Cidade encontrada' })
   @ApiResponse({ status: 404, description: 'Cidade não encontrada' })
@@ -53,7 +55,7 @@ export class CidadesController extends BaseCrudController<
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Criar cidade' })
@@ -64,7 +66,7 @@ export class CidadesController extends BaseCrudController<
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Atualizar cidade' })
@@ -75,7 +77,7 @@ export class CidadesController extends BaseCrudController<
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Deletar cidade' })
