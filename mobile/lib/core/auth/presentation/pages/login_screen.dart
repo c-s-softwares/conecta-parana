@@ -19,7 +19,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
 
-  final _formKey = GlobalKey<FormState>();
   String? _emailError;
   String? _passwordError;
 
@@ -74,10 +73,9 @@ class _LoginScreenState extends State<LoginScreen> {
           accessToken: fakeAccessToken,
           refreshToken: fakeRefreshToken,
         );
-      } // ← fecha o else aqui
+      } 
 
       if (mounted) {
-        // ← AGORA ESTÁ FORA DO ELSE
         Navigator.pushReplacementNamed(context, '/home');
       }
     } on DioException catch (e) {

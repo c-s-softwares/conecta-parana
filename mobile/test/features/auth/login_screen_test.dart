@@ -16,7 +16,7 @@ void main() {
       ),
     );
   }
-  
+
   testWidgets('Deve mostrar erro quando email for inválido', (tester) async {
     await abrirTela(tester);
 
@@ -80,14 +80,3 @@ void main() {
   });
 }
 
-class _RotaObserver extends NavigatorObserver {
-  final void Function(String rota) onPush;
-  _RotaObserver({required this.onPush});
-
-  @override
-  void didPush(Route route, Route? previousRoute) {
-    if (route.settings.name != null) {
-      onPush(route.settings.name!);
-    }
-  }
-}
