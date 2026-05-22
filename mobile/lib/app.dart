@@ -1,6 +1,6 @@
-import 'package:conectaparana/core/auth/auth_gate.dart';
-import 'package:conectaparana/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:conectaparana/core/theme/app_theme.dart';
+import 'package:conectaparana/shared/widgets/pages/splash_page.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -12,11 +12,9 @@ class App extends StatelessWidget {
     return MaterialApp(
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      title: 'Conecta Paraná',
       theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
-      home: const AuthGate(),
+      themeMode: ThemeMode.light,
+      home: const SplashPage(),
     );
   }
 }
