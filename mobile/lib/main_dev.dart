@@ -9,6 +9,6 @@ void main() async {
   Environment.initialize(Flavor.dev);
 
   await AuthService.instance.init();
-
+  
   runApp(const App());
 }

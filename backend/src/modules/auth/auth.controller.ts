@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  UseGuards,
-  Request,
-  HttpCode,
-} from '@nestjs/common';
+import { Controller, Post, Get, Body, Request, HttpCode } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -18,7 +10,7 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/request/register.dto';
 import { LoginDto } from './dto/request/login.dto';
 import { RefreshDto } from './dto/request/refresh.dto';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { Public } from '../../common/decorators/public.decorator';
 import { JwtPayload } from './strategies/jwt.strategy';
 
 @ApiTags('auth')
@@ -27,6 +19,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @Public()
   @ApiOperation({ summary: 'Cadastrar novo usuário' })
   @ApiResponse({ status: 201, description: 'Usuário criado com sucesso!' })
   @ApiResponse({
@@ -47,6 +40,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @Public()
   @HttpCode(200)
   @ApiOperation({ summary: 'Autenticar usuário' })
   @ApiResponse({ status: 200, description: 'Autenticação bem-sucedida' })
@@ -56,6 +50,7 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @Public()
   @HttpCode(200)
   @ApiOperation({ summary: 'Gerar novo token de acesso usando refresh token' })
   @ApiResponse({
@@ -71,7 +66,6 @@ export class AuthController {
   }
 
   @Get('me')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retorno de dados do usuário logado' })
   @ApiResponse({
