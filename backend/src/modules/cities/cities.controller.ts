@@ -60,7 +60,7 @@ export class CitiesController extends BaseCrudController<
   }
 
   @Post()
-  @UseGuards( SuperAdminGuard)
+  @UseGuards(SuperAdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Criar cidade' })
   @ApiResponse({ status: 201, description: 'Cidade criada com sucesso' })
