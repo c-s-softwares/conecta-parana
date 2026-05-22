@@ -24,7 +24,6 @@ import { CityResponse } from './dto/response/city-response.dto';
 import { CreateCityDto } from './dto/request/create-city.dto';
 import { UpdateCityDto } from './dto/request/update-city.dto';
 import { CACHE_TTL_1_HOUR } from '../../common/constants/cache.constants';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
 import { Public } from '../../common/decorators/public.decorator';
 import { PaginationQueryDto } from '../../common/dto/request/pagination-query.dto';
