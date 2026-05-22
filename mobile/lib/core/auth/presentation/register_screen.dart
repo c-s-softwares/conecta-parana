@@ -1,5 +1,7 @@
+import 'package:conectaparana/features/register/data/models/services/city_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:conectaparana/features/register/data/models/services/city_model.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -9,6 +11,12 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _cityService = CityService();
+  List<City> _cities = [];
+  City? _selectedCity;
+  bool _loadingCities = true;
+  bool _citiesError = false;
+
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -23,6 +31,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscureConfirm = true;
   bool _acceptedTerms = false;
 
+  String? _nameError;
+  String? _emailError;
+  String? _passwordError;
+  bool _isLoading = false;
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -34,6 +47,90 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _passwordFocus.dispose();
     _confirmFocus.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCities();
+  }
+
+  Future<void> _loadCities() async {
+    setState(() {
+      _loadingCities = true;
+      _citiesError = false;
+    });
+    try {
+      final cities = await _cityService.getCities();
+      setState(() {
+        _cities = cities;
+        _loadingCities = false;
+      });
+    } catch (e) {
+      setState(() {
+        _loadingCities = false;
+        _citiesError = true;
+      });
+    }
+  }
+
+  bool _passwordForte() {
+    final senha = _passwordController.text;
+    return senha.length >= 8 &&
+        senha.contains(RegExp(r'[A-Z]')) &&
+        senha.contains(RegExp(r'[a-z]')) &&
+        senha.contains(RegExp(r'[0-9]'));
+  }
+
+  bool _validate() {
+    setState(() {
+      _nameError = null;
+      _emailError = null;
+      _passwordError = null;
+
+      if (_nameController.text.trim().isEmpty) {
+        _nameError = 'Informe seu nome';
+      }
+
+      final email = _emailController.text.trim();
+      if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
+        _emailError = 'Informe um email válido';
+      }
+
+      if (!_passwordForte()) {
+        _passwordError = 'A senha não atende os critérios mínimos';
+      }
+    });
+
+    final senhasIguais = _passwordController.text == _confirmController.text;
+    return _nameError == null &&
+        _emailError == null &&
+        _passwordError == null &&
+        senhasIguais &&
+        _acceptedTerms;
+  }
+
+  bool get _formValido {
+    final email = _emailController.text.trim();
+    return _nameController.text.trim().isNotEmpty &&
+        email.contains('@') &&
+        email.contains('.') &&
+        _passwordForte() &&
+        _passwordController.text == _confirmController.text &&
+        _confirmController.text.isNotEmpty &&
+        _acceptedTerms;
+  }
+
+  Future<void> _register() async {
+    if (!_validate()) return;
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+    try {
+      await Future.delayed(const Duration(seconds: 1));
+      if (mounted) Navigator.pushReplacementNamed(context, '/onboarding');
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -98,7 +195,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Nome
         _buildLabel('NOME COMPLETO'),
         const SizedBox(height: 8),
         TextFormField(
@@ -106,9 +202,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
           focusNode: _nameFocus,
           textInputAction: TextInputAction.next,
           onFieldSubmitted: (_) => _emailFocus.requestFocus(),
+          onChanged: (_) => setState(() => _nameError = null),
           decoration: _inputDecoration(
             hint: 'Camila Souza',
             icon: Icons.person_outline,
+            errorText: _nameError,
           ),
         ),
 
@@ -123,7 +221,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
           keyboardType: TextInputType.emailAddress,
           textInputAction: TextInputAction.next,
           onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
-          decoration: _inputDecoration(hint: 'seu@email.com'),
+          onChanged: (_) => setState(() => _emailError = null),
+          decoration: _inputDecoration(
+            hint: 'seu@email.com',
+            errorText: _emailError,
+          ),
         ),
 
         const SizedBox(height: 20),
@@ -140,6 +242,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           onChanged: (_) => setState(() {}),
           decoration: _inputDecoration(
             hint: 'Mínimo 8 caracteres',
+            errorText: _passwordError,
             suffix: TextButton(
               onPressed: () =>
                   setState(() => _obscurePassword = !_obscurePassword),
@@ -191,8 +294,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
         const SizedBox(height: 24),
 
-        // Aceite de termos
+        const SizedBox(height: 20),
+        _buildLabel('CIDADE'),
+
+        const SizedBox(height: 8),
+        _buildCityDropdown(),
+
+        const SizedBox(height: 24),
+
         _buildTermsCheckbox(),
+
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: ElevatedButton(
+            onPressed: _isLoading || !_formValido ? null : _register,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF006733),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(50),
+              ),
+            ),
+            child: _isLoading
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2.5,
+                    ),
+                  )
+                : const Text(
+                    'Criar conta',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+          ),
+        ),
 
         const SizedBox(height: 24),
 
@@ -245,26 +383,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
 
         const SizedBox(height: 16),
-
-        // Botão Criar conta
-        SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF006733),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(50),
-              ),
-            ),
-            child: const Text(
-              'Criar conta',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-            ),
-          ),
-        ),
 
         const SizedBox(height: 20),
 
@@ -485,6 +603,71 @@ class _RegisterScreenState extends State<RegisterScreen> {
         borderRadius: BorderRadius.circular(50),
         borderSide: const BorderSide(color: Color(0xFF006733), width: 1.5),
       ),
+    );
+  }
+
+  Widget _buildCityDropdown() {
+    if (_loadingCities) {
+      return Container(
+        height: 56,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5FAF7),
+          borderRadius: BorderRadius.circular(50),
+        ),
+        child: const Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Color(0xFF006733),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_citiesError) {
+      return Container(
+        height: 56,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5FAF7),
+          borderRadius: BorderRadius.circular(50),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Erro ao carregar cidades.',
+              style: TextStyle(color: Colors.black54),
+            ),
+            TextButton(
+              onPressed: _loadCities,
+              child: const Text(
+                'Tentar novamente',
+                style: TextStyle(
+                  color: Color(0xFF006733),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return DropdownButtonFormField<City>(
+      value: _selectedCity,
+      hint: const Text(
+        'Selecione sua cidade',
+        style: TextStyle(color: Colors.black38),
+      ),
+      decoration: _inputDecoration(hint: ''),
+      borderRadius: BorderRadius.circular(16),
+      items: _cities.map((city) {
+        return DropdownMenuItem<City>(value: city, child: Text(city.name));
+      }).toList(),
+      onChanged: (city) => setState(() => _selectedCity = city),
     );
   }
 }
