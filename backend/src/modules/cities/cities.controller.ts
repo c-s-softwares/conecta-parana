@@ -61,7 +61,7 @@ export class CitiesController extends BaseCrudController<
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  @UseGuards( SuperAdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Criar cidade' })
   @ApiResponse({ status: 201, description: 'Cidade criada com sucesso' })
@@ -71,7 +71,7 @@ export class CitiesController extends BaseCrudController<
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  @UseGuards(SuperAdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Atualizar cidade' })
   @ApiResponse({ status: 200, description: 'Cidade atualizada com sucesso' })
@@ -82,7 +82,7 @@ export class CitiesController extends BaseCrudController<
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  @UseGuards(SuperAdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Deletar cidade' })
   @ApiResponse({ status: 204, description: 'Cidade deletada com sucesso' })
