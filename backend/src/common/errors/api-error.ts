@@ -1,3 +1,5 @@
+import { CATEGORY_ERROR_CODE } from "../../modules/categories/category.service";
+
 /**
  * Fonte única de verdade para os corpos de erro da API.
  *
@@ -14,6 +16,7 @@ export const API_ERROR_CODE = {
   CITY_REQUIRED: 'city_required',
   VALIDATION_FAILED: 'validation_failed',
   TOO_MANY_ATTEMPTS: 'too_many_attempts',
+    INVALID_ICON: 'invalid_icon',
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];
@@ -35,6 +38,7 @@ const STATIC_MESSAGE: Record<StaticCode, string> = {
   [API_ERROR_CODE.CITY_SCOPE_DENIED]:  'ADMIN só pode atuar em sua própria cidade',
   [API_ERROR_CODE.CITY_REQUIRED]:      'Super Admin deve informar a cidade (cityId) no payload',
   [API_ERROR_CODE.TOO_MANY_ATTEMPTS]:  'Muitas tentativas. Aguarde e tente novamente.',
+  [API_ERROR_CODE.INVALID_ICON]: 'Ícone inválido',
 };
 
 // Função para manter a(s) role(s) exigida(s) dentro do motivo.

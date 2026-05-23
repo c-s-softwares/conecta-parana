@@ -12,6 +12,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { CidadesModule } from './modules/cidades/cidades.module';
 import { PinoLoggerModule } from './config/logger.module';
+import { CategoryModule } from './modules/categories/category.module ';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { PinoLoggerModule } from './config/logger.module';
     AdminModule,
     CidadesModule,
     RedisCacheModule,
+    CategoryModule,
   ],
   controllers: [AppController],
   providers: [

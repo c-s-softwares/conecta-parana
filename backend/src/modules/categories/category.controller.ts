@@ -17,10 +17,11 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 
 import { CreateCategoryDto } from './dto/request/create-category.dto';
+import { BaseCrudController } from '../../common/controllers/base-crud.controller';
 
 @ApiTags('categories')
 @Controller('categories')
-export class CategoryController {
+export class CategoryController extends BaseCrudController<CreateCategoryDto,  >{
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
