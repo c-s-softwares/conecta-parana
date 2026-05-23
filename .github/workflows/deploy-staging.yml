@@ -164,13 +164,13 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Insttodas dependencies
+      - name: Install dependencies
         working-directory: mobile
         run: flutter pub get
 
-      - name: Build APK (dev)
+      - name: Build APK (staging)
         working-directory: mobile
-        run: flutter build apk --flavor dev -t lib/main_dev.dart --dart-define=API_BASE_URL=https://api-staging.conectaparana.com.br
+        run: flutter build apk --flavor staging -t lib/main_staging.dart --dart-define=API_BASE_URL=https://api-staging.conectaparana.com.br
 
       - name: Criar GitHub Release (pre-release)
         uses: softprops/action-gh-release@v2
@@ -184,4 +184,4 @@ jobs:
             Commit: ${{ github.sha }}
             Disparado por: ${{ github.actor }}
           files: |
-            mobile/build/app/outputs/flutter-apk/app-dev-release.apk
+            mobile/build/app/outputs/flutter-apk/app-staging-release.apk
