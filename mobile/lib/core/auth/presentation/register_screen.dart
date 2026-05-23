@@ -1,7 +1,10 @@
-import 'package:conectaparana/features/register/data/models/services/city_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:conectaparana/features/register/data/models/services/register_repository.dart';
+import 'package:conectaparana/features/register/data/models/services/city_service.dart';
 import 'package:conectaparana/features/register/data/models/services/city_model.dart';
+import 'package:conectaparana/core/auth/auth_service.dart';
+import 'package:dio/dio.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -17,6 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _loadingCities = true;
   bool _citiesError = false;
 
+  final _repository = RegisterRepository();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -124,12 +128,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _register() async {
     if (!_validate()) return;
     if (_isLoading) return;
+
     setState(() => _isLoading = true);
+
     try {
-      await Future.delayed(const Duration(seconds: 1));
-      if (mounted) Navigator.pushReplacementNamed(context, '/onboarding');
+      final tokens = await _repository.register(
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        cityId: _selectedCity!.id,
+      );
+
+      await AuthService.instance.login(
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      );
+
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, '/onboarding');
+    } on DioException catch (e) {
+      if (!mounted) return;
+
+      final code = e.response?.data?['code'];
+      final status = e.response?.statusCode;
+
+      if (status == 409 && code == 'email_exists') {
+        setState(() {
+          _emailError = 'Esse email já tem conta. Faça login.';
+        });
+      } else if (status == 400 && code == 'validation_failed') {
+        final errors = e.response?.data?['errors'] as Map<String, dynamic>?;
+        setState(() {
+          _nameError = errors?['name'] as String?;
+          _emailError = errors?['email'] as String?;
+          _passwordError = errors?['password'] as String?;
+        });
+      } else {}
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
