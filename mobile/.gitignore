@@ -81,8 +81,8 @@ google-services.json
 captures/
 .externalNativeBuild/
 .cxx/
-gen/
-out/
+/android/gen/
+/android/out/
 obj/
 gen-external-apklibs
 
@@ -158,7 +158,10 @@ proguard/
 
 .env
 .env.*
-.config*
+# .config*
+.config_dev.json
+.config_staging.json
+.config_prod.json
 !*.example*
 !*.sample*
 
@@ -232,7 +235,7 @@ migrate_working_dir/
 # Build artifacts Java/Kotlin
 *.war
 *.ear
-bin/
+/android/bin/
 
 # Crash logs JVM
 hs_err_pid*
