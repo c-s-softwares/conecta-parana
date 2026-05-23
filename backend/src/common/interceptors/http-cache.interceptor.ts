@@ -35,8 +35,24 @@ interface CacheManagerWithStores {
 }
 
 /**
- * iknterceptor geneico que limpa automaticamente o cache de rotas GET
- * correspondentes a um recurso sempre que uma operação de escrita (POST, PUT, PATCH, DELETE) e realizada, .
+ * @class HttpCacheInterceptor
+ * @implements {NestInterceptor}
+ *
+ * @description
+ * Interceptor genérico responsável pela limpeza automatizada de cache de rotas GET
+ * correspondentes a um recurso sempre que uma operação de escrita (POST, PUT, PATCH, DELETE) é realizada com sucesso.
+ *
+ * **Funcionamento:**
+ * - GET: As requisições de leitura passam direto, permitindo que a resposta seja armazenada ou retornada do cache pelo interceptor padrão do NestJS.
+ * - Escrita (POST, PUT, PATCH, DELETE): O interceptor captura o recurso base do path da requisição (ex: extrai `/cities` de `/cities/123`), aguarda a execução bem-sucedida da rota e expurga todas as chaves de cache relacionadas a esse recurso.
+ *
+ * **Estratégias por Driver:**
+ * - **Redis**: Para instâncias Redis, o interceptor obtém o cliente Redis subjacente (`_client` ou `client`) e utiliza o comando `KEYS *<baseResource>*` para varrer e excluir (via `del`) todas as chaves correspondentes ao padrão de forma atômica e eficiente.
+ * - **Keyv em Memória**: Para armazenamentos locais em memória (Keyv padrão), acessa-se o Map interno (`_store`) e utiliza-se o método `keys()` para listar e filtrar as chaves iniciadas ou contendo o recurso base, removendo-as manualmente via `delete`.
+ * - **Fallback**: Caso não consiga detectar ou acessar estruturas internas do driver específico, o interceptor tenta um fallback simplificado utilizando o método `del` padrão do Cache Manager na chave exata do recurso base.
+ *
+ * @important
+ * **Aviso de Manutenção:** Este interceptor depende de propriedades privadas e internas dos drivers de cache (`_client`, `_store`, `stores[0]`) que não fazem parte da API pública ou tipada do `@nestjs/cache-manager` e `cache-manager`. Atualizações futuras dessas dependências ou de pacotes relacionados podem quebrar a lógica de invalidação de cache de forma silenciosa. É crucial que qualquer atualização nessas dependências seja acompanhada de testes rigorosos neste interceptor (especialmente testes de E2E de invalidação de cache).
  */
 @Injectable()
 export class HttpCacheInterceptor implements NestInterceptor {
