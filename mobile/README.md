@@ -219,3 +219,8 @@ Está Autenticado?
 - **Timeout > 5 segundos**: Exibe o indicador de progresso circular e texto de carregamento.
 - **Timeout > 30 segundos**: Interrompe a inicialização por quebra de tempo limite e exibe tela de erro de conexão com botão de reativação.
 - **Crash em Inicialização**: Captura falhas inesperadas no ecossistema nativo ou Dart, gerando log local e congelando o fluxo em tela de erro fatal genérica.
+
+### Cadastro e Autenticação (/register)
+
+* **Regras de Senha Forte:** O formulário de cadastro exige senhas com no mínimo 8 caracteres, contendo pelo menos uma letra maiúscula, uma letra minúscula, um número e um caractere especial. O feedback visual (indicador de força) é atualizado em tempo real.
+* **Cache de Cidades (TTL):** Para otimizar a experiência e reduzir chamadas desnecessárias à API, a lista de cidades do dropdown de cadastro é cacheada localmente. O cache possui um TTL (Time To Live) de 1 hora, alinhado com o backend. O pull-to-refresh não foi implementado nesta tela, pois o tempo de cache é suficiente para a taxa de atualização dessas informações.
