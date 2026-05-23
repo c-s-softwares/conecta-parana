@@ -1,14 +1,14 @@
+import 'package:conectaparana/features/register/data/models/city_model.dart';
+import 'package:conectaparana/features/register/data/services/city_service.dart';
+import 'package:conectaparana/features/register/data/services/register_repository.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:dio/dio.dart';
-import 'package:conectaparana/features/register/data/models/services/register_repository.dart';
 import 'package:conectaparana/core/auth/auth_service.dart';
 import 'package:conectaparana/core/auth/auth_user.dart';
 import 'package:conectaparana/core/auth/auth_event.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:conectaparana/core/auth/presentation/register_screen.dart';
-import 'package:conectaparana/features/register/data/models/services/city_service.dart';
-import 'package:conectaparana/features/register/data/models/services/city_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FakeCityService extends CityService {

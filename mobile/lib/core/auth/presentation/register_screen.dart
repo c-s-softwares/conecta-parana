@@ -1,3 +1,6 @@
+import 'package:conectaparana/features/register/data/models/city_model.dart';
+import 'package:conectaparana/features/register/data/services/city_service.dart';
+import 'package:conectaparana/features/register/data/services/register_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:conectaparana/shared/widgets/pages/webview_screen.dart';
@@ -5,6 +8,8 @@ import 'package:conectaparana/features/register/data/models/services/register_re
 import 'package:conectaparana/features/register/data/models/services/city_service.dart';
 import 'package:conectaparana/features/register/data/models/services/city_model.dart';
 import 'package:go_router/go_router.dart';
+import 'package:conectaparana/core/auth/auth_service.dart';
+import 'package:dio/dio.dart';
 
 class _PasswordRules {
   static final _especial = RegExp(

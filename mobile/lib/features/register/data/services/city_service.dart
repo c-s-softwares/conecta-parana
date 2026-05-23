@@ -1,7 +1,7 @@
 import 'dart:convert';
+import 'package:conectaparana/features/register/data/models/city_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:conectaparana/core/network/api_client.dart';
-import 'package:conectaparana/features/register/data/models/services/city_model.dart';
 
 class CityService {
   static const _kCacheKey = 'cities_cache_v1';
