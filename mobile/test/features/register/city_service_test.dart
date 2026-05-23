@@ -23,13 +23,13 @@ void main() {
     });
 
     test('cache expirado é ignorado (TTL > 1h)', () async {
-      final doisHorasAtras = DateTime.now()
-          .subtract(const Duration(hours: 1))
+      final umaHoraAtras = DateTime.now()
+          .subtract(const Duration(hours: 1, minutes: 1))
           .millisecondsSinceEpoch;
 
       SharedPreferences.setMockInitialValues({
         'cities_cache_v1': '[{"id":"99","name":"Cidade Antiga"}]',
-        'cities_cache_ts_v1': doisHorasAtras,
+        'cities_cache_ts_v1': umaHoraAtras,
       });
 
       final prefs = await SharedPreferences.getInstance();

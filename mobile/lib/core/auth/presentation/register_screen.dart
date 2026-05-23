@@ -50,6 +50,8 @@ class RegisterScreenState extends State<RegisterScreen> {
   String? _nameError;
   String? _emailError;
   String? _passwordError;
+
+  bool _emailExists = false;
   bool _isLoading = false;
 
   @override
@@ -139,6 +141,8 @@ class RegisterScreenState extends State<RegisterScreen> {
         _selectedCity != null;
   }
 
+  bool get _formEnabled => !_loadingCities && !_citiesError;
+
   @visibleForTesting
   void validateForTest() => _validate();
 
@@ -171,7 +175,8 @@ class RegisterScreenState extends State<RegisterScreen> {
 
       if (status == 409 && code == 'email_exists') {
         setState(() {
-          _emailError = 'Esse email já tem conta. Faça login.';
+          _emailError = null;
+          _emailExists = true;
         });
       } else if (status == 400 && code == 'validation_failed') {
         final errors = e.response?.data?['errors'] as Map<String, dynamic>?;
@@ -262,6 +267,7 @@ class RegisterScreenState extends State<RegisterScreen> {
         const SizedBox(height: 8),
         TextFormField(
           controller: _nameController,
+          enabled: _formEnabled,
           focusNode: _nameFocus,
           textInputAction: TextInputAction.next,
           onFieldSubmitted: (_) => _emailFocus.requestFocus(),
@@ -275,15 +281,15 @@ class RegisterScreenState extends State<RegisterScreen> {
 
         const SizedBox(height: 20),
 
-        _buildLabel('E-MAIL'),
-        const SizedBox(height: 8),
         TextFormField(
           controller: _emailController,
+          enabled: _formEnabled,
           focusNode: _emailFocus,
           keyboardType: TextInputType.emailAddress,
           textInputAction: TextInputAction.next,
           onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
           onChanged: (value) => setState(() {
+            _emailExists = false;
             final v = value.trim();
             if (v.isEmpty) {
               _emailError = null;
@@ -299,12 +305,53 @@ class RegisterScreenState extends State<RegisterScreen> {
           ),
         ),
 
+        if (_emailExists) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFEBEE),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.red.shade200),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.red, size: 18),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Esse email já tem conta. Faça login.',
+                    style: TextStyle(color: Colors.red, fontSize: 13),
+                  ),
+                ),
+                TextButton(
+                  key: const Key('go_to_login_button'),
+                  onPressed: () =>
+                      Navigator.pushReplacementNamed(context, '/login'),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: const Size(0, 32),
+                  ),
+                  child: const Text(
+                    'Fazer login',
+                    style: TextStyle(
+                      color: Color(0xFF006733),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+
         const SizedBox(height: 20),
 
         _buildLabel('SENHA'),
         const SizedBox(height: 8),
         TextFormField(
           controller: _passwordController,
+          enabled: _formEnabled,
           focusNode: _passwordFocus,
           obscureText: _obscurePassword,
           textInputAction: TextInputAction.next,
@@ -337,6 +384,7 @@ class RegisterScreenState extends State<RegisterScreen> {
         ),
 
         const SizedBox(height: 12),
+
         _buildPasswordStrength(),
 
         const SizedBox(height: 24),
@@ -345,6 +393,7 @@ class RegisterScreenState extends State<RegisterScreen> {
         const SizedBox(height: 8),
         TextFormField(
           controller: _confirmController,
+          enabled: _formEnabled,
           focusNode: _confirmFocus,
           obscureText: _obscureConfirm,
           textInputAction: TextInputAction.done,
@@ -589,7 +638,9 @@ class RegisterScreenState extends State<RegisterScreen> {
       children: [
         GestureDetector(
           key: const Key('terms_checkbox'),
-          onTap: () => setState(() => _acceptedTerms = !_acceptedTerms),
+          onTap: _formEnabled
+              ? () => setState(() => _acceptedTerms = !_acceptedTerms)
+              : null,
           child: Container(
             width: 22,
             height: 22,

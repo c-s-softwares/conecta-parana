@@ -14,7 +14,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 class FakeCityService extends CityService {
   @override
   Future<List<City>> getCities() async {
-    return [City(id: '1', name: 'Curitiba'), City(id: '2', name: 'Maringá')];
+    return [
+      const City(id: '1', name: 'Curitiba'),
+      const City(id: '2', name: 'Maringá'),
+    ];
   }
 }
 
@@ -40,9 +43,7 @@ void main() {
   Future<void> scrollAndTap(WidgetTester tester, Finder finder) async {
     await tester.ensureVisible(finder);
     await tester.pumpAndSettle();
-    await tester.tap(
-      finder,
-    ); 
+    await tester.tap(finder);
     await tester.pumpAndSettle();
   }
 
@@ -136,43 +137,71 @@ void main() {
       expect(find.text('Tentar novamente'), findsOneWidget);
     });
 
-    testWidgets('erro inline quando backend retorna email_exists (409)', (
+    testWidgets('campos ficam desabilitados quando cities falha', (
       tester,
     ) async {
+      final errorService = _ErrorCityService();
       await tester.pumpWidget(
-        MaterialApp(
-          home: RegisterScreen(
-            cityService: FakeCityService(),
-            repository: _EmailExistsRepository(),
-          ),
-          routes: {
-            '/onboarding': (_) => const Scaffold(body: Text('Onboarding')),
-            '/login': (_) => const Scaffold(body: Text('Login')),
-          },
-        ),
+        MaterialApp(home: RegisterScreen(cityService: errorService)),
       );
       await tester.pumpAndSettle();
 
-      await preencherFormValido(tester);
+      // Todos os 4 TextFormField devem estar enabled: false
+      final campos = tester
+          .widgetList<TextFormField>(find.byType(TextFormField))
+          .toList();
 
-      final submitBtn = tester.widget<ElevatedButton>(
-        find.byKey(const Key('register_submit_button')),
-      );
-      expect(
-        submitBtn.onPressed,
-        isNotNull,
-        reason: 'O botão de cadastrar está desabilitado!',
-      );
-
-      await scrollAndTap(
-        tester,
-        find.byKey(const Key('register_submit_button')),
-      );
-
-      expect(find.text('Esse email já tem conta. Faça login.'), findsOneWidget);
-      expect(find.text('Onboarding'), findsNothing);
+      expect(campos.length, 4);
+      for (final campo in campos) {
+        expect(
+          campo.enabled,
+          isFalse,
+          reason:
+              'Campo deveria estar desabilitado enquanto cities está em erro',
+        );
+      }
     });
 
+    testWidgets(
+      'erro inline + botão Fazer login quando backend retorna email_exists (409)',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: RegisterScreen(
+              cityService: FakeCityService(),
+              repository: _EmailExistsRepository(),
+            ),
+            routes: {
+              '/onboarding': (_) => const Scaffold(body: Text('Onboarding')),
+              '/login': (_) => const Scaffold(body: Text('Login')),
+            },
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await preencherFormValido(tester);
+
+        final submitBtn = tester.widget<ElevatedButton>(
+          find.byKey(const Key('register_submit_button')),
+        );
+        expect(submitBtn.onPressed, isNotNull);
+
+        await scrollAndTap(
+          tester,
+          find.byKey(const Key('register_submit_button')),
+        );
+
+        expect(
+          find.text('Esse email já tem conta. Faça login.'),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('go_to_login_button')), findsOneWidget);
+        expect(find.text('Onboarding'), findsNothing);
+
+        await scrollAndTap(tester, find.byKey(const Key('go_to_login_button')));
+        expect(find.text('Login'), findsOneWidget);
+      },
+    );
     testWidgets('happy path: cadastra com sucesso e navega para /onboarding', (
       tester,
     ) async {
