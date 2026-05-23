@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:conectaparana/shared/widgets/pages/webview_screen.dart';
 import 'package:conectaparana/features/register/data/models/services/register_repository.dart';
 import 'package:conectaparana/features/register/data/models/services/city_service.dart';
 import 'package:conectaparana/features/register/data/models/services/city_model.dart';
@@ -370,7 +371,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
         const SizedBox(height: 24),
 
-        // Divisor "ou"
         const Row(
           children: [
             Expanded(child: Divider()),
@@ -384,7 +384,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
         const SizedBox(height: 16),
 
-        // Botão Google
         SizedBox(
           width: double.infinity,
           height: 52,
@@ -422,7 +421,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
         const SizedBox(height: 20),
 
-        // Já tem conta?
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -578,8 +576,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 const TextSpan(text: 'Li e aceito os '),
                 WidgetSpan(
+                  // ✅ depois
                   child: GestureDetector(
-                    onTap: () {}, // WebView /termos
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const WebViewScreen(
+                          title: 'Termos de Uso',
+                          url: 'https://conectaparana.pr.gov.br/termos',
+                        ),
+                      ),
+                    ),
                     child: const Text(
                       'Termos de Uso',
                       style: TextStyle(
@@ -592,7 +599,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const TextSpan(text: ' e a '),
                 WidgetSpan(
                   child: GestureDetector(
-                    onTap: () {}, // WebView /privacidade
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const WebViewScreen(
+                          title: 'Política de Privacidade',
+                          url: 'https://conectaparana.pr.gov.br/privacidade',
+                        ),
+                      ),
+                    ),
                     child: const Text(
                       'Política de Privacidade',
                       style: TextStyle(
