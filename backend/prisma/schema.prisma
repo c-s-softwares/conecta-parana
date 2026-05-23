@@ -209,6 +209,7 @@ model Category {
 
   locals Local[]
 
+  @@unique([name])
   @@map("categories")
 }
 
