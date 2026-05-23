@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 enum AppToastVariant {
   success, 
   error,   
-  info,    
+  info, warning,    
 }
 
 class AppToast {
