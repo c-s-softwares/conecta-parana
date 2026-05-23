@@ -8,20 +8,31 @@ import 'package:conectaparana/core/auth/auth_service.dart';
 import 'package:dio/dio.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  final CityService? cityService;
+  final RegisterRepository? repository;
+  const RegisterScreen({super.key, this.cityService, this.repository});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<RegisterScreen> createState() => RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
-  final _cityService = CityService();
+class RegisterScreenState extends State<RegisterScreen> {
+  late final CityService _cityService;
+
+  @override
+  void initState() {
+    super.initState();
+    _cityService = widget.cityService ?? CityService();
+    _repository = widget.repository ?? RegisterRepository();
+    _loadCities();
+  }
+
   List<City> _cities = [];
   City? _selectedCity;
   bool _loadingCities = true;
   bool _citiesError = false;
 
-  final _repository = RegisterRepository();
+  late final RegisterRepository _repository;
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -54,12 +65,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _loadCities();
-  }
-
   Future<void> _loadCities() async {
     setState(() {
       _loadingCities = true;
@@ -84,7 +89,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return senha.length >= 8 &&
         senha.contains(RegExp(r'[A-Z]')) &&
         senha.contains(RegExp(r'[a-z]')) &&
-        senha.contains(RegExp(r'[0-9]'));
+        senha.contains(RegExp(r'[0-9]')) &&
+        senha.contains(
+          RegExp(
+            r'[!@#\$%^&*(),.?":{}|<>_\-+=/\\\[\]~`'
+            "'"
+            ';]',
+          ),
+        );
   }
 
   bool _validate() {
@@ -123,8 +135,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _passwordForte() &&
         _passwordController.text == _confirmController.text &&
         _confirmController.text.isNotEmpty &&
-        _acceptedTerms;
+        _acceptedTerms &&
+        _selectedCity != null;
   }
+
+  @visibleForTesting
+  void validateForTest() => _validate();
 
   Future<void> _register() async {
     if (!_validate()) return;
@@ -164,7 +180,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _emailError = errors?['email'] as String?;
           _passwordError = errors?['password'] as String?;
         });
-      } else {}
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Erro ao criar conta. Verifique sua conexão e tente novamente.',
+            ),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -241,7 +267,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           onFieldSubmitted: (_) => _emailFocus.requestFocus(),
           onChanged: (_) => setState(() => _nameError = null),
           decoration: _inputDecoration(
-            hint: 'Camila Souza',
+            hint: 'Nome Sobrenome',
             icon: Icons.person_outline,
             errorText: _nameError,
           ),
@@ -249,7 +275,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
         const SizedBox(height: 20),
 
-        // Email
         _buildLabel('E-MAIL'),
         const SizedBox(height: 8),
         TextFormField(
@@ -258,7 +283,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
           keyboardType: TextInputType.emailAddress,
           textInputAction: TextInputAction.next,
           onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
-          onChanged: (_) => setState(() => _emailError = null),
+          onChanged: (value) => setState(() {
+            final v = value.trim();
+            if (v.isEmpty) {
+              _emailError = null;
+            } else if (!v.contains('@') || !v.contains('.')) {
+              _emailError = 'Informe um email válido';
+            } else {
+              _emailError = null;
+            }
+          }),
           decoration: _inputDecoration(
             hint: 'seu@email.com',
             errorText: _emailError,
@@ -267,7 +301,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
         const SizedBox(height: 20),
 
-        // Senha
         _buildLabel('SENHA'),
         const SizedBox(height: 8),
         TextFormField(
@@ -276,7 +309,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
           obscureText: _obscurePassword,
           textInputAction: TextInputAction.next,
           onFieldSubmitted: (_) => _confirmFocus.requestFocus(),
-          onChanged: (_) => setState(() {}),
+          onChanged: (value) => setState(() {
+            if (value.isEmpty) {
+              _passwordError = null;
+            } else if (!_passwordForte()) {
+              _passwordError =
+                  'Mín. 8 caracteres com maiúscula, minúscula, número e especial';
+            } else {
+              _passwordError = null;
+            }
+          }),
           decoration: _inputDecoration(
             hint: 'Mínimo 8 caracteres',
             errorText: _passwordError,
@@ -297,9 +339,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SizedBox(height: 12),
         _buildPasswordStrength(),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
 
-        // Confirmar senha
         _buildLabel('CONFIRMAR SENHA'),
         const SizedBox(height: 8),
         TextFormField(
@@ -338,13 +379,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _buildCityDropdown(),
 
         const SizedBox(height: 24),
-
         _buildTermsCheckbox(),
 
         SizedBox(
           width: double.infinity,
           height: 52,
           child: ElevatedButton(
+            key: const Key('register_submit_button'),
             onPressed: _isLoading || !_formValido ? null : _register,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF006733),
@@ -483,7 +524,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Colors.grey.shade300,
         Colors.grey.shade300,
       ];
-    } else if (forca <= 3) {
+    } else if (forca == 3) {
       label = 'Senha média';
       labelColor = Colors.orange;
       barColors = [
@@ -493,7 +534,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Colors.grey.shade300,
       ];
     } else if (forca == 4) {
-      label = 'Senha boa';
+      label = 'Quase lá — falta 1 critério';
       labelColor = Colors.lightGreen;
       barColors = [
         Colors.lightGreen,
@@ -547,6 +588,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         GestureDetector(
+          key: const Key('terms_checkbox'),
           onTap: () => setState(() => _acceptedTerms = !_acceptedTerms),
           child: Container(
             width: 22,
@@ -576,7 +618,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 const TextSpan(text: 'Li e aceito os '),
                 WidgetSpan(
-                  // ✅ depois
                   child: GestureDetector(
                     onTap: () => Navigator.push(
                       context,
@@ -708,7 +749,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     return DropdownButtonFormField<City>(
-      value: _selectedCity,
+      initialValue: _selectedCity,
       hint: const Text(
         'Selecione sua cidade',
         style: TextStyle(color: Colors.black38),
