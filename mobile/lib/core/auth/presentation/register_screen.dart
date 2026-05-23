@@ -1,10 +1,16 @@
 import 'package:conectaparana/features/register/data/models/city_model.dart';
 import 'package:conectaparana/features/register/data/services/city_service.dart';
 import 'package:conectaparana/features/register/data/services/register_repository.dart';
+<<<<<<< HEAD
 import 'package:conectaparana/shared/widgets/pages/webview_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+=======
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:conectaparana/shared/widgets/pages/webview_screen.dart';
+>>>>>>> 4ce3d4c (refactor: fix models and services folder structure and update imports)
 import 'package:conectaparana/core/auth/auth_service.dart';
 import 'package:dio/dio.dart';
 
