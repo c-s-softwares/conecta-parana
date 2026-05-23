@@ -1,7 +1,4 @@
-import { CATEGORY_ERROR_CODE } from "../../modules/categories/category.service";
-
-/**
- * Fonte única de verdade para os corpos de erro da API.
+/** * Fonte única de verdade para os corpos de erro da API.
  *
  * Contrato: o backend devolve `{ code, message }`, onde `code` é o
  * identificador de máquina e `message` é o *motivo* em PT-BR. O frontend
@@ -16,7 +13,7 @@ export const API_ERROR_CODE = {
   CITY_REQUIRED: 'city_required',
   VALIDATION_FAILED: 'validation_failed',
   TOO_MANY_ATTEMPTS: 'too_many_attempts',
-    INVALID_ICON: 'invalid_icon',
+  INVALID_ICON: 'invalid_icon',
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];

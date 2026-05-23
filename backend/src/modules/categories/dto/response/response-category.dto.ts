@@ -1,5 +1,5 @@
-export interface CategoryResponse{
-    id: String;
-    name: String;
-    icon: String;
+export interface CategoryResponse {
+  id: string;
+  name: string;
+  icon: string;
 }
