@@ -1,6 +1,8 @@
+import 'package:conectaparana/core/router/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:dio/dio.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../../core/auth/auth_service.dart';
 import '../../../../dev/fakes/fake_jwt.dart';
 
@@ -76,7 +78,8 @@ class _LoginScreenState extends State<LoginScreen> {
       } 
 
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
+        final pending = AppRouter.instance.consumePendingDeepLink();
+        context.go(pending ?? AppRoutes.home);
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {

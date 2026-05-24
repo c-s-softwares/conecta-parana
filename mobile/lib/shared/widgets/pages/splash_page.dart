@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'package:conectaparana/core/router/navigator_key.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class SplashPage extends StatefulWidget {
   final Future<Map<String, bool>> Function()? mockAuthCheck;
@@ -96,7 +98,8 @@ class _SplashPageState extends State<SplashPage> {
     if (widget.onNavigate != null) {
       widget.onNavigate!(rota);
     } else {
-      Navigator.pushReplacementNamed(context, rota);
+      // ignore: use_build_context_synchronously
+      navigatorKey.currentContext?.go(rota);
     }
   }
 
