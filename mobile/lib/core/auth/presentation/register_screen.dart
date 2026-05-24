@@ -7,6 +7,32 @@ import 'package:conectaparana/features/register/data/models/services/city_model.
 import 'package:conectaparana/core/auth/auth_service.dart';
 import 'package:dio/dio.dart';
 
+class _PasswordRules {
+  static final _especial = RegExp(
+    r'[!@#\$%^&*(),.?":{}|<>_\-+=/\\\[\]~`'
+    "'"
+    ';]',
+  );
+
+  static bool minimo(String senha) => senha.length >= 8;
+  static bool maiuscula(String senha) => senha.contains(RegExp(r'[A-Z]'));
+  static bool minuscula(String senha) => senha.contains(RegExp(r'[a-z]'));
+  static bool numero(String senha) => senha.contains(RegExp(r'[0-9]'));
+  static bool especial(String senha) => senha.contains(_especial);
+
+  static int forca(String senha) {
+    int count = 0;
+    if (minimo(senha)) count++;
+    if (maiuscula(senha)) count++;
+    if (minuscula(senha)) count++;
+    if (numero(senha)) count++;
+    if (especial(senha)) count++;
+    return count;
+  }
+
+  static bool forte(String senha) => forca(senha) == 5;
+}
+
 class RegisterScreen extends StatefulWidget {
   final CityService? cityService;
   final RegisterRepository? repository;
@@ -86,20 +112,7 @@ class RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  bool _passwordForte() {
-    final senha = _passwordController.text;
-    return senha.length >= 8 &&
-        senha.contains(RegExp(r'[A-Z]')) &&
-        senha.contains(RegExp(r'[a-z]')) &&
-        senha.contains(RegExp(r'[0-9]')) &&
-        senha.contains(
-          RegExp(
-            r'[!@#\$%^&*(),.?":{}|<>_\-+=/\\\[\]~`'
-            "'"
-            ';]',
-          ),
-        );
-  }
+  bool _passwordForte() => _PasswordRules.forte(_passwordController.text);
 
   bool _validate() {
     setState(() {
@@ -179,7 +192,8 @@ class RegisterScreenState extends State<RegisterScreen> {
           _emailExists = true;
         });
       } else if (status == 400 && code == 'validation_failed') {
-        final errors = e.response?.data?['errors'] as Map<String, dynamic>?;
+        final errorsData = e.response?.data?['errors'];
+        final errors = errorsData is Map<String, dynamic> ? errorsData : null;
         setState(() {
           _nameError = errors?['name'] as String?;
           _emailError = errors?['email'] as String?;
@@ -233,7 +247,7 @@ class RegisterScreenState extends State<RegisterScreen> {
               color: const Color(0xFFF5FAF7),
               borderRadius: BorderRadius.circular(50),
             ),
-            child: const Icon(Icons.chevron_right, color: Colors.black54),
+            child: const Icon(Icons.chevron_left, color: Colors.black54),
           ),
         ),
         const SizedBox(width: 12),
@@ -547,18 +561,7 @@ class RegisterScreenState extends State<RegisterScreen> {
 
     if (senha.isEmpty) return const SizedBox();
 
-    final temMinimo = senha.length >= 8;
-    final temMaiuscula = senha.contains(RegExp(r'[A-Z]'));
-    final temMinuscula = senha.contains(RegExp(r'[a-z]'));
-    final temNumero = senha.contains(RegExp(r'[0-9]'));
-    final temEspecial = senha.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>]'));
-
-    int forca = 0;
-    if (temMinimo) forca++;
-    if (temMaiuscula) forca++;
-    if (temMinuscula) forca++;
-    if (temNumero) forca++;
-    if (temEspecial) forca++;
+    final forca = _PasswordRules.forca(senha);
 
     String label;
     Color labelColor;
