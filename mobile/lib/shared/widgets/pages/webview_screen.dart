@@ -5,11 +5,7 @@ class WebViewScreen extends StatefulWidget {
   final String title;
   final String url;
 
-  const WebViewScreen({
-    super.key,
-    required this.title,
-    required this.url,
-  });
+  const WebViewScreen({super.key, required this.title, required this.url});
 
   @override
   State<WebViewScreen> createState() => _WebViewScreenState();
@@ -26,7 +22,9 @@ class _WebViewScreenState extends State<WebViewScreen> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
         NavigationDelegate(
-          onPageFinished: (_) => setState(() => _isLoading = false),
+          onPageFinished: (_) {
+            if (mounted) setState(() => _isLoading = false);
+          },
         ),
       )
       ..loadRequest(Uri.parse(widget.url));
@@ -50,9 +48,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
           WebViewWidget(controller: _controller),
           if (_isLoading)
             const Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFF006733),
-              ),
+              child: CircularProgressIndicator(color: Color(0xFF006733)),
             ),
         ],
       ),
