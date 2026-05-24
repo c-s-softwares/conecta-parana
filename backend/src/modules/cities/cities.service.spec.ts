@@ -138,7 +138,7 @@ describe('CitiesService', () => {
 
       await expect(
         service.create({ name: 'Paiçandu', state: 'PR' }),
-      ).rejects.toThrow(new ConflictException('city_duplicate'));
+      ).rejects.toThrow(new ConflictException('Cidade já cadastrada'));
     });
   });
 
@@ -166,7 +166,7 @@ describe('CitiesService', () => {
 
       await expect(
         service.update(MOCK_CITY_ID, { name: 'Paiçandu' }),
-      ).rejects.toThrow(new ConflictException('city_duplicate'));
+      ).rejects.toThrow(new ConflictException('Cidade já cadastrada'));
     });
   });
 

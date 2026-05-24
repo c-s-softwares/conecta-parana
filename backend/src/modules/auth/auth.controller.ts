@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  UseGuards,
-  Request,
-  HttpCode,
-} from '@nestjs/common';
+import { Controller, Post, Get, Body, Request, HttpCode } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -20,7 +12,7 @@ import { LoginDto } from './dto/request/login.dto';
 import { RefreshDto } from './dto/request/refresh.dto';
 import { LogoutDto } from './dto/request/logout.dto';
 import { LogoutAllDto } from './dto/request/logout-all.dto';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { Public } from '../../common/decorators/public.decorator';
 import { JwtPayload } from './strategies/jwt.strategy';
 
 @ApiTags('auth')
@@ -29,12 +21,17 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @Public()
   @ApiOperation({ summary: 'Cadastrar novo usuário' })
   @ApiResponse({ status: 201, description: 'Usuário criado com sucesso!' })
   @ApiResponse({
     status: 400,
     description:
-      'Erro de validação (validation_failed) ou formato de ID inválido (invalid_id_format)',
+      'Erro de validação (validation_failed): "Formato de id inválido" ou "O campo de ID da cidade é obrigatório"',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Cidade não encontrada (city_not_found)',
   })
   @ApiResponse({
     status: 409,
@@ -45,6 +42,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @Public()
   @HttpCode(200)
   @ApiOperation({ summary: 'Autenticar usuário' })
   @ApiResponse({ status: 200, description: 'Autenticação bem-sucedida' })
@@ -54,6 +52,7 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @Public()
   @HttpCode(200)
   @ApiOperation({ summary: 'Gerar novo token de acesso usando refresh token' })
   @ApiResponse({
@@ -69,7 +68,6 @@ export class AuthController {
   }
 
   @Get('me')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retorno de dados do usuário logado' })
   @ApiResponse({
@@ -86,7 +84,6 @@ export class AuthController {
   }
 
   @Post('logout')
-  @UseGuards(JwtAuthGuard)
   @HttpCode(204)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Revoga um refresh token' })
@@ -103,7 +100,6 @@ export class AuthController {
   }
 
   @Post('logout-all')
-  @UseGuards(JwtAuthGuard)
   @HttpCode(204)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Revoga todos os refresh tokens do usuário' })

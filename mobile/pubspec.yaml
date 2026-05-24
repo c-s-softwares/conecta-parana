@@ -12,8 +12,12 @@ dependencies:
   flutter_secure_storage: ^9.0.0
   jwt_decoder: ^2.0.1
   dio: ^5.0.0
+  
+  mocktail: ^1.0.3
 
   cupertino_icons: ^1.0.8
+  flutter_native_splash: ^2.4.7
+  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -26,3 +30,10 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: "assets/images/paranalogo.png"
+  android_12:
+    color: "#FFFFFF"
+    image: "assets/images/paranalogo.png"
