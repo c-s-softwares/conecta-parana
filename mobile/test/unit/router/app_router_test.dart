@@ -29,7 +29,7 @@ void main() {
 
       final consumed = AppRouter.instance.consumePendingDeepLink();
 
-      expect(consumed, equals('/event/evt_123'));
+      expect(consumed, equals('/events/evt_123'));
       expect(AppRouter.instance.pendingDeepLink, isNull);
     });
 
