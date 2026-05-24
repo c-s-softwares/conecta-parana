@@ -8,6 +8,9 @@ import {
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -15,26 +18,28 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { Role } from '@prisma/client';
-import { CidadesService } from './cidades.service';
-import { CidadeResponse } from './dto/response/cidade-response.dto';
-import { CreateCidadeDto } from './dto/request/create-cidade.dto';
-import { UpdateCidadeDto } from './dto/request/update-cidade.dto';
-import { PaginationQueryDto } from '../../common/dto/request/pagination-query.dto';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
+import { CitiesService } from './cities.service';
+import { CityResponse } from './dto/response/city-response.dto';
+import { CreateCityDto } from './dto/request/create-city.dto';
+import { UpdateCityDto } from './dto/request/update-city.dto';
+import { CACHE_TTL_1_HOUR } from '../../common/constants/cache.constants';
+import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
 import { Public } from '../../common/decorators/public.decorator';
+import { PaginationQueryDto } from '../../common/dto/request/pagination-query.dto';
 import { BaseCrudController } from '../../common/controllers/base-crud.controller';
 
-@ApiTags('cidades')
-@Controller('cidades')
-export class CidadesController extends BaseCrudController<
-  CidadeResponse,
-  CreateCidadeDto,
-  UpdateCidadeDto
+@ApiTags('cities')
+@UseInterceptors(CacheInterceptor)
+@CacheTTL(CACHE_TTL_1_HOUR)
+@Controller('cities')
+export class CitiesController extends BaseCrudController<
+  CityResponse,
+  CreateCityDto,
+  UpdateCityDto
 > {
-  constructor(private readonly cidadesService: CidadesService) {
-    super(cidadesService);
+  constructor(private readonly citiesService: CitiesService) {
+    super(citiesService);
   }
 
   @Get()
@@ -55,33 +60,32 @@ export class CidadesController extends BaseCrudController<
   }
 
   @Post()
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
+  @UseGuards(SuperAdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Criar cidade' })
   @ApiResponse({ status: 201, description: 'Cidade criada com sucesso' })
   @ApiResponse({ status: 409, description: 'Cidade já existe' })
-  override create(@Body() dto: CreateCidadeDto) {
+  override create(@Body() dto: CreateCityDto) {
     return super.create(dto);
   }
 
   @Patch(':id')
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
+  @UseGuards(SuperAdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Atualizar cidade' })
   @ApiResponse({ status: 200, description: 'Cidade atualizada com sucesso' })
   @ApiResponse({ status: 404, description: 'Cidade não encontrada' })
-  override update(@Param('id') id: string, @Body() dto: UpdateCidadeDto) {
+  override update(@Param('id') id: string, @Body() dto: UpdateCityDto) {
     return super.update(id, dto);
   }
 
   @Delete(':id')
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(SuperAdminGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Deletar cidade' })
   @ApiResponse({ status: 204, description: 'Cidade deletada com sucesso' })
+  @ApiResponse({ status: 409, description: 'Cidade possui conteúdo associado' })
   override remove(@Param('id') id: string) {
     return super.remove(id);
   }

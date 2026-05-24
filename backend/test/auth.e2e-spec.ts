@@ -106,8 +106,41 @@ describe('Auth (e2e)', () => {
       })
       .expect(400);
 
-    const body = response.body as { code: string };
+    const body = response.body as { code: string; message: string[] };
     expect(body.code).toBe('validation_failed');
+    expect(body.message).toContain('O campo de ID da cidade é obrigatório');
+  });
+
+  it('POST /auth/register — retornar 400 com formato de cityId inválido', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({
+        name: 'Teste Formato Invalido',
+        email: 'formato-invalido@teste.com',
+        password: 'Senha123',
+        cityId: 'invalido',
+      })
+      .expect(400);
+
+    const body = response.body as { code: string; message: string[] };
+    expect(body.code).toBe('validation_failed');
+    expect(body.message).toContain('Formato de id inválido');
+  });
+
+  it('POST /auth/register — retornar 404 com cidade inexistente', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({
+        name: 'Teste Cidade Inexistente',
+        email: 'cidade-inexistente@teste.com',
+        password: 'Senha123',
+        cityId: `${TABLE_PREFIX.CITY}00000000000000000000000000`,
+      })
+      .expect(404);
+
+    const body = response.body as { code: string; message: string };
+    expect(body.code).toBe('city_not_found');
+    expect(body.message).toBe('Cidade não encontrada');
   });
 
   it('POST /auth/login — deve retornar tokens', async () => {
