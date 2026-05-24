@@ -25,7 +25,11 @@ export class AuthController {
   @ApiResponse({
     status: 400,
     description:
-      'Erro de validação (validation_failed) ou formato de ID inválido (invalid_id_format)',
+      'Erro de validação (validation_failed): "Formato de id inválido" ou "O campo de ID da cidade é obrigatório"',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Cidade não encontrada (city_not_found)',
   })
   @ApiResponse({
     status: 409,
