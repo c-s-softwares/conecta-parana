@@ -219,3 +219,30 @@ Está Autenticado?
 - **Timeout > 5 segundos**: Exibe o indicador de progresso circular e texto de carregamento.
 - **Timeout > 30 segundos**: Interrompe a inicialização por quebra de tempo limite e exibe tela de erro de conexão com botão de reativação.
 - **Crash em Inicialização**: Captura falhas inesperadas no ecossistema nativo ou Dart, gerando log local e congelando o fluxo em tela de erro fatal genérica.
+
+## Roteamento com pendingDeepLink no AppRouter
+
+#### Fluxo:
+
+1. Deep link chega via `uriLinkStream` ou cold start
+2. `DeepLinkParser` valida e converte para `DeepLinkRoute`
+3. Usuário não logado → `AppRouter.setPendingDeepLink(route)` salva o destino
+4. App navega para `/login`
+5. Login bem-sucedido → `AppRouter.consumePendingDeepLink()` retorna o path e limpa o estado
+6. `context.go(path)` leva o usuário ao destino original
+
+---
+
+## Custom scheme como fallback de deep links
+
+Além dos Universal Links / App Links (`https://conectaparana.app/share/...`), o app
+suporta um custom scheme próprio (`conectaparana://share/...`).
+
+#### Quando usar cada um:
+
+| Scheme | Ambiente | Observação |
+| --- | --- | --- |
+| `https://conectaparana.app/share/...` | Produção | Requer `assetlinks.json` e `apple-app-site-association` no domínio |
+| `conectaparana://share/...` | Dev / Staging | Funciona sem verificação de domínio |
+
+> Custom schemes são menos seguros que Universal Links — qualquer app pode registrar o mesmo scheme. Em produção o fluxo principal sempre usa HTTPS.
