@@ -12,8 +12,10 @@ class CityService {
   static DateTime? _memCacheTime;
 
   Future<List<City>> getCities() async {
+    final now = DateTime.now();
+
     if (_memCache != null && _memCacheTime != null) {
-      if (DateTime.now().difference(_memCacheTime!) < _ttl) {
+      if (now.difference(_memCacheTime!) < _ttl) {
         return _memCache!;
       }
     }
@@ -23,14 +25,20 @@ class CityService {
     final cachedTs = prefs.getInt(_kCacheTimestampKey);
 
     if (cachedJson != null && cachedTs != null) {
-      final age = DateTime.now().millisecondsSinceEpoch - cachedTs;
+      final age = now.millisecondsSinceEpoch - cachedTs;
       if (age < _ttl.inMilliseconds) {
-        final list = (jsonDecode(cachedJson) as List)
-            .map((e) => City.fromJson(e as Map<String, dynamic>))
-            .toList();
-        _memCache = list;
-        _memCacheTime = DateTime.fromMillisecondsSinceEpoch(cachedTs);
-        return list;
+        try {
+          final list = (jsonDecode(cachedJson) as List)
+              .map((e) => City.fromJson(e as Map<String, dynamic>))
+              .toList();
+          _memCache = list;
+          _memCacheTime = DateTime.fromMillisecondsSinceEpoch(cachedTs);
+          return list;
+        } catch (_) {
+          // Cache corrompido ou estrutura mudou → limpa e busca da API
+          await prefs.remove(_kCacheKey);
+          await prefs.remove(_kCacheTimestampKey);
+        }
       }
     }
 
@@ -40,15 +48,12 @@ class CityService {
         .toList();
 
     _memCache = cities;
-    _memCacheTime = DateTime.now();
+    _memCacheTime = now;
     await prefs.setString(
       _kCacheKey,
       jsonEncode(cities.map((c) => c.toJson()).toList()),
     );
-    await prefs.setInt(
-      _kCacheTimestampKey,
-      DateTime.now().millisecondsSinceEpoch,
-    );
+    await prefs.setInt(_kCacheTimestampKey, now.millisecondsSinceEpoch);
 
     return cities;
   }
