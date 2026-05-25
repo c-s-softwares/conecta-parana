@@ -28,6 +28,15 @@ class _AuthGateState extends State<AuthGate> {
           );
         });
       }
+
+      if (event == AuthEvent.sessionExpired) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Sessão expirada.')));
+        });
+      }
     });
   }
 

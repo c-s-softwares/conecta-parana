@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  UseGuards,
-  Request,
-  HttpCode,
-} from '@nestjs/common';
+import { Controller, Post, Get, Body, Request, HttpCode } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -19,6 +11,9 @@ import { RegisterDto } from './dto/request/register.dto';
 import { LoginDto } from './dto/request/login.dto';
 import { RefreshDto } from './dto/request/refresh.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { LogoutDto } from './dto/request/logout.dto';
+import { LogoutAllDto } from './dto/request/logout-all.dto';
+import { Public } from '../../common/decorators/public.decorator';
 import { JwtPayload } from './strategies/jwt.strategy';
 
 @ApiTags('auth')
@@ -27,6 +22,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @Public()
   @ApiOperation({ summary: 'Cadastrar novo usuário' })
   @ApiResponse({ status: 201, description: 'Usuário criado com sucesso!' })
   @ApiResponse({
@@ -47,6 +43,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @Public()
   @HttpCode(200)
   @ApiOperation({ summary: 'Autenticar usuário' })
   @ApiResponse({ status: 200, description: 'Autenticação bem-sucedida' })
@@ -56,6 +53,7 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @Public()
   @HttpCode(200)
   @ApiOperation({ summary: 'Gerar novo token de acesso usando refresh token' })
   @ApiResponse({
@@ -71,7 +69,6 @@ export class AuthController {
   }
 
   @Get('me')
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Retorno de dados do usuário logado' })
   @ApiResponse({
@@ -85,5 +82,41 @@ export class AuthController {
   me(@Request() req: ExpressRequest) {
     const user = req['user'] as JwtPayload;
     return this.authService.getMe(user.sub);
+  }
+  @Post('logout')
+  @HttpCode(204)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Revoga um refresh token' })
+  @ApiResponse({
+    status: 204,
+    description: 'Refresh token revogado com sucesso',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Token de acesso inválido ou expirado',
+  })
+  async logout(@Body() dto: LogoutDto) {
+    await this.authService.logout(dto.refresh_token);
+  }
+
+  @Post('logout-all')
+  @HttpCode(204)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Revoga todos os refresh tokens do usuário' })
+  @ApiResponse({
+    status: 204,
+    description: 'Todos os refresh tokens revogados com sucesso',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Body ausente ou formato inválido',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Token de acesso ausente/expirado ou senha incorreta',
+  })
+  async logoutAll(@Request() req: ExpressRequest, @Body() dto: LogoutAllDto) {
+    const user = req['user'] as JwtPayload;
+    await this.authService.logoutAll(user.sub, dto);
   }
 }

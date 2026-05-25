@@ -10,6 +10,18 @@ import { CityResponse } from './dto/response/city-response.dto';
 import { PaginationQueryDto } from '../../common/dto/request/pagination-query.dto';
 import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
 
+interface RedisCacheClient {
+  keys(pattern: string): Promise<string[]>;
+  del(keys: string[]): Promise<number>;
+}
+
+interface RedisCacheStore {
+  _store?: {
+    client?: RedisCacheClient;
+    _client?: RedisCacheClient;
+  };
+}
+
 @Injectable()
 export class CitiesService extends BaseCrudService<
   CityResponse,
@@ -97,11 +109,38 @@ export class CitiesService extends BaseCrudService<
 
   protected async afterSave(entity: unknown): Promise<void> {
     void entity;
-    await this.cacheManager.del('/cities');
+    await this.clearCache();
   }
 
   protected async afterDelete(id: string): Promise<void> {
     void id;
-    await this.cacheManager.del('/cities');
+    await this.clearCache();
+  }
+
+  /**
+   * Invalida todas as chaves de cache do módulo de cidades de forma robusta.
+   * Busca por chaves com padrão 'keyv:/cities*' (incluindo variações de query params
+   * como paginação, busca e filtros) e as remove do Redis.
+   */
+  private async clearCache(): Promise<void> {
+    try {
+      const store = (this.cacheManager as unknown as { store: RedisCacheStore })
+        .store;
+      const client = store?._store?.client || store?._store?._client;
+
+      if (client) {
+        // Encontra todas as chaves com o padrão '/cities*' no Redis (com o prefixo do Keyv)
+        const keys = await client.keys('keyv:/cities*');
+        if (keys && keys.length > 0) {
+          await client.del(keys);
+        }
+      } else {
+        // Fallback para ambientes de teste com mocks ou outros adaptadores de cache
+        await this.cacheManager.del('/cities');
+      }
+    } catch (err) {
+      // Impede que falhas de infraestrutura de cache interrompam o fluxo principal do CRUD
+      console.error('Erro ao limpar cache de cidades:', err);
+    }
   }
 }
