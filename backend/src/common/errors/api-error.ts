@@ -17,7 +17,6 @@ export const API_ERROR_CODE = {
   CITY_NOT_FOUND: 'city_not_found',
   CITY_DUPLICATE: 'city_duplicate',
   CITY_HAS_CONTENT: 'city_has_content',
-<<<<<<< HEAD
   LOCAL_NOT_FOUND: 'local_not_found',
   INVALID_COORDINATES: 'invalid_coordinates',
   RADIUS_TOO_LARGE: 'radius_too_large',

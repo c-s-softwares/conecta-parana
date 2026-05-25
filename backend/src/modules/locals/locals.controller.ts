@@ -30,6 +30,7 @@ import {
 } from './dto/response/local-response.dto';
 import { AdminRoute } from '../../common/decorators/admin-route.decorator';
 import { RequireCityScope } from '../../common/decorators/require-city-scope.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
 import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
 import { PaginationQueryDto } from '../../common/dto/request/pagination-query.dto';
@@ -41,6 +42,7 @@ export class LocalsController {
   constructor(private readonly localsService: LocalsService) {}
 
   @Get()
+  @Public()
   @ApiOperation({ summary: 'Listar locais com paginação e filtros' })
   @ApiResponse({
     status: 200,
@@ -53,6 +55,7 @@ export class LocalsController {
   }
 
   @Get('nearby')
+  @Public()
   @ApiOperation({ summary: 'Busca geoespacial de locais mais próximos' })
   @ApiResponse({
     status: 200,
@@ -71,6 +74,7 @@ export class LocalsController {
   }
 
   @Get(':id')
+  @Public()
   @ApiOperation({ summary: 'Buscar local por ID' })
   @ApiResponse({ status: 200, description: 'Local encontrado com sucesso' })
   @ApiResponse({

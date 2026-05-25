@@ -10,7 +10,6 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/request/register.dto';
 import { LoginDto } from './dto/request/login.dto';
 import { RefreshDto } from './dto/request/refresh.dto';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { LogoutDto } from './dto/request/logout.dto';
 import { LogoutAllDto } from './dto/request/logout-all.dto';
 import { Public } from '../../common/decorators/public.decorator';
