@@ -10,6 +10,7 @@ import { hash, compare } from 'bcryptjs';
 import { PrismaService } from '../../config/prisma.service';
 import { RegisterDto } from './dto/request/register.dto';
 import { LoginDto } from './dto/request/login.dto';
+import { LogoutAllDto } from './dto/request/logout-all.dto';
 import { generateId } from '../../common/utils/ulid.util';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
@@ -101,6 +102,36 @@ export class AuthService {
     return { id: user.id, name: user.name, email: user.email, role: user.role };
   }
 
+  async logout(token: string): Promise<void> {
+    await this.prisma.client.refreshToken.deleteMany({
+      where: { token },
+    });
+  }
+
+  async logoutAll(userId: string, dto: LogoutAllDto): Promise<void> {
+    const user = await this.prisma.client.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException({
+        code: 'unauthenticated',
+        message: 'Usuário não autenticado',
+      });
+    }
+
+    const passwordMatch = await compare(dto.password, user.password);
+
+    if (!passwordMatch) {
+      throw new UnauthorizedException(
+        apiError(API_ERROR_CODE.INVALID_PASSWORD),
+      );
+    }
+
+    await this.prisma.client.refreshToken.deleteMany({
+      where: { userId },
+    });
+  }
   private async generateTokens(
     userId: string,
     email: string,

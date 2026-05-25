@@ -16,7 +16,7 @@ void main() {
       ),
     );
   }
-
+  
   testWidgets('Deve mostrar erro quando email for inválido', (tester) async {
     await abrirTela(tester);
 
