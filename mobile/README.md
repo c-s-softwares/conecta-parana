@@ -219,3 +219,17 @@ Está Autenticado?
 - **Timeout > 5 segundos**: Exibe o indicador de progresso circular e texto de carregamento.
 - **Timeout > 30 segundos**: Interrompe a inicialização por quebra de tempo limite e exibe tela de erro de conexão com botão de reativação.
 - **Crash em Inicialização**: Captura falhas inesperadas no ecossistema nativo ou Dart, gerando log local e congelando o fluxo em tela de erro fatal genérica.
+
+### Cadastro e Autenticação (/register)
+
+* **Regras de Senha Forte:** O formulário de cadastro exige senhas com no mínimo 8 caracteres, contendo pelo menos uma letra maiúscula, uma letra minúscula, um número e um caractere especial. O feedback visual (indicador de força) é atualizado em tempo real.
+* **Cache de Cidades (TTL):** Para otimizar a experiência e reduzir chamadas desnecessárias à API, a lista de cidades do dropdown de cadastro é cacheada localmente. O cache possui um TTL (Time To Live) de 1 hora, alinhado com o backend. O pull-to-refresh não foi implementado nesta tela, pois o tempo de cache é suficiente para a taxa de atualização dessas informações.
+### Cenários de erro tratados (POST /auth/register)
+
+* **Campo vazio:** erros inline aparecem nos campos conforme o usuário digita. O botão "Criar conta" fica desabilitado até todos os campos estarem válidos.
+* **Senha fraca:** mensagem inline `"Mín. 8 caracteres com maiúscula, minúscula, número e especial"` aparece no campo de senha; indicador de força mostra o nível em tempo real; botão desabilitado.
+* **Backend 409 `email_exists`:** card vermelho abaixo do campo de email com a mensagem `"Esse email já tem conta. Faça login."` + botão `"Fazer login"` que navega para `/login`.
+* **Backend 400 `validation_failed`:** o backend retorna `errors: { name, email, password }` e cada mensagem é mapeada inline no respectivo campo.
+* **GET /cities falha:** o dropdown de cidades exibe `"Erro ao carregar cidades."` com o botão `"Tentar novamente"`. Todos os campos do formulário ficam desabilitados (`enabled: false`) e o checkbox de termos ignora cliques até a lista carregar.
+* **Termos não aceitos:** botão `"Criar conta"` permanece desabilitado.
+* **Erro de rede genérico (timeout, sem conexão, 5xx):** SnackBar vermelho `"Erro ao criar conta. Verifique sua conexão e tente novamente."` no rodapé da tela.

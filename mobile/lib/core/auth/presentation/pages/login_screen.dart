@@ -340,7 +340,7 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const Text('Não tem conta? '),
               GestureDetector(
-                onTap: () {},
+                onTap: () => Navigator.pushNamed(context, '/register'),
                 child: const Text(
                   'Criar conta',
                   style: TextStyle(

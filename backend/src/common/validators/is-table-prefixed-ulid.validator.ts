@@ -7,11 +7,12 @@ import {
 } from 'class-validator';
 import { TablePrefix } from '../utils/ulid.util';
 
-export const INVALID_ID_FORMAT = 'invalid_id_format';
+export const INVALID_ID_FORMAT = 'Formato de id inválido';
 
 @ValidatorConstraint({ name: 'isTablePrefixedUlid', async: false })
 export class IsTablePrefixedUlidConstraint implements ValidatorConstraintInterface {
   validate(value: any, args: ValidationArguments) {
+    if (value === undefined || value === null || value === '') return true;
     if (typeof value !== 'string') return false;
 
     const prefix = args.constraints[0] as TablePrefix;
