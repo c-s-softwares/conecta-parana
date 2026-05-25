@@ -10,6 +10,8 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/request/register.dto';
 import { LoginDto } from './dto/request/login.dto';
 import { RefreshDto } from './dto/request/refresh.dto';
+import { LogoutDto } from './dto/request/logout.dto';
+import { LogoutAllDto } from './dto/request/logout-all.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { JwtPayload } from './strategies/jwt.strategy';
 
@@ -79,5 +81,42 @@ export class AuthController {
   me(@Request() req: ExpressRequest) {
     const user = req['user'] as JwtPayload;
     return this.authService.getMe(user.sub);
+  }
+
+  @Post('logout')
+  @HttpCode(204)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Revoga um refresh token' })
+  @ApiResponse({
+    status: 204,
+    description: 'Refresh token revogado com sucesso',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Token de acesso inválido ou expirado',
+  })
+  async logout(@Body() dto: LogoutDto) {
+    await this.authService.logout(dto.refresh_token);
+  }
+
+  @Post('logout-all')
+  @HttpCode(204)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Revoga todos os refresh tokens do usuário' })
+  @ApiResponse({
+    status: 204,
+    description: 'Todos os refresh tokens revogados com sucesso',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Body ausente ou formato inválido',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Token de acesso ausente/expirado ou senha incorreta',
+  })
+  async logoutAll(@Request() req: ExpressRequest, @Body() dto: LogoutAllDto) {
+    const user = req['user'] as JwtPayload;
+    await this.authService.logoutAll(user.sub, dto);
   }
 }

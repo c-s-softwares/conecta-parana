@@ -12,6 +12,11 @@ import { hash } from 'bcryptjs';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 
 const MOCK_CITY_ID = `${TABLE_PREFIX.CITY}01HZX3Y4Q9F8TAB1C2DKEYH9MN`;
+const MOCK_TOKEN = 'any_token';
+const MOCK_PASSWORD = 'senha123';
+const MOCK_VALID_TOKEN = 'valid_token';
+const MOCK_INVALID_TOKEN = 'invalid_token';
+const MOCK_EXPIRED_TOKEN = 'expired_token';
 
 const MOCK_USER = {
   id: `${TABLE_PREFIX.USER}mock_id_00000000000000000`,
@@ -33,6 +38,7 @@ const mockPrisma = {
       findUnique: jest.fn(),
       create: jest.fn(),
       delete: jest.fn(),
+      deleteMany: jest.fn(),
     },
     city: {
       findFirst: jest.fn(),
@@ -132,7 +138,7 @@ describe('AuthService', () => {
 
   describe('login', () => {
     it('deve retornar tokens quando credenciais são válidas', async () => {
-      const hashed = await hash('senha123', 10);
+      const hashed = await hash(MOCK_PASSWORD, 10);
       mockPrisma.client.user.findUnique.mockResolvedValue({
         ...MOCK_USER,
         password: hashed,
@@ -141,7 +147,7 @@ describe('AuthService', () => {
 
       const result = await service.login({
         email: MOCK_USER.email,
-        password: 'senha123',
+        password: MOCK_PASSWORD,
       });
 
       expect(result).toHaveProperty('access_token');
@@ -152,7 +158,7 @@ describe('AuthService', () => {
       mockPrisma.client.user.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.login({ email: MOCK_USER.email, password: 'senha123' }),
+        service.login({ email: MOCK_USER.email, password: MOCK_PASSWORD }),
       ).rejects.toThrow(UnauthorizedException);
     });
 
@@ -164,7 +170,7 @@ describe('AuthService', () => {
       });
 
       await expect(
-        service.login({ email: MOCK_USER.email, password: 'senha123' }),
+        service.login({ email: MOCK_USER.email, password: MOCK_PASSWORD }),
       ).rejects.toThrow(UnauthorizedException);
     });
   });
@@ -172,7 +178,7 @@ describe('AuthService', () => {
   describe('refresh', () => {
     it('deve retornar novos tokens com refresh token válido', async () => {
       mockPrisma.client.refreshToken.findUnique.mockResolvedValue({
-        token: 'valid_token',
+        token: MOCK_VALID_TOKEN,
         expiresAt: new Date(Date.now() + 100000),
         userId: MOCK_USER.id,
       });
@@ -184,7 +190,7 @@ describe('AuthService', () => {
       });
       mockPrisma.client.refreshToken.create.mockResolvedValue({});
 
-      const result = await service.refresh('valid_token');
+      const result = await service.refresh(MOCK_VALID_TOKEN);
 
       expect(result).toHaveProperty('access_token');
       expect(result).toHaveProperty('refresh_token');
@@ -194,19 +200,19 @@ describe('AuthService', () => {
     it('deve lançar UnauthorizedException se token não existir', async () => {
       mockPrisma.client.refreshToken.findUnique.mockResolvedValue(null);
 
-      await expect(service.refresh('invalid_token')).rejects.toThrow(
+      await expect(service.refresh(MOCK_INVALID_TOKEN)).rejects.toThrow(
         UnauthorizedException,
       );
     });
 
     it('deve lançar UnauthorizedException se token estiver expirado', async () => {
       mockPrisma.client.refreshToken.findUnique.mockResolvedValue({
-        token: 'expired_token',
+        token: MOCK_EXPIRED_TOKEN,
         expiresAt: new Date(Date.now() - 100000),
         userId: MOCK_USER.id,
       });
 
-      await expect(service.refresh('expired_token')).rejects.toThrow(
+      await expect(service.refresh(MOCK_EXPIRED_TOKEN)).rejects.toThrow(
         UnauthorizedException,
       );
     });
@@ -230,6 +236,60 @@ describe('AuthService', () => {
         role: MOCK_USER.role,
       });
       expect(result).not.toHaveProperty('password');
+    });
+  });
+
+  describe('logout', () => {
+    it('deve deletar o refresh token do banco de dados (idempotente)', async () => {
+      mockPrisma.client.refreshToken.deleteMany.mockResolvedValue({ count: 1 });
+
+      await expect(service.logout(MOCK_TOKEN)).resolves.not.toThrow();
+
+      expect(mockPrisma.client.refreshToken.deleteMany).toHaveBeenCalledWith({
+        where: { token: MOCK_TOKEN },
+      });
+    });
+  });
+
+  describe('logoutAll', () => {
+    it('deve revogar todos os refresh tokens do usuário quando a senha for válida', async () => {
+      const hashed = await hash(MOCK_PASSWORD, 10);
+      mockPrisma.client.user.findUnique.mockResolvedValue({
+        ...MOCK_USER,
+        password: hashed,
+      });
+      mockPrisma.client.refreshToken.deleteMany.mockResolvedValue({ count: 2 });
+
+      await expect(
+        service.logoutAll(MOCK_USER.id, { password: MOCK_PASSWORD }),
+      ).resolves.not.toThrow();
+
+      expect(mockPrisma.client.user.findUnique).toHaveBeenCalledWith({
+        where: { id: MOCK_USER.id },
+      });
+      expect(mockPrisma.client.refreshToken.deleteMany).toHaveBeenCalledWith({
+        where: { userId: MOCK_USER.id },
+      });
+    });
+
+    it('deve lançar UnauthorizedException se o usuário não for encontrado', async () => {
+      mockPrisma.client.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.logoutAll(MOCK_USER.id, { password: MOCK_PASSWORD }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('deve lançar UnauthorizedException se a senha estiver incorreta', async () => {
+      const hashed = await hash(MOCK_PASSWORD, 10);
+      mockPrisma.client.user.findUnique.mockResolvedValue({
+        ...MOCK_USER,
+        password: hashed,
+      });
+
+      await expect(
+        service.logoutAll(MOCK_USER.id, { password: 'senha_errada' }),
+      ).rejects.toThrow(UnauthorizedException);
     });
   });
 });
