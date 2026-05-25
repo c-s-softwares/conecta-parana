@@ -17,13 +17,13 @@ describe('Auth (e2e)', () => {
   let testCityId: string;
   let api: () => ReturnType<typeof request>;
 
-  const  MOCK_TEST_USER = { email: 'e2e@teste.com', password: 'Senha123' };
+  const MOCK_TEST_USER = { email: 'e2e@teste.com', password: 'Senha123' };
   const authHeader = (token: string) => ({ Authorization: `Bearer ${token}` });
 
   async function doLogin(
     server: App,
-    email =  MOCK_TEST_USER.email,
-    password =  MOCK_TEST_USER.password,
+    email = MOCK_TEST_USER.email,
+    password = MOCK_TEST_USER.password,
   ) {
     const res = await request(server)
       .post('/auth/login')
@@ -47,10 +47,10 @@ describe('Auth (e2e)', () => {
 
     // Limpar dados anteriores
     await prisma.client.refreshToken.deleteMany({
-      where: { user: { email:  MOCK_TEST_USER.email } },
+      where: { user: { email: MOCK_TEST_USER.email } },
     });
     await prisma.client.user.deleteMany({
-      where: { email:  MOCK_TEST_USER.email },
+      where: { email: MOCK_TEST_USER.email },
     });
 
     // criar cidade
@@ -70,10 +70,10 @@ describe('Auth (e2e)', () => {
 
   afterAll(async () => {
     await prisma.client.refreshToken.deleteMany({
-      where: { user: { email:  MOCK_TEST_USER.email } },
+      where: { user: { email: MOCK_TEST_USER.email } },
     });
     await prisma.client.user.deleteMany({
-      where: { email:  MOCK_TEST_USER.email },
+      where: { email: MOCK_TEST_USER.email },
     });
     await prisma.client.city.deleteMany({
       where: { name: 'Cidade E2E', state: 'PR' },
@@ -86,14 +86,14 @@ describe('Auth (e2e)', () => {
       .post('/auth/register')
       .send({
         name: 'Teste E2E',
-        email:  MOCK_TEST_USER.email,
-        password:  MOCK_TEST_USER.password,
+        email: MOCK_TEST_USER.email,
+        password: MOCK_TEST_USER.password,
         cityId: testCityId,
       })
       .expect(201);
 
     expect(response.body).toHaveProperty('id');
-    expect(response.body).toHaveProperty('email',  MOCK_TEST_USER.email);
+    expect(response.body).toHaveProperty('email', MOCK_TEST_USER.email);
     expect(response.body).not.toHaveProperty('password');
     expect(response.body).not.toHaveProperty('role');
   });
@@ -104,7 +104,7 @@ describe('Auth (e2e)', () => {
       .send({
         name: 'Teste E2E',
         email: '  E2E@TESTE.COM  ',
-        password:  MOCK_TEST_USER.password,
+        password: MOCK_TEST_USER.password,
         cityId: testCityId,
       })
       .expect(409);
@@ -120,7 +120,7 @@ describe('Auth (e2e)', () => {
       .send({
         name: 'Teste Sem Cidade',
         email: 'sem-cidade@teste.com',
-        password:  MOCK_TEST_USER.password,
+        password: MOCK_TEST_USER.password,
       })
       .expect(400);
 
@@ -135,7 +135,7 @@ describe('Auth (e2e)', () => {
       .send({
         name: 'Teste Formato Invalido',
         email: 'formato-invalido@teste.com',
-        password:  MOCK_TEST_USER.password,
+        password: MOCK_TEST_USER.password,
         cityId: 'invalido',
       })
       .expect(400);
@@ -151,7 +151,7 @@ describe('Auth (e2e)', () => {
       .send({
         name: 'Teste Cidade Inexistente',
         email: 'cidade-inexistente@teste.com',
-        password:  MOCK_TEST_USER.password,
+        password: MOCK_TEST_USER.password,
         cityId: `${TABLE_PREFIX.CITY}00000000000000000000000000`,
       })
       .expect(404);
@@ -165,8 +165,8 @@ describe('Auth (e2e)', () => {
     const response = await api()
       .post('/auth/login')
       .send({
-        email:  MOCK_TEST_USER.email,
-        password:  MOCK_TEST_USER.password,
+        email: MOCK_TEST_USER.email,
+        password: MOCK_TEST_USER.password,
       })
       .expect(200);
 
@@ -187,7 +187,7 @@ describe('Auth (e2e)', () => {
       .set(authHeader(accessToken))
       .expect(200);
 
-    expect(response.body).toHaveProperty('email',  MOCK_TEST_USER.email);
+    expect(response.body).toHaveProperty('email', MOCK_TEST_USER.email);
     expect(response.body).not.toHaveProperty('password');
   });
 
@@ -210,7 +210,7 @@ describe('Auth (e2e)', () => {
       .set(authHeader(accessToken))
       .expect(200);
 
-    expect(response.body).toHaveProperty('email',  MOCK_TEST_USER.email);
+    expect(response.body).toHaveProperty('email', MOCK_TEST_USER.email);
   });
 
   it('GET /auth/me — deve retornar 401 sem token', async () => {
@@ -222,8 +222,8 @@ describe('Auth (e2e)', () => {
       .post('/auth/register')
       .send({
         name: 'Teste E2E',
-        email:  MOCK_TEST_USER.email,
-        password:  MOCK_TEST_USER.password,
+        email: MOCK_TEST_USER.email,
+        password: MOCK_TEST_USER.password,
         cityId: testCityId,
       })
       .expect(409);
@@ -233,7 +233,7 @@ describe('Auth (e2e)', () => {
     await api()
       .post('/auth/login')
       .send({
-        email:  MOCK_TEST_USER.email,
+        email: MOCK_TEST_USER.email,
         password: 'SenhaErrada1',
       })
       .expect(401);
@@ -246,7 +246,7 @@ describe('Auth (e2e)', () => {
     beforeEach(async () => {
       // Limpar tokens anteriores do usuário de teste para evitar colisão de iat no JWT do login
       await prisma.client.refreshToken.deleteMany({
-        where: { user: { email:  MOCK_TEST_USER.email } },
+        where: { user: { email: MOCK_TEST_USER.email } },
       });
 
       // Login para obter tokens frescos para cada teste
@@ -284,7 +284,7 @@ describe('Auth (e2e)', () => {
     it('POST /auth/logout-all — deve retornar 401 se não autenticado', async () => {
       const res = await api()
         .post('/auth/logout-all')
-        .send({ password:  MOCK_TEST_USER.password })
+        .send({ password: MOCK_TEST_USER.password })
         .expect(401);
 
       expect(res.body).toEqual({
@@ -319,7 +319,7 @@ describe('Auth (e2e)', () => {
     it('POST /auth/logout-all — deve revogar todos os refresh tokens do usuário', async () => {
       // 1. Obter o ID do usuário de teste
       const user = await prisma.client.user.findUniqueOrThrow({
-        where: { email:  MOCK_TEST_USER.email },
+        where: { email: MOCK_TEST_USER.email },
       });
 
       // 2. Inserir manualmente um segundo refresh token ativo no banco de dados
@@ -339,7 +339,7 @@ describe('Auth (e2e)', () => {
       await api()
         .post('/auth/logout-all')
         .set(authHeader(activeAccessToken))
-        .send({ password:  MOCK_TEST_USER.password })
+        .send({ password: MOCK_TEST_USER.password })
         .expect(204);
 
       // 4. Tentar renovar com qualquer um dos dois refresh tokens antigos deve falhar
