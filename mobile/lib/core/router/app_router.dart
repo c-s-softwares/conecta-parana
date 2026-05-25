@@ -60,7 +60,18 @@ class AppRouter {
 
   late final GoRouter router = _buildRouter();
 
-  void init() {
+  Future<void> init() async {
+
+    try {
+      final initialUri = await _appLinks.getInitialLink();
+      if (initialUri != null) {
+        if (kDebugMode) debugPrint('[DeepLink] cold start link: $initialUri');
+        _handleIncomingLink(initialUri);
+      }
+    } catch(e) {
+        if (kDebugMode) debugPrint('[DeepLink] erro ao ler initial link: $e');
+    }
+
     _appLinks.uriLinkStream.listen((uri) {
       if (kDebugMode) debugPrint('[DeepLink] link recebido: $uri');
       _handleIncomingLink(uri);

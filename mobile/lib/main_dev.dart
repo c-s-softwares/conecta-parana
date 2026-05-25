@@ -10,7 +10,7 @@ void main() async {
   Environment.initialize(Flavor.dev);
 
   await AuthService.instance.init();
-  AppRouter.instance.init();
+  await AppRouter.instance.init();
 
   runApp(const App());
 }
