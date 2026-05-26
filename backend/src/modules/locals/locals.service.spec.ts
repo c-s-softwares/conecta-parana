@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { LocalsService } from './locals.service';
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
@@ -157,6 +157,146 @@ describe('LocalsService', () => {
       expect(result.items[0].id).toBe(MOCK_LOCAL_ID);
       expect(result.items[0].distance).toBe(350);
       expect(result.items[0].coordinates).toEqual({ lat: -23.45, lng: -51.95 });
+    });
+
+    it('deve lancar BadRequestException se as coordenadas forem invalidas', async () => {
+      await expect(
+        service.findNearby({ lat: -95, lng: -51.95, radius: 1000 }),
+      ).rejects.toThrow(BadRequestException);
+
+      await expect(
+        service.findNearby({ lat: -23.45, lng: -185, radius: 1000 }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('deve lancar BadRequestException se o raio for muito grande (>50km)', async () => {
+      await expect(
+        service.findNearby({ lat: -23.45, lng: -51.95, radius: 55000 }),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('update', () => {
+    it('deve lancar NotFoundException se o local nao existir', async () => {
+      mockPrisma.client.local.findFirst.mockResolvedValue(null);
+
+      await expect(service.update(MOCK_LOCAL_ID, {})).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('deve lancar ForbiddenException se o escopo da cidade for violado', async () => {
+      mockPrisma.client.local.findFirst.mockResolvedValue(MOCK_LOCAL);
+
+      await expect(
+        service.update(MOCK_LOCAL_ID, {}, 'outra_cidade_id'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('deve atualizar dados e setar novas coordenadas se informadas', async () => {
+      mockPrisma.client.local.findFirst.mockResolvedValue(MOCK_LOCAL);
+      mockPrisma.client.local.update.mockResolvedValue({
+        ...MOCK_LOCAL,
+        name: 'UPA Atualizada',
+      });
+      mockPrisma.client.$executeRaw.mockResolvedValue(1);
+
+      const result = await service.update(
+        MOCK_LOCAL_ID,
+        {
+          name: 'UPA Atualizada',
+          latitude: -23.46,
+          longitude: -51.96,
+        },
+        MOCK_CITY_ID,
+      );
+
+      expect(result.name).toBe('UPA Atualizada');
+      expect(result.coordinates).toEqual({ lat: -23.46, lng: -51.96 });
+      expect(mockPrisma.client.$executeRaw).toHaveBeenCalled();
+    });
+
+    it('deve atualizar dados e limpar coordenadas se latitude/longitude forem null', async () => {
+      mockPrisma.client.local.findFirst.mockResolvedValue(MOCK_LOCAL);
+      mockPrisma.client.local.update.mockResolvedValue({
+        ...MOCK_LOCAL,
+        name: 'UPA Atualizada',
+      });
+      mockPrisma.client.$executeRaw.mockResolvedValue(1);
+
+      const result = await service.update(
+        MOCK_LOCAL_ID,
+        {
+          name: 'UPA Atualizada',
+          latitude: null,
+          longitude: null,
+        },
+        MOCK_CITY_ID,
+      );
+
+      expect(result.name).toBe('UPA Atualizada');
+      expect(result.coordinates).toBeNull();
+      expect(mockPrisma.client.$executeRaw).toHaveBeenCalled();
+    });
+
+    it('deve atualizar dados e manter coordenadas existentes se nao informadas no DTO', async () => {
+      mockPrisma.client.local.findFirst.mockResolvedValue(MOCK_LOCAL);
+      mockPrisma.client.local.update.mockResolvedValue({
+        ...MOCK_LOCAL,
+        name: 'UPA Atualizada',
+      });
+      mockPrisma.client.$queryRaw.mockResolvedValue([
+        { lng: -51.95, lat: -23.45 },
+      ]);
+
+      const result = await service.update(
+        MOCK_LOCAL_ID,
+        {
+          name: 'UPA Atualizada',
+        },
+        MOCK_CITY_ID,
+      );
+
+      expect(result.name).toBe('UPA Atualizada');
+      expect(result.coordinates).toEqual({ lat: -23.45, lng: -51.95 });
+      expect(mockPrisma.client.$queryRaw).toHaveBeenCalled();
+    });
+  });
+
+  describe('remove', () => {
+    it('deve lancar NotFoundException se o local nao existir', async () => {
+      mockPrisma.client.local.findFirst.mockResolvedValue(null);
+
+      await expect(service.remove(MOCK_LOCAL_ID)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('deve lancar ForbiddenException se o escopo da cidade for violado', async () => {
+      mockPrisma.client.local.findFirst.mockResolvedValue(MOCK_LOCAL);
+
+      await expect(
+        service.remove(MOCK_LOCAL_ID, 'outra_cidade_id'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('deve realizar o soft-delete do local', async () => {
+      mockPrisma.client.local.findFirst.mockResolvedValue(MOCK_LOCAL);
+      mockPrisma.client.local.update.mockResolvedValue({
+        ...MOCK_LOCAL,
+        deletedAt: new Date(),
+      });
+
+      await service.remove(MOCK_LOCAL_ID, MOCK_CITY_ID);
+
+      expect(mockPrisma.client.local.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: MOCK_LOCAL_ID },
+          data: expect.objectContaining({
+            deletedAt: expect.any(Date),
+          }),
+        }),
+      );
     });
   });
 });
