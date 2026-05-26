@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
@@ -12,6 +12,7 @@ import {
 import { NearbyQueryDto } from './dto/request/nearby-query.dto';
 import { PaginationQueryDto } from '../../common/dto/request/pagination-query.dto';
 import { PaginatedResponseDto } from '../../common/dto/response/paginated-response.dto';
+import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
 
 @Injectable()
 export class LocalsService extends BaseCrudService<
@@ -71,11 +72,11 @@ export class LocalsService extends BaseCrudService<
 
   protected toUpdateData(dto: UpdateLocalDto): Record<string, unknown> {
     return {
-      ...(dto.name && { name: dto.name }),
-      ...(dto.description && { description: dto.description }),
-      ...(dto.address && { address: dto.address }),
-      ...(dto.phone && { phone: dto.phone }),
-      ...(dto.categoryId && { categoryId: dto.categoryId }),
+      ...(dto.name !== undefined && { name: dto.name }),
+      ...(dto.description !== undefined && { description: dto.description }),
+      ...(dto.address !== undefined && { address: dto.address }),
+      ...(dto.phone !== undefined && { phone: dto.phone }),
+      ...(dto.categoryId !== undefined && { categoryId: dto.categoryId }),
     };
   }
 
@@ -146,7 +147,7 @@ export class LocalsService extends BaseCrudService<
     dto: CreateLocalDto & { userId: string },
   ): Promise<LocalResponseDto> {
     const response = await super.create(dto);
-    if (dto.latitude !== undefined && dto.longitude !== undefined) {
+    if (dto.latitude !== undefined && dto.longitude !== undefined && dto.latitude !== null && dto.longitude !== null) {
       await this.prisma.client.$executeRaw`
         UPDATE locals
         SET coordinates = ST_SetSRID(ST_MakePoint(${dto.longitude}, ${dto.latitude}), 4326)
@@ -162,9 +163,31 @@ export class LocalsService extends BaseCrudService<
   override async update(
     id: string,
     dto: UpdateLocalDto,
+    userCityId?: string,
   ): Promise<LocalResponseDto> {
-    const response = await super.update(id, dto);
-    if (dto.latitude !== undefined && dto.longitude !== undefined) {
+    const local = await this.prisma.client.local.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
+    });
+
+    if (!local) {
+      throw new NotFoundException(apiError('local_not_found'));
+    }
+
+    if (userCityId && local.cityId !== userCityId) {
+      throw new ForbiddenException(apiError(API_ERROR_CODE.CITY_SCOPE_DENIED));
+    }
+
+    const updated = await this.prisma.client.local.update({
+      where: { id },
+      data: this.toUpdateData(dto),
+    });
+
+    const response = this.toResponse(updated);
+
+    if (dto.latitude !== undefined && dto.longitude !== undefined && dto.latitude !== null && dto.longitude !== null) {
       await this.prisma.client.$executeRaw`
         UPDATE locals
         SET coordinates = ST_SetSRID(ST_MakePoint(${dto.longitude}, ${dto.latitude}), 4326)
@@ -207,6 +230,14 @@ export class LocalsService extends BaseCrudService<
     query: NearbyQueryDto,
   ): Promise<{ items: LocalNearbyResponseDto[]; total: number }> {
     const { lat, lng, radius, categoryId } = query;
+
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      throw new BadRequestException(apiError(API_ERROR_CODE.INVALID_COORDINATES));
+    }
+
+    if (radius > 50000) {
+      throw new BadRequestException(apiError(API_ERROR_CODE.RADIUS_TOO_LARGE));
+    }
 
     const categoryCondition = categoryId
       ? Prisma.sql`AND category_id = ${categoryId}`
@@ -273,5 +304,27 @@ export class LocalsService extends BaseCrudService<
       items: mappedItems,
       total: mappedItems.length,
     };
+  }
+
+  override async remove(id: string, userCityId?: string): Promise<void> {
+    const local = await this.prisma.client.local.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
+    });
+
+    if (!local) {
+      throw new NotFoundException(apiError('local_not_found'));
+    }
+
+    if (userCityId && local.cityId !== userCityId) {
+      throw new ForbiddenException(apiError(API_ERROR_CODE.CITY_SCOPE_DENIED));
+    }
+
+    await this.prisma.client.local.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
   }
 }
