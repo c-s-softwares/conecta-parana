@@ -129,18 +129,8 @@ export class LocalsController {
     @Request() req: ExpressRequest,
   ): Promise<LocalResponseDto> {
     const user = req['user'] as JwtPayload;
-
-    // Se for administrador municipal, valida se o local pertence à própria cidade
-    if (user.role === Role.ADMIN && user.cityId) {
-      const local = await this.localsService.findOne(id);
-      if (local.cityId !== user.cityId) {
-        throw new ForbiddenException(
-          apiError(API_ERROR_CODE.CITY_SCOPE_DENIED),
-        );
-      }
-    }
-
-    return this.localsService.update(id, dto);
+    const userCityId = user.role === Role.ADMIN ? (user.cityId ?? undefined) : undefined;
+    return this.localsService.update(id, dto, userCityId);
   }
 
   @Delete(':id')
@@ -160,17 +150,7 @@ export class LocalsController {
     @Request() req: ExpressRequest,
   ): Promise<void> {
     const user = req['user'] as JwtPayload;
-
-    // Se for administrador municipal, valida se o local pertence à própria cidade
-    if (user.role === Role.ADMIN && user.cityId) {
-      const local = await this.localsService.findOne(id);
-      if (local.cityId !== user.cityId) {
-        throw new ForbiddenException(
-          apiError(API_ERROR_CODE.CITY_SCOPE_DENIED),
-        );
-      }
-    }
-
-    return this.localsService.remove(id);
+    const userCityId = user.role === Role.ADMIN ? (user.cityId ?? undefined) : undefined;
+    return this.localsService.remove(id, userCityId);
   }
 }
