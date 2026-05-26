@@ -66,7 +66,7 @@ export class CreateLocalDto {
   @Min(-90, { message: 'A latitude mínima é -90' })
   @Max(90, { message: 'A latitude máxima é 90' })
   @Type(() => Number)
-  latitude?: number;
+  latitude?: number | null;
 
   @ApiProperty({
     example: -51.95,
@@ -78,7 +78,7 @@ export class CreateLocalDto {
   @Min(-180, { message: 'A longitude mínima é -180' })
   @Max(180, { message: 'A longitude máxima é 180' })
   @Type(() => Number)
-  longitude?: number;
+  longitude?: number | null;
 
   @ApiProperty({
     example: 'cit_01HZX3Y4Q9F8TAB1C2DKEYH9MN',

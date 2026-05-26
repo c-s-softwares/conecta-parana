@@ -1,8 +1,6 @@
 import {
   IsNotEmpty,
   IsNumber,
-  Min,
-  Max,
   IsOptional,
   IsString,
 } from 'class-validator';
@@ -18,8 +16,6 @@ export class NearbyQueryDto {
   })
   @IsNotEmpty({ message: 'A latitude é obrigatória' })
   @IsNumber({}, { message: 'A latitude deve ser um número' })
-  @Min(-90, { message: 'A latitude mínima é -90' })
-  @Max(90, { message: 'A latitude máxima é 90' })
   @Type(() => Number)
   lat!: number;
 
@@ -29,8 +25,6 @@ export class NearbyQueryDto {
   })
   @IsNotEmpty({ message: 'A longitude é obrigatória' })
   @IsNumber({}, { message: 'A longitude deve ser um número' })
-  @Min(-180, { message: 'A longitude mínima é -180' })
-  @Max(180, { message: 'A longitude máxima é 180' })
   @Type(() => Number)
   lng!: number;
 
@@ -40,8 +34,6 @@ export class NearbyQueryDto {
   })
   @IsNotEmpty({ message: 'O raio de busca é obrigatório' })
   @IsNumber({}, { message: 'O raio de busca deve ser um número' })
-  @Min(1, { message: 'O raio de busca deve ser de pelo menos 1 metro' })
-  @Max(50000, { message: 'O raio máximo permitido é de 50.000 metros (50km)' })
   @Type(() => Number)
   radius!: number;
 
