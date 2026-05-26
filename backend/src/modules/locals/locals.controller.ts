@@ -10,7 +10,6 @@ import {
   Request,
   HttpCode,
   HttpStatus,
-  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -32,7 +31,6 @@ import { AdminRoute } from '../../common/decorators/admin-route.decorator';
 import { RequireCityScope } from '../../common/decorators/require-city-scope.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
-import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
 import { PaginationQueryDto } from '../../common/dto/request/pagination-query.dto';
 import { PaginatedResponseDto } from '../../common/dto/response/paginated-response.dto';
 
@@ -129,7 +127,8 @@ export class LocalsController {
     @Request() req: ExpressRequest,
   ): Promise<LocalResponseDto> {
     const user = req['user'] as JwtPayload;
-    const userCityId = user.role === Role.ADMIN ? (user.cityId ?? undefined) : undefined;
+    const userCityId =
+      user.role === Role.ADMIN ? (user.cityId ?? undefined) : undefined;
     return this.localsService.update(id, dto, userCityId);
   }
 
@@ -150,7 +149,8 @@ export class LocalsController {
     @Request() req: ExpressRequest,
   ): Promise<void> {
     const user = req['user'] as JwtPayload;
-    const userCityId = user.role === Role.ADMIN ? (user.cityId ?? undefined) : undefined;
+    const userCityId =
+      user.role === Role.ADMIN ? (user.cityId ?? undefined) : undefined;
     return this.localsService.remove(id, userCityId);
   }
 }

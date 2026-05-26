@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
@@ -147,7 +152,12 @@ export class LocalsService extends BaseCrudService<
     dto: CreateLocalDto & { userId: string },
   ): Promise<LocalResponseDto> {
     const response = await super.create(dto);
-    if (dto.latitude !== undefined && dto.longitude !== undefined && dto.latitude !== null && dto.longitude !== null) {
+    if (
+      dto.latitude !== undefined &&
+      dto.longitude !== undefined &&
+      dto.latitude !== null &&
+      dto.longitude !== null
+    ) {
       await this.prisma.client.$executeRaw`
         UPDATE locals
         SET coordinates = ST_SetSRID(ST_MakePoint(${dto.longitude}, ${dto.latitude}), 4326)
@@ -187,7 +197,12 @@ export class LocalsService extends BaseCrudService<
 
     const response = this.toResponse(updated);
 
-    if (dto.latitude !== undefined && dto.longitude !== undefined && dto.latitude !== null && dto.longitude !== null) {
+    if (
+      dto.latitude !== undefined &&
+      dto.longitude !== undefined &&
+      dto.latitude !== null &&
+      dto.longitude !== null
+    ) {
       await this.prisma.client.$executeRaw`
         UPDATE locals
         SET coordinates = ST_SetSRID(ST_MakePoint(${dto.longitude}, ${dto.latitude}), 4326)
@@ -232,7 +247,9 @@ export class LocalsService extends BaseCrudService<
     const { lat, lng, radius, categoryId } = query;
 
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-      throw new BadRequestException(apiError(API_ERROR_CODE.INVALID_COORDINATES));
+      throw new BadRequestException(
+        apiError(API_ERROR_CODE.INVALID_COORDINATES),
+      );
     }
 
     if (radius > 50000) {

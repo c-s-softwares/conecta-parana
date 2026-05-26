@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { LocalsService } from './locals.service';
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
@@ -293,9 +297,9 @@ describe('LocalsService', () => {
         expect.objectContaining({
           where: { id: MOCK_LOCAL_ID },
           data: expect.objectContaining({
-            deletedAt: expect.any(Date),
-          }),
-        }),
+            deletedAt: expect.any(Date) as unknown,
+          }) as unknown,
+        }) as unknown,
       );
     });
   });

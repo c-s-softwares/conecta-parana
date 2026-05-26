@@ -304,12 +304,16 @@ describe('Locals (e2e)', () => {
       const response1 = await request(app.getHttpServer())
         .get('/locals/nearby?lat=-95.0&lng=-51.93&radius=2000')
         .expect(400);
-      expect((response1.body as Record<string, any>).code).toBe('invalid_coordinates');
+      expect((response1.body as Record<string, any>).code).toBe(
+        'invalid_coordinates',
+      );
 
       const response2 = await request(app.getHttpServer())
         .get('/locals/nearby?lat=-23.0&lng=-185.0&radius=2000')
         .expect(400);
-      expect((response2.body as Record<string, any>).code).toBe('invalid_coordinates');
+      expect((response2.body as Record<string, any>).code).toBe(
+        'invalid_coordinates',
+      );
     });
   });
 
