@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
-import { Server } from 'http';
+import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/config/prisma.service';
 import { JwtService } from '@nestjs/jwt';
@@ -9,7 +9,7 @@ import { TABLE_PREFIX } from '../src/common/types/ulid.types';
 import { validationPipeConfig } from '../src/config/validation-pipe.config';
 
 describe('Locals (e2e)', () => {
-  let app: INestApplication;
+  let app: INestApplication<App>;
   let prisma: PrismaService;
   let jwtService: JwtService;
 
@@ -19,6 +19,16 @@ describe('Locals (e2e)', () => {
   const curitibaId = `${TABLE_PREFIX.CITY}01HZX3Y4Q9F8TAB1C2DKEYH9C1`;
   const maringaId = `${TABLE_PREFIX.CITY}01HZX3Y4Q9F8TAB1C2DKEYH9M1`;
   const categoryId = `${TABLE_PREFIX.CATEGORY}01HZX3Y4Q9F8TAB1C2DKEYH9C2`;
+
+  const TEST_EMAILS = [
+    'super@locals.com',
+    'curitiba@locals.com',
+    'maringa@locals.com',
+    'citizen@locals.com',
+  ];
+  const TEST_CITY_IDS = [curitibaId, maringaId];
+
+  const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
 
   let localCuritibaId: string;
   let localMaringaId: string;
@@ -43,12 +53,7 @@ describe('Locals (e2e)', () => {
     await prisma.client.user.deleteMany({
       where: {
         email: {
-          in: [
-            'super@locals.com',
-            'curitiba@locals.com',
-            'maringa@locals.com',
-            'citizen@locals.com',
-          ],
+          in: TEST_EMAILS,
         },
       },
     });
@@ -56,7 +61,7 @@ describe('Locals (e2e)', () => {
       where: { id: categoryId },
     });
     await prisma.client.city.deleteMany({
-      where: { id: { in: [curitibaId, maringaId] } },
+      where: { id: { in: TEST_CITY_IDS } },
     });
 
     // 2. Fixtures básicas
@@ -136,12 +141,7 @@ describe('Locals (e2e)', () => {
     await prisma.client.user.deleteMany({
       where: {
         email: {
-          in: [
-            'super@locals.com',
-            'curitiba@locals.com',
-            'maringa@locals.com',
-            'citizen@locals.com',
-          ],
+          in: TEST_EMAILS,
         },
       },
     });
@@ -149,14 +149,14 @@ describe('Locals (e2e)', () => {
       where: { id: categoryId },
     });
     await prisma.client.city.deleteMany({
-      where: { id: { in: [curitibaId, maringaId] } },
+      where: { id: { in: TEST_CITY_IDS } },
     });
     await app.close();
   });
 
   describe('Criação (POST /locals)', () => {
     it('deve rejeitar escrita sem token (401)', async () => {
-      await request(app.getHttpServer() as unknown as Server)
+      await request(app.getHttpServer())
         .post('/locals')
         .send({
           name: 'Jardim Botânico',
@@ -170,9 +170,9 @@ describe('Locals (e2e)', () => {
     });
 
     it('deve permitir Super Admin criar local em qualquer cidade', async () => {
-      const response = await request(app.getHttpServer() as unknown as Server)
+      const response = await request(app.getHttpServer())
         .post('/locals')
-        .set('Authorization', `Bearer ${superAdminToken}`)
+        .set(auth(superAdminToken))
         .send({
           name: 'Catedral de Maringá',
           description: 'Catedral cônica',
@@ -192,9 +192,9 @@ describe('Locals (e2e)', () => {
     });
 
     it('deve permitir admin municipal criar local na própria cidade', async () => {
-      const response = await request(app.getHttpServer() as unknown as Server)
+      const response = await request(app.getHttpServer())
         .post('/locals')
-        .set('Authorization', `Bearer ${curitibaAdminToken}`)
+        .set(auth(curitibaAdminToken))
         .send({
           name: 'Jardim Botânico',
           description: 'Estufa de vidro',
@@ -214,9 +214,9 @@ describe('Locals (e2e)', () => {
     });
 
     it('deve rejeitar admin municipal criando local em outra cidade (403)', async () => {
-      const response = await request(app.getHttpServer() as unknown as Server)
+      const response = await request(app.getHttpServer())
         .post('/locals')
-        .set('Authorization', `Bearer ${curitibaAdminToken}`)
+        .set(auth(curitibaAdminToken))
         .send({
           name: 'Parque do Ingá',
           description: 'Parque urbano',
@@ -234,7 +234,7 @@ describe('Locals (e2e)', () => {
 
   describe('Consultas (GET /locals)', () => {
     it('deve retornar lista paginada pública de locais (200)', async () => {
-      const response = await request(app.getHttpServer() as unknown as Server)
+      const response = await request(app.getHttpServer())
         .get('/locals')
         .expect(200);
 
@@ -245,7 +245,7 @@ describe('Locals (e2e)', () => {
     });
 
     it('deve retornar detalhes de local público (200)', async () => {
-      const response = await request(app.getHttpServer() as unknown as Server)
+      const response = await request(app.getHttpServer())
         .get(`/locals/${localCuritibaId}`)
         .expect(200);
 
@@ -255,7 +255,7 @@ describe('Locals (e2e)', () => {
     });
 
     it('deve retornar 404 para local inexistente', async () => {
-      const response = await request(app.getHttpServer() as unknown as Server)
+      const response = await request(app.getHttpServer())
         .get(`/locals/loc_01HZX3Y4Q9F8TAB1C2DKEYH9FF`)
         .expect(404);
 
@@ -267,7 +267,7 @@ describe('Locals (e2e)', () => {
   describe('Busca Geoespacial (GET /locals/nearby)', () => {
     it('deve encontrar local próximo no raio de busca', async () => {
       // Ponto de busca: exatamente no Jardim Botânico (-25.443, -49.239)
-      const response = await request(app.getHttpServer() as unknown as Server)
+      const response = await request(app.getHttpServer())
         .get('/locals/nearby?lat=-25.443&lng=-49.239&radius=1000')
         .expect(200);
 
@@ -280,9 +280,9 @@ describe('Locals (e2e)', () => {
 
     it('deve ordenar por proximidade e incluir a distância', async () => {
       // Ponto de busca: Catedral de Maringá (-23.426, -51.938)
-      // Jardim Botânico está a mais de 300km, então com raio 400.000m (400km) deve retornar ambos ordenados
-      const response = await request(app.getHttpServer() as unknown as Server)
-        .get('/locals/nearby?lat=-23.426&lng=-51.938&radius=45000') // Maringá está a ~0m
+      // Jardim Botânico está a mais de 300km, então com raio 45km deve retornar apenas Catedral de Maringá
+      const response = await request(app.getHttpServer())
+        .get('/locals/nearby?lat=-23.426&lng=-51.938&radius=45000')
         .expect(200);
 
       const body = response.body as Record<string, any>;
@@ -292,30 +292,32 @@ describe('Locals (e2e)', () => {
     });
 
     it('deve falhar se o raio for superior a 50.000m (400)', async () => {
-      const response = await request(app.getHttpServer() as unknown as Server)
+      const response = await request(app.getHttpServer())
         .get('/locals/nearby?lat=-23.42&lng=-51.93&radius=55000')
         .expect(400);
 
       const body = response.body as Record<string, any>;
-      expect(body.code).toBe('validation_failed');
+      expect(body.code).toBe('radius_too_large');
     });
 
     it('deve falhar se as coordenadas estiverem fora da faixa (-90 a 90 / -180 a 180)', async () => {
-      await request(app.getHttpServer() as unknown as Server)
+      const response1 = await request(app.getHttpServer())
         .get('/locals/nearby?lat=-95.0&lng=-51.93&radius=2000')
         .expect(400);
+      expect((response1.body as Record<string, any>).code).toBe('invalid_coordinates');
 
-      await request(app.getHttpServer() as unknown as Server)
+      const response2 = await request(app.getHttpServer())
         .get('/locals/nearby?lat=-23.0&lng=-185.0&radius=2000')
         .expect(400);
+      expect((response2.body as Record<string, any>).code).toBe('invalid_coordinates');
     });
   });
 
   describe('Alteração (PUT /locals/:id)', () => {
     it('deve permitir admin municipal atualizar local da sua cidade', async () => {
-      const response = await request(app.getHttpServer() as unknown as Server)
+      const response = await request(app.getHttpServer())
         .put(`/locals/${localCuritibaId}`)
-        .set('Authorization', `Bearer ${curitibaAdminToken}`)
+        .set(auth(curitibaAdminToken))
         .send({
           name: 'Jardim Botânico Alterado',
           description: 'Estufa icônica',
@@ -333,9 +335,9 @@ describe('Locals (e2e)', () => {
     });
 
     it('deve negar admin municipal atualizando local de outra cidade (403)', async () => {
-      const response = await request(app.getHttpServer() as unknown as Server)
+      const response = await request(app.getHttpServer())
         .put(`/locals/${localMaringaId}`)
-        .set('Authorization', `Bearer ${curitibaAdminToken}`)
+        .set(auth(curitibaAdminToken))
         .send({
           name: 'Invasão',
         })
@@ -348,9 +350,9 @@ describe('Locals (e2e)', () => {
 
   describe('Remoção (DELETE /locals/:id)', () => {
     it('deve negar admin municipal deletando local de outra cidade (403)', async () => {
-      const response = await request(app.getHttpServer() as unknown as Server)
+      const response = await request(app.getHttpServer())
         .delete(`/locals/${localMaringaId}`)
-        .set('Authorization', `Bearer ${curitibaAdminToken}`)
+        .set(auth(curitibaAdminToken))
         .expect(403);
 
       const body = response.body as Record<string, any>;
@@ -358,15 +360,13 @@ describe('Locals (e2e)', () => {
     });
 
     it('deve permitir admin municipal deletar local da sua cidade', async () => {
-      await request(app.getHttpServer() as unknown as Server)
+      await request(app.getHttpServer())
         .delete(`/locals/${localCuritibaId}`)
-        .set('Authorization', `Bearer ${curitibaAdminToken}`)
+        .set(auth(curitibaAdminToken))
         .expect(204);
 
       // Valida soft-delete: findOne retorna 404 após deletado
-      const responseGet = await request(
-        app.getHttpServer() as unknown as Server,
-      )
+      const responseGet = await request(app.getHttpServer())
         .get(`/locals/${localCuritibaId}`)
         .expect(404);
 
