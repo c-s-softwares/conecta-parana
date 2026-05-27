@@ -3,6 +3,7 @@ import 'package:conectaparana/core/config/environment.dart';
 import 'package:conectaparana/core/network/api_client.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class PlaceholderScreen extends StatelessWidget {
   const PlaceholderScreen({super.key});
@@ -46,6 +47,10 @@ class PlaceholderScreen extends StatelessWidget {
               child: const Text('TESTAR CHAMADA AUTENTICADA'),
             ),
             ElevatedButton(onPressed: _logout, child: const Text('LOGOUT')),
+            ElevatedButton(
+              onPressed: () => context.go('/rota-que-nao-existe'),
+              child: const Text('Testar 404'),
+            ),
           ],
         ),
       ),

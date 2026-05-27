@@ -1,4 +1,4 @@
-import 'package:conectaparana/app.dart';
+import 'package:conectaparana/core/router/navigator_key.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 

@@ -233,3 +233,30 @@ Está Autenticado?
 * **GET /cities falha:** o dropdown de cidades exibe `"Erro ao carregar cidades."` com o botão `"Tentar novamente"`. Todos os campos do formulário ficam desabilitados (`enabled: false`) e o checkbox de termos ignora cliques até a lista carregar.
 * **Termos não aceitos:** botão `"Criar conta"` permanece desabilitado.
 * **Erro de rede genérico (timeout, sem conexão, 5xx):** SnackBar vermelho `"Erro ao criar conta. Verifique sua conexão e tente novamente."` no rodapé da tela.
+
+## Roteamento com pendingDeepLink no AppRouter
+
+#### Fluxo:
+
+1. Deep link chega via `uriLinkStream` ou cold start
+2. `DeepLinkParser` valida e converte para `DeepLinkRoute`
+3. Usuário não logado → `AppRouter.setPendingDeepLink(route)` salva o destino
+4. App navega para `/login`
+5. Login bem-sucedido → `AppRouter.consumePendingDeepLink()` retorna o path e limpa o estado
+6. `context.go(path)` leva o usuário ao destino original
+
+---
+
+## Custom scheme como fallback de deep links
+
+Além dos Universal Links / App Links (`https://conectaparana.app/share/...`), o app
+suporta um custom scheme próprio (`conectaparana://share/...`).
+
+#### Quando usar cada um:
+
+| Scheme | Ambiente | Observação |
+| --- | --- | --- |
+| `https://conectaparana.app/share/...` | Produção | Requer `assetlinks.json` e `apple-app-site-association` no domínio |
+| `conectaparana://share/...` | Dev / Staging | Funciona sem verificação de domínio |
+
+> Custom schemes são menos seguros que Universal Links — qualquer app pode registrar o mesmo scheme. Em produção o fluxo principal sempre usa HTTPS.

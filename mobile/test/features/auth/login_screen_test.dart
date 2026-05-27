@@ -1,18 +1,18 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:conectaparana/core/auth/presentation/pages/login_screen.dart';
+import 'package:conectaparana/core/router/app_router.dart';
 
 void main() {
   Future<void> abrirTela(
     WidgetTester tester, {
     Future<void> Function(String email, String senha)? mockLogin,
-    String? rotaAlvo,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
         home: LoginScreen(mockLogin: mockLogin),
-        routes: {'/home': (_) => const Scaffold(body: Text('Home'))},
       ),
     );
   }
@@ -64,11 +64,24 @@ void main() {
   testWidgets('Deve navegar para /home quando login for bem sucedido', (
     tester,
   ) async {
+    final router = GoRouter(
+      initialLocation: AppRoutes.login,
+      routes: [
+        GoRoute(
+          path: AppRoutes.login,
+          builder: (context, state) =>
+              LoginScreen(mockLogin: (email, senha) async {}),
+        ),
+        GoRoute(
+          path: AppRoutes.home,
+          builder: (context, state) =>
+              const Scaffold(body: Text('Home')),
+        ),
+      ],
+    );
+
     await tester.pumpWidget(
-      MaterialApp(
-        home: LoginScreen(mockLogin: (email, senha) async {}),
-        routes: {'/home': (_) => const Scaffold(body: Text('Home'))},
-      ),
+      MaterialApp.router(routerConfig: router),
     );
 
     await tester.enterText(find.byType(TextFormField).first, 'teste@email.com');
