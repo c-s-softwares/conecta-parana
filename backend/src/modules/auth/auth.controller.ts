@@ -82,7 +82,6 @@ export class AuthController {
     const user = req['user'] as JwtPayload;
     return this.authService.getMe(user.sub);
   }
-
   @Post('logout')
   @HttpCode(204)
   @ApiBearerAuth()

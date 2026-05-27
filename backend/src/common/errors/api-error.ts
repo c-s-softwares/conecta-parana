@@ -17,6 +17,9 @@ export const API_ERROR_CODE = {
   CITY_NOT_FOUND: 'city_not_found',
   CITY_DUPLICATE: 'city_duplicate',
   CITY_HAS_CONTENT: 'city_has_content',
+  LOCAL_NOT_FOUND: 'local_not_found',
+  INVALID_COORDINATES: 'invalid_coordinates',
+  RADIUS_TOO_LARGE: 'radius_too_large',
   INVALID_PASSWORD: 'invalid_password',
 } as const;
 
@@ -42,6 +45,9 @@ const STATIC_MESSAGE: Record<StaticCode, string> = {
   [API_ERROR_CODE.CITY_NOT_FOUND]:     'Cidade não encontrada',
   [API_ERROR_CODE.CITY_DUPLICATE]:     'Cidade já cadastrada',
   [API_ERROR_CODE.CITY_HAS_CONTENT]:   'Cidade possui conteúdo associado',
+  [API_ERROR_CODE.LOCAL_NOT_FOUND]:    'Local não encontrado',
+  [API_ERROR_CODE.INVALID_COORDINATES]:'Coordenadas inválidas (latitude deve ser entre -90 e 90, longitude entre -180 e 180)',
+  [API_ERROR_CODE.RADIUS_TOO_LARGE]:   'Raio máximo de busca permitido de 50km (50000 metros)',
   [API_ERROR_CODE.INVALID_PASSWORD]:   'Senha incorreta',
 };
 

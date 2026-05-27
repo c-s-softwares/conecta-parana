@@ -12,6 +12,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { AuthModule } from './modules/auth/auth.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { CitiesModule } from './modules/cities/cities.module';
+import { LocalsModule } from './modules/locals/locals.module';
 import { HttpCacheInterceptor } from './common/interceptors/http-cache.interceptor';
 import { PinoLoggerModule } from './config/logger.module';
 
@@ -38,6 +39,7 @@ import { PinoLoggerModule } from './config/logger.module';
     AuthModule,
     AdminModule,
     CitiesModule,
+    LocalsModule,
     RedisCacheModule,
   ],
   controllers: [AppController],

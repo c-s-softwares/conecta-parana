@@ -238,7 +238,6 @@ describe('AuthService', () => {
       expect(result).not.toHaveProperty('password');
     });
   });
-
   describe('logout', () => {
     it('deve deletar o refresh token do banco de dados (idempotente)', async () => {
       mockPrisma.client.refreshToken.deleteMany.mockResolvedValue({ count: 1 });

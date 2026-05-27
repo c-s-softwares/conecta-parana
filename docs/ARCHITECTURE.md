@@ -105,6 +105,44 @@ A tabela abaixo define a Fonte de Verdade para o mapeamento Entidade para Prefix
 | Photo | `pho_` | `pho_01H...` |
 | RefreshToken | `rfk_` | `rfk_01H...` |
 
+## Integração de Dados Geoespaciais (PostGIS e Prisma)
+
+O monorepo utiliza o **PostGIS** para o gerenciamento e consultas espaciais de alta performance. Como o Prisma ORM não possui suporte nativo para tipos geométricos especiais como `geometry(Point, 4326)`, adotamos a seguinte arquitetura híbrida de persistência:
+
+1. **Definição no Schema (`schema.prisma`)**:
+   A coluna de coordenadas é mapeada usando a anotação `Unsupported` do Prisma:
+   ```prisma
+   coordinates Unsupported("geometry(Point, 4326)")?
+   ```
+   Isso permite que o banco gerencie a coluna nativamente sem que o Prisma tente mapear seus detalhes WKB. Um índice espacial `GiST` é adicionado no schema para otimização de consultas:
+   ```prisma
+   @@index([coordinates], type: Gist)
+   ```
+
+2. **Inserção e Atualização de Coordenadas**:
+   Como a gravação direta via Prisma Client omitiria a conversão geométrica, as atualizações de pontos de latitude e longitude ocorrem em duas etapas na camada de serviço (`LocalsService`):
+   - Escrita inicial/atualização de campos tradicionais via Prisma Client.
+   - Atualização da coluna geométrica via comandos Raw SQL `$executeRaw` usando a função `ST_SetSRID` e `ST_MakePoint`:
+     ```sql
+     UPDATE locals
+     SET coordinates = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)
+     WHERE id = :id
+     ```
+
+3. **Leitura e Busca Geoespacial (Nearby)**:
+   - **Busca Padrão:** As coordenadas são extraídas decodificando a geometria usando `ST_X` e `ST_Y` em consultas otimizadas ou consultas agregadas após a busca tradicional por ID.
+   - **Busca por Proximidade (`ST_DWithin`):** A busca geoespacial executa uma query Raw SQL via `$queryRaw` para calcular a distância e filtrar por raio, ordenando os locais do mais próximo ao mais distante:
+     ```sql
+     SELECT id, name, ...,
+            ST_X(coordinates) as lng,
+            ST_Y(coordinates) as lat,
+            ST_Distance(coordinates, ST_SetSRID(ST_MakePoint(lng_busca, lat_busca), 4326)) as distance
+     FROM locals
+     WHERE ST_DWithin(coordinates, ST_SetSRID(ST_MakePoint(lng_busca, lat_busca), 4326), raio_metros)
+       AND deleted_at IS NULL
+     ORDER BY distance ASC;
+     ```
+
 ## Ambientes
 
 | Ambiente | Compose file | Descrição |
