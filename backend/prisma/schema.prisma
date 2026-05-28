@@ -30,6 +30,7 @@ model City {
   news   News[]
   locals Local[] 
   communicates Communicate[]
+  suggestions  Suggestion[]
 
   @@unique([name, state])
   @@map("cities")
@@ -50,7 +51,8 @@ model User {
   likes Like[]
   favorites Favorite[]
   notifications Notification[]
-  suggestions    Suggestion[] 
+  suggestions          Suggestion[]   @relation("UserSuggestions")
+  respondedSuggestions Suggestion[]   @relation("ResponderSuggestions")
   locals         Local[]
   communicates Communicate[]
 
@@ -236,13 +238,19 @@ model Local {
 }
 
 model Suggestion {
-  id      String @id
-  subject String
-  message String
-  status  String
-  userId  String @map("user_id")
+  id            String    @id
+  subject       String
+  message       String
+  status        String
+  userId        String    @map("user_id")
+  cityId        String    @map("city_id")
+  response      String?
+  respondedAt   DateTime? @map("responded_at")
+  respondedById String?   @map("responded_by_id")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user        User  @relation("UserSuggestions", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  respondedBy User? @relation("ResponderSuggestions", fields: [respondedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  city        City  @relation(fields: [cityId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@map("suggestions")
 }

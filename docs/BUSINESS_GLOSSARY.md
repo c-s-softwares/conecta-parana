@@ -47,8 +47,13 @@ Cada termo deve seguir esta estrutura:
 
 ### Sugestão
 
-- **Definição:** Pedidos de usuários para o usuário Adm a respeito de novas ideias de eventos.
-- **Contexto de Uso:** Os usuários autenticados poderão dar sugestões para os usuários administradores para dar ideias de novos eventos para movimentar a comunidade 
+- **Definição:** Pedidos e ideias enviados por cidadãos aos administradores municipais para sugerir novos eventos, ações ou melhorias na comunidade. Cada sugestão possui um ciclo de vida controlado por estados rígidos de transição.
+- **Contexto de Uso:** Cidadãos autenticados criam sugestões associadas à sua cidade. Administradores da respectiva cidade visualizam, leem, respondem e arquivam as sugestões.
+- **Ciclo de Vida & Transições de Status:**
+  - `enviada` (Status inicial ao ser criada pelo cidadão).
+  - `lida` (Transição automática ocorrendo quando um administrador da respectiva cidade visualiza o detalhe do ticket via GET).
+  - `respondida` (Transição manual quando o administrador envia uma resposta formal. Dispara uma notificação automática ao cidadão).
+  - `arquivada` (Estado terminal em que a sugestão é arquivada pelo administrador. Nenhuma transição de status a partir de `arquivada` é permitida).
 
 ### Moderação
 
