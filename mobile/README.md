@@ -260,3 +260,12 @@ suporta um custom scheme próprio (`conectaparana://share/...`).
 | `conectaparana://share/...` | Dev / Staging | Funciona sem verificação de domínio |
 
 > Custom schemes são menos seguros que Universal Links — qualquer app pode registrar o mesmo scheme. Em produção o fluxo principal sempre usa HTTPS.
+
+## Bottom Navigation — tap em aba já ativa
+
+Tap em uma aba já ativa faz pop até o root dessa aba. Se o usuário já estiver no root, o tap não tem efeito.
+
+Exemplo:
+1. Usuário navega para `/map/loc_X` (detalhe dentro da aba Mapa)
+2. Toca na aba Mapa novamente → volta para `/map` (root da aba)
+3. Toca na aba Mapa mais uma vez → sem efeito (já no root)
