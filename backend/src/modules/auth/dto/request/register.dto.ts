@@ -4,6 +4,7 @@ import {
   MinLength,
   MaxLength,
   Matches,
+  IsNotEmpty,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -39,6 +40,7 @@ export class RegisterDto {
     example: 'cit_01HZX3Y4Q9F8TAB1C2DKEYH9MN',
     description: 'ID da cidade (ULID prefixado com cit_)',
   })
+  @IsNotEmpty({ message: 'O campo de ID da cidade é obrigatório' })
   @IsTablePrefixedUlid(TABLE_PREFIX.CITY)
   cityId!: string;
 }

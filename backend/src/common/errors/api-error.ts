@@ -13,7 +13,16 @@ export const API_ERROR_CODE = {
   CITY_REQUIRED: 'city_required',
   VALIDATION_FAILED: 'validation_failed',
   TOO_MANY_ATTEMPTS: 'too_many_attempts',
+
   INVALID_ICON: 'invalid_icon',
+  CITY_NOT_FOUND: 'city_not_found',
+  CITY_DUPLICATE: 'city_duplicate',
+  CITY_HAS_CONTENT: 'city_has_content',
+  LOCAL_NOT_FOUND: 'local_not_found',
+  INVALID_COORDINATES: 'invalid_coordinates',
+  RADIUS_TOO_LARGE: 'radius_too_large',
+  INVALID_PASSWORD: 'invalid_password',
+
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];
@@ -22,7 +31,7 @@ export type ApiErrorCode = (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];
 export type ApiErrorBody = { code: ApiErrorCode; message: string | string[] };
 
 // Códigos cujo motivo é fixo (não dependem de dado dinâmico).
-type StaticCode = Exclude<
+export type StaticCode = Exclude<
   ApiErrorCode,
   typeof API_ERROR_CODE.ROLE_DENIED | typeof API_ERROR_CODE.VALIDATION_FAILED
 >;
@@ -35,7 +44,15 @@ const STATIC_MESSAGE: Record<StaticCode, string> = {
   [API_ERROR_CODE.CITY_SCOPE_DENIED]:  'ADMIN só pode atuar em sua própria cidade',
   [API_ERROR_CODE.CITY_REQUIRED]:      'Super Admin deve informar a cidade (cityId) no payload',
   [API_ERROR_CODE.TOO_MANY_ATTEMPTS]:  'Muitas tentativas. Aguarde e tente novamente.',
+
   [API_ERROR_CODE.INVALID_ICON]: 'Ícone inválido',
+  [API_ERROR_CODE.CITY_NOT_FOUND]:     'Cidade não encontrada',
+  [API_ERROR_CODE.CITY_DUPLICATE]:     'Cidade já cadastrada',
+  [API_ERROR_CODE.CITY_HAS_CONTENT]:   'Cidade possui conteúdo associado',
+  [API_ERROR_CODE.LOCAL_NOT_FOUND]:    'Local não encontrado',
+  [API_ERROR_CODE.INVALID_COORDINATES]:'Coordenadas inválidas (latitude deve ser entre -90 e 90, longitude entre -180 e 180)',
+  [API_ERROR_CODE.RADIUS_TOO_LARGE]:   'Raio máximo de busca permitido de 50km (50000 metros)',
+  [API_ERROR_CODE.INVALID_PASSWORD]:   'Senha incorreta',
 };
 
 // Função para manter a(s) role(s) exigida(s) dentro do motivo.
