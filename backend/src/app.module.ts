@@ -15,7 +15,7 @@ import { CitiesModule } from './modules/cities/cities.module';
 import { LocalsModule } from './modules/locals/locals.module';
 import { HttpCacheInterceptor } from './common/interceptors/http-cache.interceptor';
 import { PinoLoggerModule } from './config/logger.module';
-import { CategoryModule } from './modules/categories/category.module ';
+import { CategoryModule } from './modules/categories/category.module';
 
 @Module({
   imports: [

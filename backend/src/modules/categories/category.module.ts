@@ -3,13 +3,13 @@ import { Module } from '@nestjs/common';
 import { CategoryController } from './category.controller';
 import { CategoryService } from './category.service';
 
-import { PrismaService } from '../../config/prisma.service';
-
+import { PrismaModule } from '../../config/prisma.module';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [AuthModule],
+  imports: [PrismaModule, AuthModule],
   controllers: [CategoryController],
-  providers: [CategoryService, PrismaService],
+  providers: [CategoryService],
+  exports: [],
 })
 export class CategoryModule {}

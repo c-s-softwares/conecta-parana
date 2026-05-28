@@ -13,6 +13,9 @@ export const API_ERROR_CODE = {
   CITY_REQUIRED: 'city_required',
   VALIDATION_FAILED: 'validation_failed',
   TOO_MANY_ATTEMPTS: 'too_many_attempts',
+  CATEGORY_NOT_FOUND: 'category_not_found',
+  CATEGORY_DUPLICATE: 'category_duplicate',
+  CATEGORY_HAS_LOCALS: 'category_has_locals',
 
   INVALID_ICON: 'invalid_icon',
   CITY_NOT_FOUND: 'city_not_found',
@@ -22,7 +25,6 @@ export const API_ERROR_CODE = {
   INVALID_COORDINATES: 'invalid_coordinates',
   RADIUS_TOO_LARGE: 'radius_too_large',
   INVALID_PASSWORD: 'invalid_password',
-
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];
@@ -44,6 +46,9 @@ const STATIC_MESSAGE: Record<StaticCode, string> = {
   [API_ERROR_CODE.CITY_SCOPE_DENIED]:  'ADMIN só pode atuar em sua própria cidade',
   [API_ERROR_CODE.CITY_REQUIRED]:      'Super Admin deve informar a cidade (cityId) no payload',
   [API_ERROR_CODE.TOO_MANY_ATTEMPTS]:  'Muitas tentativas. Aguarde e tente novamente.',
+  [API_ERROR_CODE.CATEGORY_NOT_FOUND]:  'Categoria não encontrada',
+  [API_ERROR_CODE.CATEGORY_DUPLICATE]:  'Categoria já cadastrada',
+  [API_ERROR_CODE.CATEGORY_HAS_LOCALS]: 'Categoria possui locais associados',
 
   [API_ERROR_CODE.INVALID_ICON]: 'Ícone inválido',
   [API_ERROR_CODE.CITY_NOT_FOUND]:     'Cidade não encontrada',

@@ -1,12 +1,11 @@
 import {
   BadRequestException,
-  NotFoundException,
   Injectable,
+  ConflictException,
   Inject,
 } from '@nestjs/common';
 
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-
 import type { Cache } from 'cache-manager';
 
 import { PrismaService } from '../../config/prisma.service';
@@ -22,9 +21,21 @@ import { CategoryResponse } from './dto/response/response-category.dto';
 
 import { PaginationQueryDto } from '../../common/dto/request/pagination-query.dto';
 
-import { PaginatedResponseDto } from '../../common/dto/response/paginated-response.dto';
-
 import { VALID_CATEGORY_ICONS } from './constants/category-icons';
+
+import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
+
+interface RedisCacheClient {
+  keys(pattern: string): Promise<string[]>;
+  del(keys: string[]): Promise<number>;
+}
+
+interface RedisCacheStore {
+  _store?: {
+    client?: RedisCacheClient;
+    _client?: RedisCacheClient;
+  };
+}
 
 @Injectable()
 export class CategoryService extends BaseCrudService<
@@ -34,13 +45,14 @@ export class CategoryService extends BaseCrudService<
 > {
   constructor(
     prisma: PrismaService,
-
-    @Inject(CACHE_MANAGER)
-    private readonly cacheManager: Cache,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {
     super(prisma, {
       tablePrefix: TABLE_PREFIX.CATEGORY,
       entityName: 'Categoria',
+      softDelete: true,
+      duplicateErrorKey: 'category_duplicate',
+      notFoundErrorKey: 'category_not_found',
     });
   }
 
@@ -90,93 +102,63 @@ export class CategoryService extends BaseCrudService<
     };
   }
 
-  override async remove(id: string): Promise<void> {
-    const category = await this.getDelegate().findFirst({
-      where: {
-        id,
-        deletedAt: null,
-      },
-    });
-
-    if (!category) {
-      throw new NotFoundException('Categoria não encontrada');
-    }
-
-    await this.getDelegate().update({
-      where: { id },
-      data: {
-        deletedAt: new Date(),
-      },
-    });
-  }
-
-  override async findAll(
+  protected buildSearchWhere(
     query: PaginationQueryDto,
-  ): Promise<PaginatedResponseDto<CategoryResponse>> {
-    const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? 10;
+  ): Record<string, unknown> {
+    if (!query.search) return {};
 
-    const cacheKey = `categories:page:${page}:size:${pageSize}`;
-
-    const cached =
-      await this.cacheManager.get<PaginatedResponseDto<CategoryResponse>>(
-        cacheKey,
-      );
-
-    if (cached) {
-      return cached;
-    }
-
-    const where = {
-      deletedAt: null,
+    return {
+      name: {
+        contains: query.search,
+        mode: 'insensitive',
+      },
     };
-
-    const [items, total] = await Promise.all([
-      this.getDelegate().findMany({
-        where,
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.getDelegate().count({ where }),
-    ]);
-
-    const response = {
-      items: items.map((item) => this.toResponse(item)),
-      total,
-      page,
-      pageSize,
-    };
-
-    await this.cacheManager.set(cacheKey, response, 3_600_000);
-
-    return response;
   }
 
-  override async findOne(id: string): Promise<CategoryResponse> {
-    const cacheKey = `category:${id}`;
-
-    const cached = await this.cacheManager.get<CategoryResponse>(cacheKey);
-
-    if (cached) {
-      return cached;
-    }
-
-    const entity = await this.getDelegate().findFirst({
-      where: {
-        id,
-        deletedAt: null,
+  protected async checkBeforeDelete(id: string): Promise<void> {
+    const category = await this.prisma.client.category.findUnique({
+      where: { id },
+      select: {
+        _count: {
+          select: {
+            locals: true,
+          },
+        },
       },
     });
 
-    if (!entity) {
-      throw new NotFoundException('Categoria não encontrada');
+    if (category && category._count.locals > 0) {
+      throw new ConflictException(apiError(API_ERROR_CODE.CATEGORY_HAS_LOCALS));
     }
+  }
 
-    const response = this.toResponse(entity);
+  protected async afterSave(entity: unknown): Promise<void> {
+    void entity;
+    await this.clearCache();
+  }
 
-    await this.cacheManager.set(cacheKey, response, 3_600_000);
+  protected async afterDelete(id: string): Promise<void> {
+    void id;
+    await this.clearCache();
+  }
 
-    return response;
+  private async clearCache(): Promise<void> {
+    try {
+      const store = (this.cacheManager as unknown as { store: RedisCacheStore })
+        .store;
+      const client = store?._store?.client || store?._store?._client;
+
+      if (client) {
+        const keys = await client.keys('keyv:/categories*');
+
+        if (keys && keys.length > 0) {
+          await client.del(keys);
+        }
+      } else {
+        await this.cacheManager.del('/categories');
+      }
+    } catch (err) {
+      console.error('Erro ao limpar cache de categorias:', err);
+    }
   }
 }
