@@ -21,6 +21,12 @@ export const API_ERROR_CODE = {
   INVALID_COORDINATES: 'invalid_coordinates',
   RADIUS_TOO_LARGE: 'radius_too_large',
   INVALID_PASSWORD: 'invalid_password',
+  MESSAGE_TOO_LONG: 'message_too_long',
+  SUBJECT_TOO_LONG: 'subject_too_long',
+  INVALID_STATUS_TRANSITION: 'invalid_status_transition',
+  USER_WITHOUT_CITY: 'user_without_city',
+  NOT_OWNER_OR_ADMIN: 'not_owner_or_admin',
+  SUGGESTION_NOT_FOUND: 'suggestion_not_found',
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];
@@ -49,6 +55,12 @@ const STATIC_MESSAGE: Record<StaticCode, string> = {
   [API_ERROR_CODE.INVALID_COORDINATES]:'Coordenadas inválidas (latitude deve ser entre -90 e 90, longitude entre -180 e 180)',
   [API_ERROR_CODE.RADIUS_TOO_LARGE]:   'Raio máximo de busca permitido de 50km (50000 metros)',
   [API_ERROR_CODE.INVALID_PASSWORD]:   'Senha incorreta',
+  [API_ERROR_CODE.MESSAGE_TOO_LONG]:   'Mensagem excede o limite de 1000 caracteres',
+  [API_ERROR_CODE.SUBJECT_TOO_LONG]:   'Assunto excede o limite de 200 caracteres',
+  [API_ERROR_CODE.INVALID_STATUS_TRANSITION]: 'Transição de status inválida',
+  [API_ERROR_CODE.USER_WITHOUT_CITY]:  'Cidadão sem cidade associada não pode enviar sugestões',
+  [API_ERROR_CODE.NOT_OWNER_OR_ADMIN]: 'Acesso negado: você não é o proprietário desta sugestão ou administrador desta cidade',
+  [API_ERROR_CODE.SUGGESTION_NOT_FOUND]: 'Sugestão não encontrada',
 };
 
 // Função para manter a(s) role(s) exigida(s) dentro do motivo.

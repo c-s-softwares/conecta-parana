@@ -13,6 +13,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { CitiesModule } from './modules/cities/cities.module';
 import { LocalsModule } from './modules/locals/locals.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { SuggestionsModule } from './modules/suggestions/suggestions.module';
 import { HttpCacheInterceptor } from './common/interceptors/http-cache.interceptor';
 import { PinoLoggerModule } from './config/logger.module';
 
@@ -40,6 +42,8 @@ import { PinoLoggerModule } from './config/logger.module';
     AdminModule,
     CitiesModule,
     LocalsModule,
+    NotificationsModule,
+    SuggestionsModule,
     RedisCacheModule,
   ],
   controllers: [AppController],
