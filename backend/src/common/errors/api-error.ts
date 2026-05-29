@@ -14,6 +14,7 @@ export const API_ERROR_CODE = {
   CITY_REQUIRED: 'city_required',
   VALIDATION_FAILED: 'validation_failed',
   TOO_MANY_ATTEMPTS: 'too_many_attempts',
+<<<<<<< HEAD
 
   EVENT_NOT_FOUND: 'event_no_found',
   EVENT_CHANGED: 'event_changed',
@@ -21,6 +22,21 @@ export const API_ERROR_CODE = {
   INVALID_TYPE: 'invalid_type',
   INVALID_STATUS: 'invalid_status',
   COORDINATES_LOCAL_MISMATCH: 'coordinates_local_mismatch',
+=======
+  CITY_NOT_FOUND: 'city_not_found',
+  CITY_DUPLICATE: 'city_duplicate',
+  CITY_HAS_CONTENT: 'city_has_content',
+  LOCAL_NOT_FOUND: 'local_not_found',
+  INVALID_COORDINATES: 'invalid_coordinates',
+  RADIUS_TOO_LARGE: 'radius_too_large',
+  INVALID_PASSWORD: 'invalid_password',
+  MESSAGE_TOO_LONG: 'message_too_long',
+  SUBJECT_TOO_LONG: 'subject_too_long',
+  INVALID_STATUS_TRANSITION: 'invalid_status_transition',
+  USER_WITHOUT_CITY: 'user_without_city',
+  NOT_OWNER_OR_ADMIN: 'not_owner_or_admin',
+  SUGGESTION_NOT_FOUND: 'suggestion_not_found',
+>>>>>>> 2796b251fbc733cb9ed3d490ea6dd774dc1b5fdc
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];
@@ -29,7 +45,7 @@ export type ApiErrorCode = (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];
 export type ApiErrorBody = { code: ApiErrorCode; message: string | string[] };
 
 // Códigos cujo motivo é fixo (não dependem de dado dinâmico).
-type StaticCode = Exclude<
+export type StaticCode = Exclude<
   ApiErrorCode,
   typeof API_ERROR_CODE.ROLE_DENIED | typeof API_ERROR_CODE.VALIDATION_FAILED
 >;
@@ -42,6 +58,7 @@ const STATIC_MESSAGE: Record<StaticCode, string> = {
   [API_ERROR_CODE.CITY_SCOPE_DENIED]:  'ADMIN só pode atuar em sua própria cidade',
   [API_ERROR_CODE.CITY_REQUIRED]:      'Super Admin deve informar a cidade (cityId) no payload',
   [API_ERROR_CODE.TOO_MANY_ATTEMPTS]:  'Muitas tentativas. Aguarde e tente novamente.',
+<<<<<<< HEAD
 
   [API_ERROR_CODE.EVENT_NOT_FOUND]:    'Evento não encontrado',
   [API_ERROR_CODE.EVENT_CHANGED]:      'Evento alterado por outro processo',
@@ -49,6 +66,21 @@ const STATIC_MESSAGE: Record<StaticCode, string> = {
   [API_ERROR_CODE.INVALID_TYPE]:       'Tipo de evento inválido',
   [API_ERROR_CODE.INVALID_STATUS]:     'Status de evento inválido',
   [API_ERROR_CODE.COORDINATES_LOCAL_MISMATCH]: 'Coordenadas informadas conflitam com o local',
+=======
+  [API_ERROR_CODE.CITY_NOT_FOUND]:     'Cidade não encontrada',
+  [API_ERROR_CODE.CITY_DUPLICATE]:     'Cidade já cadastrada',
+  [API_ERROR_CODE.CITY_HAS_CONTENT]:   'Cidade possui conteúdo associado',
+  [API_ERROR_CODE.LOCAL_NOT_FOUND]:    'Local não encontrado',
+  [API_ERROR_CODE.INVALID_COORDINATES]:'Coordenadas inválidas (latitude deve ser entre -90 e 90, longitude entre -180 e 180)',
+  [API_ERROR_CODE.RADIUS_TOO_LARGE]:   'Raio máximo de busca permitido de 50km (50000 metros)',
+  [API_ERROR_CODE.INVALID_PASSWORD]:   'Senha incorreta',
+  [API_ERROR_CODE.MESSAGE_TOO_LONG]:   'Mensagem excede o limite de 1000 caracteres',
+  [API_ERROR_CODE.SUBJECT_TOO_LONG]:   'Assunto excede o limite de 200 caracteres',
+  [API_ERROR_CODE.INVALID_STATUS_TRANSITION]: 'Transição de status inválida',
+  [API_ERROR_CODE.USER_WITHOUT_CITY]:  'Cidadão sem cidade associada não pode enviar sugestões',
+  [API_ERROR_CODE.NOT_OWNER_OR_ADMIN]: 'Acesso negado: você não é o proprietário desta sugestão ou administrador desta cidade',
+  [API_ERROR_CODE.SUGGESTION_NOT_FOUND]: 'Sugestão não encontrada',
+>>>>>>> 2796b251fbc733cb9ed3d490ea6dd774dc1b5fdc
 };
 
 // Função para manter a(s) role(s) exigida(s) dentro do motivo.

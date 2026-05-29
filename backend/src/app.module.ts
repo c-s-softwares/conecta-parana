@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './config/prisma.module';
@@ -8,9 +8,14 @@ import { RedisCacheModule } from './config/redis-cache.module';
 import { envValidationSchema } from './config/env.validation';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { CustomThrottlerGuard } from './common/guards/throttler.guard';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { AuthModule } from './modules/auth/auth.module';
 import { AdminModule } from './modules/admin/admin.module';
-import { CidadesModule } from './modules/cidades/cidades.module';
+import { CitiesModule } from './modules/cities/cities.module';
+import { LocalsModule } from './modules/locals/locals.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { SuggestionsModule } from './modules/suggestions/suggestions.module';
+import { HttpCacheInterceptor } from './common/interceptors/http-cache.interceptor';
 import { PinoLoggerModule } from './config/logger.module';
 import { EventsModule } from './modules/events/events.module';
 
@@ -36,7 +41,10 @@ import { EventsModule } from './modules/events/events.module';
     PrismaModule,
     AuthModule,
     AdminModule,
-    CidadesModule,
+    CitiesModule,
+    LocalsModule,
+    NotificationsModule,
+    SuggestionsModule,
     RedisCacheModule,
     EventsModule,
   ],
@@ -44,8 +52,16 @@ import { EventsModule } from './modules/events/events.module';
   providers: [
     AppService,
     {
-      provide: APP_GUARD as string,
+      provide: APP_GUARD,
       useClass: CustomThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: HttpCacheInterceptor,
     },
   ],
 })

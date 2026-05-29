@@ -30,6 +30,7 @@ model City {
   news         News[]
   locals       Local[]
   communicates Communicate[]
+  suggestions  Suggestion[]
 
   @@unique([name, state])
   @@map("cities")
@@ -45,12 +46,22 @@ model User {
 
   city           City?          @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   refresh_tokens RefreshToken[]
+<<<<<<< HEAD
   events         Event[]
   photos         Photo[]
   likes          Like[]
   favorites      Favorite[]
   notifications  Notification[]
   suggestions    Suggestion[]
+=======
+  events Event[] 
+  photos Photo[]
+  likes Like[]
+  favorites Favorite[]
+  notifications Notification[]
+  suggestions          Suggestion[]   @relation("UserSuggestions")
+  respondedSuggestions Suggestion[]   @relation("ResponderSuggestions")
+>>>>>>> 2796b251fbc733cb9ed3d490ea6dd774dc1b5fdc
   locals         Local[]
   communicates   Communicate[]
 
@@ -224,7 +235,15 @@ model Local {
   categoryId  String                                @map("category_id")
   userId      String                                @map("created_by_user_id")
 
+<<<<<<< HEAD
   city     City     @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+=======
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  city     City     @relation(fields: [cityId],     references: [id], onDelete: Restrict, onUpdate: Cascade)
+>>>>>>> 2796b251fbc733cb9ed3d490ea6dd774dc1b5fdc
   category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
@@ -236,13 +255,19 @@ model Local {
 }
 
 model Suggestion {
-  id      String @id
-  subject String
-  message String
-  status  String
-  userId  String @map("user_id")
+  id            String    @id
+  subject       String
+  message       String
+  status        String    @default("enviada")
+  userId        String    @map("user_id")
+  cityId        String    @map("city_id")
+  response      String?
+  respondedAt   DateTime? @map("responded_at")
+  respondedById String?   @map("responded_by_id")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user        User  @relation("UserSuggestions", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  respondedBy User? @relation("ResponderSuggestions", fields: [respondedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  city        City  @relation(fields: [cityId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@map("suggestions")
 }
