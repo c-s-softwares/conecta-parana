@@ -111,6 +111,66 @@ describe('SuggestionsService', () => {
         ),
       ).rejects.toThrow(BadRequestException);
     });
+
+    it('deve lancar BadRequestException se o assunto exceder 200 caracteres', async () => {
+      mockPrisma.client.user.findUnique.mockResolvedValue(MOCK_USER);
+
+      const longSubject = 'A'.repeat(201);
+
+      await expect(
+        service.create(
+          { subject: longSubject, message: 'Seria ótimo' },
+          MOCK_CITIZEN_ID,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('findAllForUser', () => {
+    it('deve retornar sugestões do usuário ordenadas por id desc', async () => {
+      const mockSuggestions = [
+        { ...MOCK_SUGGESTION, id: 'sgt_2' },
+        { ...MOCK_SUGGESTION, id: 'sgt_1' },
+      ];
+      mockPrisma.client.suggestion.findMany.mockResolvedValue(mockSuggestions);
+
+      const result = await service.findAllForUser(MOCK_CITIZEN_ID);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe('sgt_2');
+      expect(mockPrisma.client.suggestion.findMany).toHaveBeenCalledWith({
+        where: { userId: MOCK_CITIZEN_ID },
+        orderBy: { id: 'desc' },
+      });
+    });
+  });
+
+  describe('findAllForAdmin', () => {
+    it('deve retornar sugestões da cidade do admin', async () => {
+      const mockSuggestions = [MOCK_SUGGESTION];
+      mockPrisma.client.suggestion.findMany.mockResolvedValue(mockSuggestions);
+
+      const result = await service.findAllForAdmin(MOCK_CITY_ID);
+
+      expect(result).toHaveLength(1);
+      expect(mockPrisma.client.suggestion.findMany).toHaveBeenCalledWith({
+        where: { cityId: MOCK_CITY_ID },
+        orderBy: { id: 'desc' },
+      });
+    });
+
+    it('deve retornar todas as sugestões se o admin for Super Admin (cityId null)', async () => {
+      const mockSuggestions = [MOCK_SUGGESTION];
+      mockPrisma.client.suggestion.findMany.mockResolvedValue(mockSuggestions);
+
+      const result = await service.findAllForAdmin(null);
+
+      expect(result).toHaveLength(1);
+      expect(mockPrisma.client.suggestion.findMany).toHaveBeenCalledWith({
+        where: {},
+        orderBy: { id: 'desc' },
+      });
+    });
   });
 
   describe('findOne', () => {
@@ -210,7 +270,12 @@ describe('SuggestionsService', () => {
 
       expect(result.status).toBe('respondida');
       expect(result.response).toBe('Obrigado');
-      expect(mockNotificationService.create).toHaveBeenCalled();
+      expect(mockNotificationService.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: MOCK_CITIZEN_ID,
+          title: 'Sua sugestão foi respondida!',
+        }),
+      );
     });
 
     it('deve lancar ForbiddenException se admin de outra cidade tentar responder', async () => {
@@ -243,6 +308,99 @@ describe('SuggestionsService', () => {
         ),
       ).rejects.toThrow(BadRequestException);
     });
+
+    it('deve lancar BadRequestException se a sugestão já estiver respondida', async () => {
+      mockPrisma.client.suggestion.findUnique.mockResolvedValue({
+        ...MOCK_SUGGESTION,
+        status: 'respondida',
+      });
+
+      await expect(
+        service.respond(
+          MOCK_SUGGESTION_ID,
+          { response: 'Obrigado' },
+          MOCK_ADMIN_ID,
+          MOCK_CITY_ID,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('deve lancar BadRequestException se a sugestão já estiver concluída', async () => {
+      mockPrisma.client.suggestion.findUnique.mockResolvedValue({
+        ...MOCK_SUGGESTION,
+        status: 'concluída',
+      });
+
+      await expect(
+        service.respond(
+          MOCK_SUGGESTION_ID,
+          { response: 'Obrigado' },
+          MOCK_ADMIN_ID,
+          MOCK_CITY_ID,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('conclude', () => {
+    it('deve concluir com sucesso se a sugestão estiver respondida e disparar notificacao', async () => {
+      mockPrisma.client.suggestion.findUnique.mockResolvedValue({
+        ...MOCK_SUGGESTION,
+        status: 'respondida',
+      });
+      mockPrisma.client.suggestion.update.mockResolvedValue({
+        ...MOCK_SUGGESTION,
+        status: 'concluída',
+        response: 'Resolvido!',
+      });
+
+      const result = await service.conclude(
+        MOCK_SUGGESTION_ID,
+        { response: 'Resolvido!' },
+        MOCK_ADMIN_ID,
+        MOCK_CITY_ID,
+      );
+
+      expect(result.status).toBe('concluída');
+      expect(result.response).toBe('Resolvido!');
+      expect(mockNotificationService.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: MOCK_CITIZEN_ID,
+          title: 'Sua sugestão foi concluída!',
+        }),
+      );
+    });
+
+    it('deve lancar BadRequestException se tentar concluir a partir de status diferente de respondida', async () => {
+      mockPrisma.client.suggestion.findUnique.mockResolvedValue(
+        MOCK_SUGGESTION,
+      );
+
+      await expect(
+        service.conclude(
+          MOCK_SUGGESTION_ID,
+          { response: 'Resolvido!' },
+          MOCK_ADMIN_ID,
+          MOCK_CITY_ID,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('deve lancar ForbiddenException se admin de outra cidade tentar concluir', async () => {
+      mockPrisma.client.suggestion.findUnique.mockResolvedValue({
+        ...MOCK_SUGGESTION,
+        status: 'respondida',
+      });
+
+      await expect(
+        service.conclude(
+          MOCK_SUGGESTION_ID,
+          { response: 'Resolvido!' },
+          MOCK_ADMIN_ID,
+          'cit_outra_cidade',
+        ),
+      ).rejects.toThrow(ForbiddenException);
+    });
   });
 
   describe('archive', () => {
@@ -253,17 +411,66 @@ describe('SuggestionsService', () => {
       mockPrisma.client.suggestion.update.mockResolvedValue({
         ...MOCK_SUGGESTION,
         status: 'arquivada',
+        response: 'Negado',
       });
 
-      const result = await service.archive(MOCK_SUGGESTION_ID, MOCK_CITY_ID);
+      const result = await service.archive(
+        MOCK_SUGGESTION_ID,
+        { response: 'Negado' },
+        MOCK_ADMIN_ID,
+        MOCK_CITY_ID,
+      );
 
       expect(result.status).toBe('arquivada');
       expect(mockPrisma.client.suggestion.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: MOCK_SUGGESTION_ID },
-          data: { status: 'arquivada' },
+          data: {
+            status: 'arquivada',
+            response: 'Negado',
+            respondedById: MOCK_ADMIN_ID,
+            respondedAt: expect.any(Date) as unknown as Date,
+          },
         }),
       );
+    });
+
+    it('deve ser idempotente (retornar sem escrever no DB) se já estiver arquivada', async () => {
+      const archivedSuggestion = {
+        ...MOCK_SUGGESTION,
+        status: 'arquivada',
+        response: 'Negado',
+      };
+      mockPrisma.client.suggestion.findUnique.mockResolvedValue(
+        archivedSuggestion,
+      );
+
+      const result = await service.archive(
+        MOCK_SUGGESTION_ID,
+        { response: 'Nova tentativa' },
+        MOCK_ADMIN_ID,
+        MOCK_CITY_ID,
+      );
+
+      expect(result.status).toBe('arquivada');
+      expect(result.response).toBe('Negado');
+      expect(mockPrisma.client.suggestion.update).not.toHaveBeenCalled();
+    });
+
+    it('deve lancar BadRequestException se tentar arquivar uma sugestão já concluída', async () => {
+      mockPrisma.client.suggestion.findUnique.mockResolvedValue({
+        ...MOCK_SUGGESTION,
+        status: 'concluída',
+      });
+
+      await expect(
+        service.archive(
+          MOCK_SUGGESTION_ID,
+          { response: 'Negado' },
+          MOCK_ADMIN_ID,
+          MOCK_CITY_ID,
+        ),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('deve lancar ForbiddenException se admin de outra cidade tentar arquivar', async () => {
@@ -272,7 +479,12 @@ describe('SuggestionsService', () => {
       );
 
       await expect(
-        service.archive(MOCK_SUGGESTION_ID, 'cit_outra_cidade'),
+        service.archive(
+          MOCK_SUGGESTION_ID,
+          { response: 'Negado' },
+          MOCK_ADMIN_ID,
+          'cit_outra_cidade',
+        ),
       ).rejects.toThrow(ForbiddenException);
     });
   });
