@@ -275,6 +275,13 @@ export class SuggestionsService {
       },
     });
 
+    // Envia notificação automática ao cidadão
+    await this.notificationService.create({
+      userId: suggestion.userId,
+      title: 'Sua sugestão foi arquivada.',
+      description: `Sua sugestão sobre "${suggestion.subject}" foi arquivada.`,
+    });
+
     return this.toResponse(updated);
   }
 }

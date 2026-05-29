@@ -433,6 +433,12 @@ describe('SuggestionsService', () => {
           },
         }),
       );
+      expect(mockNotificationService.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: MOCK_CITIZEN_ID,
+          title: 'Sua sugestão foi arquivada.',
+        }),
+      );
     });
 
     it('deve ser idempotente (retornar sem escrever no DB) se já estiver arquivada', async () => {
