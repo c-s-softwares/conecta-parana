@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateSuggestionDto {
@@ -9,7 +9,6 @@ export class CreateSuggestionDto {
   })
   @IsNotEmpty({ message: 'O assunto é obrigatório' })
   @IsString({ message: 'O assunto deve ser uma string' })
-  @MaxLength(200, { message: 'O assunto deve ter no máximo 200 caracteres' })
   subject!: string;
 
   @ApiProperty({
