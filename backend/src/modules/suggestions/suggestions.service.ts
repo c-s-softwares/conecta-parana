@@ -57,6 +57,10 @@ export class SuggestionsService {
       throw new BadRequestException(apiError(API_ERROR_CODE.USER_WITHOUT_CITY));
     }
 
+    if (dto.subject.length > 200) {
+      throw new BadRequestException(apiError(API_ERROR_CODE.SUBJECT_TOO_LONG));
+    }
+
     if (dto.message.length > 1000) {
       throw new BadRequestException(apiError(API_ERROR_CODE.MESSAGE_TOO_LONG));
     }
@@ -108,14 +112,14 @@ export class SuggestionsService {
     }
 
     if (userPayload.role === Role.ADMIN) {
-      // Admins can view suggestions in their city
+      // Administradores só podem visualizar sugestões da própria cidade
       if (userPayload.cityId && suggestion.cityId !== userPayload.cityId) {
         throw new ForbiddenException(
           apiError(API_ERROR_CODE.NOT_OWNER_OR_ADMIN),
         );
       }
 
-      // Automatic transition from 'enviada' to 'lida' when read by admin
+      // Transição automática de 'enviada' para 'lida' quando visualizada pelo administrador
       if (suggestion.status === 'enviada') {
         const updated = await this.prisma.client.suggestion.update({
           where: { id },
@@ -124,7 +128,7 @@ export class SuggestionsService {
         return this.toResponse(updated);
       }
     } else {
-      // Citizens can only view their own suggestions
+      // Cidadãos só podem visualizar as próprias sugestões
       if (suggestion.userId !== userPayload.sub) {
         throw new ForbiddenException(
           apiError(API_ERROR_CODE.NOT_OWNER_OR_ADMIN),
@@ -155,7 +159,8 @@ export class SuggestionsService {
       throw new ForbiddenException(apiError(API_ERROR_CODE.NOT_OWNER_OR_ADMIN));
     }
 
-    if (suggestion.status === 'arquivada') {
+    // Bloqueia transição se a sugestão já foi respondida, concluída ou arquivada
+    if (['respondida', 'concluída', 'arquivada'].includes(suggestion.status)) {
       throw new BadRequestException(
         apiError(API_ERROR_CODE.INVALID_STATUS_TRANSITION),
       );
@@ -171,7 +176,7 @@ export class SuggestionsService {
       },
     });
 
-    // Send automatic notification to the citizen
+    // Envia notificação automática ao cidadão
     await this.notificationService.create({
       userId: suggestion.userId,
       title: 'Sua sugestão foi respondida!',
@@ -181,8 +186,10 @@ export class SuggestionsService {
     return this.toResponse(updated);
   }
 
-  async archive(
+  async conclude(
     id: string,
+    dto: RespondSuggestionDto,
+    adminId: string,
     adminCityId: string | null,
   ): Promise<SuggestionResponseDto> {
     const suggestion = await this.prisma.client.suggestion.findUnique({
@@ -199,10 +206,73 @@ export class SuggestionsService {
       throw new ForbiddenException(apiError(API_ERROR_CODE.NOT_OWNER_OR_ADMIN));
     }
 
-    // Attempting to change status when already archived is allowed (no-op), but let's just update
+    // Transição de conclusão só aceita a partir do status respondida
+    if (suggestion.status !== 'respondida') {
+      throw new BadRequestException(
+        apiError(API_ERROR_CODE.INVALID_STATUS_TRANSITION),
+      );
+    }
+
     const updated = await this.prisma.client.suggestion.update({
       where: { id },
-      data: { status: 'arquivada' },
+      data: {
+        response: dto.response,
+        respondedAt: new Date(),
+        respondedById: adminId,
+        status: 'concluída',
+      },
+    });
+
+    // Envia notificação automática ao cidadão
+    await this.notificationService.create({
+      userId: suggestion.userId,
+      title: 'Sua sugestão foi concluída!',
+      description: `Sua sugestão sobre "${suggestion.subject}" foi concluída.`,
+    });
+
+    return this.toResponse(updated);
+  }
+
+  async archive(
+    id: string,
+    dto: RespondSuggestionDto,
+    adminId: string,
+    adminCityId: string | null,
+  ): Promise<SuggestionResponseDto> {
+    const suggestion = await this.prisma.client.suggestion.findUnique({
+      where: { id },
+    });
+
+    if (!suggestion) {
+      throw new NotFoundException(
+        apiError(API_ERROR_CODE.SUGGESTION_NOT_FOUND),
+      );
+    }
+
+    if (adminCityId && suggestion.cityId !== adminCityId) {
+      throw new ForbiddenException(apiError(API_ERROR_CODE.NOT_OWNER_OR_ADMIN));
+    }
+
+    // Re-arquivar é idempotente -- retorna sem escrita no banco
+    if (suggestion.status === 'arquivada') {
+      return this.toResponse(suggestion);
+    }
+
+    // Concluída é terminal positivo -- não pode ser arquivada
+    if (suggestion.status === 'concluída') {
+      throw new BadRequestException(
+        apiError(API_ERROR_CODE.INVALID_STATUS_TRANSITION),
+      );
+    }
+
+    const updated = await this.prisma.client.suggestion.update({
+      where: { id },
+      data: {
+        response: dto.response,
+        respondedAt: new Date(),
+        respondedById: adminId,
+        status: 'arquivada',
+      },
     });
 
     return this.toResponse(updated);

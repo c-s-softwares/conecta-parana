@@ -7,8 +7,6 @@ import {
   Param,
   Request,
   UseGuards,
-  HttpCode,
-  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -95,7 +93,6 @@ export class SuggestionsController {
   @Post()
   @Roles(Role.CIDADAO)
   @UseGuards(RolesGuard)
-  @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Criar uma nova sugestão (Cidadão)' })
   @ApiResponse({
     status: 201,
@@ -151,6 +148,38 @@ export class SuggestionsController {
     );
   }
 
+  @Put(':id/conclude')
+  @AdminRoute()
+  @ApiOperation({ summary: 'Concluir uma sugestão (Admin)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Sugestão concluída com sucesso',
+    type: SuggestionResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Erro de validação ou transição inválida',
+  })
+  @ApiResponse({ status: 401, description: 'Não autenticado' })
+  @ApiResponse({
+    status: 403,
+    description: 'Acesso negado: administrador em outra cidade',
+  })
+  @ApiResponse({ status: 404, description: 'Sugestão não encontrada' })
+  async conclude(
+    @Param('id') id: string,
+    @Body() dto: RespondSuggestionDto,
+    @Request() req: ExpressRequest,
+  ): Promise<SuggestionResponseDto> {
+    const user = req['user'] as JwtPayload;
+    return this.suggestionsService.conclude(
+      id,
+      dto,
+      user.sub,
+      user.cityId ?? null,
+    );
+  }
+
   @Put(':id/archive')
   @AdminRoute()
   @ApiOperation({ summary: 'Arquivar uma sugestão (Admin)' })
@@ -158,6 +187,10 @@ export class SuggestionsController {
     status: 200,
     description: 'Sugestão arquivada com sucesso',
     type: SuggestionResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Erro de validação ou transição inválida',
   })
   @ApiResponse({ status: 401, description: 'Não autenticado' })
   @ApiResponse({
@@ -167,9 +200,15 @@ export class SuggestionsController {
   @ApiResponse({ status: 404, description: 'Sugestão não encontrada' })
   async archive(
     @Param('id') id: string,
+    @Body() dto: RespondSuggestionDto,
     @Request() req: ExpressRequest,
   ): Promise<SuggestionResponseDto> {
     const user = req['user'] as JwtPayload;
-    return this.suggestionsService.archive(id, user.cityId ?? null);
+    return this.suggestionsService.archive(
+      id,
+      dto,
+      user.sub,
+      user.cityId ?? null,
+    );
   }
 }
