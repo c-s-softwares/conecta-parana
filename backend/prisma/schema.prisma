@@ -241,7 +241,7 @@ model Suggestion {
   id            String    @id
   subject       String
   message       String
-  status        String
+  status        String    @default("enviada")
   userId        String    @map("user_id")
   cityId        String    @map("city_id")
   response      String?
