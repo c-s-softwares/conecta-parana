@@ -245,8 +245,6 @@ Está Autenticado?
 5. Login bem-sucedido → `AppRouter.consumePendingDeepLink()` retorna o path e limpa o estado
 6. `context.go(path)` leva o usuário ao destino original
 
----
-
 ## Custom scheme como fallback de deep links
 
 Além dos Universal Links / App Links (`https://conectaparana.app/share/...`), o app
@@ -296,6 +294,7 @@ Exemplo:
 1. Usuário navega para `/map/loc_X` (detalhe dentro da aba Mapa)
 2. Toca na aba Mapa novamente → volta para `/map` (root da aba)
 3. Toca na aba Mapa mais uma vez → sem efeito (já no root)
+
 ## Fluxo de Onboarding 
 
 O onboarding é exibido após o cadastro ou quando o usuário autenticado não possui `cityId` no perfil.
