@@ -24,23 +24,6 @@ class _StepNeighborhoodScreenState extends State<StepNeighborhoodScreen> {
   final _controller = TextEditingController();
   bool _isLoading = false;
 
-  String get _getHintText {
-    switch (widget.cityName) {
-      case 'Curitiba':
-        return 'Ex: Centro, Batel, Água Verde...';
-      case 'Maringá':
-        return 'Ex: Centro, Zona 7, Vila Operária...';
-      case 'Londrina':
-        return 'Ex: Centro, Gleba Palhano...';
-      case 'Cascavel':
-        return 'Ex: Centro, Neva, Cancelli...';
-      case 'Paiçandu':
-        return 'Ex: Centro, Jardim Pioneiro, Bela Vista...';
-      default:
-        return 'Ex: Centro, Jardim, Parque...';
-    }
-  }
-
   @override
   void dispose() {
     _controller.dispose();
@@ -143,7 +126,7 @@ class _StepNeighborhoodScreenState extends State<StepNeighborhoodScreen> {
           onChanged: (_) => setState(() {}),
           textInputAction: TextInputAction.done,
           decoration: InputDecoration(
-            hintText: _getHintText,
+            hintText: 'Ex: Centro, Jardim, Vila...',
             hintStyle: const TextStyle(color: Colors.black38),
             counterText: '',
             filled: true,
