@@ -296,3 +296,35 @@ Exemplo:
 1. Usuário navega para `/map/loc_X` (detalhe dentro da aba Mapa)
 2. Toca na aba Mapa novamente → volta para `/map` (root da aba)
 3. Toca na aba Mapa mais uma vez → sem efeito (já no root)
+## Fluxo de Onboarding 
+
+O onboarding é exibido após o cadastro ou quando o usuário autenticado não possui `cityId` no perfil.
+
+### Quando é acionado
+
+- Após cadastro bem-sucedido (`/register` navega para `/onboarding`)
+- No boot, quando `isLogged == true` e `hasCity == false`
+
+### Passos do wizard
+
+| Passo | Tela | Obrigatório |
+|-------|------|-------------|
+| 1 | Confirmar cidade (`PUT /users/me/city`) | Sim |
+| 2 | Informar bairro (`PUT /users/me`) | Não — pode pular |
+| 3 | Permissões (localização e notificações) | Não — pode pular |
+
+### Comportamento
+
+- Botão **"Pular"** disponível nos passos 2 e 3
+- Permissões negadas não bloqueiam a finalização
+- Ao concluir, navega para `/home`
+- Se o usuário veio do cadastro com cidade já selecionada, o passo 1 vem preenchido
+
+### Cenários de erro tratados
+
+| Cenário | Comportamento |
+|---------|---------------|
+| `PUT /users/me/city` retorna 429 `update_too_frequent` | Snackbar amarelo + botão "Próximo" desabilitado por 60s |
+| `PUT /users/me` falha | Snackbar genérico + usuário pode tentar novamente ou pular |
+| Permissão negada pelo usuário | Onboarding segue normalmente |
+| Usuário nega permissão e tenta novamente | Abre configurações do app (`openAppSettings`) |
