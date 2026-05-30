@@ -27,6 +27,9 @@ export const API_ERROR_CODE = {
   USER_WITHOUT_CITY: 'user_without_city',
   NOT_OWNER_OR_ADMIN: 'not_owner_or_admin',
   SUGGESTION_NOT_FOUND: 'suggestion_not_found',
+  TICKET_NOT_FOUND: 'ticket_not_found',
+  PHOTO_NOT_FOUND: 'photo_not_found',
+  INVALID_TYPE: 'invalid_type',
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];
@@ -61,6 +64,9 @@ const STATIC_MESSAGE: Record<StaticCode, string> = {
   [API_ERROR_CODE.USER_WITHOUT_CITY]:  'Cidadão sem cidade associada não pode enviar sugestões',
   [API_ERROR_CODE.NOT_OWNER_OR_ADMIN]: 'Acesso negado: você não é o proprietário desta sugestão ou administrador desta cidade',
   [API_ERROR_CODE.SUGGESTION_NOT_FOUND]: 'Sugestão não encontrada',
+  [API_ERROR_CODE.TICKET_NOT_FOUND]:   'Chamado não encontrado',
+  [API_ERROR_CODE.PHOTO_NOT_FOUND]:    'Foto não encontrada ou não pertence ao usuário',
+  [API_ERROR_CODE.INVALID_TYPE]:       'Tipo de chamado inválido',
 };
 
 // Função para manter a(s) role(s) exigida(s) dentro do motivo.

@@ -13,4 +13,6 @@ export const TABLE_PREFIX = {
   FAVORITE: 'fav_',
   PHOTO: 'pho_',
   REFRESH_TOKEN: 'rfk_',
+  TICKET: 'tkt_',
+  TICKET_COMMENT: 'tkc_',
 } as const;
