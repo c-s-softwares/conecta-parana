@@ -18,6 +18,10 @@ class _StepPermissionsScreenState extends State<StepPermissionsScreen> {
   _PermStatus _notifStatus = _PermStatus.pending;
 
   Future<void> _requestLocation() async {
+    if (_locationStatus == _PermStatus.denied) {
+      await openAppSettings();
+      return;
+    }
     final result = await Permission.locationWhenInUse.request();
     setState(() {
       _locationStatus = result.isGranted
@@ -27,6 +31,10 @@ class _StepPermissionsScreenState extends State<StepPermissionsScreen> {
   }
 
   Future<void> _requestNotifications() async {
+    if (_notifStatus == _PermStatus.denied) {
+      await openAppSettings();
+      return;
+    }
     final result = await Permission.notification.request();
     setState(() {
       _notifStatus = result.isGranted
