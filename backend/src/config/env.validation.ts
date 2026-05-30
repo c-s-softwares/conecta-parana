@@ -13,4 +13,13 @@ export const envValidationSchema = Joi.object({
   GLITCHTIP_DSN: Joi.string().uri().allow('').default(''),
   JWT_SECRET: Joi.string().required(),
   JWT_REFRESH_SECRET: Joi.string().required(),
+
+  // Oracle Object Storage (ver docs/SETUP.md secao "Object Storage Oracle")
+  OCI_OBJECT_STORAGE_NAMESPACE: Joi.string().required(),
+  OCI_BUCKET_NAME: Joi.string().required(),
+  OCI_REGION: Joi.string().required(),
+  OCI_TENANCY_OCID: Joi.string().required(),
+  OCI_USER_OCID: Joi.string().required(),
+  OCI_FINGERPRINT: Joi.string().required(),
+  OCI_PRIVATE_KEY_PATH: Joi.string().required(),
 });
