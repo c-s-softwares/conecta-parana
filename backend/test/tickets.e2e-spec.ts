@@ -199,7 +199,11 @@ describe('Tickets (e2e)', () => {
     it('deve rejeitar criação sem token (401)', async () => {
       await api()
         .post('/tickets')
-        .send({ type: 'iluminação', title: 'Rua escura', description: 'Falta lâmpada no poste X' })
+        .send({
+          type: 'iluminação',
+          title: 'Rua escura',
+          description: 'Falta lâmpada no poste X',
+        })
         .expect(401);
     });
 
@@ -207,20 +211,30 @@ describe('Tickets (e2e)', () => {
       const response = await api()
         .post('/tickets')
         .set(auth(nocityCitizenToken))
-        .send({ type: 'iluminação', title: 'Rua escura', description: 'Falta lâmpada no poste X' })
+        .send({
+          type: 'iluminação',
+          title: 'Rua escura',
+          description: 'Falta lâmpada no poste X',
+        })
         .expect(400);
 
-      expect(response.body.code).toBe('user_without_city');
+      const body = response.body as Record<string, any>;
+      expect(body.code).toBe('user_without_city');
     });
 
     it('deve rejeitar tipo inválido/fora da lista (400)', async () => {
       const response = await api()
         .post('/tickets')
         .set(auth(curitibaCitizenToken))
-        .send({ type: 'invalido', title: 'Rua escura', description: 'Falta lâmpada no poste X' })
+        .send({
+          type: 'invalido',
+          title: 'Rua escura',
+          description: 'Falta lâmpada no poste X',
+        })
         .expect(400);
 
-      expect(response.body.code).toBe('invalid_type');
+      const body = response.body as Record<string, any>;
+      expect(body.code).toBe('invalid_type');
     });
 
     it('deve criar chamado com sucesso para cidadão com cidade (201)', async () => {
@@ -235,13 +249,14 @@ describe('Tickets (e2e)', () => {
         })
         .expect(201);
 
-      expect(response.body.title).toBe('Poste queimado');
-      expect(response.body.type).toBe('iluminação');
-      expect(response.body.status).toBe('aberto');
-      expect(response.body.cityId).toBe(curitibaId);
-      expect(response.body.coordinates).toEqual({ lat: -25.43, lng: -49.27 });
+      const body = response.body as Record<string, any>;
+      expect(body.title).toBe('Poste queimado');
+      expect(body.type).toBe('iluminação');
+      expect(body.status).toBe('aberto');
+      expect(body.cityId).toBe(curitibaId);
+      expect(body.coordinates).toEqual({ lat: -25.43, lng: -49.27 });
 
-      curitibaTicketId = response.body.id;
+      curitibaTicketId = body.id as string;
     });
   });
 
@@ -252,8 +267,9 @@ describe('Tickets (e2e)', () => {
         .set(auth(curitibaCitizenToken))
         .expect(200);
 
-      expect(response.body.length).toBe(1);
-      expect(response.body[0].id).toBe(curitibaTicketId);
+      const body = response.body as Record<string, any>[];
+      expect(body.length).toBe(1);
+      expect(body[0].id).toBe(curitibaTicketId);
     });
 
     it('deve retornar lista vazia para cidadão de Maringá', async () => {
@@ -262,7 +278,8 @@ describe('Tickets (e2e)', () => {
         .set(auth(maringaCitizenToken))
         .expect(200);
 
-      expect(response.body.length).toBe(0);
+      const body = response.body as Record<string, any>[];
+      expect(body.length).toBe(0);
     });
   });
 
@@ -273,8 +290,9 @@ describe('Tickets (e2e)', () => {
         .set(auth(curitibaAdminToken))
         .expect(200);
 
-      expect(response.body.length).toBe(1);
-      expect(response.body[0].id).toBe(curitibaTicketId);
+      const body = response.body as Record<string, any>[];
+      expect(body.length).toBe(1);
+      expect(body[0].id).toBe(curitibaTicketId);
     });
 
     it('deve retornar lista vazia para admin de Maringá', async () => {
@@ -283,7 +301,8 @@ describe('Tickets (e2e)', () => {
         .set(auth(maringaAdminToken))
         .expect(200);
 
-      expect(response.body.length).toBe(0);
+      const body = response.body as Record<string, any>[];
+      expect(body.length).toBe(0);
     });
   });
 
@@ -294,7 +313,8 @@ describe('Tickets (e2e)', () => {
         .set(auth(maringaCitizenToken))
         .expect(403);
 
-      expect(response.body.code).toBe('not_owner_or_admin');
+      const body = response.body as Record<string, any>;
+      expect(body.code).toBe('not_owner_or_admin');
     });
 
     it('deve negar admin de outra cidade acessar chamado (403)', async () => {
@@ -303,7 +323,8 @@ describe('Tickets (e2e)', () => {
         .set(auth(maringaAdminToken))
         .expect(403);
 
-      expect(response.body.code).toBe('not_owner_or_admin');
+      const body = response.body as Record<string, any>;
+      expect(body.code).toBe('not_owner_or_admin');
     });
 
     it('deve permitir admin da mesma cidade ver detalhes', async () => {
@@ -312,7 +333,8 @@ describe('Tickets (e2e)', () => {
         .set(auth(curitibaAdminToken))
         .expect(200);
 
-      expect(response.body.id).toBe(curitibaTicketId);
+      const body = response.body as Record<string, any>;
+      expect(body.id).toBe(curitibaTicketId);
     });
 
     it('deve permitir dono ver detalhes', async () => {
@@ -321,7 +343,8 @@ describe('Tickets (e2e)', () => {
         .set(auth(curitibaCitizenToken))
         .expect(200);
 
-      expect(response.body.id).toBe(curitibaTicketId);
+      const body = response.body as Record<string, any>;
+      expect(body.id).toBe(curitibaTicketId);
     });
   });
 
@@ -341,8 +364,9 @@ describe('Tickets (e2e)', () => {
         .send({ status: 'em_análise', assignedToId: curitibaAdminId })
         .expect(200);
 
-      expect(response.body.status).toBe('em_análise');
-      expect(response.body.assignedToId).toBe(curitibaAdminId);
+      const body = response.body as Record<string, any>;
+      expect(body.status).toBe('em_análise');
+      expect(body.assignedToId).toBe(curitibaAdminId);
 
       // Verifica se a notificação foi criada no banco de dados
       const notifications = await prisma.client.notification.findMany({
@@ -359,7 +383,8 @@ describe('Tickets (e2e)', () => {
         .send({ status: 'reaberto' }) // Reaberto não é permitido a partir do status em_análise
         .expect(400);
 
-      expect(response.body.code).toBe('invalid_status_transition');
+      const body = response.body as Record<string, any>;
+      expect(body.code).toBe('invalid_status_transition');
     });
   });
 
@@ -371,8 +396,9 @@ describe('Tickets (e2e)', () => {
         .send({ message: 'Estou enviando mais informações.' })
         .expect(201);
 
-      expect(response.body.message).toBe('Estou enviando mais informações.');
-      expect(response.body.isInternal).toBe(false);
+      const body = response.body as Record<string, any>;
+      expect(body.message).toBe('Estou enviando mais informações.');
+      expect(body.isInternal).toBe(false);
     });
 
     it('deve permitir admin adicionar comentário interno', async () => {
@@ -382,8 +408,9 @@ describe('Tickets (e2e)', () => {
         .send({ message: 'Equipe de manutenção despachada.', isInternal: true })
         .expect(201);
 
-      expect(response.body.message).toBe('Equipe de manutenção despachada.');
-      expect(response.body.isInternal).toBe(true);
+      const body = response.body as Record<string, any>;
+      expect(body.message).toBe('Equipe de manutenção despachada.');
+      expect(body.isInternal).toBe(true);
     });
 
     it('deve permitir admin ver todos os comentários incluindo internos', async () => {
@@ -392,8 +419,9 @@ describe('Tickets (e2e)', () => {
         .set(auth(curitibaAdminToken))
         .expect(200);
 
-      expect(response.body.length).toBe(2);
-      expect(response.body.some((c: any) => c.isInternal)).toBe(true);
+      const body = response.body as Record<string, any>[];
+      expect(body.length).toBe(2);
+      expect(body.some((c: Record<string, any>) => c.isInternal)).toBe(true);
     });
 
     it('deve ocultar comentários internos para cidadão dono', async () => {
@@ -402,8 +430,9 @@ describe('Tickets (e2e)', () => {
         .set(auth(curitibaCitizenToken))
         .expect(200);
 
-      expect(response.body.length).toBe(1);
-      expect(response.body.some((c: any) => c.isInternal)).toBe(false);
+      const body = response.body as Record<string, any>[];
+      expect(body.length).toBe(1);
+      expect(body.some((c: Record<string, any>) => c.isInternal)).toBe(false);
     });
   });
 });

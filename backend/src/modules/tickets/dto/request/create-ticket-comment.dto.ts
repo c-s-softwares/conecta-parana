@@ -12,7 +12,8 @@ export class CreateTicketCommentDto {
 
   @ApiProperty({
     example: false,
-    description: 'Se o comentário é interno (apenas visível para administradores)',
+    description:
+      'Se o comentário é interno (apenas visível para administradores)',
     required: false,
     default: false,
   })

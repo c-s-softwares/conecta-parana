@@ -38,7 +38,11 @@ export class TicketResponseDto {
   @ApiProperty({ example: '2026-05-09T13:00:00Z' })
   updatedAt!: Date;
 
-  @ApiProperty({ example: '2026-05-09T14:00:00Z', required: false, nullable: true })
+  @ApiProperty({
+    example: '2026-05-09T14:00:00Z',
+    required: false,
+    nullable: true,
+  })
   resolvedAt?: Date | null;
 
   @ApiProperty({ example: ['pho_...'], type: [String], required: false })

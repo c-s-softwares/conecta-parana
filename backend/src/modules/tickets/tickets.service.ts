@@ -88,7 +88,13 @@ export class TicketsService {
       throw new BadRequestException(apiError(API_ERROR_CODE.USER_WITHOUT_CITY));
     }
 
-    const allowedTypes = ['acidente', 'sinalização', 'iluminação', 'lixo', 'outros'];
+    const allowedTypes = [
+      'acidente',
+      'sinalização',
+      'iluminação',
+      'lixo',
+      'outros',
+    ];
     if (!allowedTypes.includes(dto.type)) {
       throw new BadRequestException(apiError(API_ERROR_CODE.INVALID_TYPE));
     }
@@ -189,7 +195,9 @@ export class TicketsService {
     }));
   }
 
-  async findAllForAdmin(adminCityId: string | null): Promise<TicketResponseDto[]> {
+  async findAllForAdmin(
+    adminCityId: string | null,
+  ): Promise<TicketResponseDto[]> {
     const items = await this.prisma.client.ticket.findMany({
       where: adminCityId ? { cityId: adminCityId } : {},
       orderBy: { id: 'desc' },
@@ -304,7 +312,10 @@ export class TicketsService {
       }
 
       // Aplica a regra de 7 dias para reabertura a partir do status fechado
-      if (currentStatus === 'fechado' && (newStatus === 'reaberto' || newStatus === 'aberto')) {
+      if (
+        currentStatus === 'fechado' &&
+        (newStatus === 'reaberto' || newStatus === 'aberto')
+      ) {
         const timeDiff = new Date().getTime() - ticket.updatedAt.getTime();
         const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
         if (timeDiff > sevenDaysMs) {
@@ -319,14 +330,17 @@ export class TicketsService {
       newStatus === 'resolvido'
         ? new Date()
         : ['aberto', 'reaberto', 'em_análise'].includes(newStatus)
-        ? null
-        : ticket.resolvedAt;
+          ? null
+          : ticket.resolvedAt;
 
-    const updated = await this.prisma.client.ticket.update({
+    await this.prisma.client.ticket.update({
       where: { id },
       data: {
         status: newStatus,
-        assignedToId: dto.assignedToId !== undefined ? dto.assignedToId : ticket.assignedToId,
+        assignedToId:
+          dto.assignedToId !== undefined
+            ? dto.assignedToId
+            : ticket.assignedToId,
         resolvedAt,
       },
     });
@@ -420,10 +434,10 @@ export class TicketsService {
       }
     }
 
-    const whereClause: any = { ticketId };
-    if (userRole !== Role.ADMIN) {
-      whereClause.isInternal = false;
-    }
+    const whereClause = {
+      ticketId,
+      ...(userRole !== Role.ADMIN && { isInternal: false }),
+    };
 
     const comments = await this.prisma.client.ticketComment.findMany({
       where: whereClause,
