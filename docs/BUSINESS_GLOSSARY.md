@@ -80,10 +80,25 @@ Cada termo deve seguir esta estrutura:
 - **definição:** Tecnologia usada que permite identificar a posição geográfica de um usuário ou dispositivo.
 - **Contexto de Uso:** Usada para ordenar eventos por proximidade no feed e identificar serviços próximos ao usuário no mapa interativo.
 
-### Ticket
+### Ticket (Chamado)
 
-- **Definição:**  Registro de solicitação ou problema enviado pelo usuário. 
-- **Contexto de Uso:** Utilizado para comunicar problemas urbanos à prefeitura (ex.: acidentes ou falta de sinalização em um trecho da cidade).
+- **Definição:** Registro oficial de solicitação de manutenção urbana ou reporte de incidente enviado por um cidadão para a administração da sua cidade. Ao contrário de uma **Sugestão** (que representa ideias e melhorias gerais sem compromisso imediato de execução), o **Ticket** refere-se a um problema real e localizado que necessita de intervenção direta da prefeitura (ex.: buraco na pista, semáforo queimado, vazamento de lixo, etc.).
+- **Contexto de uso:** Cidadãos autenticados com perfil associado a uma cidade criam chamados com geolocalização (PostGIS) opcional, descrição, categoria e fotos associadas. Administradores da respectiva cidade gerenciam o ciclo de vida do chamado, atribuindo responsáveis e atualizando os status.
+- **Diferença de Escopo (Ticket vs Sugestão):**
+  - **Sugestão:** Foco em propostas construtivas, ideias de lazer, novas praças e eventos municipais. Não possui localização exata obrigatória e transiciona de forma linear (`enviada` -> `lida` -> `respondida` -> `concluída`/`arquivada`).
+  - **Ticket:** Foco em falhas de infraestrutura urbana (`acidente`, `sinalização`, `iluminação`, `lixo`, `outros`). Possui coordenadas precisas (PostGIS) associadas, campo de responsável (`assignedToId`), suporte a fotos pré-carregadas e uma matriz de transição de estados complexa com regras de reabertura limitadas temporalmente.
+- **Ciclo de Vida & Transições de Status (Matriz de Transição):**
+  - O ticket inicia no estado `aberto`.
+  - Apenas usuários com perfil **Admin** da cidade do ticket podem alterar seu status através do endpoint `PUT /tickets/:id/status`.
+  - **Matriz de Transição Permitida:**
+    - `aberto` &rarr; `em_análise`, `resolvido`, `fechado`
+    - `em_análise` &rarr; `resolvido`, `fechado`
+    - `resolvido` &rarr; `fechado`, `reaberto`
+    - `fechado` &rarr; `reaberto`, `aberto` (Apenas se a reabertura for realizada dentro de no máximo **7 dias** desde o fechamento/última atualização do ticket. Após este período, a transição é bloqueada permanentemente).
+    - `reaberto` &rarr; `em_análise`, `resolvido`, `fechado`
+  - Sempre que o status de um chamado muda, o cidadão autor recebe uma notificação instantânea. Ao atingir o status `resolvido`, a data de resolução (`resolvedAt`) é preenchida automaticamente.
+- **Histórico de Interação (Comentários de Via Dupla):** Enquanto a **Sugestão** possui apenas uma resposta unidirecional (de mão única) do administrador gravada no campo `response`, o **Ticket** suporta uma comunicação contínua de via dupla. Cidadãos e administradores podem enviar comentários (`TicketComment`) sucessivos, permitindo reproduzir um histórico completo de conversas (histórico do chamado) até a sua efetiva resolução. Comentários internos marcados como `isInternal: true` permanecem visíveis apenas para os administradores.
+
 
 ### Usuário Autenticado
 
