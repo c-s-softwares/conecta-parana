@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:conectaparana/features/register/data/models/city_model.dart';
+import 'package:conectaparana/features/register/data/services/city_service.dart';
 import 'package:conectaparana/features/onboarding/data/services/onboarding_repository.dart';
 import 'package:conectaparana/features/onboarding/presentation/steps/step_city_screen.dart';
 import 'package:conectaparana/features/onboarding/presentation/steps/step_neighborhood_screen.dart';
@@ -6,9 +8,15 @@ import 'package:conectaparana/features/onboarding/presentation/steps/step_permis
 
 class OnboardingScreen extends StatefulWidget {
   final OnboardingRepository? repository;
+  final CityService? cityService;
   final String? preselectedCityId;
 
-  const OnboardingScreen({super.key, this.repository, this.preselectedCityId});
+  const OnboardingScreen({
+    super.key,
+    this.repository,
+    this.cityService,
+    this.preselectedCityId,
+  });
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -16,20 +24,21 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   late final OnboardingRepository _repository;
+  late final CityService _cityService;
+
   int _step = 0;
-  String _selectedCityId = '';
-  String _selectedCityName = '';
+  City? _selectedCity;
 
   @override
   void initState() {
     super.initState();
     _repository = widget.repository ?? OnboardingRepository();
+    _cityService = widget.cityService ?? CityService();
   }
 
-  void _goToNeighborhood(String cityId, String cityName) {
+  void _goToNeighborhood(City city) {
     setState(() {
-      _selectedCityId = cityId;
-      _selectedCityName = cityName;
+      _selectedCity = city;
       _step = 1;
     });
   }
@@ -61,14 +70,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               0 => StepCityScreen(
                 key: const ValueKey('step_city'),
                 repository: _repository,
+                cityService: _cityService,
                 preselectedCityId: widget.preselectedCityId,
-                onNext: () =>
-                    _goToNeighborhood(_selectedCityId, _selectedCityName),
+                onNext: _goToNeighborhood,
               ),
               1 => StepNeighborhoodScreen(
                 key: const ValueKey('step_neighborhood'),
                 repository: _repository,
-                cityName: _selectedCityName,
+                cityName: _selectedCity?.name ?? '',
                 onNext: _goToPermissions,
               ),
               _ => StepPermissionsScreen(

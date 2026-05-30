@@ -1,21 +1,23 @@
 import 'dart:convert';
+import 'package:conectaparana/core/network/api_client.dart';
 import 'package:conectaparana/features/register/data/models/city_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:conectaparana/core/network/api_client.dart';
 
 class CityService {
   static const _kCacheKey = 'cities_cache_v1';
   static const _kCacheTimestampKey = 'cities_cache_ts_v1';
   static const _ttl = Duration(hours: 1);
 
+  static const _kPageSize = 100;
+
   static List<City>? _memCache;
   static DateTime? _memCacheTime;
 
   static const List<City> _demoCities = [
-    City(id: 'maringa', name: 'Maringá'),
-    City(id: 'sarandi', name: 'Sarandi'),
-    City(id: 'paicandu', name: 'Paiçandu'),
-    City(id: 'curitiba', name: 'Curitiba'),
+    City(id: 'maringa', name: 'Maringá', state: 'PR'),
+    City(id: 'sarandi', name: 'Sarandi', state: 'PR'),
+    City(id: 'paicandu', name: 'Paiçandu', state: 'PR'),
+    City(id: 'curitiba', name: 'Curitiba', state: 'PR'),
   ];
 
   Future<List<City>> getCities() async {
@@ -52,9 +54,13 @@ class CityService {
     }
 
     try {
-      final response = await ApiClient.instance.dio.get('/cities');
+      final response = await ApiClient.instance.dio.get(
+        '/cities',
+        queryParameters: {'pageSize': _kPageSize},
+      );
 
-      final cities = (response.data as List)
+      final items = response.data['items'] as List;
+      final cities = items
           .map((e) => City.fromJson(e as Map<String, dynamic>))
           .toList();
 

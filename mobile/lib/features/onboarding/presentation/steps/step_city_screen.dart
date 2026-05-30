@@ -1,36 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import 'package:conectaparana/features/onboarding/data/models/onboarding_city_model.dart';
+import 'package:conectaparana/features/register/data/models/city_model.dart';
+import 'package:conectaparana/features/register/data/services/city_service.dart';
 import 'package:conectaparana/features/onboarding/data/services/onboarding_repository.dart';
 import 'package:conectaparana/features/onboarding/presentation/widgets/onboarding_step_indicator.dart';
 import 'package:conectaparana/shared/widgets/feedback/app_toast.dart';
 
-const _kCities = [
-  OnboardingCity(id: 'curitiba', name: 'Curitiba', population: '1,77M hab.'),
-  OnboardingCity(id: 'londrina', name: 'Londrina', population: '580k hab.'),
-  OnboardingCity(id: 'maringa', name: 'Maringá', population: '430k hab.'),
-  OnboardingCity(id: 'cascavel', name: 'Cascavel', population: '335k hab.'),
-  OnboardingCity(
-    id: 'ponta-grossa',
-    name: 'Ponta Grossa',
-    population: '355k hab.',
-  ),
-  OnboardingCity(
-    id: 'foz-do-iguacu',
-    name: 'Foz do Iguaçu',
-    population: '258k hab.',
-  ),
-  OnboardingCity(id: 'paranagua', name: 'Paranaguá', population: '153k hab.'),
-];
-
 class StepCityScreen extends StatefulWidget {
   final OnboardingRepository repository;
+  final CityService cityService;
   final String? preselectedCityId;
-  final VoidCallback onNext;
+  final void Function(City city) onNext;
 
   const StepCityScreen({
     super.key,
     required this.repository,
+    required this.cityService,
     required this.onNext,
     this.preselectedCityId,
   });
@@ -40,37 +25,62 @@ class StepCityScreen extends StatefulWidget {
 }
 
 class _StepCityScreenState extends State<StepCityScreen> {
-  OnboardingCity? _selected;
+  List<City> _cities = [];
+  City? _selected;
   String _query = '';
-  bool _isLoading = false;
+
+  bool _loadingCities = true;
+  bool _citiesError = false;
+
+  bool _isSaving = false;
   bool _cooldown = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.preselectedCityId != null) {
-      _selected = _kCities
-          .where((c) => c.id == widget.preselectedCityId)
-          .firstOrNull;
+    _loadCities();
+  }
+
+  Future<void> _loadCities() async {
+    setState(() {
+      _loadingCities = true;
+      _citiesError = false;
+    });
+    try {
+      final cities = await widget.cityService.getCities();
+      if (!mounted) return;
+      setState(() {
+        _cities = cities;
+        _loadingCities = false;
+        if (widget.preselectedCityId != null) {
+          _selected = cities
+              .where((c) => c.id == widget.preselectedCityId)
+              .firstOrNull;
+        }
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loadingCities = false;
+        _citiesError = true;
+      });
     }
   }
 
-  List<OnboardingCity> get _filtered => _kCities
+  List<City> get _filtered => _cities
       .where((c) => c.name.toLowerCase().contains(_query.toLowerCase()))
       .toList();
 
   Future<void> _handleNext() async {
-    if (_selected == null || _isLoading || _cooldown) return;
+    if (_selected == null || _isSaving || _cooldown) return;
 
-    setState(() => _isLoading = true);
-
+    setState(() => _isSaving = true);
     try {
       await widget.repository.updateCity(_selected!.id);
       if (!mounted) return;
-      widget.onNext();
+      widget.onNext(_selected!);
     } on DioException catch (e) {
       if (!mounted) return;
-
       if (e.response?.statusCode == 429) {
         AppToast.show(
           context,
@@ -78,7 +88,7 @@ class _StepCityScreenState extends State<StepCityScreen> {
           variant: AppToastVariant.warning,
         );
         setState(() {
-          _isLoading = false;
+          _isSaving = false;
           _cooldown = true;
         });
         Future.delayed(const Duration(seconds: 60), () {
@@ -90,7 +100,7 @@ class _StepCityScreenState extends State<StepCityScreen> {
           message: 'Erro ao salvar cidade. Tente novamente.',
           variant: AppToastVariant.error,
         );
-        setState(() => _isLoading = false);
+        setState(() => _isSaving = false);
       }
     }
   }
@@ -122,13 +132,13 @@ class _StepCityScreenState extends State<StepCityScreen> {
           style: TextStyle(fontSize: 14, color: Colors.black54, height: 1.5),
         ),
         const SizedBox(height: 20),
-
         Container(
           decoration: BoxDecoration(
             color: const Color(0xFFF5FAF7),
             borderRadius: BorderRadius.circular(12),
           ),
           child: TextField(
+            enabled: !_loadingCities && !_citiesError,
             onChanged: (v) => setState(() => _query = v),
             decoration: const InputDecoration(
               hintText: 'Buscar cidade...',
@@ -140,7 +150,6 @@ class _StepCityScreenState extends State<StepCityScreen> {
           ),
         ),
         const SizedBox(height: 20),
-
         const Text(
           'CIDADES DISPONÍVEIS',
           style: TextStyle(
@@ -151,103 +160,14 @@ class _StepCityScreenState extends State<StepCityScreen> {
           ),
         ),
         const SizedBox(height: 10),
-
-        Expanded(
-          child: ListView.separated(
-            itemCount: _filtered.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              final city = _filtered[index];
-              final isSelected = _selected?.id == city.id;
-
-              return GestureDetector(
-                onTap: () => setState(() => _selected = city),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 14,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFFF0FAF4) : Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: isSelected
-                          ? const Color(0xFF006733)
-                          : const Color(0xFFE2E8F0),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? const Color(0xFF006733)
-                              : const Color(0xFFE8EDE9),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.location_on_outlined,
-                          size: 18,
-                          color: isSelected
-                              ? Colors.white
-                              : const Color(0xFF006733),
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              city.name,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              'Paraná · ${city.population}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.black45,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (isSelected)
-                        Container(
-                          width: 24,
-                          height: 24,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF006733),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.check,
-                            size: 14,
-                            color: Colors.white,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
+        Expanded(child: _buildCityList()),
         const SizedBox(height: 16),
-
         SizedBox(
           width: double.infinity,
           height: 52,
           child: ElevatedButton(
-            onPressed: (_selected == null || _isLoading || _cooldown)
+            key: const Key('city_next_button'),
+            onPressed: (_selected == null || _isSaving || _cooldown)
                 ? null
                 : _handleNext,
             style: ElevatedButton.styleFrom(
@@ -258,7 +178,7 @@ class _StepCityScreenState extends State<StepCityScreen> {
                 borderRadius: BorderRadius.circular(50),
               ),
             ),
-            child: _isLoading
+            child: _isSaving
                 ? const SizedBox(
                     width: 22,
                     height: 22,
@@ -277,6 +197,122 @@ class _StepCityScreenState extends State<StepCityScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildCityList() {
+    if (_loadingCities) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFF006733)),
+      );
+    }
+
+    if (_citiesError) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Erro ao carregar cidades.',
+              style: TextStyle(color: Colors.black54),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              key: const Key('retry_cities_button'),
+              onPressed: _loadCities,
+              child: const Text(
+                'Tentar novamente',
+                style: TextStyle(
+                  color: Color(0xFF006733),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.separated(
+      itemCount: _filtered.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final city = _filtered[index];
+        final isSelected = _selected?.id == city.id;
+        return GestureDetector(
+          onTap: () => setState(() => _selected = city),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            decoration: BoxDecoration(
+              color: isSelected ? const Color(0xFFF0FAF4) : Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isSelected
+                    ? const Color(0xFF006733)
+                    : const Color(0xFFE2E8F0),
+                width: 1.5,
+              ),
+            ),
+            child: Row(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? const Color(0xFF006733)
+                        : const Color(0xFFE8EDE9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.location_on_outlined,
+                    size: 18,
+                    color: isSelected ? Colors.white : const Color(0xFF006733),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        city.name,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        city.state,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.black45,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isSelected)
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF006733),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check,
+                      size: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

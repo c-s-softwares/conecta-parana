@@ -15,8 +15,8 @@ class FakeCityService extends CityService {
   @override
   Future<List<City>> getCities() async {
     return [
-      const City(id: '1', name: 'Curitiba'),
-      const City(id: '2', name: 'Maringá'),
+      const City(id: '1', name: 'Curitiba', state: 'PR'),
+      const City(id: '2', name: 'Maringá', state: 'PR'),
     ];
   }
 }
