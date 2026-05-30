@@ -15,6 +15,7 @@ import 'package:conectaparana/features/onboarding/presentation/pages/city_select
 import 'package:conectaparana/features/events/presentation/pages/event_detail_page.dart';
 import 'package:conectaparana/features/home/presentation/pages/home_page.dart';
 import 'package:conectaparana/features/map/presentation/pages/map_page.dart';
+import 'package:conectaparana/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:conectaparana/features/profile/presentation/pages/profile_page.dart';
 import 'package:conectaparana/features/tickets/presentation/pages/ticket_detail_page.dart';
 import 'package:conectaparana/features/tickets/presentation/pages/tickets_page.dart';
@@ -164,7 +165,8 @@ class AppRouter {
         ),
         GoRoute(
           path: AppRoutes.onboarding,
-          builder: (context, state) => const CitySelectorScreen(),
+
+          builder: (context, state) => const OnboardingScreen(),
         ),
         GoRoute(
           path: AppRoutes.styleguide,
@@ -334,7 +336,9 @@ class AppRouter {
       AppRoutes.login,
       AppRoutes.register,
       AppRoutes.forgotPassword,
+      AppRoutes.styleguide,
     };
+    
     final isPublic = publicRoutes.contains(location);
 
     if (isLoggedIn && isPublic) {
