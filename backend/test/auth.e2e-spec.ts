@@ -98,7 +98,7 @@ describe('Auth (e2e)', () => {
     expect(response.body).not.toHaveProperty('role');
   });
 
-  it('POST /auth/register — normalizar email com trim e lowercase', async () => {
+  it('POST /auth/register — normaliza email com trim e lowercase no check de duplicidade', async () => {
     const response = await api()
       .post('/auth/register')
       .send({
@@ -107,11 +107,10 @@ describe('Auth (e2e)', () => {
         password: MOCK_TEST_USER.password,
         cityId: testCityId,
       })
-      .expect(409);
+      .expect(400);
 
-    // 409(email ja existe)
     const body = response.body as { code: string };
-    expect(body.code).toBe('email_exists');
+    expect(body.code).toBe('registration_failed');
   });
 
   it('POST /auth/register —  retornar 400 sem cityId', async () => {
