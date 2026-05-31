@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { ForbiddenException, ValidationPipe } from '@nestjs/common';
 import { SentryExceptionFilter } from './common/sentry-exception.filter';
+import { JsonParseExceptionFilter } from './common/filters/json-parse-exception.filter';
 import { validationPipeConfig } from './config/validation-pipe.config';
 
 const glitchtipDsn = process.env.GLITCHTIP_DSN;
@@ -49,9 +50,15 @@ async function bootstrap(): Promise<void> {
     },
   });
 
-  // Filter global de exceções enviadas para o GlitchTip
+  // Filters globais:
+  // - JsonParseExceptionFilter: transforma BadRequest do body-parser em { code, message }.
+  // - SentryExceptionFilter: captura 5xx e crashes inesperados no GlitchTip.
+  // Mais específicos primeiro - o Nest aplica o mais específico para o tipo da exceção.
   const { httpAdapter } = app.get(HttpAdapterHost);
-  app.useGlobalFilters(new SentryExceptionFilter(httpAdapter));
+  app.useGlobalFilters(
+    new SentryExceptionFilter(httpAdapter),
+    new JsonParseExceptionFilter(),
+  );
 
   app.useGlobalPipes(new ValidationPipe(validationPipeConfig));
 
