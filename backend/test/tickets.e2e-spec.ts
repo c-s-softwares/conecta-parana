@@ -13,8 +13,8 @@ describe('Tickets (e2e)', () => {
   let prisma: PrismaService;
   let jwtService: JwtService;
 
-  const curitibaId = `${TABLE_PREFIX.CITY}01HZX3Y4Q9F8TAB1C2DKEYH9S1`;
-  const maringaId = `${TABLE_PREFIX.CITY}01HZX3Y4Q9F8TAB1C2DKEYH9S2`;
+  const curitibaId = `${TABLE_PREFIX.CITY}01HZX3Y4Q9F8TAB1C2DKEYH9T1`;
+  const maringaId = `${TABLE_PREFIX.CITY}01HZX3Y4Q9F8TAB1C2DKEYH9T2`;
 
   const TEST_EMAILS = [
     'curitiba_citizen@tickets.com',
