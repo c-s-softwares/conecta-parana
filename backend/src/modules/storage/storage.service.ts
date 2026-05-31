@@ -64,7 +64,9 @@ export class StorageService implements OnModuleInit {
       common.Region.fromRegionId(this.region),
     );
 
-    this.client = new ObjectStorageClient({ authenticationDetailsProvider: provider });
+    this.client = new ObjectStorageClient({
+      authenticationDetailsProvider: provider,
+    });
   }
 
   async upload(
@@ -179,7 +181,10 @@ export class StorageService implements OnModuleInit {
       'ECONNREFUSED',
       'ENETUNREACH',
     ];
-    return typeof candidate.code === 'string' && transientCodes.includes(candidate.code);
+    return (
+      typeof candidate.code === 'string' &&
+      transientCodes.includes(candidate.code)
+    );
   }
 
   private isNotFound(err: unknown): boolean {

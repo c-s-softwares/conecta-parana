@@ -35,11 +35,7 @@ export class JsonParseExceptionFilter implements ExceptionFilter {
     const body = exception.getResponse();
 
     // Já no formato `{ code, message }` (veio do apiError) - passa direto.
-    if (
-      typeof body === 'object' &&
-      body !== null &&
-      'code' in body
-    ) {
+    if (typeof body === 'object' && body !== null && 'code' in body) {
       response.status(status).json(body);
       return;
     }
@@ -64,11 +60,7 @@ export class JsonParseExceptionFilter implements ExceptionFilter {
     if (typeof body === 'string') {
       return body;
     }
-    if (
-      typeof body === 'object' &&
-      body !== null &&
-      'message' in body
-    ) {
+    if (typeof body === 'object' && body !== null && 'message' in body) {
       const msg = (body as { message: unknown }).message;
       return Array.isArray(msg) ? msg.join(' ') : String(msg);
     }

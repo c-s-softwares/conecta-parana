@@ -34,9 +34,7 @@ export class AuthService {
     // Não diferencia "email já existe" de outras falhas de registro para evitar
     // enumeração de usuários via /auth/register. Ver AUTH_ERRORS.REGISTRATION_FAILED.
     if (exists) {
-      throw new BadRequestException(
-        apiError(AUTH_ERRORS.REGISTRATION_FAILED),
-      );
+      throw new BadRequestException(apiError(AUTH_ERRORS.REGISTRATION_FAILED));
     }
 
     const city = await this.prisma.client.city.findFirst({
@@ -130,9 +128,7 @@ export class AuthService {
     const passwordMatch = await compare(dto.password, user.password);
 
     if (!passwordMatch) {
-      throw new UnauthorizedException(
-        apiError(AUTH_ERRORS.INVALID_PASSWORD),
-      );
+      throw new UnauthorizedException(apiError(AUTH_ERRORS.INVALID_PASSWORD));
     }
 
     await this.prisma.client.refreshToken.deleteMany({

@@ -25,29 +25,60 @@ jest.mock('oci-common', () => ({
 }));
 
 jest.mock('fs', () => ({
-  ...jest.requireActual('fs'),
+  ...jest.requireActual<object>('fs'),
   readFileSync: jest.fn(() => 'fake-private-key-content'),
 }));
 
 import { StorageService } from './storage.service';
 
+const NAMESPACE = 'ns-test';
+const BUCKET = 'bucket-test';
+const REGION = 'sa-saopaulo-1';
+
 const ENV = {
-  OCI_OBJECT_STORAGE_NAMESPACE: 'ns-test',
-  OCI_BUCKET_NAME: 'bucket-test',
-  OCI_REGION: 'sa-saopaulo-1',
+  OCI_OBJECT_STORAGE_NAMESPACE: NAMESPACE,
+  OCI_BUCKET_NAME: BUCKET,
+  OCI_REGION: REGION,
   OCI_TENANCY_OCID: 'ocid1.tenancy.oc1..x',
   OCI_USER_OCID: 'ocid1.user.oc1..x',
   OCI_FINGERPRINT: 'aa:bb:cc',
   OCI_PRIVATE_KEY_PATH: '/fake/path.pem',
 };
 
-const transientError = (statusCode = 503) => {
-  const err: { statusCode: number; message: string } = {
-    statusCode,
-    message: 'Service Unavailable',
-  };
-  return err;
-};
+const STORAGE_BASE_URL = `https://objectstorage.${REGION}.oraclecloud.com`;
+const PUBLIC_URL_PREFIX = `${STORAGE_BASE_URL}/n/${NAMESPACE}/b/${BUCKET}/o/`;
+
+const SAMPLE_KEY = 'photos/event/evt_x/pho_y.webp';
+const SIMPLE_KEY = 'k.webp';
+const SAMPLE_KEY_WITH_ACCENTS = 'photos/event/evt_x/foto com espaço.webp';
+const SAMPLE_KEY_WITH_ACCENTS_ENCODED =
+  'photos/event/evt_x/foto%20com%20espa%C3%A7o.webp';
+
+const PAR_ACCESS_URI = '/p/abc123/n/ns-test/b/bucket-test/o/k.webp';
+
+const buildPutObjectArgs = (
+  objectName: string,
+  buffer: Buffer,
+  contentType = 'image/webp',
+) => ({
+  namespaceName: NAMESPACE,
+  bucketName: BUCKET,
+  objectName,
+  putObjectBody: buffer,
+  contentLength: buffer.length,
+  contentType,
+});
+
+const buildDeleteObjectArgs = (objectName: string) => ({
+  namespaceName: NAMESPACE,
+  bucketName: BUCKET,
+  objectName,
+});
+
+const transientError = (statusCode = 503) => ({
+  statusCode,
+  message: 'Service Unavailable',
+});
 
 const networkError = (): NodeJS.ErrnoException => {
   const err = new Error('connection reset') as NodeJS.ErrnoException;
@@ -82,23 +113,12 @@ describe('StorageService', () => {
       putObjectMock.mockResolvedValueOnce({});
       const buf = Buffer.from('image-bytes');
 
-      const url = await service.upload(
-        'photos/event/evt_x/pho_y.webp',
-        buf,
-        'image/webp',
-      );
+      const url = await service.upload(SAMPLE_KEY, buf, 'image/webp');
 
-      expect(url).toBe(
-        'https://objectstorage.sa-saopaulo-1.oraclecloud.com/n/ns-test/b/bucket-test/o/photos/event/evt_x/pho_y.webp',
+      expect(url).toBe(`${PUBLIC_URL_PREFIX}${SAMPLE_KEY}`);
+      expect(putObjectMock).toHaveBeenCalledWith(
+        buildPutObjectArgs(SAMPLE_KEY, buf),
       );
-      expect(putObjectMock).toHaveBeenCalledWith({
-        namespaceName: 'ns-test',
-        bucketName: 'bucket-test',
-        objectName: 'photos/event/evt_x/pho_y.webp',
-        putObjectBody: buf,
-        contentLength: buf.length,
-        contentType: 'image/webp',
-      });
     });
 
     it('retry exponencial em erro transitório (503) e sucesso no terceiro attempt', async () => {
@@ -107,9 +127,13 @@ describe('StorageService', () => {
         .mockRejectedValueOnce(transientError(502))
         .mockResolvedValueOnce({});
 
-      const url = await service.upload('k.webp', Buffer.from('x'), 'image/webp');
+      const url = await service.upload(
+        SIMPLE_KEY,
+        Buffer.from('x'),
+        'image/webp',
+      );
 
-      expect(url).toContain('/o/k.webp');
+      expect(url).toBe(`${PUBLIC_URL_PREFIX}${SIMPLE_KEY}`);
       expect(putObjectMock).toHaveBeenCalledTimes(3);
     });
 
@@ -118,7 +142,7 @@ describe('StorageService', () => {
         .mockRejectedValueOnce(networkError())
         .mockResolvedValueOnce({});
 
-      await service.upload('k.webp', Buffer.from('x'), 'image/webp');
+      await service.upload(SIMPLE_KEY, Buffer.from('x'), 'image/webp');
 
       expect(putObjectMock).toHaveBeenCalledTimes(2);
     });
@@ -128,7 +152,7 @@ describe('StorageService', () => {
 
       let caught: ServiceUnavailableException | undefined;
       try {
-        await service.upload('k.webp', Buffer.from('x'), 'image/webp');
+        await service.upload(SIMPLE_KEY, Buffer.from('x'), 'image/webp');
       } catch (err) {
         caught = err as ServiceUnavailableException;
       }
@@ -145,7 +169,7 @@ describe('StorageService', () => {
       putObjectMock.mockRejectedValueOnce(permanent);
 
       await expect(
-        service.upload('k.webp', Buffer.from('x'), 'image/webp'),
+        service.upload(SIMPLE_KEY, Buffer.from('x'), 'image/webp'),
       ).rejects.toBe(permanent);
       expect(putObjectMock).toHaveBeenCalledTimes(1);
     });
@@ -154,13 +178,13 @@ describe('StorageService', () => {
       putObjectMock.mockResolvedValueOnce({});
 
       const url = await service.upload(
-        'photos/event/evt_x/foto com espaço.webp',
+        SAMPLE_KEY_WITH_ACCENTS,
         Buffer.from('x'),
         'image/webp',
       );
 
-      expect(url).toContain(
-        '/o/photos/event/evt_x/foto%20com%20espa%C3%A7o.webp',
+      expect(url).toBe(
+        `${PUBLIC_URL_PREFIX}${SAMPLE_KEY_WITH_ACCENTS_ENCODED}`,
       );
     });
   });
@@ -169,35 +193,30 @@ describe('StorageService', () => {
     it('delete bem-sucedido', async () => {
       deleteObjectMock.mockResolvedValueOnce({});
 
-      await service.delete('photos/event/evt_x/pho_y.webp');
+      await service.delete(SAMPLE_KEY);
 
-      expect(deleteObjectMock).toHaveBeenCalledWith({
-        namespaceName: 'ns-test',
-        bucketName: 'bucket-test',
-        objectName: 'photos/event/evt_x/pho_y.webp',
-      });
+      expect(deleteObjectMock).toHaveBeenCalledWith(
+        buildDeleteObjectArgs(SAMPLE_KEY),
+      );
     });
 
     it('trata 404 como sucesso (idempotência)', async () => {
       deleteObjectMock.mockRejectedValueOnce({ statusCode: 404 });
 
-      await expect(service.delete('k.webp')).resolves.toBeUndefined();
+      await expect(service.delete(SIMPLE_KEY)).resolves.toBeUndefined();
     });
 
     it('propaga erro permanente diferente de 404', async () => {
       const err = { statusCode: 403, message: 'Forbidden' };
       deleteObjectMock.mockRejectedValueOnce(err);
 
-      await expect(service.delete('k.webp')).rejects.toBe(err);
+      await expect(service.delete(SIMPLE_KEY)).rejects.toBe(err);
     });
 
     it('retry em transitório e lança STORAGE_UNAVAILABLE se esgotar', async () => {
-      deleteObjectMock
-        .mockRejectedValueOnce(transientError(503))
-        .mockRejectedValueOnce(transientError(503))
-        .mockRejectedValueOnce(transientError(503));
+      deleteObjectMock.mockRejectedValue(transientError(503));
 
-      await expect(service.delete('k.webp')).rejects.toThrow(
+      await expect(service.delete(SIMPLE_KEY)).rejects.toThrow(
         ServiceUnavailableException,
       );
     });
@@ -206,23 +225,25 @@ describe('StorageService', () => {
   describe('getSignedUrl', () => {
     it('gera PAR e devolve URL completa', async () => {
       createPARMock.mockResolvedValueOnce({
-        preauthenticatedRequest: {
-          accessUri: '/p/abc123/n/ns-test/b/bucket-test/o/k.webp',
-        },
+        preauthenticatedRequest: { accessUri: PAR_ACCESS_URI },
       });
 
-      const url = await service.getSignedUrl('k.webp', 3600);
+      const url = await service.getSignedUrl(SIMPLE_KEY, 3600);
 
-      expect(url).toBe(
-        'https://objectstorage.sa-saopaulo-1.oraclecloud.com/p/abc123/n/ns-test/b/bucket-test/o/k.webp',
+      expect(url).toBe(`${STORAGE_BASE_URL}${PAR_ACCESS_URI}`);
+      const [firstCallArg] = createPARMock.mock.calls[0] as [
+        {
+          createPreauthenticatedRequestDetails: {
+            objectName: string;
+            accessType: string;
+          };
+        },
+      ];
+      expect(firstCallArg.createPreauthenticatedRequestDetails.objectName).toBe(
+        SIMPLE_KEY,
       );
-      expect(createPARMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          createPreauthenticatedRequestDetails: expect.objectContaining({
-            objectName: 'k.webp',
-            accessType: 'ObjectRead',
-          }),
-        }),
+      expect(firstCallArg.createPreauthenticatedRequestDetails.accessType).toBe(
+        'ObjectRead',
       );
     });
   });

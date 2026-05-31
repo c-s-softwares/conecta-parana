@@ -37,10 +37,7 @@ export function apiError(
 ): ApiErrorBody;
 export function apiError(code: string): ApiErrorBody;
 
-export function apiError(
-  code: string,
-  detail: string[] = [],
-): ApiErrorBody {
+export function apiError(code: string, detail: string[] = []): ApiErrorBody {
   if (code === ROLE_DENIED) {
     return {
       code,

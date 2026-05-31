@@ -35,7 +35,9 @@ export type ErrorCodes<T extends CatalogInput> = {
  *   // ... uploads.service.ts
  *   throw new BadRequestException(apiError(UPLOAD_ERRORS.INVALID_FILE_TYPE));
  */
-export function defineErrors<T extends CatalogInput>(catalog: T): ErrorCodes<T> {
+export function defineErrors<T extends CatalogInput>(
+  catalog: T,
+): ErrorCodes<T> {
   const result = {} as { [K in keyof T]: Lowercase<K & string> };
   for (const key of Object.keys(catalog) as Array<keyof T & string>) {
     const code = key.toLowerCase() as Lowercase<typeof key>;
