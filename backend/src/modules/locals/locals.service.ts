@@ -17,7 +17,9 @@ import {
 import { NearbyQueryDto } from './dto/request/nearby-query.dto';
 import { PaginationQueryDto } from '../../common/dto/request/pagination-query.dto';
 import { PaginatedResponseDto } from '../../common/dto/response/paginated-response.dto';
-import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
+import { apiError } from '../../common/errors/api-error';
+import { LOCALS_ERRORS } from './locals.errors';
+import { SHARED_ERRORS } from '../../common/errors/shared-errors';
 
 @Injectable()
 export class LocalsService extends BaseCrudService<
@@ -29,7 +31,7 @@ export class LocalsService extends BaseCrudService<
     super(prisma, {
       tablePrefix: TABLE_PREFIX.LOCAL,
       entityName: 'Local',
-      notFoundErrorKey: 'local_not_found',
+      notFoundErrorKey: LOCALS_ERRORS.LOCAL_NOT_FOUND,
       softDelete: true,
     });
   }
@@ -187,7 +189,7 @@ export class LocalsService extends BaseCrudService<
     }
 
     if (userCityId && local.cityId !== userCityId) {
-      throw new ForbiddenException(apiError(API_ERROR_CODE.CITY_SCOPE_DENIED));
+      throw new ForbiddenException(apiError(SHARED_ERRORS.CITY_SCOPE_DENIED));
     }
 
     const updated = await this.prisma.client.local.update({
@@ -248,12 +250,12 @@ export class LocalsService extends BaseCrudService<
 
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
       throw new BadRequestException(
-        apiError(API_ERROR_CODE.INVALID_COORDINATES),
+        apiError(LOCALS_ERRORS.INVALID_COORDINATES),
       );
     }
 
     if (radius > 50000) {
-      throw new BadRequestException(apiError(API_ERROR_CODE.RADIUS_TOO_LARGE));
+      throw new BadRequestException(apiError(LOCALS_ERRORS.RADIUS_TOO_LARGE));
     }
 
     const categoryCondition = categoryId
@@ -336,7 +338,7 @@ export class LocalsService extends BaseCrudService<
     }
 
     if (userCityId && local.cityId !== userCityId) {
-      throw new ForbiddenException(apiError(API_ERROR_CODE.CITY_SCOPE_DENIED));
+      throw new ForbiddenException(apiError(SHARED_ERRORS.CITY_SCOPE_DENIED));
     }
 
     await this.prisma.client.local.update({

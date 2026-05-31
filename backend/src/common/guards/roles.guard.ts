@@ -9,7 +9,7 @@ import { Request } from 'express';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { JwtPayload } from '../../modules/auth/strategies/jwt.strategy';
-import { API_ERROR_CODE, apiError } from '../errors/api-error';
+import { apiError, ROLE_DENIED } from '../errors/api-error';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -31,7 +31,7 @@ export class RolesGuard implements CanActivate {
 
     if (!user?.role) {
       throw new ForbiddenException(
-        apiError(API_ERROR_CODE.ROLE_DENIED, requiredRoles),
+        apiError(ROLE_DENIED, requiredRoles),
       );
     }
 
@@ -39,7 +39,7 @@ export class RolesGuard implements CanActivate {
 
     if (!hasRole) {
       throw new ForbiddenException(
-        apiError(API_ERROR_CODE.ROLE_DENIED, requiredRoles),
+        apiError(ROLE_DENIED, requiredRoles),
       );
     }
 

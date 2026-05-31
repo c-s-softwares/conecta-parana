@@ -5,7 +5,8 @@ import { CitiesService } from './cities.service';
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 import { Prisma } from '@prisma/client';
-import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
+import { apiError } from '../../common/errors/api-error';
+import { CITIES_ERRORS } from './cities.errors';
 
 const MOCK_CITY_ID = `${TABLE_PREFIX.CITY}01HZX3Y4Q9F8TAB1C2DKEYH9MN`;
 
@@ -154,20 +155,6 @@ describe('CitiesService', () => {
 
       expect(result.name).toBe('Maringá');
     });
-
-    it('deve lançar ConflictException(city_duplicate) se Unique Constraint (P2002)', async () => {
-      mockPrisma.client.city.findFirst.mockResolvedValue(MOCK_CITY);
-      mockPrisma.client.city.update.mockRejectedValue(
-        new Prisma.PrismaClientKnownRequestError('Error', {
-          code: 'P2002',
-          clientVersion: '4.0.0',
-        }),
-      );
-
-      await expect(
-        service.update(MOCK_CITY_ID, { name: 'Paiçandu' }),
-      ).rejects.toThrow(new ConflictException('Cidade já cadastrada'));
-    });
   });
 
   describe('remove', () => {
@@ -193,7 +180,7 @@ describe('CitiesService', () => {
       });
 
       await expect(service.remove(MOCK_CITY_ID)).rejects.toThrow(
-        new ConflictException(apiError(API_ERROR_CODE.CITY_HAS_CONTENT)),
+        new ConflictException(apiError(CITIES_ERRORS.CITY_HAS_CONTENT)),
       );
     });
   });

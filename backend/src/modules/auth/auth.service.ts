@@ -13,7 +13,9 @@ import { LoginDto } from './dto/request/login.dto';
 import { LogoutAllDto } from './dto/request/logout-all.dto';
 import { generateId } from '../../common/utils/ulid.util';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
-import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
+import { apiError } from '../../common/errors/api-error';
+import { AUTH_ERRORS } from './auth.errors';
+import { CITIES_ERRORS } from '../cities/cities.errors';
 
 @Injectable()
 export class AuthService {
@@ -40,7 +42,7 @@ export class AuthService {
     });
 
     if (!city) {
-      throw new NotFoundException(apiError(API_ERROR_CODE.CITY_NOT_FOUND));
+      throw new NotFoundException(apiError(CITIES_ERRORS.CITY_NOT_FOUND));
     }
 
     const hashed = await hash(dto.password, 10);
@@ -124,7 +126,7 @@ export class AuthService {
 
     if (!passwordMatch) {
       throw new UnauthorizedException(
-        apiError(API_ERROR_CODE.INVALID_PASSWORD),
+        apiError(AUTH_ERRORS.INVALID_PASSWORD),
       );
     }
 

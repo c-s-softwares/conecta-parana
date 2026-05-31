@@ -8,7 +8,8 @@ import { Role } from '@prisma/client';
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 import { generateId } from '../../common/utils/ulid.util';
-import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
+import { apiError } from '../../common/errors/api-error';
+import { SUGGESTIONS_ERRORS } from './suggestions.errors';
 import { CreateSuggestionDto } from './dto/request/create-suggestion.dto';
 import { RespondSuggestionDto } from './dto/request/respond-suggestion.dto';
 import { SuggestionResponseDto } from './dto/response/suggestion-response.dto';
@@ -54,15 +55,15 @@ export class SuggestionsService {
     });
 
     if (!user || !user.cityId) {
-      throw new BadRequestException(apiError(API_ERROR_CODE.USER_WITHOUT_CITY));
+      throw new BadRequestException(apiError(SUGGESTIONS_ERRORS.USER_WITHOUT_CITY));
     }
 
     if (dto.subject.length > 200) {
-      throw new BadRequestException(apiError(API_ERROR_CODE.SUBJECT_TOO_LONG));
+      throw new BadRequestException(apiError(SUGGESTIONS_ERRORS.SUBJECT_TOO_LONG));
     }
 
     if (dto.message.length > 1000) {
-      throw new BadRequestException(apiError(API_ERROR_CODE.MESSAGE_TOO_LONG));
+      throw new BadRequestException(apiError(SUGGESTIONS_ERRORS.MESSAGE_TOO_LONG));
     }
 
     const suggestion = await this.prisma.client.suggestion.create({
@@ -107,7 +108,7 @@ export class SuggestionsService {
 
     if (!suggestion) {
       throw new NotFoundException(
-        apiError(API_ERROR_CODE.SUGGESTION_NOT_FOUND),
+        apiError(SUGGESTIONS_ERRORS.SUGGESTION_NOT_FOUND),
       );
     }
 
@@ -115,7 +116,7 @@ export class SuggestionsService {
       // Administradores só podem visualizar sugestões da própria cidade
       if (userPayload.cityId && suggestion.cityId !== userPayload.cityId) {
         throw new ForbiddenException(
-          apiError(API_ERROR_CODE.NOT_OWNER_OR_ADMIN),
+          apiError(SUGGESTIONS_ERRORS.NOT_OWNER_OR_ADMIN),
         );
       }
 
@@ -131,7 +132,7 @@ export class SuggestionsService {
       // Cidadãos só podem visualizar as próprias sugestões
       if (suggestion.userId !== userPayload.sub) {
         throw new ForbiddenException(
-          apiError(API_ERROR_CODE.NOT_OWNER_OR_ADMIN),
+          apiError(SUGGESTIONS_ERRORS.NOT_OWNER_OR_ADMIN),
         );
       }
     }
@@ -151,18 +152,18 @@ export class SuggestionsService {
 
     if (!suggestion) {
       throw new NotFoundException(
-        apiError(API_ERROR_CODE.SUGGESTION_NOT_FOUND),
+        apiError(SUGGESTIONS_ERRORS.SUGGESTION_NOT_FOUND),
       );
     }
 
     if (adminCityId && suggestion.cityId !== adminCityId) {
-      throw new ForbiddenException(apiError(API_ERROR_CODE.NOT_OWNER_OR_ADMIN));
+      throw new ForbiddenException(apiError(SUGGESTIONS_ERRORS.NOT_OWNER_OR_ADMIN));
     }
 
     // Bloqueia transição se a sugestão já foi respondida, concluída ou arquivada
     if (['respondida', 'concluída', 'arquivada'].includes(suggestion.status)) {
       throw new BadRequestException(
-        apiError(API_ERROR_CODE.INVALID_STATUS_TRANSITION),
+        apiError(SUGGESTIONS_ERRORS.INVALID_STATUS_TRANSITION),
       );
     }
 
@@ -198,18 +199,18 @@ export class SuggestionsService {
 
     if (!suggestion) {
       throw new NotFoundException(
-        apiError(API_ERROR_CODE.SUGGESTION_NOT_FOUND),
+        apiError(SUGGESTIONS_ERRORS.SUGGESTION_NOT_FOUND),
       );
     }
 
     if (adminCityId && suggestion.cityId !== adminCityId) {
-      throw new ForbiddenException(apiError(API_ERROR_CODE.NOT_OWNER_OR_ADMIN));
+      throw new ForbiddenException(apiError(SUGGESTIONS_ERRORS.NOT_OWNER_OR_ADMIN));
     }
 
     // Transição de conclusão só aceita a partir do status respondida
     if (suggestion.status !== 'respondida') {
       throw new BadRequestException(
-        apiError(API_ERROR_CODE.INVALID_STATUS_TRANSITION),
+        apiError(SUGGESTIONS_ERRORS.INVALID_STATUS_TRANSITION),
       );
     }
 
@@ -245,12 +246,12 @@ export class SuggestionsService {
 
     if (!suggestion) {
       throw new NotFoundException(
-        apiError(API_ERROR_CODE.SUGGESTION_NOT_FOUND),
+        apiError(SUGGESTIONS_ERRORS.SUGGESTION_NOT_FOUND),
       );
     }
 
     if (adminCityId && suggestion.cityId !== adminCityId) {
-      throw new ForbiddenException(apiError(API_ERROR_CODE.NOT_OWNER_OR_ADMIN));
+      throw new ForbiddenException(apiError(SUGGESTIONS_ERRORS.NOT_OWNER_OR_ADMIN));
     }
 
     // Re-arquivar é idempotente -- retorna sem escrita no banco
@@ -261,7 +262,7 @@ export class SuggestionsService {
     // Concluída é terminal positivo -- não pode ser arquivada
     if (suggestion.status === 'concluída') {
       throw new BadRequestException(
-        apiError(API_ERROR_CODE.INVALID_STATUS_TRANSITION),
+        apiError(SUGGESTIONS_ERRORS.INVALID_STATUS_TRANSITION),
       );
     }
 
