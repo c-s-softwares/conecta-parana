@@ -217,8 +217,8 @@ describe('Auth (e2e)', () => {
     await api().get('/auth/me').expect(401);
   });
 
-  it('POST /auth/register — deve retornar 409 com email duplicado', async () => {
-    await api()
+  it('POST /auth/register — deve retornar 400 genérico com email já cadastrado (sem revelar existência)', async () => {
+    const response = await api()
       .post('/auth/register')
       .send({
         name: 'Teste E2E',
@@ -226,7 +226,13 @@ describe('Auth (e2e)', () => {
         password: MOCK_TEST_USER.password,
         cityId: testCityId,
       })
-      .expect(409);
+      .expect(400);
+
+    const body = response.body as { code: string; message: string };
+    expect(body.code).toBe('registration_failed');
+    // Mensagem propositalmente genérica para evitar enumeração de emails.
+    expect(body.message).not.toContain('Email');
+    expect(body.message).not.toContain('cadastrado');
   });
 
   it('POST /auth/login — deve retornar 401 com senha errada', async () => {

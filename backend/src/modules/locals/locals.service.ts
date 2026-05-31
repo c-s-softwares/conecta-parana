@@ -185,7 +185,7 @@ export class LocalsService extends BaseCrudService<
     });
 
     if (!local) {
-      throw new NotFoundException(apiError('local_not_found'));
+      throw new NotFoundException(apiError(LOCALS_ERRORS.LOCAL_NOT_FOUND));
     }
 
     if (userCityId && local.cityId !== userCityId) {
@@ -334,7 +334,7 @@ export class LocalsService extends BaseCrudService<
     });
 
     if (!local) {
-      throw new NotFoundException(apiError('local_not_found'));
+      throw new NotFoundException(apiError(LOCALS_ERRORS.LOCAL_NOT_FOUND));
     }
 
     if (userCityId && local.cityId !== userCityId) {

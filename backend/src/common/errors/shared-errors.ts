@@ -12,5 +12,7 @@ export const SHARED_ERRORS = defineErrors({
   UNAUTHENTICATED: 'Token ausente, inválido ou expirado',
   CITY_SCOPE_DENIED: 'ADMIN só pode atuar em sua própria cidade',
   CITY_REQUIRED: 'Super Admin deve informar a cidade (cityId) no payload',
+  SUPER_ADMIN_REQUIRED: 'Acesso negado: requer privilégios de Super Admin',
   TOO_MANY_ATTEMPTS: 'Muitas tentativas. Aguarde e tente novamente.',
+  MALFORMED_JSON: 'Corpo da requisição contém JSON inválido',
 });
