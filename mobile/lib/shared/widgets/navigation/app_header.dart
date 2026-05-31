@@ -46,16 +46,20 @@ class _AppHeaderState extends State<AppHeader> {
   Widget _buildDefault() {
     return Row(
       children: [
-        Image.asset('assets/images/paranalogo.png', height: 32, errorBuilder: (context, e, s) {
-          return Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: const Color(0xFF006733),
-              borderRadius: BorderRadius.circular(8),
-            ),
-          );
-        }),
+        Image.asset(
+          'assets/images/paranalogo.png',
+          height: 32,
+          errorBuilder: (context, e, s) {
+            return Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: const Color(0xFF006733),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            );
+          },
+        ),
         const SizedBox(width: 12),
 
         GestureDetector(
@@ -66,20 +70,30 @@ class _AppHeaderState extends State<AppHeader> {
               color: const Color(0xFFFFF0EE),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.location_on_outlined, size: 14, color: Color(0xFF006733)),
-                SizedBox(width: 4),
+                const Icon(
+                  Icons.location_on_outlined,
+                  size: 14,
+                  color: Color(0xFF006733),
+                ),
+                const SizedBox(width: 4),
                 Text(
-                  'Cidade',
-                  style: TextStyle(
+                  widget.cityName.isNotEmpty
+                      ? widget.cityName
+                      : 'Selecionar cidade',
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF006733),
                   ),
                 ),
-                SizedBox(width: 4),
-                Icon(Icons.keyboard_arrow_down, size: 16, color: Color(0xFF006733)),
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 16,
+                  color: Color(0xFF006733),
+                ),
               ],
             ),
           ),
@@ -96,7 +110,10 @@ class _AppHeaderState extends State<AppHeader> {
           children: [
             IconButton(
               onPressed: widget.onNotificationTap,
-              icon: const Icon(Icons.notifications_outlined, color: Colors.black87),
+              icon: const Icon(
+                Icons.notifications_outlined,
+                color: Colors.black87,
+              ),
             ),
             if (widget.hasAlert)
               Positioned(
@@ -139,15 +156,24 @@ class _AppHeaderState extends State<AppHeader> {
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFF006733), width: 1.5),
+                borderSide: const BorderSide(
+                  color: Color(0xFF006733),
+                  width: 1.5,
+                ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFF006733), width: 1.5),
+                borderSide: const BorderSide(
+                  color: Color(0xFF006733),
+                  width: 1.5,
+                ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFF006733), width: 1.5),
+                borderSide: const BorderSide(
+                  color: Color(0xFF006733),
+                  width: 1.5,
+                ),
               ),
               contentPadding: const EdgeInsets.symmetric(vertical: 0),
             ),
