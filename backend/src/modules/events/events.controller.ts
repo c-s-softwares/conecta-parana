@@ -12,12 +12,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Request } from 'express';
 
@@ -32,6 +27,7 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
 import { CreateEventDto } from './dto/request/create-event.dto';
 import { UpdateEventDto } from './dto/request/update-event.dto';
 import { QueryEventsDto } from './dto/request/query-events.dto';
+import { Public } from '../../common/decorators/public.decorator';
 
 type RequestWithUser = Request & {
   user: JwtPayload;
@@ -42,12 +38,14 @@ type RequestWithUser = Request & {
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
+  @Public()
   @Get()
   @ApiOperation({ summary: 'Listar eventos com filtros e paginação' })
   findAll(@Query() query: QueryEventsDto) {
     return this.eventsService.findAll(query);
   }
 
+  @Public()
   @Get(':id')
   @ApiOperation({ summary: 'Buscar evento por ID' })
   findOne(@Param('id') id: string) {

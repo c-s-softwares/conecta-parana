@@ -1,4 +1,9 @@
 import {
+  VALID_EVENT_STATUS,
+  VALID_EVENT_TYPES,
+} from './constants/events.constants';
+
+import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
@@ -17,15 +22,6 @@ import { JwtPayload } from '../auth/strategies/jwt.strategy';
 import { CreateEventDto } from './dto/request/create-event.dto';
 import { UpdateEventDto } from './dto/request/update-event.dto';
 import { QueryEventsDto } from './dto/request/query-events.dto';
-
-const VALID_EVENT_TYPES = [
-  'festa',
-  'oficial',
-  'esportivo',
-  'cultural',
-  'outros',
-];
-const VALID_EVENT_STATUS = ['rascunho', 'publicado', 'cancelado', 'encerrado'];
 
 @Injectable()
 export class EventsService {
@@ -146,9 +142,10 @@ export class EventsService {
     }
 
     try {
-      return await this.prisma.client.event.update({
+      const updated = await this.prisma.client.event.updateMany({
         where: {
           id,
+          deletedAt: null,
           updatedAt: dto.updatedAt
             ? new Date(dto.updatedAt)
             : current.updatedAt,
@@ -163,7 +160,17 @@ export class EventsService {
           ...(dto.localId !== undefined && { localId: dto.localId }),
         },
       });
-    } catch {
+
+      if (updated.count === 0) {
+        throw new ConflictException(apiError(API_ERROR_CODE.EVENT_CHANGED));
+      }
+
+      return this.findOne(id);
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+
       throw new ConflictException(apiError(API_ERROR_CODE.EVENT_CHANGED));
     }
   }
