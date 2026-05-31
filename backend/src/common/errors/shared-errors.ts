@@ -15,4 +15,6 @@ export const SHARED_ERRORS = defineErrors({
   SUPER_ADMIN_REQUIRED: 'Acesso negado: requer privilégios de Super Admin',
   TOO_MANY_ATTEMPTS: 'Muitas tentativas. Aguarde e tente novamente.',
   MALFORMED_JSON: 'Corpo da requisição contém JSON inválido',
+  NOT_OWNER_OR_ADMIN:
+    'Acesso negado: você não é o proprietário deste recurso nem administrador desta cidade',
 });
