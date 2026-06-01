@@ -76,10 +76,7 @@ export class CategoryService extends BaseCrudService<
 
   protected toCreateData(dto: CreateCategoryDto): Record<string, unknown> {
     if (!VALID_CATEGORY_ICONS.includes(dto.icon)) {
-      throw new BadRequestException({
-        code: 'invalid_icon',
-        message: 'Ícone inválido',
-      });
+      throw new BadRequestException(apiError(API_ERROR_CODE.INVALID_ICON));
     }
 
     return {
@@ -89,16 +86,13 @@ export class CategoryService extends BaseCrudService<
   }
 
   protected toUpdateData(dto: UpdateCategoryDto): Record<string, unknown> {
-    if (dto.icon && !VALID_CATEGORY_ICONS.includes(dto.icon)) {
-      throw new BadRequestException({
-        code: 'invalid_icon',
-        message: 'Ícone inválido',
-      });
+    if (dto.icon !== undefined && !VALID_CATEGORY_ICONS.includes(dto.icon)) {
+      throw new BadRequestException(apiError(API_ERROR_CODE.INVALID_ICON));
     }
 
     return {
-      ...(dto.name && { name: dto.name }),
-      ...(dto.icon && { icon: dto.icon }),
+      ...(dto.name !== undefined && { name: dto.name }),
+      ...(dto.icon !== undefined && { icon: dto.icon }),
     };
   }
 
