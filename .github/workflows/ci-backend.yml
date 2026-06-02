@@ -115,11 +115,4 @@ jobs:
           CORS_ORIGIN: http://localhost:3000
           JWT_SECRET: test_secret_cpr
           JWT_REFRESH_SECRET: test_refresh_secret_cpr
-          OCI_OBJECT_STORAGE_NAMESPACE: gr-test-xxx
-          OCI_BUCKET_NAME: cpr-photos-test
-          OCI_REGION: sa-saopaulo-1
-          OCI_TENANCY_OCID: ocid1.tenancy.oc1..test
-          OCI_USER_OCID: ocid1.user.oc1..test
-          OCI_FINGERPRINT: 00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00
-          OCI_PRIVATE_KEY_PATH: .secrets/oci_api_key.pem  # nunca lido nos e2e
           NODE_ENV: test
