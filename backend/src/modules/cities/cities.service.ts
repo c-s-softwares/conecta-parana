@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, Inject } from '@nestjs/common';
+import { Injectable, ConflictException, Inject, Logger } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { PrismaService } from '../../config/prisma.service';
@@ -29,6 +29,8 @@ export class CitiesService extends BaseCrudService<
   CreateCityDto,
   UpdateCityDto
 > {
+  private readonly logger = new Logger(CitiesService.name);
+
   constructor(
     prisma: PrismaService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
@@ -141,7 +143,8 @@ export class CitiesService extends BaseCrudService<
       }
     } catch (err) {
       // Impede que falhas de infraestrutura de cache interrompam o fluxo principal do CRUD
-      console.error('Erro ao limpar cache de cidades:', err);
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`Erro ao limpar cache de cidades: ${message}`);
     }
   }
 }

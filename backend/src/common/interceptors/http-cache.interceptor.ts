@@ -4,6 +4,7 @@ import {
   ExecutionContext,
   CallHandler,
   Inject,
+  Logger,
 } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
@@ -56,6 +57,8 @@ interface CacheManagerWithStores {
  */
 @Injectable()
 export class HttpCacheInterceptor implements NestInterceptor {
+  private readonly logger = new Logger(HttpCacheInterceptor.name);
+
   constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: Cache) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
@@ -112,9 +115,8 @@ export class HttpCacheInterceptor implements NestInterceptor {
               }
             } catch (err) {
               const message = err instanceof Error ? err.message : String(err);
-              console.error(
-                `Erro ao invalidar cache para o recurso ${baseResource}:`,
-                message,
+              this.logger.warn(
+                `Erro ao invalidar cache para o recurso ${baseResource}: ${message}`,
               );
             }
           })();
