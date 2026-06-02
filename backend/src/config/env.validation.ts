@@ -1,5 +1,16 @@
 import * as Joi from 'joi';
 
+/**
+ * Helper: torna uma env obrigatória apenas quando STORAGE_DRIVER=oci.
+ * Permite dev rodar sem credenciais OCI configuradas.
+ */
+const requiredOnlyForOci = (schema: Joi.StringSchema): Joi.StringSchema =>
+  schema.when('STORAGE_DRIVER', {
+    is: 'oci',
+    then: Joi.required(),
+    otherwise: Joi.optional().allow(''),
+  });
+
 export const envValidationSchema = Joi.object({
   DATABASE_URL: Joi.string().required(),
   PORT: Joi.number().default(3000),
@@ -14,12 +25,18 @@ export const envValidationSchema = Joi.object({
   JWT_SECRET: Joi.string().required(),
   JWT_REFRESH_SECRET: Joi.string().required(),
 
-  // Oracle Object Storage (ver docs/SETUP.md secao "Object Storage Oracle")
-  OCI_OBJECT_STORAGE_NAMESPACE: Joi.string().required(),
-  OCI_BUCKET_NAME: Joi.string().required(),
-  OCI_REGION: Joi.string().required(),
-  OCI_TENANCY_OCID: Joi.string().required(),
-  OCI_USER_OCID: Joi.string().required(),
-  OCI_FINGERPRINT: Joi.string().required(),
-  OCI_PRIVATE_KEY_PATH: Joi.string().required(),
+  // Driver do storage de arquivos. Em dev, `local` salva em disco
+  // (backend/.local-uploads/) e dispensa credenciais Oracle. Em staging/prod,
+  // usar `oci` para falar com o Oracle Cloud Object Storage.
+  STORAGE_DRIVER: Joi.string().valid('local', 'oci').default('local'),
+
+  // Oracle Object Storage - obrigatórias apenas quando STORAGE_DRIVER=oci.
+  // Ver docs/SETUP.md secao "Object Storage Oracle".
+  OCI_OBJECT_STORAGE_NAMESPACE: requiredOnlyForOci(Joi.string()),
+  OCI_BUCKET_NAME: requiredOnlyForOci(Joi.string()),
+  OCI_REGION: requiredOnlyForOci(Joi.string()),
+  OCI_TENANCY_OCID: requiredOnlyForOci(Joi.string()),
+  OCI_USER_OCID: requiredOnlyForOci(Joi.string()),
+  OCI_FINGERPRINT: requiredOnlyForOci(Joi.string()),
+  OCI_PRIVATE_KEY_PATH: requiredOnlyForOci(Joi.string()),
 });
