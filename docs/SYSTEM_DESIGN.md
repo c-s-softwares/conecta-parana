@@ -232,7 +232,7 @@ Este cenário extremo exigiria múltiplas instâncias do backend com load balanc
 | Event | 24.000 | ~18 MB |
 | News | 12.000 | ~8 MB |
 | Local | 25.000 | ~8 MB |
-| Photo | 75.000 | ~15 MB (metadados; arquivos no Object Storage — planejado) |
+| Photo | 75.000 | ~15 MB (metadados; arquivos no Oracle Object Storage) |
 | Like | 2.000.000 | ~80 MB |
 | Favorite | 500.000 | ~20 MB |
 | Suggestion | 50.000 | ~30 MB |
@@ -240,9 +240,9 @@ Este cenário extremo exigiria múltiplas instâncias do backend com load balanc
 | Notification_Dismiss | 1.000.000 | ~32 MB |
 | Índices + overhead | - | ~100 MB |
 | **Total banco** | | **~469 MB** |
-| **Fotos (Object Storage — planejado)** | 75.000 × 500KB média | **~35 GB** |
+| **Fotos (Oracle Object Storage)** | 75.000 × 500KB média | **~35 GB** |
 
-**Conclusão:** O banco de dados cabe confortavelmente em uma VM com 24GB RAM. O gargalo de armazenamento são as fotos, que devem ir para Object Storage (Oracle Cloud Object Storage — planejado).
+**Conclusão:** O banco de dados cabe confortavelmente em uma VM com 24GB RAM. O gargalo de armazenamento são as fotos, que ficam no Oracle Cloud Object Storage. Os primeiros 20 GB são cobertos pelo Always Free; acima disso, o tier Standard custa ~US$ 0,026/GB-mês.
 
 ### 2.8. Justificativa da Escolha de Banco e Cloud
 
@@ -280,7 +280,7 @@ Quando o sistema expandir para o Paraná inteiro (267K usuários simultâneos no
 | Banco (read) | Réplica de leitura via PostgreSQL Streaming Replication. Reads pesados (listagem de locais, feed de posts) vão para a réplica. Writes continuam no primário. |
 | Banco (write) | Escala vertical primeiro (mais CPU/RAM). Se necessário, sharding por cidade. |
 | Cache (Redis) | Redis Cluster para distribuir chaves entre nós. |
-| Fotos | Object Storage Oracle — planejado (escalável por natureza, sem limite prático). |
+| Fotos | Oracle Object Storage (escalável por natureza, sem limite prático). |
 
 ### 3.3. Quando escalar?
 
@@ -424,32 +424,13 @@ Salvar logs no banco de dados é um anti-pattern:
 
 ### 6.2. Estratégia de Logging
 
-**Atual:**
-
 ```
 Backend NestJS
     │
-    ├── NestJS Logger (stdout)
+    ├── Pino via nestjs-pino (stdout)
     │       │
-    │       └── Docker captura → docker logs
-    │
-    └── @sentry/node SDK (SentryExceptionFilter)
-            │
-            └── GlitchTip (erros 5xx e exceções não-tratadas)
-```
-
-- NestJS built-in `Logger` escreve no stdout, capturado pelo Docker (`docker logs`)
-- `SentryExceptionFilter` intercepta exceções não-tratadas e reporta via `Sentry.captureException()` para o GlitchTip
-- Erros 4xx (erros esperados) não são reportados ao GlitchTip
-
-**Planejado — Pino como logger estruturado:**
-
-```
-Backend NestJS
-    │
-    ├── Pino (stdout — JSON estruturado)
-    │       │
-    │       ├── Dev: pino-pretty (formato legível)
+    │       ├── Dev: pino-pretty (formato legível e colorido, level=debug)
+    │       ├── Test: level=silent (não polui saída do CI)
     │       └── Prod: JSON puro → Docker captura → docker logs
     │
     └── @sentry/node SDK (SentryExceptionFilter)
@@ -457,16 +438,17 @@ Backend NestJS
             └── GlitchTip (erros 5xx e exceções não-tratadas)
 ```
 
-- JSON estruturado em produção para facilitar parsing e busca
-- Request ID automático em cada log para correlação entre requests
-- Nível: `info` para requests, `warn` para situações anômalas, `error` para falhas
+**Logger estruturado (Pino):**
+- `nestjs-pino` configurado em [`src/config/logger.module.ts`](../backend/src/config/logger.module.ts); `main.ts` chama `app.useLogger(app.get(Logger))` para que todas as chamadas a `new Logger(...).log()` do `@nestjs/common` sejam roteadas pelo Pino.
+- JSON estruturado em produção para facilitar parsing e busca; `pino-pretty` em desenvolvimento.
+- **Request ID automático** em cada log via `genReqId`: aceita `x-request-id` enviado pelo cliente ou gera UUID v4; ecoa de volta no response header para correlação cross-service.
+- Níveis: `info` para requests (autoLogging), `warn` para situações anômalas (ex: falha de invalidação de cache), `error` para falhas inesperadas.
 
 **Error tracking (GlitchTip):**
-- Self-hosted na mesma VM (compose separado)
-- Compatível com SDK do Sentry (`@sentry/node`)
-- Só reporta erros 5xx e exceções não-tratadas (4xx são erros esperados)
-- Dashboard acessível via browser para visualizar erros agrupados
-- Sem limite de eventos (self-hosted)
+- Self-hosted na mesma VM (compose separado; ver [`docs/GLITCHTIP_SETUP.md`](GLITCHTIP_SETUP.md)).
+- Compatível com SDK do Sentry (`@sentry/node`); inicializado em `main.ts` quando `GLITCHTIP_DSN` está presente.
+- `SentryExceptionFilter` ([src/common/sentry-exception.filter.ts](../backend/src/common/sentry-exception.filter.ts)) intercepta exceções não-tratadas e só reporta `>= 500` ou erros não-HttpException (4xx esperados não geram ruído).
+- Dashboard acessível via browser para visualizar erros agrupados; sem limite de eventos (self-hosted).
 
 ### 6.3. O que Monitorar
 
