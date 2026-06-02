@@ -29,7 +29,7 @@ jest.mock('fs', () => ({
   readFileSync: jest.fn(() => 'fake-private-key-content'),
 }));
 
-import { StorageService } from './storage.service';
+import { OciStorageService } from './oci-storage.service';
 
 const NAMESPACE = 'ns-test';
 const BUCKET = 'bucket-test';
@@ -86,15 +86,15 @@ const networkError = (): NodeJS.ErrnoException => {
   return err;
 };
 
-describe('StorageService', () => {
-  let service: StorageService;
+describe('OciStorageService', () => {
+  let service: OciStorageService;
 
   beforeEach(async () => {
     jest.clearAllMocks();
 
     const moduleRef = await Test.createTestingModule({
       providers: [
-        StorageService,
+        OciStorageService,
         {
           provide: ConfigService,
           useValue: {
@@ -104,7 +104,7 @@ describe('StorageService', () => {
       ],
     }).compile();
 
-    service = moduleRef.get(StorageService);
+    service = moduleRef.get(OciStorageService);
   });
 
   describe('upload', () => {

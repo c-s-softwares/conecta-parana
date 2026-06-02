@@ -10,6 +10,7 @@ import { ForbiddenException, ValidationPipe } from '@nestjs/common';
 import { SentryExceptionFilter } from './common/sentry-exception.filter';
 import { JsonParseExceptionFilter } from './common/filters/json-parse-exception.filter';
 import { validationPipeConfig } from './config/validation-pipe.config';
+import { getLocalStorageDir } from './modules/storage/local-storage.service';
 
 const glitchtipDsn = process.env.GLITCHTIP_DSN;
 if (glitchtipDsn) {
@@ -61,6 +62,12 @@ async function bootstrap(): Promise<void> {
   );
 
   app.useGlobalPipes(new ValidationPipe(validationPipeConfig));
+
+  // Serve arquivos do driver `local` do StorageService em /dev-uploads/...
+  // Em modo `oci` o diretório não existe (ou fica vazio) e o handler só
+  // responde 404 para qualquer URL - sem impacto pratico em prod, pois as
+  // URLs geradas lá apontam para o bucket Oracle.
+  app.useStaticAssets(getLocalStorageDir(), { prefix: '/dev-uploads' });
 
   if (configService.get<string>('NODE_ENV') !== 'production') {
     const config = new DocumentBuilder()
