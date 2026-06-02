@@ -107,7 +107,13 @@ export class AuthService {
       where: { id: userId },
     });
 
-    return { id: user.id, name: user.name, email: user.email, role: user.role, cityId: user.cityId };
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      cityId: user.cityId,
+    };
   }
 
   async logout(token: string): Promise<void> {
