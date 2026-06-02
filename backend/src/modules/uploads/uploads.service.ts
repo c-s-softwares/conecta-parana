@@ -133,9 +133,13 @@ export class UploadsService {
 
     await this.assertAuthorized(entityType, entityId, user, { isDelete: true });
 
-    await this.safeDelete(this.urlToKey(photo.url));
+    // Reconstrói as keys via buildKey (deterministico a partir dos dados da
+    // Photo) em vez de parsear URLs - URL é detalhe do driver de storage.
+    await this.safeDelete(this.buildKey(entityType, entityId, photo.id, false));
     if (photo.thumbUrl) {
-      await this.safeDelete(this.urlToKey(photo.thumbUrl));
+      await this.safeDelete(
+        this.buildKey(entityType, entityId, photo.id, true),
+      );
     }
     await this.prisma.client.photo.delete({ where: { id } });
   }
@@ -323,9 +327,13 @@ export class UploadsService {
     });
 
     for (const old of existing) {
-      await this.safeDelete(this.urlToKey(old.url));
+      await this.safeDelete(
+        this.buildKey(ENTITY_TYPES.USER_AVATAR, userId, old.id, false),
+      );
       if (old.thumbUrl) {
-        await this.safeDelete(this.urlToKey(old.thumbUrl));
+        await this.safeDelete(
+          this.buildKey(ENTITY_TYPES.USER_AVATAR, userId, old.id, true),
+        );
       }
       await this.prisma.client.photo.delete({ where: { id: old.id } });
     }
@@ -374,14 +382,6 @@ export class UploadsService {
       this.logger.warn(`Falha ao apagar objeto ${key} do storage (ignorado).`);
       this.logger.debug(err);
     }
-  }
-
-  private urlToKey(url: string): string {
-    // URL pública: https://objectstorage.<region>.oraclecloud.com/n/<ns>/b/<bucket>/o/<key>
-    const marker = '/o/';
-    const idx = url.indexOf(marker);
-    if (idx < 0) return url;
-    return decodeURI(url.slice(idx + marker.length));
   }
 
   // ---------------- inferência e resposta ----------------
