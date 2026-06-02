@@ -2,7 +2,6 @@ import { readFileSync } from 'fs';
 import {
   Injectable,
   Logger,
-  OnModuleInit,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -34,39 +33,68 @@ const DEFAULT_RETRY: Required<RetryOptions> = {
  * O serviço propaga ServiceUnavailableException(STORAGE_UNAVAILABLE)
  * quando o retry se esgota, deixando que o SentryExceptionFilter capture
  * o erro para o GlitchTip e o cliente receba o code padronizado.
+ *
+ * **Lazy init:** o cliente OCI (incluindo a leitura do .pem) é construído
+ * sob demanda na primeira chamada de upload/delete/getSignedUrl, NÃO no
+ * boot do app. Isso permite que:
+ * - Testes e2e que mockam o StorageService não precisem de .pem em disco.
+ * - O CI execute outras suites e2e sem provisionar credenciais OCI reais.
+ * - Em produção, a falha de leitura do .pem aparece na primeira tentativa
+ *   de upload (com stack clara) em vez de quebrar o boot do app inteiro.
+ *
+ * As variáveis de ambiente OCI_* continuam sendo validadas no boot pelo
+ * Joi (env.validation.ts) - garantindo fail-fast de configuração ausente.
  */
 @Injectable()
-export class StorageService implements OnModuleInit {
+export class StorageService {
   private readonly logger = new Logger(StorageService.name);
-  private client!: ObjectStorageClient;
-  private namespace!: string;
-  private bucket!: string;
-  private region!: string;
+  private client: ObjectStorageClient | null = null;
+  private namespace: string | null = null;
+  private bucket: string | null = null;
+  private region: string | null = null;
 
   constructor(private readonly config: ConfigService) {}
 
-  onModuleInit(): void {
-    this.namespace = this.config.getOrThrow<string>(
-      'OCI_OBJECT_STORAGE_NAMESPACE',
-    );
-    this.bucket = this.config.getOrThrow<string>('OCI_BUCKET_NAME');
-    this.region = this.config.getOrThrow<string>('OCI_REGION');
+  /**
+   * Inicializa o cliente OCI e os valores de namespace/bucket/region na
+   * primeira chamada. Subsequentes reusam o cliente cacheado.
+   */
+  private getClient(): {
+    client: ObjectStorageClient;
+    namespace: string;
+    bucket: string;
+    region: string;
+  } {
+    if (!this.client || !this.namespace || !this.bucket || !this.region) {
+      this.namespace = this.config.getOrThrow<string>(
+        'OCI_OBJECT_STORAGE_NAMESPACE',
+      );
+      this.bucket = this.config.getOrThrow<string>('OCI_BUCKET_NAME');
+      this.region = this.config.getOrThrow<string>('OCI_REGION');
 
-    const provider = new common.SimpleAuthenticationDetailsProvider(
-      this.config.getOrThrow<string>('OCI_TENANCY_OCID'),
-      this.config.getOrThrow<string>('OCI_USER_OCID'),
-      this.config.getOrThrow<string>('OCI_FINGERPRINT'),
-      readFileSync(
-        this.config.getOrThrow<string>('OCI_PRIVATE_KEY_PATH'),
-        'utf8',
-      ),
-      null,
-      common.Region.fromRegionId(this.region),
-    );
+      const provider = new common.SimpleAuthenticationDetailsProvider(
+        this.config.getOrThrow<string>('OCI_TENANCY_OCID'),
+        this.config.getOrThrow<string>('OCI_USER_OCID'),
+        this.config.getOrThrow<string>('OCI_FINGERPRINT'),
+        readFileSync(
+          this.config.getOrThrow<string>('OCI_PRIVATE_KEY_PATH'),
+          'utf8',
+        ),
+        null,
+        common.Region.fromRegionId(this.region),
+      );
 
-    this.client = new ObjectStorageClient({
-      authenticationDetailsProvider: provider,
-    });
+      this.client = new ObjectStorageClient({
+        authenticationDetailsProvider: provider,
+      });
+    }
+
+    return {
+      client: this.client,
+      namespace: this.namespace,
+      bucket: this.bucket,
+      region: this.region,
+    };
   }
 
   async upload(
@@ -74,10 +102,12 @@ export class StorageService implements OnModuleInit {
     buffer: Buffer,
     contentType: string,
   ): Promise<string> {
+    const { client, namespace, bucket, region } = this.getClient();
+
     await this.withRetry(() =>
-      this.client.putObject({
-        namespaceName: this.namespace,
-        bucketName: this.bucket,
+      client.putObject({
+        namespaceName: namespace,
+        bucketName: bucket,
         objectName: key,
         putObjectBody: buffer,
         contentLength: buffer.length,
@@ -85,18 +115,20 @@ export class StorageService implements OnModuleInit {
       }),
     );
 
-    return this.buildPublicUrl(key);
+    return this.buildPublicUrl(region, namespace, bucket, key);
   }
 
   /**
    * Remove um objeto. Ambos os casos são capturados como sucesso.
    */
   async delete(key: string): Promise<void> {
+    const { client, namespace, bucket } = this.getClient();
+
     try {
       await this.withRetry(() =>
-        this.client.deleteObject({
-          namespaceName: this.namespace,
-          bucketName: this.bucket,
+        client.deleteObject({
+          namespaceName: namespace,
+          bucketName: bucket,
           objectName: key,
         }),
       );
@@ -114,10 +146,12 @@ export class StorageService implements OnModuleInit {
    * Reservado para futuros casos de acesso temporário a objetos privados.
    */
   async getSignedUrl(key: string, ttlSeconds: number): Promise<string> {
+    const { client, namespace, bucket, region } = this.getClient();
+
     const response = await this.withRetry(() =>
-      this.client.createPreauthenticatedRequest({
-        namespaceName: this.namespace,
-        bucketName: this.bucket,
+      client.createPreauthenticatedRequest({
+        namespaceName: namespace,
+        bucketName: bucket,
         createPreauthenticatedRequestDetails: {
           name: `par-${Date.now()}-${key}`,
           objectName: key,
@@ -129,12 +163,17 @@ export class StorageService implements OnModuleInit {
     );
 
     const accessUri = response.preauthenticatedRequest.accessUri;
-    return `https://objectstorage.${this.region}.oraclecloud.com${accessUri}`;
+    return `https://objectstorage.${region}.oraclecloud.com${accessUri}`;
   }
 
-  private buildPublicUrl(key: string): string {
+  private buildPublicUrl(
+    region: string,
+    namespace: string,
+    bucket: string,
+    key: string,
+  ): string {
     const encoded = encodeURI(key);
-    return `https://objectstorage.${this.region}.oraclecloud.com/n/${this.namespace}/b/${this.bucket}/o/${encoded}`;
+    return `https://objectstorage.${region}.oraclecloud.com/n/${namespace}/b/${bucket}/o/${encoded}`;
   }
 
   private async withRetry<T>(

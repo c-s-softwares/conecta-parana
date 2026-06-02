@@ -105,7 +105,6 @@ describe('StorageService', () => {
     }).compile();
 
     service = moduleRef.get(StorageService);
-    service.onModuleInit();
   });
 
   describe('upload', () => {
