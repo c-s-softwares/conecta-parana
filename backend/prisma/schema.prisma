@@ -292,7 +292,6 @@ model TicketComment {
   authorId   String   @map("author_id")
   message    String
   createdAt  DateTime @default(now()) @map("created_at")
-  isInternal Boolean  @default(false) @map("is_internal")
 
   ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   author User   @relation(fields: [authorId], references: [id], onDelete: Restrict, onUpdate: Cascade)

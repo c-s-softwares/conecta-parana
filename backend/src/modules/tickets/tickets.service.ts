@@ -4,7 +4,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { Role } from '@prisma/client';
+import { Role, Ticket } from '@prisma/client';
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 import { generateId } from '../../common/utils/ulid.util';
@@ -148,17 +148,9 @@ export class TicketsService {
     return this.getFullTicket(ticketId);
   }
 
-  async findAllForUser(userId: string): Promise<TicketResponseDto[]> {
-    const items = await this.prisma.client.ticket.findMany({
-      where: { userId },
-      orderBy: { id: 'desc' },
-      include: {
-        photos: {
-          select: { id: true },
-        },
-      },
-    });
-
+  private async mapTicketList(
+    items: (Ticket & { photos: { id: string }[] })[],
+  ): Promise<TicketResponseDto[]> {
     if (items.length === 0) return [];
 
     const ids = items.map((item) => item.id);
@@ -195,6 +187,20 @@ export class TicketsService {
     }));
   }
 
+  async findAllForUser(userId: string): Promise<TicketResponseDto[]> {
+    const items = await this.prisma.client.ticket.findMany({
+      where: { userId },
+      orderBy: { id: 'desc' },
+      include: {
+        photos: {
+          select: { id: true },
+        },
+      },
+    });
+
+    return this.mapTicketList(items);
+  }
+
   async findAllForAdmin(
     adminCityId: string | null,
   ): Promise<TicketResponseDto[]> {
@@ -208,40 +214,7 @@ export class TicketsService {
       },
     });
 
-    if (items.length === 0) return [];
-
-    const ids = items.map((item) => item.id);
-    const coords = await this.prisma.client.$queryRaw<
-      { id: string; lng: number | null; lat: number | null }[]
-    >`
-      SELECT id, ST_X(coordinates) as lng, ST_Y(coordinates) as lat
-      FROM tickets
-      WHERE id = ANY(${ids})
-    `;
-
-    const coordsMap = new Map<string, { lat: number; lng: number }>();
-    for (const row of coords) {
-      if (row.lat !== null && row.lng !== null) {
-        coordsMap.set(row.id, { lat: row.lat, lng: row.lng });
-      }
-    }
-
-    return items.map((ticket) => ({
-      id: ticket.id,
-      type: ticket.type,
-      title: ticket.title,
-      description: ticket.description,
-      status: ticket.status,
-      coordinates: coordsMap.get(ticket.id) ?? null,
-      address: ticket.address,
-      cityId: ticket.cityId,
-      userId: ticket.userId,
-      assignedToId: ticket.assignedToId,
-      createdAt: ticket.createdAt,
-      updatedAt: ticket.updatedAt,
-      resolvedAt: ticket.resolvedAt,
-      photoIds: ticket.photos.map((p) => p.id),
-    }));
+    return this.mapTicketList(items);
   }
 
   async findOne(
@@ -294,35 +267,34 @@ export class TicketsService {
     const currentStatus = ticket.status;
     const newStatus = dto.status;
 
-    if (currentStatus !== newStatus) {
-      // Transições válidas
-      const VALID_TRANSITIONS: Record<string, string[]> = {
-        aberto: ['em_análise', 'resolvido', 'fechado'],
-        em_análise: ['resolvido', 'fechado'],
-        resolvido: ['fechado', 'reaberto'],
-        fechado: ['reaberto', 'aberto'],
-        reaberto: ['em_análise', 'resolvido', 'fechado'],
-      };
+    if (currentStatus === newStatus) {
+      return this.getFullTicket(id);
+    }
 
-      const allowedTransitions = VALID_TRANSITIONS[currentStatus] ?? [];
-      if (!allowedTransitions.includes(newStatus)) {
+    // Transições válidas
+    const VALID_TRANSITIONS: Record<string, string[]> = {
+      aberto: ['em_análise', 'resolvido', 'fechado'],
+      em_análise: ['resolvido', 'fechado'],
+      resolvido: ['fechado', 'reaberto'],
+      fechado: ['reaberto'],
+      reaberto: ['em_análise', 'resolvido', 'fechado'],
+    };
+
+    const allowedTransitions = VALID_TRANSITIONS[currentStatus] ?? [];
+    if (!allowedTransitions.includes(newStatus)) {
+      throw new BadRequestException(
+        apiError(API_ERROR_CODE.INVALID_STATUS_TRANSITION),
+      );
+    }
+
+    // Aplica a regra de 7 dias para reabertura a partir do status fechado
+    if (currentStatus === 'fechado' && newStatus === 'reaberto') {
+      const timeDiff = new Date().getTime() - ticket.updatedAt.getTime();
+      const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+      if (timeDiff > sevenDaysMs) {
         throw new BadRequestException(
           apiError(API_ERROR_CODE.INVALID_STATUS_TRANSITION),
         );
-      }
-
-      // Aplica a regra de 7 dias para reabertura a partir do status fechado
-      if (
-        currentStatus === 'fechado' &&
-        (newStatus === 'reaberto' || newStatus === 'aberto')
-      ) {
-        const timeDiff = new Date().getTime() - ticket.updatedAt.getTime();
-        const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
-        if (timeDiff > sevenDaysMs) {
-          throw new BadRequestException(
-            apiError(API_ERROR_CODE.INVALID_STATUS_TRANSITION),
-          );
-        }
       }
     }
 
@@ -345,14 +317,12 @@ export class TicketsService {
       },
     });
 
-    if (currentStatus !== newStatus) {
-      // Envia notificação automática
-      await this.notificationService.create({
-        userId: ticket.userId,
-        title: 'Status do seu chamado atualizado',
-        description: `O chamado "${ticket.title}" mudou para o status ${newStatus}.`,
-      });
-    }
+    // Envia notificação automática
+    await this.notificationService.create({
+      userId: ticket.userId,
+      title: 'Status do seu chamado atualizado',
+      description: `O chamado "${ticket.title}" mudou para o status ${newStatus}.`,
+    });
 
     return this.getFullTicket(id);
   }
@@ -392,7 +362,6 @@ export class TicketsService {
         ticketId,
         authorId: userId,
         message: dto.message,
-        isInternal: dto.isInternal ?? false,
       },
     });
 
@@ -402,7 +371,6 @@ export class TicketsService {
       authorId: comment.authorId,
       message: comment.message,
       createdAt: comment.createdAt,
-      isInternal: comment.isInternal,
     };
   }
 
@@ -434,13 +402,8 @@ export class TicketsService {
       }
     }
 
-    const whereClause = {
-      ticketId,
-      ...(userRole !== Role.ADMIN && { isInternal: false }),
-    };
-
     const comments = await this.prisma.client.ticketComment.findMany({
-      where: whereClause,
+      where: { ticketId },
       orderBy: { createdAt: 'asc' },
     });
 
@@ -450,7 +413,6 @@ export class TicketsService {
       authorId: comment.authorId,
       message: comment.message,
       createdAt: comment.createdAt,
-      isInternal: comment.isInternal,
     }));
   }
 }

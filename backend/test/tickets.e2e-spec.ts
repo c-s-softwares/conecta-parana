@@ -389,7 +389,7 @@ describe('Tickets (e2e)', () => {
   });
 
   describe('Comentários (POST & GET /tickets/:id/comments)', () => {
-    it('deve permitir dono adicionar comentário público', async () => {
+    it('deve permitir dono adicionar comentário (201)', async () => {
       const response = await api()
         .post(`/tickets/${curitibaTicketId}/comments`)
         .set(auth(curitibaCitizenToken))
@@ -398,22 +398,20 @@ describe('Tickets (e2e)', () => {
 
       const body = response.body as Record<string, any>;
       expect(body.message).toBe('Estou enviando mais informações.');
-      expect(body.isInternal).toBe(false);
     });
 
-    it('deve permitir admin adicionar comentário interno', async () => {
+    it('deve permitir admin adicionar comentário (201)', async () => {
       const response = await api()
         .post(`/tickets/${curitibaTicketId}/comments`)
         .set(auth(curitibaAdminToken))
-        .send({ message: 'Equipe de manutenção despachada.', isInternal: true })
+        .send({ message: 'Equipe de manutenção despachada.' })
         .expect(201);
 
       const body = response.body as Record<string, any>;
       expect(body.message).toBe('Equipe de manutenção despachada.');
-      expect(body.isInternal).toBe(true);
     });
 
-    it('deve permitir admin ver todos os comentários incluindo internos', async () => {
+    it('deve permitir admin ver todos os comentários (200)', async () => {
       const response = await api()
         .get(`/tickets/${curitibaTicketId}/comments`)
         .set(auth(curitibaAdminToken))
@@ -421,18 +419,18 @@ describe('Tickets (e2e)', () => {
 
       const body = response.body as Record<string, any>[];
       expect(body.length).toBe(2);
-      expect(body.some((c: Record<string, any>) => c.isInternal)).toBe(true);
+      expect(body[0].message).toBe('Estou enviando mais informações.');
+      expect(body[1].message).toBe('Equipe de manutenção despachada.');
     });
 
-    it('deve ocultar comentários internos para cidadão dono', async () => {
+    it('deve permitir cidadão ver todos os comentários (200)', async () => {
       const response = await api()
         .get(`/tickets/${curitibaTicketId}/comments`)
         .set(auth(curitibaCitizenToken))
         .expect(200);
 
       const body = response.body as Record<string, any>[];
-      expect(body.length).toBe(1);
-      expect(body.some((c: Record<string, any>) => c.isInternal)).toBe(false);
+      expect(body.length).toBe(2);
     });
   });
 });

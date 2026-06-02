@@ -15,7 +15,4 @@ export class TicketCommentResponseDto {
 
   @ApiProperty({ example: '2026-05-09T13:05:00Z' })
   createdAt!: Date;
-
-  @ApiProperty({ example: false })
-  isInternal!: boolean;
 }
