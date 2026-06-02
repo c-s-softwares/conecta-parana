@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import sharp from 'sharp';
@@ -7,8 +7,8 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/config/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { TABLE_PREFIX } from '../src/common/types/ulid.types';
-import { validationPipeConfig } from '../src/config/validation-pipe.config';
 import { StorageService } from '../src/modules/storage/storage.service';
+import { buildTestApp } from './helpers/test-app';
 
 // --------------------- IDs / constantes da fixture ---------------------
 const CITY_ID = `${TABLE_PREFIX.CITY}01HZX3Y4Q9F8TAB1C2DKEYU01`;
@@ -112,13 +112,11 @@ describe('Uploads (e2e)', () => {
       .useValue(storageMock)
       .compile();
 
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe(validationPipeConfig));
+    app = await buildTestApp(moduleFixture);
 
     prisma = moduleFixture.get<PrismaService>(PrismaService);
     jwtService = moduleFixture.get<JwtService>(JwtService);
 
-    await app.init();
     await cleanupDb();
 
     await prisma.client.city.createMany({
