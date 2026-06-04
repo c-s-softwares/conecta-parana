@@ -83,6 +83,7 @@ describe('TicketsService', () => {
 
     service = module.get<TicketsService>(TicketsService);
     jest.clearAllMocks();
+    mockPrisma.client.ticketComment.findMany.mockResolvedValue([]);
   });
 
   describe('create', () => {
@@ -220,6 +221,34 @@ describe('TicketsService', () => {
         }),
       ).rejects.toThrow(ForbiddenException);
     });
+
+    it('deve retornar os detalhes do chamado incluindo os comentários associados', async () => {
+      const mockComments = [
+        {
+          id: 'tkc_1',
+          ticketId: MOCK_TICKET_ID,
+          authorId: MOCK_CITIZEN_ID,
+          message: 'Mensagem e comentário teste',
+          createdAt: new Date(),
+        },
+      ];
+      mockPrisma.client.ticket.findUnique.mockResolvedValue(MOCK_TICKET);
+      mockPrisma.client.ticketComment.findMany.mockResolvedValue(mockComments);
+      mockPrisma.client.$queryRaw.mockResolvedValue([]);
+
+      const result = await service.findOne(MOCK_TICKET_ID, {
+        sub: MOCK_CITIZEN_ID,
+        role: Role.CIDADAO,
+      });
+
+      expect(result.id).toBe(MOCK_TICKET_ID);
+      expect(result.comments).toHaveLength(1);
+      expect(result.comments[0].message).toBe('Mensagem e comentário teste');
+      expect(mockPrisma.client.ticketComment.findMany).toHaveBeenCalledWith({
+        where: { ticketId: MOCK_TICKET_ID },
+        orderBy: { createdAt: 'asc' },
+      });
+    });
   });
 
   describe('updateStatus', () => {
@@ -354,67 +383,6 @@ describe('TicketsService', () => {
 
       expect(result.message).toBe('Teste comentário');
       expect(mockPrisma.client.ticketComment.create).toHaveBeenCalled();
-    });
-
-    it('deve retornar todos os comentarios para o cidadao', async () => {
-      mockPrisma.client.ticket.findUnique.mockResolvedValue(MOCK_TICKET);
-      mockPrisma.client.ticketComment.findMany.mockResolvedValue([
-        {
-          id: 'tkc_1',
-          ticketId: MOCK_TICKET_ID,
-          authorId: MOCK_CITIZEN_ID,
-          message: 'Publico',
-          createdAt: new Date(),
-        },
-      ]);
-
-      const result = await service.findComments(
-        MOCK_TICKET_ID,
-        MOCK_CITIZEN_ID,
-        Role.CIDADAO,
-        MOCK_CITY_ID,
-      );
-
-      expect(result).toHaveLength(1);
-      expect(mockPrisma.client.ticketComment.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { ticketId: MOCK_TICKET_ID },
-        }),
-      );
-    });
-
-    it('deve retornar todos os comentarios para o admin', async () => {
-      mockPrisma.client.ticket.findUnique.mockResolvedValue(MOCK_TICKET);
-      mockPrisma.client.ticketComment.findMany.mockResolvedValue([
-        {
-          id: 'tkc_1',
-          ticketId: MOCK_TICKET_ID,
-          authorId: MOCK_CITIZEN_ID,
-          message: 'Publico',
-          createdAt: new Date(),
-        },
-        {
-          id: 'tkc_2',
-          ticketId: MOCK_TICKET_ID,
-          authorId: MOCK_ADMIN_ID,
-          message: 'Outro comentario',
-          createdAt: new Date(),
-        },
-      ]);
-
-      const result = await service.findComments(
-        MOCK_TICKET_ID,
-        MOCK_ADMIN_ID,
-        Role.ADMIN,
-        MOCK_CITY_ID,
-      );
-
-      expect(result).toHaveLength(2);
-      expect(mockPrisma.client.ticketComment.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { ticketId: MOCK_TICKET_ID },
-        }),
-      );
     });
   });
 });

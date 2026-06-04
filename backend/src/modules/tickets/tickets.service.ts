@@ -14,6 +14,7 @@ import { UpdateTicketStatusDto } from './dto/request/update-ticket-status.dto';
 import { CreateTicketCommentDto } from './dto/request/create-ticket-comment.dto';
 import { TicketResponseDto } from './dto/response/ticket-response.dto';
 import { TicketCommentResponseDto } from './dto/response/ticket-comment-response.dto';
+import { TicketDetailResponseDto } from './dto/response/ticket-detail-response.dto';
 import { NotificationService } from '../notifications/notifications.service';
 
 @Injectable()
@@ -220,7 +221,7 @@ export class TicketsService {
   async findOne(
     id: string,
     userPayload: { sub: string; role: Role; cityId?: string | null },
-  ): Promise<TicketResponseDto> {
+  ): Promise<TicketDetailResponseDto> {
     const ticket = await this.prisma.client.ticket.findUnique({
       where: { id },
     });
@@ -243,7 +244,22 @@ export class TicketsService {
       }
     }
 
-    return this.getFullTicket(id);
+    const fullTicket = await this.getFullTicket(id);
+    const comments = await this.prisma.client.ticketComment.findMany({
+      where: { ticketId: id },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return {
+      ...fullTicket,
+      comments: comments.map((comment) => ({
+        id: comment.id,
+        ticketId: comment.ticketId,
+        authorId: comment.authorId,
+        message: comment.message,
+        createdAt: comment.createdAt,
+      })),
+    };
   }
 
   async updateStatus(
@@ -372,47 +388,5 @@ export class TicketsService {
       message: comment.message,
       createdAt: comment.createdAt,
     };
-  }
-
-  async findComments(
-    ticketId: string,
-    userId: string,
-    userRole: Role,
-    userCityId: string | null,
-  ): Promise<TicketCommentResponseDto[]> {
-    const ticket = await this.prisma.client.ticket.findUnique({
-      where: { id: ticketId },
-    });
-
-    if (!ticket) {
-      throw new NotFoundException(apiError(API_ERROR_CODE.TICKET_NOT_FOUND));
-    }
-
-    if (userRole === Role.ADMIN) {
-      if (userCityId && ticket.cityId !== userCityId) {
-        throw new ForbiddenException(
-          apiError(API_ERROR_CODE.NOT_OWNER_OR_ADMIN),
-        );
-      }
-    } else {
-      if (ticket.userId !== userId) {
-        throw new ForbiddenException(
-          apiError(API_ERROR_CODE.NOT_OWNER_OR_ADMIN),
-        );
-      }
-    }
-
-    const comments = await this.prisma.client.ticketComment.findMany({
-      where: { ticketId },
-      orderBy: { createdAt: 'asc' },
-    });
-
-    return comments.map((comment) => ({
-      id: comment.id,
-      ticketId: comment.ticketId,
-      authorId: comment.authorId,
-      message: comment.message,
-      createdAt: comment.createdAt,
-    }));
   }
 }

@@ -22,6 +22,7 @@ import { UpdateTicketStatusDto } from './dto/request/update-ticket-status.dto';
 import { CreateTicketCommentDto } from './dto/request/create-ticket-comment.dto';
 import { TicketResponseDto } from './dto/response/ticket-response.dto';
 import { TicketCommentResponseDto } from './dto/response/ticket-comment-response.dto';
+import { TicketDetailResponseDto } from './dto/response/ticket-detail-response.dto';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { AdminRoute } from '../../common/decorators/admin-route.decorator';
@@ -76,7 +77,7 @@ export class TicketsController {
   @ApiResponse({
     status: 200,
     description: 'Detalhes do chamado retornados com sucesso',
-    type: TicketResponseDto,
+    type: TicketDetailResponseDto,
   })
   @ApiResponse({ status: 401, description: 'Não autenticado' })
   @ApiResponse({
@@ -87,7 +88,7 @@ export class TicketsController {
   async findOne(
     @Param('id') id: string,
     @Request() req: ExpressRequest,
-  ): Promise<TicketResponseDto> {
+  ): Promise<TicketDetailResponseDto> {
     const user = req['user'] as JwtPayload;
     return this.ticketsService.findOne(id, user);
   }
@@ -176,32 +177,6 @@ export class TicketsController {
     return this.ticketsService.addComment(
       id,
       dto,
-      user.sub,
-      user.role,
-      user.cityId ?? null,
-    );
-  }
-
-  @Get(':id/comments')
-  @ApiOperation({ summary: 'Listar comentários de um chamado' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lista de comentários retornada com sucesso',
-    type: [TicketCommentResponseDto],
-  })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Acesso negado: não é o dono ou administrador da cidade',
-  })
-  @ApiResponse({ status: 404, description: 'Chamado não encontrado' })
-  async findComments(
-    @Param('id') id: string,
-    @Request() req: ExpressRequest,
-  ): Promise<TicketCommentResponseDto[]> {
-    const user = req['user'] as JwtPayload;
-    return this.ticketsService.findComments(
-      id,
       user.sub,
       user.role,
       user.cityId ?? null,

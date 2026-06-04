@@ -411,26 +411,35 @@ describe('Tickets (e2e)', () => {
       expect(body.message).toBe('Equipe de manutenção despachada.');
     });
 
-    it('deve permitir admin ver todos os comentários (200)', async () => {
-      const response = await api()
+    it('deve retornar 404 ao tentar acessar listagem de comentários independente (GET /tickets/:id/comments)', async () => {
+      await api()
         .get(`/tickets/${curitibaTicketId}/comments`)
+        .set(auth(curitibaCitizenToken))
+        .expect(404);
+    });
+
+    it('deve permitir admin ver todos os comentários pelo detalhe do ticket (200)', async () => {
+      const response = await api()
+        .get(`/tickets/${curitibaTicketId}`)
         .set(auth(curitibaAdminToken))
         .expect(200);
 
-      const body = response.body as Record<string, any>[];
-      expect(body.length).toBe(2);
-      expect(body[0].message).toBe('Estou enviando mais informações.');
-      expect(body[1].message).toBe('Equipe de manutenção despachada.');
+      const body = response.body as { comments: { message: string }[] };
+      expect(body.comments).toBeDefined();
+      expect(body.comments.length).toBe(2);
+      expect(body.comments[0].message).toBe('Estou enviando mais informações.');
+      expect(body.comments[1].message).toBe('Equipe de manutenção despachada.');
     });
 
-    it('deve permitir cidadão ver todos os comentários (200)', async () => {
+    it('deve permitir cidadão ver todos os comentários pelo detalhe do ticket (200)', async () => {
       const response = await api()
-        .get(`/tickets/${curitibaTicketId}/comments`)
+        .get(`/tickets/${curitibaTicketId}`)
         .set(auth(curitibaCitizenToken))
         .expect(200);
 
-      const body = response.body as Record<string, any>[];
-      expect(body.length).toBe(2);
+      const body = response.body as { comments: { message: string }[] };
+      expect(body.comments).toBeDefined();
+      expect(body.comments.length).toBe(2);
     });
   });
 });
