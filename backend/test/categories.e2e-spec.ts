@@ -1,25 +1,30 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
-import { Server } from 'http';
+import { App } from 'supertest/types';
 
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/config/prisma.service';
 import { JwtService } from '@nestjs/jwt';
+import { TABLE_PREFIX } from '../src/common/types/ulid.types';
+import { validationPipeConfig } from '../src/config/validation-pipe.config';
 
 describe('Categories (e2e)', () => {
-  let app: INestApplication;
+  let app: INestApplication<App>;
   let prisma: PrismaService;
   let jwtService: JwtService;
   let superAdminToken: string;
 
-  const suffix = Date.now();
+  const cityId = `${TABLE_PREFIX.CITY}01HZX3Y4Q9F8TAB1C2DKEYC1`;
+  const categoryId = `${TABLE_PREFIX.CATEGORY}01HZX3Y4Q9F8TAB1C2DKEYC2`;
+  const localId = `${TABLE_PREFIX.LOCAL}01HZX3Y4Q9F8TAB1C2DKEYC3`;
+  const userId = `${TABLE_PREFIX.USER}01HZX3Y4Q9F8TAB1C2DKEYC4`;
 
-  const userId = `usr_category_${suffix}`;
-  const cityId = `cit_category_${suffix}`;
-  const categoryId = `cat_category_${suffix}`;
-  const localId = `loc_category_${suffix}`;
-  const email = `category-super-${suffix}@test.com`;
+  const TEST_EMAILS = ['category-super@test.com'];
+
+  const auth = (token: string) => ({
+    Authorization: `Bearer ${token}`,
+  });
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -27,24 +32,37 @@ describe('Categories (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
+    app.useGlobalPipes(new ValidationPipe(validationPipeConfig));
 
     prisma = moduleFixture.get<PrismaService>(PrismaService);
     jwtService = moduleFixture.get<JwtService>(JwtService);
 
     await app.init();
 
+    await prisma.client.local.deleteMany({
+      where: { id: localId },
+    });
+
+    await prisma.client.user.deleteMany({
+      where: {
+        email: {
+          in: TEST_EMAILS,
+        },
+      },
+    });
+
+    await prisma.client.category.deleteMany({
+      where: { id: categoryId },
+    });
+
+    await prisma.client.city.deleteMany({
+      where: { id: cityId },
+    });
+
     await prisma.client.city.create({
       data: {
         id: cityId,
-        name: `Cidade E2E ${suffix}`,
+        name: 'Cidade Category E2E',
         state: 'PR',
       },
     });
@@ -52,7 +70,7 @@ describe('Categories (e2e)', () => {
     await prisma.client.category.create({
       data: {
         id: categoryId,
-        name: `Categoria E2E ${suffix}`,
+        name: 'Categoria Category E2E',
         icon: 'medical-cross',
       },
     });
@@ -61,7 +79,7 @@ describe('Categories (e2e)', () => {
       data: {
         id: userId,
         name: 'Super Admin',
-        email,
+        email: 'category-super@test.com',
         password: 'hash',
         role: 'ADMIN',
         cityId: null,
@@ -76,6 +94,26 @@ describe('Categories (e2e)', () => {
   });
 
   afterAll(async () => {
+    await prisma.client.local.deleteMany({
+      where: { id: localId },
+    });
+
+    await prisma.client.user.deleteMany({
+      where: {
+        email: {
+          in: TEST_EMAILS,
+        },
+      },
+    });
+
+    await prisma.client.category.deleteMany({
+      where: { id: categoryId },
+    });
+
+    await prisma.client.city.deleteMany({
+      where: { id: cityId },
+    });
+
     await app.close();
   });
 
@@ -93,9 +131,9 @@ describe('Categories (e2e)', () => {
       },
     });
 
-    const response = await request(app.getHttpServer() as unknown as Server)
+    const response = await request(app.getHttpServer())
       .delete(`/categories/${categoryId}`)
-      .set('Authorization', `Bearer ${superAdminToken}`)
+      .set(auth(superAdminToken))
       .expect(409);
 
     const body = response.body as Record<string, any>;
