@@ -4,28 +4,40 @@ import 'package:conectaparana/core/auth/presentation/pages/login_screen.dart';
 import 'package:conectaparana/core/config/environment.dart';
 import 'package:conectaparana/core/router/deep_link_parser.dart';
 import 'package:conectaparana/core/router/deep_link_route.dart';
+import 'package:conectaparana/core/router/navigator_key.dart';
+import 'package:conectaparana/core/shell/main_shell.dart';
+import 'package:conectaparana/features/events/presentation/pages/events_page.dart';
+import 'package:conectaparana/features/home/presentation/pages/home_page.dart';
+import 'package:conectaparana/features/map/presentation/pages/map_page.dart';
+import 'package:conectaparana/features/profile/presentation/pages/profile_page.dart';
+import 'package:conectaparana/features/tickets/presentation/pages/tickets_page.dart';
 import 'package:conectaparana/shared/widgets/feedback/app_toast.dart';
 import 'package:conectaparana/shared/widgets/not_found_screen.dart';
 import 'package:conectaparana/shared/widgets/pages/splash_page.dart';
-import 'package:conectaparana/shared/widgets/placeholder_screen.dart';
 import 'package:conectaparana/shared/widgets/styleguide_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:conectaparana/core/router/navigator_key.dart';
 
 abstract class AppRoutes {
-  static const splash = '/';
-  static const login = '/login';
-  static const onboarding = '/onboarding';
-  static const home = '/home';
+  static const splash       = '/';
+  static const login        = '/login';
+  static const onboarding   = '/onboarding';
 
-  static const event = '/event/:id';
-  static const comunicado = '/comunicado/:id';
-  static const news = '/news/:id';
-  static const local = '/local/:id';
-  static const ticket = '/ticket/:id';
-  static const notification = '/notification/:id';
+  static const home         = '/home';
+  static const events       = '/events';
+  static const map          = '/map';
+  static const tickets      = '/tickets';
+  static const profile      = '/profile';
+
+  static const event        = '/events/:id';
+  static const comunicado   = '/home/comunicado/:id';
+  static const news         = '/home/news/:id';
+  static const local        = '/map/:id';
+  static const ticket       = '/tickets/:id';
+  static const notification = '/home/notification/:id';
+
+  static const styleguide   = '/styleguide';
 }
 
 class AppRouter {
@@ -57,7 +69,6 @@ class AppRouter {
   }
 
   final _appLinks = AppLinks();
-
   late final GoRouter router = _buildRouter();
 
   Future<void> init() async {
@@ -83,7 +94,7 @@ class AppRouter {
 
     if (deepLink == null) {
       router.go(AppRoutes.home);
-      _showSnackbar('Conteúdo não encontrado.');
+      _showErrorToast('Conteúdo não encontrado.');
       return;
     }
 
@@ -97,8 +108,8 @@ class AppRouter {
     }
   }
 
-  void _showSnackbar(String message) {
-    final context = router.routerDelegate.navigatorKey.currentContext;
+  void _showErrorToast(String message) {
+    final context = navigatorKey.currentContext;
     if (context == null) return;
     AppToast.show(context, message: message, variant: AppToastVariant.error);
   }
@@ -124,44 +135,93 @@ class AppRouter {
           builder: (context, state) => const StyleguideScreen(),
         ),
         GoRoute(
-          path: AppRoutes.home,
+          path: AppRoutes.styleguide,
           builder: (context, state) => const StyleguideScreen(),
         ),
-        GoRoute(
-          path: AppRoutes.event,
-          builder: (context, state) => PlaceholderScreen(
-            key: ValueKey('event-${state.pathParameters['id']}'),
-          ),
-        ),
-        GoRoute(
-          path: AppRoutes.comunicado,
-          builder: (context, state) => PlaceholderScreen(
-            key: ValueKey('comunicado-${state.pathParameters['id']}'),
-          ),
-        ),
-        GoRoute(
-          path: AppRoutes.news,
-          builder: (context, state) => PlaceholderScreen(
-            key: ValueKey('news-${state.pathParameters['id']}'),
-          ),
-        ),
-        GoRoute(
-          path: AppRoutes.local,
-          builder: (context, state) => PlaceholderScreen(
-            key: ValueKey('local-${state.pathParameters['id']}'),
-          ),
-        ),
-        GoRoute(
-          path: AppRoutes.ticket,
-          builder: (context, state) => PlaceholderScreen(
-            key: ValueKey('ticket-${state.pathParameters['id']}'),
-          ),
-        ),
-        GoRoute(
-          path: AppRoutes.notification,
-          builder: (context, state) => PlaceholderScreen(
-            key: ValueKey('notification-${state.pathParameters['id']}'),
-          ),
+
+        StatefulShellRoute.indexedStack(
+          builder: (context, state, navigationShell) {
+            return MainShell(navigationShell: navigationShell);
+          },
+          branches: [
+            // Inicio
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: AppRoutes.home,
+                builder: (context, state) => const HomePage(),
+                routes: [
+                  GoRoute(
+                    path: 'comunicado/:id',
+                    builder: (context, state) =>
+                        _detailPlaceholder('comunicado', state),
+                  ),
+                  GoRoute(
+                    path: 'news/:id',
+                    builder: (context, state) =>
+                        _detailPlaceholder('news', state),
+                  ),
+                  GoRoute(
+                    path: 'notification/:id',
+                    builder: (context, state) =>
+                        _detailPlaceholder('notification', state),
+                  ),
+                ],
+              ),
+            ]),
+
+            // Eventos
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: AppRoutes.events,
+                builder: (context, state) => const EventsPage(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (context, state) =>
+                        _detailPlaceholder('event', state),
+                  ),
+                ],
+              ),
+            ]),
+
+            // Mapa
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: AppRoutes.map,
+                builder: (context, state) => const MapPage(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (context, state) =>
+                        _detailPlaceholder('local', state),
+                  ),
+                ],
+              ),
+            ]),
+
+            // Tickets
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: AppRoutes.tickets,
+                builder: (context, state) => const TicketsPage(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (context, state) =>
+                        _detailPlaceholder('ticket', state),
+                  ),
+                ],
+              ),
+            ]),
+
+            // Perfil
+            StatefulShellBranch(routes: [
+              GoRoute(
+                path: AppRoutes.profile,
+                builder: (context, state) => const ProfilePage(),
+              ),
+            ]),
+          ],
         ),
       ],
     );
@@ -184,5 +244,13 @@ class AppRouter {
     }
 
     return null;
+  }
+
+  static Widget _detailPlaceholder(String type, GoRouterState state) {
+    final id = state.pathParameters['id'] ?? '';
+    return Scaffold(
+      appBar: AppBar(title: Text('$type: $id')),
+      body: Center(child: Text('Detalhe de $type — $id')),
+    );
   }
 }

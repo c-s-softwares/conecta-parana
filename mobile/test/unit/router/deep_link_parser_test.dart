@@ -6,12 +6,12 @@ void main() {
   group('DeepLinkParser', () {
     group('HTTPS scheme — tipos válidos', () {
       const validCases = [
-        ('event', 'evt_123', '/event/evt_123'),
-        ('comunicado', 'com_456', '/comunicado/com_456'),
-        ('news', 'news_789', '/news/news_789'),
-        ('local', 'loc_abc', '/local/loc_abc'),
-        ('ticket', 'tkt_def', '/ticket/tkt_def'),
-        ('notification', 'ntf_ghi', '/notification/ntf_ghi'),
+        ('event', 'evt_123', '/events/evt_123'),
+        ('comunicado', 'com_456', '/home/comunicado/com_456'),
+        ('news', 'news_789', '/home/news/news_789'),
+        ('local', 'loc_abc', '/map/loc_abc'),
+        ('ticket', 'tkt_def', '/tickets/tkt_def'),
+        ('notification', 'ntf_ghi', '/home/notification/ntf_ghi'),
       ];
 
       for (final (type, id, expectedPath) in validCases) {
@@ -75,7 +75,7 @@ void main() {
   group('DeepLinkRoute.path', () {
     test('gera path correto para event', () {
       const route = DeepLinkRoute(type: DeepLinkType.event, id: 'evt_abc');
-      expect(route.path, equals('/event/evt_abc'));
+      expect(route.path, equals('/events/evt_abc'));
     });
 
     test('gera path correto para notification', () {
@@ -83,7 +83,12 @@ void main() {
         type: DeepLinkType.notification,
         id: 'ntf_xyz',
       );
-      expect(route.path, equals('/notification/ntf_xyz'));
+      expect(route.path, equals('/home/notification/ntf_xyz'));
+    });
+
+    test('gera path correto para local', () {
+      const route = DeepLinkRoute(type: DeepLinkType.local, id: 'loc_123');
+      expect(route.path, equals('/map/loc_123'));
     });
   });
 
