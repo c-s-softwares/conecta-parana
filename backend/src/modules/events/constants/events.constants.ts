@@ -1,6 +1,6 @@
 export const VALID_EVENT_TYPES = [
   'festa',
-  'ofical',
+  'oficial',
   'esportivo',
   'cultural',
   'outros',

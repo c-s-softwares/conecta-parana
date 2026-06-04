@@ -16,11 +16,7 @@ describe('Events (e2e)', () => {
 
   let superAdminToken: string;
 
-  let cityAdminToken: string;
-
   let cityId: string;
-
-  let eventId: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({

@@ -36,6 +36,6 @@ export class QueryEventsDto extends PaginationQueryDto {
   lng?: string;
 
   @IsOptional()
-  @IsIn(['date_asc', 'date_desc', 'nearest'])
+  @IsIn(['date_asc', 'date_desc'])
   order?: string;
 }

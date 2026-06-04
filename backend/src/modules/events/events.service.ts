@@ -23,6 +23,23 @@ import { CreateEventDto } from './dto/request/create-event.dto';
 import { UpdateEventDto } from './dto/request/update-event.dto';
 import { QueryEventsDto } from './dto/request/query-events.dto';
 
+type EventEntity = {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  status: string;
+  eventDate: Date;
+
+  cityId: string;
+  userId: string;
+  localId: string | null;
+
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+};
+
 @Injectable()
 export class EventsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -119,12 +136,12 @@ export class EventsService {
   }
 
   async update(id: string, dto: UpdateEventDto, user: JwtPayload) {
-    const current = await this.prisma.client.event.findFirst({
+    const current = (await this.prisma.client.event.findFirst({
       where: {
         id,
         deletedAt: null,
       },
-    });
+    })) as EventEntity | null;
 
     if (!current) {
       throw new NotFoundException(apiError(API_ERROR_CODE.EVENT_NOT_FOUND));
@@ -141,8 +158,8 @@ export class EventsService {
       await this.validateLocalBelongsToCity(dto.localId, cityId);
     }
 
-    try {
-      const updated = await this.prisma.client.event.updateMany({
+    const updated: { count: number } =
+      await this.prisma.client.event.updateMany({
         where: {
           id,
           deletedAt: null,
@@ -151,28 +168,25 @@ export class EventsService {
             : current.updatedAt,
         },
         data: {
-          ...(dto.title && { title: dto.title }),
-          ...(dto.description && { description: dto.description }),
-          ...(dto.type && { type: dto.type }),
-          ...(dto.status && { status: dto.status }),
-          ...(dto.eventDate && { eventDate: new Date(dto.eventDate) }),
-          ...(dto.cityId && { cityId: dto.cityId }),
+          ...(dto.title !== undefined && { title: dto.title }),
+          ...(dto.description !== undefined && {
+            description: dto.description,
+          }),
+          ...(dto.type !== undefined && { type: dto.type }),
+          ...(dto.status !== undefined && { status: dto.status }),
+          ...(dto.eventDate !== undefined && {
+            eventDate: new Date(dto.eventDate),
+          }),
+          ...(dto.cityId !== undefined && { cityId: dto.cityId }),
           ...(dto.localId !== undefined && { localId: dto.localId }),
         },
       });
 
-      if (updated.count === 0) {
-        throw new ConflictException(apiError(API_ERROR_CODE.EVENT_CHANGED));
-      }
-
-      return this.findOne(id);
-    } catch (error) {
-      if (error instanceof ConflictException) {
-        throw error;
-      }
-
+    if (updated.count === 0) {
       throw new ConflictException(apiError(API_ERROR_CODE.EVENT_CHANGED));
     }
+
+    return this.findOne(id);
   }
 
   async remove(id: string, user: JwtPayload): Promise<void> {
@@ -228,10 +242,12 @@ export class EventsService {
       },
     });
 
-    if (local && local.cityId !== cityId) {
-      throw new BadRequestException(
-        apiError(API_ERROR_CODE.COORDINATES_LOCAL_MISMATCH),
-      );
+    if (!local) {
+      throw new NotFoundException(apiError(API_ERROR_CODE.LOCAL_NOT_FOUND));
+    }
+
+    if (local.cityId !== cityId) {
+      throw new ForbiddenException(apiError(API_ERROR_CODE.CITY_SCOPE_DENIED));
     }
   }
 

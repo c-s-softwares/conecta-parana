@@ -15,7 +15,7 @@ export const API_ERROR_CODE = {
   VALIDATION_FAILED: 'validation_failed',
   TOO_MANY_ATTEMPTS: 'too_many_attempts',
 
-  EVENT_NOT_FOUND: 'event_no_found',
+  EVENT_NOT_FOUND: 'event_not_found',
   EVENT_CHANGED: 'event_changed',
   EVENT_DATE_IN_PAST: 'event_date_in_past',
   INVALID_TYPE: 'invalid_type',

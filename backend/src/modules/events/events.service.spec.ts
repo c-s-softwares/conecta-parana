@@ -99,8 +99,10 @@ describe('EventsService', () => {
         categoryId: 'cat_123',
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
       const findManyArgs = mockPrisma.client.event.findMany.mock.calls[0][0];
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(findManyArgs.where).toMatchObject({
         deletedAt: null,
         cityId: MOCK_CITY_ID,
@@ -119,8 +121,10 @@ describe('EventsService', () => {
         order: 'date_asc',
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
       const findManyArgs = mockPrisma.client.event.findMany.mock.calls[0][0];
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(findManyArgs.orderBy).toEqual({
         eventDate: 'asc',
       });
@@ -136,8 +140,10 @@ describe('EventsService', () => {
         order: 'date_desc',
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
       const findManyArgs = mockPrisma.client.event.findMany.mock.calls[0][0];
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(findManyArgs.orderBy).toEqual({
         eventDate: 'desc',
       });
@@ -155,12 +161,29 @@ describe('EventsService', () => {
       expect(mockPrisma.client.event.findFirst).toHaveBeenCalled();
     });
 
-    it('deve lançar NotFoundException quando evento não existir', async () => {
-      mockPrisma.client.event.findFirst.mockResolvedValue(null);
+    it('deve lançar ConflictException quando updatedAt for diferente', async () => {
+      mockPrisma.client.event.findFirst.mockResolvedValue({
+        ...MOCK_EVENT,
+        updatedAt: new Date('2026-01-01T00:00:00Z'),
+      });
 
-      await expect(service.findOne(MOCK_EVENT_ID)).rejects.toThrow(
-        NotFoundException,
-      );
+      mockPrisma.client.event.updateMany.mockResolvedValue({
+        count: 0,
+      });
+
+      await expect(
+        service.update(
+          MOCK_EVENT_ID,
+          {
+            title: 'Novo título',
+            updatedAt: '2026-05-30T13:25:59.172Z',
+          },
+          {
+            sub: 'usr_123',
+            role: 'ADMIN',
+          } as never,
+        ),
+      ).rejects.toThrow(ConflictException);
     });
   });
 
