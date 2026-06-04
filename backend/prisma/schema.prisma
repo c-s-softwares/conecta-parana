@@ -266,7 +266,7 @@ model Ticket {
   type         String                               // acidente, sinalização, iluminação, lixo, outros
   title        String
   description  String
-  status       String                               @default("aberto") // aberto, em_análise, resolvido, fechado, reaberto
+  status       String                               @default("aberto") // aberto, em_analise, resolvido, fechado, reaberto
   coordinates  Unsupported("geometry(Point, 4326)")?
   address      String?
   cityId       String                               @map("city_id")

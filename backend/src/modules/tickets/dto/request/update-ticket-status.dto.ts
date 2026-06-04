@@ -3,13 +3,13 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateTicketStatusDto {
   @ApiProperty({
-    example: 'em_análise',
+    example: 'em_analise',
     description: 'Novo status do chamado',
-    enum: ['aberto', 'em_análise', 'resolvido', 'fechado', 'reaberto'],
+    enum: ['aberto', 'em_analise', 'resolvido', 'fechado', 'reaberto'],
   })
   @IsNotEmpty({ message: 'O status é obrigatório' })
   @IsString({ message: 'O status deve ser uma string' })
-  @IsIn(['aberto', 'em_análise', 'resolvido', 'fechado', 'reaberto'], {
+  @IsIn(['aberto', 'em_analise', 'resolvido', 'fechado', 'reaberto'], {
     message: 'Status inválido',
   })
   status!: string;

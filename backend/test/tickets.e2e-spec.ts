@@ -353,7 +353,7 @@ describe('Tickets (e2e)', () => {
       await api()
         .put(`/tickets/${curitibaTicketId}/status`)
         .set(auth(curitibaCitizenToken))
-        .send({ status: 'em_análise' })
+        .send({ status: 'em_analise' })
         .expect(403);
     });
 
@@ -361,11 +361,11 @@ describe('Tickets (e2e)', () => {
       const response = await api()
         .put(`/tickets/${curitibaTicketId}/status`)
         .set(auth(curitibaAdminToken))
-        .send({ status: 'em_análise', assignedToId: curitibaAdminId })
+        .send({ status: 'em_analise', assignedToId: curitibaAdminId })
         .expect(200);
 
       const body = response.body as Record<string, any>;
-      expect(body.status).toBe('em_análise');
+      expect(body.status).toBe('em_analise');
       expect(body.assignedToId).toBe(curitibaAdminId);
 
       // Verifica se a notificação foi criada no banco de dados
@@ -380,7 +380,7 @@ describe('Tickets (e2e)', () => {
       const response = await api()
         .put(`/tickets/${curitibaTicketId}/status`)
         .set(auth(curitibaAdminToken))
-        .send({ status: 'reaberto' }) // Reaberto não é permitido a partir do status em_análise
+        .send({ status: 'reaberto' }) // Reaberto não é permitido a partir do status em_analise
         .expect(400);
 
       const body = response.body as Record<string, any>;

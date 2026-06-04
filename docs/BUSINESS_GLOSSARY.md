@@ -91,11 +91,11 @@ Cada termo deve seguir esta estrutura:
   - O ticket inicia no estado `aberto`.
   - Apenas usuários com perfil **Admin** da cidade do ticket podem alterar seu status através do endpoint `PUT /tickets/:id/status`.
   - **Matriz de Transição Permitida:**
-    - `aberto` &rarr; `em_análise`, `resolvido`, `fechado`
-    - `em_análise` &rarr; `resolvido`, `fechado`
+    - `aberto` &rarr; `em_analise`, `resolvido`, `fechado`
+    - `em_analise` &rarr; `resolvido`, `fechado`
     - `resolvido` &rarr; `fechado`, `reaberto`
     - `fechado` &rarr; `reaberto`, `aberto` (Apenas se a reabertura for realizada dentro de no máximo **7 dias** desde o fechamento/última atualização do ticket. Após este período, a transição é bloqueada permanentemente).
-    - `reaberto` &rarr; `em_análise`, `resolvido`, `fechado`
+    - `reaberto` &rarr; `em_analise`, `resolvido`, `fechado`
   - Sempre que o status de um chamado muda, o cidadão autor recebe uma notificação instantânea. Ao atingir o status `resolvido`, a data de resolução (`resolvedAt`) é preenchida automaticamente.
 - **Histórico de Interação (Comentários de Via Dupla):** Enquanto a **Sugestão** possui apenas uma resposta unidirecional (de mão única) do administrador gravada no campo `response`, o **Ticket** suporta uma comunicação contínua de via dupla. Cidadãos e administradores podem enviar comentários (`TicketComment`) sucessivos, permitindo reproduzir um histórico completo de conversas (histórico do chamado) até a sua efetiva resolução. Comentários internos marcados como `isInternal: true` permanecem visíveis apenas para os administradores.
 

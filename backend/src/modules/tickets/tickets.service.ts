@@ -273,11 +273,11 @@ export class TicketsService {
 
     // Transições válidas
     const VALID_TRANSITIONS: Record<string, string[]> = {
-      aberto: ['em_análise', 'resolvido', 'fechado'],
-      em_análise: ['resolvido', 'fechado'],
+      aberto: ['em_analise', 'resolvido', 'fechado'],
+      em_analise: ['resolvido', 'fechado'],
       resolvido: ['fechado', 'reaberto'],
       fechado: ['reaberto'],
-      reaberto: ['em_análise', 'resolvido', 'fechado'],
+      reaberto: ['em_analise', 'resolvido', 'fechado'],
     };
 
     const allowedTransitions = VALID_TRANSITIONS[currentStatus] ?? [];
@@ -301,7 +301,7 @@ export class TicketsService {
     const resolvedAt =
       newStatus === 'resolvido'
         ? new Date()
-        : ['aberto', 'reaberto', 'em_análise'].includes(newStatus)
+        : ['aberto', 'reaberto', 'em_analise'].includes(newStatus)
           ? null
           : ticket.resolvedAt;
 
