@@ -9,6 +9,7 @@ import { AppModule } from './app.module';
 import { ForbiddenException, ValidationPipe } from '@nestjs/common';
 import { SentryExceptionFilter } from './common/sentry-exception.filter';
 import { JsonParseExceptionFilter } from './common/filters/json-parse-exception.filter';
+import { MulterExceptionFilter } from './common/filters/multer-exception.filter';
 import { validationPipeConfig } from './config/validation-pipe.config';
 import { getLocalStorageDir } from './modules/storage/local-storage.service';
 
@@ -53,12 +54,14 @@ async function bootstrap(): Promise<void> {
 
   // Filters globais:
   // - JsonParseExceptionFilter: transforma BadRequest do body-parser em { code, message }.
+  // - MulterExceptionFilter: transforma erros do multer (LIMIT_FILE_SIZE etc) em { code, message }.
   // - SentryExceptionFilter: captura 5xx e crashes inesperados no GlitchTip.
   // Mais específicos primeiro - o Nest aplica o mais específico para o tipo da exceção.
   const { httpAdapter } = app.get(HttpAdapterHost);
   app.useGlobalFilters(
     new SentryExceptionFilter(httpAdapter),
     new JsonParseExceptionFilter(),
+    new MulterExceptionFilter(),
   );
 
   app.useGlobalPipes(new ValidationPipe(validationPipeConfig));

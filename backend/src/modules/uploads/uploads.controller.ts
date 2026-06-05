@@ -5,9 +5,7 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
-  MaxFileSizeValidator,
   Param,
-  ParseFilePipe,
   Post,
   Request,
   UploadedFile,
@@ -74,7 +72,7 @@ export class UploadsController {
   @ApiResponse({
     status: 400,
     description:
-      'invalid_file_type | file_too_large | invalid_entity_type | entity_id_required | entity_not_found | photo_limit_reached',
+      'invalid_file_type | file_too_large | file_required | invalid_entity_type | entity_id_required | entity_not_found | photo_limit_reached',
   })
   @ApiResponse({ status: 401, description: 'unauthenticated' })
   @ApiResponse({
@@ -103,20 +101,13 @@ export class UploadsController {
     }),
   )
   upload(
-    @UploadedFile(
-      new ParseFilePipe({
-        fileIsRequired: true,
-        validators: [
-          new MaxFileSizeValidator({ maxSize: MAX_FILE_SIZE_BYTES }),
-        ],
-        exceptionFactory: () =>
-          new BadRequestException(apiError(UPLOADS_ERRORS.FILE_TOO_LARGE)),
-      }),
-    )
-    file: Express.Multer.File,
+    @UploadedFile() file: Express.Multer.File | undefined,
     @Body() dto: UploadPhotoDto,
     @Request() req: ExpressRequest,
   ): Promise<PhotoResponseDto> {
+    if (!file) {
+      throw new BadRequestException(apiError(UPLOADS_ERRORS.FILE_REQUIRED));
+    }
     const user = req['user'] as JwtPayload;
     return this.uploadsService.upload(file, dto, user);
   }
