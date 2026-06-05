@@ -1,37 +1,40 @@
-import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  PayloadTooLargeException,
+} from '@nestjs/common';
 import type { Response } from 'express';
-import { MulterError } from 'multer';
 import { apiError } from '../errors/api-error';
 import { UPLOADS_ERRORS } from '../../modules/uploads/uploads.errors';
 
 /**
- * Captura erros do multer (LIMIT_FILE_SIZE, LIMIT_FILE_COUNT, etc.) e
- * converte para o formato padrão `{ code, message }` da API.
+ * Converte 413 Payload Too Large originados do multer em 400 + `file_too_large`,
+ * mantendo o formato `{ code, message }` da API.
  *
- * Sem este filter, o NestJS converte automaticamente o `MulterError` em
- * 413 Payload Too Large com o body default (`{ statusCode, message, error }`),
- * sem o campo `code` esperado pelos clientes -- inconsistente com o restante
- * da API.
+ * Importante: o `@nestjs/platform-express` intercepta o `MulterError`
+ * (`LIMIT_FILE_SIZE`) e o converte em `PayloadTooLargeException` antes do
+ * filter chain. Por isso este filter captura `PayloadTooLargeException` e
+ * não `MulterError` -- o `MulterError` nunca chega aqui.
  *
- * Hoje o único limite configurado no multer é o `fileSize` em
- * `UploadsController`. Para outros codes do multer (defesa contra
- * configurações futuras), respondemos com um code genérico de upload e a
- * mensagem original para não mascarar a causa.
+ * Discriminação: a mensagem 'File too large' é a constante usada pelo
+ * `@nestjs/platform-express` (`multer.constants.ts`) ao converter o erro
+ * do multer. Outros possíveis `PayloadTooLargeException` (ex: limit do
+ * body-parser para JSON) não devem virar `file_too_large` -- nesses casos
+ * mantemos o 413 mas adicionamos um `code` para o cliente.
  */
-@Catch(MulterError)
+@Catch(PayloadTooLargeException)
 export class MulterExceptionFilter implements ExceptionFilter {
-  catch(exception: MulterError, host: ArgumentsHost): void {
+  catch(exception: PayloadTooLargeException, host: ArgumentsHost): void {
     const response = host.switchToHttp().getResponse<Response>();
 
-    if (exception.code === 'LIMIT_FILE_SIZE') {
+    if (exception.message === 'File too large') {
       response.status(400).json(apiError(UPLOADS_ERRORS.FILE_TOO_LARGE));
       return;
     }
 
-    // MulterError não esperado na configuração atual. Mantemos 400 com a
-    // mensagem original para que o cliente não receba 413/500 sem contexto.
-    response.status(400).json({
-      code: 'upload_error',
+    response.status(413).json({
+      code: 'payload_too_large',
       message: exception.message,
     });
   }
