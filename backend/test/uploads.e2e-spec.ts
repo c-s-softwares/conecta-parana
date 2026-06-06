@@ -78,6 +78,7 @@ describe('Uploads (e2e)', () => {
         ],
       },
     });
+    await prisma.client.ticket.deleteMany({ where: { id: TICKET_ID } });
     await prisma.client.event.deleteMany({ where: { id: EVENT_ID } });
     await prisma.client.user.deleteMany({
       where: { email: { in: TEST_EMAILS } },
@@ -158,6 +159,18 @@ describe('Uploads (e2e)', () => {
         eventDate: new Date('2026-12-01T00:00:00Z'),
         cityId: CITY_ID,
         userId: admin.id,
+      },
+    });
+
+    await prisma.client.ticket.create({
+      data: {
+        id: TICKET_ID,
+        title: 'Ticket Uploads E2E',
+        description: 'Descrição',
+        type: 'iluminação',
+        status: 'aberto',
+        cityId: CITY_ID,
+        userId: cidadao.id,
       },
     });
 

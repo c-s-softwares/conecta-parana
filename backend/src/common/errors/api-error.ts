@@ -27,6 +27,7 @@ export const VALIDATION_FAILED = 'validation_failed';
  *
  * Codes não registrados lançam erro em runtime - registre-os via `defineErrors`.
  */
+
 export function apiError(
   code: typeof ROLE_DENIED,
   roles: string[],
