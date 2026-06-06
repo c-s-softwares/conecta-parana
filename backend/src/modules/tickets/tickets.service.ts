@@ -8,7 +8,9 @@ import { Role, Ticket } from '@prisma/client';
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 import { generateId } from '../../common/utils/ulid.util';
-import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
+import { apiError } from '../../common/errors/api-error';
+import { SHARED_ERRORS } from '../../common/errors/shared-errors';
+import { TICKET_ERRORS } from './tickets.errors';
 import { CreateTicketDto } from './dto/request/create-ticket.dto';
 import { UpdateTicketStatusDto } from './dto/request/update-ticket-status.dto';
 import { CreateTicketCommentDto } from './dto/request/create-ticket-comment.dto';
@@ -35,7 +37,7 @@ export class TicketsService {
     });
 
     if (!ticket) {
-      throw new NotFoundException(apiError(API_ERROR_CODE.TICKET_NOT_FOUND));
+      throw new NotFoundException(apiError(TICKET_ERRORS.TICKET_NOT_FOUND));
     }
 
     const coords = await this.prisma.client.$queryRaw<
@@ -86,7 +88,7 @@ export class TicketsService {
     });
 
     if (!user || !user.cityId) {
-      throw new BadRequestException(apiError(API_ERROR_CODE.USER_WITHOUT_CITY));
+      throw new BadRequestException(apiError(TICKET_ERRORS.USER_WITHOUT_CITY));
     }
 
     const allowedTypes = [
@@ -97,7 +99,7 @@ export class TicketsService {
       'outros',
     ];
     if (!allowedTypes.includes(dto.type)) {
-      throw new BadRequestException(apiError(API_ERROR_CODE.INVALID_TYPE));
+      throw new BadRequestException(apiError(TICKET_ERRORS.INVALID_TYPE));
     }
 
     // Verifica a existência e propriedade das fotos
@@ -107,12 +109,12 @@ export class TicketsService {
       });
 
       if (photos.length !== dto.photoIds.length) {
-        throw new BadRequestException(apiError(API_ERROR_CODE.PHOTO_NOT_FOUND));
+        throw new BadRequestException(apiError(TICKET_ERRORS.PHOTO_NOT_FOUND));
       }
 
       const notOwned = photos.some((p) => p.userId !== userId);
       if (notOwned) {
-        throw new BadRequestException(apiError(API_ERROR_CODE.PHOTO_NOT_FOUND));
+        throw new BadRequestException(apiError(TICKET_ERRORS.PHOTO_NOT_FOUND));
       }
     }
 
@@ -227,19 +229,19 @@ export class TicketsService {
     });
 
     if (!ticket) {
-      throw new NotFoundException(apiError(API_ERROR_CODE.TICKET_NOT_FOUND));
+      throw new NotFoundException(apiError(TICKET_ERRORS.TICKET_NOT_FOUND));
     }
 
     if (userPayload.role === Role.ADMIN) {
       if (userPayload.cityId && ticket.cityId !== userPayload.cityId) {
         throw new ForbiddenException(
-          apiError(API_ERROR_CODE.NOT_OWNER_OR_ADMIN),
+          apiError(SHARED_ERRORS.NOT_OWNER_OR_ADMIN),
         );
       }
     } else {
       if (ticket.userId !== userPayload.sub) {
         throw new ForbiddenException(
-          apiError(API_ERROR_CODE.NOT_OWNER_OR_ADMIN),
+          apiError(SHARED_ERRORS.NOT_OWNER_OR_ADMIN),
         );
       }
     }
@@ -273,11 +275,11 @@ export class TicketsService {
     });
 
     if (!ticket) {
-      throw new NotFoundException(apiError(API_ERROR_CODE.TICKET_NOT_FOUND));
+      throw new NotFoundException(apiError(TICKET_ERRORS.TICKET_NOT_FOUND));
     }
 
     if (adminCityId && ticket.cityId !== adminCityId) {
-      throw new ForbiddenException(apiError(API_ERROR_CODE.NOT_OWNER_OR_ADMIN));
+      throw new ForbiddenException(apiError(SHARED_ERRORS.NOT_OWNER_OR_ADMIN));
     }
 
     const currentStatus = ticket.status;
@@ -299,7 +301,7 @@ export class TicketsService {
     const allowedTransitions = VALID_TRANSITIONS[currentStatus] ?? [];
     if (!allowedTransitions.includes(newStatus)) {
       throw new BadRequestException(
-        apiError(API_ERROR_CODE.INVALID_STATUS_TRANSITION),
+        apiError(TICKET_ERRORS.INVALID_STATUS_TRANSITION),
       );
     }
 
@@ -309,7 +311,7 @@ export class TicketsService {
       const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
       if (timeDiff > sevenDaysMs) {
         throw new BadRequestException(
-          apiError(API_ERROR_CODE.INVALID_STATUS_TRANSITION),
+          apiError(TICKET_ERRORS.INVALID_STATUS_TRANSITION),
         );
       }
     }
@@ -355,19 +357,19 @@ export class TicketsService {
     });
 
     if (!ticket) {
-      throw new NotFoundException(apiError(API_ERROR_CODE.TICKET_NOT_FOUND));
+      throw new NotFoundException(apiError(TICKET_ERRORS.TICKET_NOT_FOUND));
     }
 
     if (userRole === Role.ADMIN) {
       if (userCityId && ticket.cityId !== userCityId) {
         throw new ForbiddenException(
-          apiError(API_ERROR_CODE.NOT_OWNER_OR_ADMIN),
+          apiError(SHARED_ERRORS.NOT_OWNER_OR_ADMIN),
         );
       }
     } else {
       if (ticket.userId !== userId) {
         throw new ForbiddenException(
-          apiError(API_ERROR_CODE.NOT_OWNER_OR_ADMIN),
+          apiError(SHARED_ERRORS.NOT_OWNER_OR_ADMIN),
         );
       }
     }
