@@ -5,14 +5,17 @@ import 'widgets/step_2_code.dart';
 import 'widgets/step_3_new_password.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
-  const ForgotPasswordPage({super.key});
+  final ForgotPasswordController? controller;
+
+  const ForgotPasswordPage({super.key, this.controller});
 
   @override
   State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
 }
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
-  final ForgotPasswordController _controller = ForgotPasswordController();
+  late final ForgotPasswordController _controller =
+      widget.controller ?? ForgotPasswordController();
 
   static const Color _backgroundColor = Color(0xFFFAFCFA);
 
