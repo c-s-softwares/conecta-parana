@@ -219,7 +219,7 @@ describe('Tickets (e2e)', () => {
         .expect(400);
 
       const body = response.body as Record<string, any>;
-      expect(body.code).toBe('user_without_city');
+      expect(body.code).toBe('ticket_user_without_city');
     });
 
     it('deve rejeitar tipo inválido/fora da lista (400)', async () => {
@@ -234,7 +234,7 @@ describe('Tickets (e2e)', () => {
         .expect(400);
 
       const body = response.body as Record<string, any>;
-      expect(body.code).toBe('invalid_type');
+      expect(body.code).toBe('ticket_invalid_type');
     });
 
     it('deve criar chamado com sucesso para cidadão com cidade (201)', async () => {
@@ -384,7 +384,7 @@ describe('Tickets (e2e)', () => {
         .expect(400);
 
       const body = response.body as Record<string, any>;
-      expect(body.code).toBe('invalid_status_transition');
+      expect(body.code).toBe('ticket_invalid_status_transition');
     });
   });
 
