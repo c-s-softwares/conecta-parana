@@ -1,6 +1,13 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'data/forgot_password_repository.dart';
 
 class ForgotPasswordController extends ChangeNotifier {
+  final ForgotPasswordRepository _repository;
+
+  ForgotPasswordController({ForgotPasswordRepository? repository})
+    : _repository = repository ?? ForgotPasswordRepository();
+
   final PageController pageController = PageController();
   int currentStep = 0;
 
@@ -11,6 +18,11 @@ class ForgotPasswordController extends ChangeNotifier {
 
   bool isPasswordVisible = false;
   bool isConfirmPasswordVisible = false;
+
+  bool isLoading = false;
+  String? errorMessage;
+  bool weakPasswordError = false;
+  int resendCooldown = 0;
 
   void togglePasswordVisibility() {
     isPasswordVisible = !isPasswordVisible;
@@ -37,6 +49,7 @@ class ForgotPasswordController extends ChangeNotifier {
   String get newPassword => _newPassword;
   set newPassword(String value) {
     _newPassword = value;
+    weakPasswordError = false;
     notifyListeners();
   }
 
@@ -44,21 +57,6 @@ class ForgotPasswordController extends ChangeNotifier {
   set confirmPassword(String value) {
     _confirmPassword = value;
     notifyListeners();
-  }
-
-  bool isLoading = false;
-  String? errorMessage;
-  int resendCooldown = 0;
-
-  Future<void> startCooldown() async {
-    resendCooldown = 60;
-    notifyListeners();
-
-    while (resendCooldown > 0) {
-      await Future.delayed(const Duration(seconds: 1));
-      resendCooldown--;
-      notifyListeners();
-    }
   }
 
   bool get isEmailValid =>
@@ -99,38 +97,41 @@ class ForgotPasswordController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> submitEmail() async {
-    if (!isEmailValid) return;
-    isLoading = true;
-    errorMessage = null;
+  Future<void> startCooldown() async {
+    resendCooldown = 60;
     notifyListeners();
 
-    await Future.delayed(const Duration(seconds: 1));
-    isLoading = false;
-
-    if (email == 'error@teste.com') {
-      errorMessage = 'Aguarde antes de tentar novamente.';
-      startCooldown();
+    while (resendCooldown > 0) {
+      await Future.delayed(const Duration(seconds: 1));
+      resendCooldown--;
       notifyListeners();
-      return;
     }
-    nextStep();
   }
 
-  Future<void> verifyCode() async {
-    if (code.length < 6) return;
+  Future<bool> submitEmail() async {
+    if (!isEmailValid) return false;
     isLoading = true;
     errorMessage = null;
     notifyListeners();
 
-    await Future.delayed(const Duration(seconds: 1));
-    isLoading = false;
-
-    if (code == '000000') {
-      errorMessage = 'Código inválido. Solicite um novo.';
+    try {
+      await _repository.forgotPassword(email: email);
+      isLoading = false;
+      nextStep();
+      return true;
+    } on DioException catch (e) {
+      isLoading = false;
+      if (e.response?.statusCode == 429) {
+        startCooldown();
+      }
       notifyListeners();
-      return;
+      return false;
     }
+  }
+
+  void verifyCode() {
+    if (code.length < 6) return;
+    errorMessage = null;
     nextStep();
   }
 
@@ -138,13 +139,34 @@ class ForgotPasswordController extends ChangeNotifier {
     if (!isPasswordValid || !passwordsMatch) return false;
     isLoading = true;
     errorMessage = null;
+    weakPasswordError = false;
     notifyListeners();
 
-    await Future.delayed(const Duration(seconds: 1));
-    isLoading = false;
-    notifyListeners();
+    try {
+      await _repository.resetPassword(
+        email: email,
+        code: code,
+        newPassword: newPassword,
+      );
+      isLoading = false;
+      notifyListeners();
+      return true;
+    } on ForgotPasswordException catch (e) {
+      isLoading = false;
 
-    return true;
+      if (e.type == ForgotPasswordError.invalidOrExpiredCode) {
+        currentStep = 1;
+        errorMessage = 'Código inválido. Solicite um novo.';
+        _animateToCurrentStep();
+      } else if (e.type == ForgotPasswordError.weakPassword) {
+        weakPasswordError = true;
+        notifyListeners();
+      } else {
+        notifyListeners();
+      }
+
+      return false;
+    }
   }
 
   @override

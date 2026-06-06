@@ -16,7 +16,9 @@ class Step1Email extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool canSubmit = controller.isEmailValid && !controller.isLoading;
+    final bool canSubmit = controller.isEmailValid &&
+        !controller.isLoading &&
+        controller.resendCooldown == 0;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
@@ -126,9 +128,9 @@ class Step1Email extends StatelessWidget {
               ),
               onPressed: canSubmit
                   ? () async {
-                      await controller.submitEmail();
+                      final success = await controller.submitEmail();
 
-                      if (context.mounted && controller.errorMessage == null) {
+                      if (success && context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(
@@ -139,7 +141,7 @@ class Step1Email extends StatelessWidget {
                       }
                     }
                   : null,
-              child: controller.isLoading
+             child: controller.isLoading
                   ? const SizedBox(
                       height: 22,
                       width: 22,
@@ -148,10 +150,21 @@ class Step1Email extends StatelessWidget {
                         color: Colors.white,
                       ),
                     )
+                  : controller.resendCooldown > 0
+                  ? Text(
+                      'Aguarde ${controller.resendCooldown}s',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    )
                   : const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.arrow_forward_rounded, size: 22),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 22,
+                        ),
                         SizedBox(width: 10),
                         Text(
                           'Enviar código',

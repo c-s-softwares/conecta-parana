@@ -61,6 +61,9 @@ class Step3NewPassword extends StatelessWidget {
                   color: const Color(0xFF006B2D),
                 ),
               ),
+              errorText: controller.weakPasswordError
+                  ? 'Senha muito fraca. Tente uma mais forte.'
+                  : null,
             ),
 
             onChanged: (value) => controller.newPassword = value,
