@@ -16,6 +16,7 @@ import { LocalsModule } from './modules/locals/locals.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { SuggestionsModule } from './modules/suggestions/suggestions.module';
 import { TicketsModule } from './modules/tickets/tickets.module';
+import { UploadsModule } from './modules/uploads/uploads.module';
 import { HttpCacheInterceptor } from './common/interceptors/http-cache.interceptor';
 import { PinoLoggerModule } from './config/logger.module';
 
@@ -46,6 +47,7 @@ import { PinoLoggerModule } from './config/logger.module';
     NotificationsModule,
     SuggestionsModule,
     TicketsModule,
+    UploadsModule,
     RedisCacheModule,
   ],
   controllers: [AppController],

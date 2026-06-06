@@ -8,7 +8,8 @@ import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { API_ERROR_CODE, apiError } from '../errors/api-error';
+import { apiError } from '../errors/api-error';
+import { SHARED_ERRORS } from '../errors/shared-errors';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 @Injectable()
@@ -33,7 +34,7 @@ export class JwtAuthGuard implements CanActivate {
     const token = this.extractToken(request);
 
     if (!token) {
-      throw new UnauthorizedException(apiError(API_ERROR_CODE.UNAUTHENTICATED));
+      throw new UnauthorizedException(apiError(SHARED_ERRORS.UNAUTHENTICATED));
     }
 
     try {
@@ -44,7 +45,7 @@ export class JwtAuthGuard implements CanActivate {
       });
       (request as Request & { user: Record<string, unknown> }).user = payload;
     } catch {
-      throw new UnauthorizedException(apiError(API_ERROR_CODE.UNAUTHENTICATED));
+      throw new UnauthorizedException(apiError(SHARED_ERRORS.UNAUTHENTICATED));
     }
 
     return true;

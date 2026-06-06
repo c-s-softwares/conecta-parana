@@ -45,6 +45,8 @@ services:
       REDIS_URL: redis://redis:6379
       NODE_ENV: staging
       PORT: 3000
+    volumes:
+      - /opt/conecta-parana/secrets/oci_api_key.pem:/app/.secrets/oci_api_key.pem:ro
     depends_on:
       db:
         condition: service_healthy

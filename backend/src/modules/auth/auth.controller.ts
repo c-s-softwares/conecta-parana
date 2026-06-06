@@ -27,15 +27,11 @@ export class AuthController {
   @ApiResponse({
     status: 400,
     description:
-      'Erro de validação (validation_failed): "Formato de id inválido" ou "O campo de ID da cidade é obrigatório"',
+      'Erro de validação (validation_failed) OU falha genérica de registro (registration_failed)',
   })
   @ApiResponse({
     status: 404,
     description: 'Cidade não encontrada (city_not_found)',
-  })
-  @ApiResponse({
-    status: 409,
-    description: 'Email já cadastrado (email_exists)',
   })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
