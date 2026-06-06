@@ -108,7 +108,7 @@ class _Step2CodeState extends State<Step2Code> {
             onPressed: widget.controller.resendCooldown > 0
                 ? null
                 : () async {
-                    await widget.controller.submitEmail();
+                    await widget.controller.resendCode();
                   },
             child: Text(
               widget.controller.resendCooldown > 0

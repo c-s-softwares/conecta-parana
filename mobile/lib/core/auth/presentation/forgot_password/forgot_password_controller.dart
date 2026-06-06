@@ -129,6 +129,22 @@ class ForgotPasswordController extends ChangeNotifier {
     }
   }
 
+  Future<void> resendCode() async {
+    if (resendCooldown > 0) return;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _repository.forgotPassword(email: email);
+      startCooldown();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        startCooldown();
+      }
+      notifyListeners();
+    }
+  }
+
   void verifyCode() {
     if (code.length < 6) return;
     errorMessage = null;
@@ -155,7 +171,7 @@ class ForgotPasswordController extends ChangeNotifier {
       isLoading = false;
 
       if (e.type == ForgotPasswordError.invalidOrExpiredCode) {
-        currentStep = 1;
+        currentStep = 1; 
         errorMessage = 'Código inválido. Solicite um novo.';
         _animateToCurrentStep();
       } else if (e.type == ForgotPasswordError.weakPassword) {
