@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:conectaparana/core/router/app_router.dart';
 import '../forgot_password_controller.dart';
 
 class Step3NewPassword extends StatelessWidget {
@@ -253,7 +255,7 @@ class Step3NewPassword extends StatelessWidget {
                           content: Text('Senha alterada com sucesso!'),
                         ),
                       );
-                      Navigator.of(context).pop();
+                      context.go(AppRoutes.login);
                     }
                   }
                 : null,
