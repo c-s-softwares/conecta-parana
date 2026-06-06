@@ -75,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
           accessToken: fakeAccessToken,
           refreshToken: fakeRefreshToken,
         );
-      } 
+      }
 
       if (mounted) {
         final pending = AppRouter.instance.consumePendingDeepLink();
@@ -251,7 +251,10 @@ class _LoginScreenState extends State<LoginScreen> {
             width: double.infinity,
             height: 52,
             child: ElevatedButton(
-              onPressed: _isLoading || _emailError != null || _passwordError != null ? null : _login,
+              onPressed:
+                  _isLoading || _emailError != null || _passwordError != null
+                  ? null
+                  : _login,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF006733),
                 foregroundColor: Colors.white,
@@ -280,7 +283,9 @@ class _LoginScreenState extends State<LoginScreen> {
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: () {},
+              onPressed: () {
+                context.push(AppRoutes.forgotPassword);
+              },
               child: const Text(
                 'Esqueceu a senha?',
                 style: TextStyle(
