@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../forgot_password_controller.dart';
 
 class Step2Code extends StatefulWidget {
@@ -38,21 +39,27 @@ class _Step2CodeState extends State<Step2Code> {
 
   void _onChanged(String value, int index) {
     if (value.length > 1) {
-      final chars = value.split('');
-      for (int i = 0; i < chars.length && i < 6; i++) {
-        _controllers[i].text = chars[i];
+      final digits = value.replaceAll(RegExp(r'\D'), '').split('');
+      for (int i = 0; i < 6; i++) {
+        _controllers[i].text = i < digits.length ? digits[i] : '';
       }
-      widget.controller.code = _controllers.map((c) => c.text).join();
-      setState(() {});
+
+      final next = digits.length >= 6 ? 5 : digits.length;
+      _focusNodes[next].requestFocus();
+      _syncCode();
       return;
     }
 
-    if (value.length == 1 && index < 5) {
+    if (value.isNotEmpty && index < 5) {
       _focusNodes[index + 1].requestFocus();
     } else if (value.isEmpty && index > 0) {
       _focusNodes[index - 1].requestFocus();
     }
 
+    _syncCode();
+  }
+
+  void _syncCode() {
     widget.controller.code = _controllers.map((c) => c.text).join();
   }
 
@@ -111,7 +118,7 @@ class _Step2CodeState extends State<Step2Code> {
                   focusNode: _focusNodes[index],
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
-                  maxLength: 1,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   style: const TextStyle(
                     color: _textColor,
                     fontSize: 22,
