@@ -40,6 +40,11 @@ export class LocalResponseDto {
 
   @ApiProperty({ example: 'usr_01HZX3Y4Q9F8TAB1C2DKEYH9ZZ' })
   userId!: string;
+
+  // TODO: descomentar quando a listagem de Local com fotos for ativada.
+  // Importar PhotoResponseDto do modulo uploads e popular via include do Prisma.
+  // @ApiProperty({ type: () => [PhotoResponseDto], required: false })
+  // photos?: PhotoResponseDto[];
 }
 
 export class LocalNearbyResponseDto extends LocalResponseDto {

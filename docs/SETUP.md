@@ -57,6 +57,8 @@ PORT=3000
 NODE_ENV=development
 ```
 
+As demais variáveis (JWT, CORS, Redis, GlitchTip, storage) já vêm preenchidas com placeholders no `.env.example`. Storage de fotos vem em modo `local` por padrão - ver seção 9 se precisar trocar.
+
 ### Mobile
 
 ```bash
@@ -180,3 +182,14 @@ flutter test integration_test/     # Testes de integração
 ```
 
 Você também pode rodar os testes direto pela IDE caso esteja disponível.
+
+## 9. Storage de arquivos em dev
+
+O backend tem dois drivers (`STORAGE_DRIVER`):
+
+- `local` (**padrão em dev**): persiste em `backend/.local-uploads/` e serve em `http://localhost:3000/dev-uploads/<key>`. **Dispensa qualquer configuração Oracle.**
+- `oci`: integra com Oracle Cloud Object Storage real.
+
+Para desenvolver, basta manter `STORAGE_DRIVER=local` no seu `.env` (padrão do `.env.example`). As envs `OCI_*` ficam em branco - são validadas pelo Joi apenas quando o driver é `oci`. Arquivos enviados via `POST /uploads/photos` vão para o seu disco, isolados de outros devs.
+
+Se você precisar testar contra OCI real localmente (raro - normalmente só para debugar problemas específicos do SDK), gere uma chave Oracle pessoal e aponte para um bucket próprio. Nunca usar buckets compartilhados de outros ambientes do seu `.env` local.

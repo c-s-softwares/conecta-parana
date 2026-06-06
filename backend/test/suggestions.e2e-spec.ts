@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/config/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { TABLE_PREFIX } from '../src/common/types/ulid.types';
-import { validationPipeConfig } from '../src/config/validation-pipe.config';
+import { buildTestApp } from './helpers/test-app';
 
 describe('Suggestions (e2e)', () => {
   let app: INestApplication<App>;
@@ -44,13 +44,11 @@ describe('Suggestions (e2e)', () => {
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe(validationPipeConfig));
+    app = await buildTestApp(moduleFixture);
 
     prisma = moduleFixture.get<PrismaService>(PrismaService);
     jwtService = moduleFixture.get<JwtService>(JwtService);
 
-    await app.init();
     api = () => request(app.getHttpServer());
 
     // 1. Limpeza completa
