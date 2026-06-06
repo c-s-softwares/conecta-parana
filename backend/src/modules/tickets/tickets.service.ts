@@ -88,7 +88,9 @@ export class TicketsService {
     });
 
     if (!user || !user.cityId) {
-      throw new BadRequestException(apiError(TICKET_ERRORS.USER_WITHOUT_CITY));
+      throw new BadRequestException(
+        apiError(TICKET_ERRORS.TICKET_USER_WITHOUT_CITY),
+      );
     }
 
     const allowedTypes = [
@@ -99,7 +101,9 @@ export class TicketsService {
       'outros',
     ];
     if (!allowedTypes.includes(dto.type)) {
-      throw new BadRequestException(apiError(TICKET_ERRORS.INVALID_TYPE));
+      throw new BadRequestException(
+        apiError(TICKET_ERRORS.TICKET_INVALID_TYPE),
+      );
     }
 
     // Verifica a existência e propriedade das fotos
@@ -109,12 +113,16 @@ export class TicketsService {
       });
 
       if (photos.length !== dto.photoIds.length) {
-        throw new BadRequestException(apiError(TICKET_ERRORS.PHOTO_NOT_FOUND));
+        throw new BadRequestException(
+          apiError(TICKET_ERRORS.TICKET_PHOTO_NOT_FOUND),
+        );
       }
 
       const notOwned = photos.some((p) => p.userId !== userId);
       if (notOwned) {
-        throw new BadRequestException(apiError(TICKET_ERRORS.PHOTO_NOT_FOUND));
+        throw new BadRequestException(
+          apiError(TICKET_ERRORS.TICKET_PHOTO_NOT_FOUND),
+        );
       }
     }
 
@@ -301,7 +309,7 @@ export class TicketsService {
     const allowedTransitions = VALID_TRANSITIONS[currentStatus] ?? [];
     if (!allowedTransitions.includes(newStatus)) {
       throw new BadRequestException(
-        apiError(TICKET_ERRORS.INVALID_STATUS_TRANSITION),
+        apiError(TICKET_ERRORS.TICKET_INVALID_STATUS_TRANSITION),
       );
     }
 
@@ -311,7 +319,7 @@ export class TicketsService {
       const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
       if (timeDiff > sevenDaysMs) {
         throw new BadRequestException(
-          apiError(TICKET_ERRORS.INVALID_STATUS_TRANSITION),
+          apiError(TICKET_ERRORS.TICKET_INVALID_STATUS_TRANSITION),
         );
       }
     }
