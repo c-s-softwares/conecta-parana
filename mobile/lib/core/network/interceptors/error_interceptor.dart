@@ -34,6 +34,12 @@ class ErrorInterceptor extends Interceptor {
         err.response?.data?['code'] == 'validation_failed';
   }
 
+  bool _isLocallyHandledError(DioException err) {
+    final code = err.response?.data?['code'];
+    return err.response?.statusCode == 400 &&
+        (code == 'invalid_or_expired_code' || code == 'weak_password');
+  }
+
   bool _isNetworkError(DioException err) {
     return err.type == DioExceptionType.connectionTimeout ||
         err.type == DioExceptionType.receiveTimeout ||
@@ -67,6 +73,10 @@ class ErrorInterceptor extends Interceptor {
     }
 
     if (_isValidationError(err)) {
+      return handler.next(err);
+    }
+
+    if (_isLocallyHandledError(err)) {
       return handler.next(err);
     }
 
