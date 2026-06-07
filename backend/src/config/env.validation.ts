@@ -11,6 +11,17 @@ const requiredOnlyForOci = (schema: Joi.StringSchema): Joi.StringSchema =>
     otherwise: Joi.optional().allow(''),
   });
 
+/**
+ * Helper: torna uma env obrigatória apenas quando MAIL_DRIVER=resend.
+ * Permite dev rodar sem credenciais Resend configuradas.
+ */
+const requiredOnlyForResend = (schema: Joi.StringSchema): Joi.StringSchema =>
+  schema.when('MAIL_DRIVER', {
+    is: 'resend',
+    then: Joi.required(),
+    otherwise: Joi.optional().allow(''),
+  });
+
 export const envValidationSchema = Joi.object({
   DATABASE_URL: Joi.string().required(),
   PORT: Joi.number().default(3000),
@@ -39,4 +50,13 @@ export const envValidationSchema = Joi.object({
   OCI_USER_OCID: requiredOnlyForOci(Joi.string()),
   OCI_FINGERPRINT: requiredOnlyForOci(Joi.string()),
   OCI_PRIVATE_KEY_PATH: requiredOnlyForOci(Joi.string()),
+
+  // Email transacional - driver de envio.
+  // Em dev, `mock` loga no console sem enviar emails reais.
+  // Em staging/prod, usa `resend` com API key válida.
+  MAIL_DRIVER: Joi.string().valid('mock', 'resend').default('mock'),
+
+  // Resend - obrigatórias apenas quando MAIL_DRIVER=resend.
+  RESEND_API_KEY: requiredOnlyForResend(Joi.string()),
+  MAIL_FROM: requiredOnlyForResend(Joi.string()),
 });
