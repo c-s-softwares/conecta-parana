@@ -8,7 +8,7 @@ class FeedItemModel {
 
   factory FeedItemModel.fromJson(Map<String, dynamic> json) {
     return FeedItemModel(
-      type: json['type'] as String,
+      type: json['type'] as String? ?? 'news',
       data: json['data'] as Map<String, dynamic>,
     );
   }
@@ -30,8 +30,7 @@ class FeedItemModel {
   DateTime? _parseDate(FeedItemType type) {
     final raw = switch (type) {
       FeedItemType.event => data['eventDate'] as String?,
-      FeedItemType.comunicado ||
-      FeedItemType.news => data['updatedAt'] as String?,
+      FeedItemType.comunicado || FeedItemType.news => data['updatedAt'] as String?,
     };
     return raw != null ? DateTime.tryParse(raw) : null;
   }

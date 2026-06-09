@@ -19,6 +19,7 @@ class FeedRepositoryImpl implements FeedRepository {
     int limit = 20,
   }) async {
     try {
+      // ignore: use_null_aware_elements
       final queryParams = <String, dynamic>{
         'cityId': cityId,
         'limit': limit.clamp(1, 50),
@@ -35,7 +36,9 @@ class FeedRepositoryImpl implements FeedRepository {
         queryParameters: queryParams,
       );
 
-      final data = response.data!;
+      final data = response.data;
+      if (data == null) throw const FeedNetworkException();
+
       final rawItems = data['items'] as List<dynamic>? ?? [];
       final items = rawItems
           .map((e) => FeedItemModel.fromJson(e as Map<String, dynamic>).toDomain())
