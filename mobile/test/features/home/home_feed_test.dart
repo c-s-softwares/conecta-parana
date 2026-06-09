@@ -27,6 +27,7 @@ void main() {
       id: 'usr_test',
       role: 'CITIZEN',
       cityId: 'city_maringa',
+      cityName: 'Maringá',
     );
   });
 
