@@ -146,7 +146,7 @@ class _CitySelectorScreenState extends State<CitySelectorScreen> {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: _filtered.length,
-      separatorBuilder: (_, __) => const Divider(height: 1, indent: 16),
+      separatorBuilder: (context, index) => const Divider(height: 1, indent: 16),
       itemBuilder: (context, index) {
         final city = _filtered[index];
         return ListTile(
