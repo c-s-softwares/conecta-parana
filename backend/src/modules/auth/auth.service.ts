@@ -24,7 +24,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
-  ) { }
+  ) {}
 
   async register(dto: RegisterDto) {
     const exists = await this.prisma.client.user.findUnique({
@@ -112,7 +112,7 @@ export class AuthService {
       name: user.name,
       email: user.email,
       role: user.role,
-      city: user.cityId
+      city: user.cityId,
     };
   }
 
