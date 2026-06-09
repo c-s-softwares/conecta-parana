@@ -308,7 +308,7 @@ class _FakeAuthService implements AuthService {
     loginCalled = true;
     lastAccessToken = accessToken;
     lastRefreshToken = refreshToken;
-    currentUser.value = AuthUser(id: 'user-1', role: 'USER', cityId: '1');
+    currentUser.value = AuthUser(id: 'user-1', role: 'USER', cityId: '1', cityName: 'Maringá');
   }
 
   @override
