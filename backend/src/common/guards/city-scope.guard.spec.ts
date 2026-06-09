@@ -7,7 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
 import { CityScopeGuard, CityScopeOptions } from './city-scope.guard';
-import { API_ERROR_CODE } from '../errors/api-error';
+import { SHARED_ERRORS } from '../errors/shared-errors';
 
 type FakeRequest = {
   user?: unknown;
@@ -65,7 +65,7 @@ describe('CityScopeGuard', () => {
 
       expect(err).toBeInstanceOf(UnauthorizedException);
       expect((err as UnauthorizedException).getResponse()).toMatchObject({
-        code: API_ERROR_CODE.UNAUTHENTICATED,
+        code: SHARED_ERRORS.UNAUTHENTICATED,
       });
     });
   });
@@ -92,7 +92,7 @@ describe('CityScopeGuard', () => {
 
       expect(err).toBeInstanceOf(BadRequestException);
       expect((err as BadRequestException).getResponse()).toMatchObject({
-        code: API_ERROR_CODE.CITY_REQUIRED,
+        code: SHARED_ERRORS.CITY_REQUIRED,
       });
     });
 
@@ -131,7 +131,7 @@ describe('CityScopeGuard', () => {
 
       expect(err).toBeInstanceOf(ForbiddenException);
       expect((err as ForbiddenException).getResponse()).toMatchObject({
-        code: API_ERROR_CODE.CITY_SCOPE_DENIED,
+        code: SHARED_ERRORS.CITY_SCOPE_DENIED,
       });
     });
 

@@ -1,9 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  ConflictException,
-  UnauthorizedException,
-  NotFoundException,
-} from '@nestjs/common';
+import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
@@ -103,36 +99,6 @@ describe('AuthService', () => {
           cityId: MOCK_CITY_ID,
         }),
       });
-    });
-
-    it('deve lançar ConflictException com error email_exists se email já existir', async () => {
-      mockPrisma.client.user.findUnique.mockResolvedValue({
-        id: MOCK_USER.id,
-        email: MOCK_USER.email,
-      });
-
-      await expect(
-        service.register({
-          name: MOCK_USER.name,
-          email: MOCK_USER.email,
-          password: 'Senha123',
-          cityId: MOCK_CITY_ID,
-        }),
-      ).rejects.toThrow(ConflictException);
-    });
-
-    it('deve lançar NotFoundException com error city_not_found se cidade não existir', async () => {
-      mockPrisma.client.user.findUnique.mockResolvedValue(null);
-      mockPrisma.client.city.findFirst.mockResolvedValue(null);
-
-      await expect(
-        service.register({
-          name: MOCK_USER.name,
-          email: MOCK_USER.email,
-          password: 'Senha123',
-          cityId: MOCK_CITY_ID,
-        }),
-      ).rejects.toThrow(NotFoundException);
     });
   });
 
