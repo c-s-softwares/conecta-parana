@@ -43,7 +43,10 @@ class CityService {
     }
 
     final response = await ApiClient.instance.dio.get('/cities');
-    final cities = (response.data as List)
+
+    final items = response.data['items'] as List;
+
+    final cities = items
         .map((e) => City.fromJson(e as Map<String, dynamic>))
         .toList();
 
