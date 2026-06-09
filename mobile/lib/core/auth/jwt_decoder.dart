@@ -6,9 +6,9 @@ class JwtPayload {
   final String cityId;
 
   JwtPayload({
-    required this.sub, 
-    required this.role, 
-    required this.cityId
+    required this.sub,
+    required this.role,
+    required this.cityId,
   });
 }
 
@@ -27,7 +27,7 @@ class JwtDecoder {
     return JwtPayload(
       sub: jsonMap['sub'].toString(),
       role: jsonMap['role'].toString(),
-      cityId: jsonMap['cityId'].toString(),
+      cityId: jsonMap['cityId']?.toString() ?? '',
     );
   }
 }
