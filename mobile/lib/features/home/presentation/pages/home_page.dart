@@ -1,13 +1,16 @@
 import 'package:conectaparana/core/auth/auth_service.dart';
+import 'package:conectaparana/core/auth/auth_user.dart';
 import 'package:conectaparana/core/router/app_router.dart';
 import 'package:conectaparana/features/home/data/repositories/feed_repository_impl.dart';
 import 'package:conectaparana/features/home/presentation/providers/feed_notifier.dart';
 import 'package:conectaparana/features/home/presentation/widgets/feed_item_card.dart';
 import 'package:conectaparana/features/home/presentation/widgets/feed_skeleton.dart';
+import 'package:conectaparana/features/register/data/models/services/city_model.dart';
 import 'package:conectaparana/shared/widgets/feedback/app_toast.dart';
 import 'package:conectaparana/shared/widgets/misc/empty_state.dart';
 import 'package:conectaparana/shared/widgets/navigation/app_header.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 
 class HomePage extends StatefulWidget {
@@ -22,6 +25,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late final FeedNotifier _notifier;
   final ScrollController _scrollController = ScrollController();
+  bool _ready = false;
 
   static const int _notificationBadge = 3;
 
@@ -33,9 +37,14 @@ class _HomePageState extends State<HomePage> {
       _notifier = widget.mockNotifier!;
       _scrollController.addListener(_onScroll);
       _notifier.addListener(_onStateChange);
+      _ready = true;
       return;
     }
 
+    _init();
+  }
+
+  Future<void> _init() async {
     final user = AuthService.instance.currentUser.value;
     final cityId = user?.cityId;
 
@@ -43,20 +52,36 @@ class _HomePageState extends State<HomePage> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) context.go(AppRoutes.onboarding);
       });
-      _notifier = FeedNotifier(
-        repository: FeedRepositoryImpl(),
-        cityId: '',
-      );
+      _notifier = FeedNotifier(repository: FeedRepositoryImpl(), cityId: '');
       return;
+    }
+
+    double? lat;
+    double? lng;
+    final permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.always ||
+        permission == LocationPermission.whileInUse) {
+      try {
+        final position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.low,
+          ),
+        );
+        lat = position.latitude;
+        lng = position.longitude;
+      } catch (_) {}
     }
 
     _notifier = FeedNotifier(
       repository: FeedRepositoryImpl(),
       cityId: cityId,
+      lat: lat,
+      lng: lng,
     );
 
     _scrollController.addListener(_onScroll);
     _notifier.addListener(_onStateChange);
+    if (mounted) setState(() => _ready = true);
     _notifier.load();
   }
 
@@ -97,23 +122,44 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    print('DEBUG build hashCode: ${AuthService.instance.hashCode}');
+    print(
+      'DEBUG build cityName: "${AuthService.instance.currentUser.value?.cityName}"',
+    );
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
         child: Column(
           children: [
-            AppHeader(
-              cityName: AuthService.instance.currentUser.value?.cityId ?? '',
-              hasAlert: _notificationBadge > 0,
-              onCityTap: () => context.push(AppRoutes.onboarding),
-              onNotificationTap: () {
-              },
+            ValueListenableBuilder<AuthUser?>(
+              valueListenable: AuthService.instance.currentUser,
+              builder: (context, user, _) => AppHeader(
+                cityName: user?.cityName ?? '',
+                hasAlert: _notificationBadge > 0,
+                onCityTap: () async {
+                  final city = await context.push<City>(AppRoutes.onboarding);
+                  if (city != null && mounted) {
+                    final current = AuthService.instance.currentUser.value;
+                    if (current != null) {
+                      AuthService.instance.currentUser.value = AuthUser(
+                        id: current.id,
+                        role: current.role,
+                        cityId: city.id,
+                        cityName: city.name,
+                      );
+                    }
+                  }
+                },
+                onNotificationTap: () {},
+              ),
             ),
             Expanded(
-              child: ValueListenableBuilder<FeedState>(
-                valueListenable: _notifier,
-                builder: (context, state, _) => _buildBody(state),
-              ),
+              child: !_ready
+                  ? const FeedSkeleton()
+                  : ValueListenableBuilder<FeedState>(
+                      valueListenable: _notifier,
+                      builder: (context, state, _) => _buildBody(state),
+                    ),
             ),
           ],
         ),
@@ -147,7 +193,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildFeedList(FeedState state) {
-    final showFooter = state.status == FeedStatus.loadingMore ||
+    final showFooter =
+        state.status == FeedStatus.loadingMore ||
         state.status == FeedStatus.errorMore;
 
     return RefreshIndicator(
@@ -204,10 +251,13 @@ class _HomePageState extends State<HomePage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF006733),
                 foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               onPressed: _notifier.load,
               child: const Text('Tentar novamente'),
