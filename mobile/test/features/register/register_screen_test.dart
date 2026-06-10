@@ -161,88 +161,88 @@ void main() {
       }
     });
 
-    //testWidgets(
-    // 'erro inline + botão Fazer login quando backend retorna email_exists (409)',
-    // (tester) async {
-    //await tester.pumpWidget(
-    //MaterialApp(
-    //home: RegisterScreen(
-    //cityService: FakeCityService(),
-    //repository: _EmailExistsRepository(),
-    // ),
-    // routes: {
-    // '/onboarding': (_) => const Scaffold(body: Text('Onboarding')),
-    //'/login': (_) => const Scaffold(body: Text('Login')),
-    // },
-    //),
-    // );
-    //await tester.pumpAndSettle();
+    testWidgets(
+      'erro inline + botão Fazer login quando backend retorna email_exists (409)',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: RegisterScreen(
+              cityService: FakeCityService(),
+              repository: _EmailExistsRepository(),
+            ),
+            routes: {
+              '/onboarding': (_) => const Scaffold(body: Text('Onboarding')),
+              '/login': (_) => const Scaffold(body: Text('Login')),
+            },
+          ),
+        );
+        await tester.pumpAndSettle();
 
-    //await preencherFormValido(tester);
+        await preencherFormValido(tester);
 
-    //final submitBtn = tester.widget<ElevatedButton>(
-    // find.byKey(const Key('register_submit_button')),
-    //);
-    // expect(submitBtn.onPressed, isNotNull);
+        final submitBtn = tester.widget<ElevatedButton>(
+          find.byKey(const Key('register_submit_button')),
+        );
+        expect(submitBtn.onPressed, isNotNull);
 
-    // await scrollAndTap(
-    // tester,
-    // find.byKey(const Key('register_submit_button')),
-    // );
+        await scrollAndTap(
+          tester,
+          find.byKey(const Key('register_submit_button')),
+        );
 
-    //expect(
-    //find.text('Esse email já tem conta. Faça login.'),
-    // findsOneWidget,
-    // );
-    //expect(find.byKey(const Key('go_to_login_button')), findsOneWidget);
-    // expect(find.text('Onboarding'), findsNothing);
+        expect(
+          find.text('Esse email já tem conta. Faça login.'),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('go_to_login_button')), findsOneWidget);
+        expect(find.text('Onboarding'), findsNothing);
 
-    // await scrollAndTap(tester, find.byKey(const Key('go_to_login_button')));
-    //expect(find.text('Login'), findsOneWidget);
-    //},
-    //);
-    //testWidgets('happy path: cadastra com sucesso e navega para /onboarding', (
-    //  tester,
-    // ) async {
-    // final fakeAuth = _FakeAuthService();
-    //AuthService.overrideInstance(fakeAuth);
-    //addTearDown(AuthService.reset);
+        await scrollAndTap(tester, find.byKey(const Key('go_to_login_button')));
+        expect(find.text('Login'), findsOneWidget);
+      },
+    );
+    testWidgets('happy path: cadastra com sucesso e navega para /onboarding', (
+      tester,
+    ) async {
+      final fakeAuth = _FakeAuthService();
+      AuthService.overrideInstance(fakeAuth);
+      addTearDown(AuthService.reset);
 
-    //await tester.pumpWidget(
-    //   MaterialApp(
-    //home: RegisterScreen(
-    // cityService: FakeCityService(),
-    //  repository: _HappyRepository(),
-    //),
-    //  routes: {
-    // '/onboarding': (_) => const Scaffold(body: Text('Onboarding')),
-    // '/login': (_) => const Scaffold(body: Text('Login')),
-    //  },
-    //  ),
-    // );
-    // await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RegisterScreen(
+            cityService: FakeCityService(),
+            repository: _HappyRepository(),
+          ),
+          routes: {
+            '/onboarding': (_) => const Scaffold(body: Text('Onboarding')),
+            '/login': (_) => const Scaffold(body: Text('Login')),
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    // await preencherFormValido(tester);
+      await preencherFormValido(tester);
 
-    //final submitBtn = tester.widget<ElevatedButton>(
-    // find.byKey(const Key('register_submit_button')),
-    // );
-    //expect(
-    // submitBtn.onPressed,
-    // isNotNull,
-    // reason: 'O botão de cadastrar está desabilitado!',
-    // );
+      final submitBtn = tester.widget<ElevatedButton>(
+        find.byKey(const Key('register_submit_button')),
+      );
+      expect(
+        submitBtn.onPressed,
+        isNotNull,
+        reason: 'O botão de cadastrar está desabilitado!',
+      );
 
-    // await scrollAndTap(
-    // tester,
-    // find.byKey(const Key('register_submit_button')),
-    //);
+      await scrollAndTap(
+        tester,
+        find.byKey(const Key('register_submit_button')),
+      );
 
-    //expect(fakeAuth.loginCalled, isTrue);
-    // expect(fakeAuth.lastAccessToken, 'fake-access-token');
-    //expect(fakeAuth.lastRefreshToken, 'fake-refresh-token');
-    // expect(find.text('Styleguide'), findsOneWidget);
-    //});
+      expect(fakeAuth.loginCalled, isTrue);
+      expect(fakeAuth.lastAccessToken, 'fake-access-token');
+      expect(fakeAuth.lastRefreshToken, 'fake-refresh-token');
+      expect(find.text('Styleguide'), findsOneWidget);
+    });
   });
 }
 
