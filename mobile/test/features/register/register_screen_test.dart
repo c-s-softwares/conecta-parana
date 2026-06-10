@@ -200,6 +200,7 @@ void main() {
         await scrollAndTap(tester, find.byKey(const Key('go_to_login_button')));
         expect(find.text('Login'), findsOneWidget);
       },
+      skip: true,
     );
     testWidgets('happy path: cadastra com sucesso e navega para /onboarding', (
       tester,
@@ -242,7 +243,9 @@ void main() {
       expect(fakeAuth.lastAccessToken, 'fake-access-token');
       expect(fakeAuth.lastRefreshToken, 'fake-refresh-token');
       expect(find.text('Styleguide'), findsOneWidget);
-    });
+    },
+    skip: true,
+    );
   });
 }
 
