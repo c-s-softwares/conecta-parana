@@ -143,8 +143,8 @@ class _LoginScreenState extends State<LoginScreen> {
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   colors: [
-                    Color(0xFF00E676).withOpacity(0.55),
-                    Color(0xFF00C853).withOpacity(0.2),
+                    const Color(0xFF00E676).withValues(alpha: 0.55),
+                    const Color(0xFF00C853).withValues(alpha: 0.2),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.35, 1.0],
