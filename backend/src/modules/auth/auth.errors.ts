@@ -1,4 +1,5 @@
 import { defineErrors } from '../../common/errors/define-errors';
+import { STRONG_PASSWORD_MESSAGE } from '../../common/utils/password.util';
 
 export const AUTH_ERRORS = defineErrors({
   INVALID_PASSWORD: 'Senha incorreta',
@@ -22,6 +23,5 @@ export const AUTH_ERRORS = defineErrors({
 
   INVALID_OR_EXPIRED_CODE: 'Código inválido, expirado ou já utilizado',
 
-  WEAK_PASSWORD:
-    'A senha deve ter no mínimo 8 caracteres, incluindo pelo menos 1 letra e 1 número',
+  WEAK_PASSWORD: STRONG_PASSWORD_MESSAGE,
 });
