@@ -8,7 +8,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   Environment.initialize(Flavor.dev);
-
+  
   await AuthService.instance.init();
   await AppRouter.instance.init();
 
