@@ -6,6 +6,7 @@ import 'package:conectaparana/features/register/data/models/services/city_servic
 import 'package:conectaparana/features/register/data/models/services/city_model.dart';
 import 'package:conectaparana/core/auth/auth_service.dart';
 import 'package:dio/dio.dart';
+import 'package:go_router/go_router.dart';
 
 class _PasswordRules {
   static final _especial = RegExp(
@@ -164,14 +165,28 @@ class RegisterScreenState extends State<RegisterScreen> {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
+    await Future.delayed(const Duration(seconds: 1));
+    if (mounted) {
+      setState(() => _isLoading = false);
+      context.go('/styleguide');
+    }
+    return;
 
     try {
-      final tokens = await _repository.register(
-        name: _nameController.text.trim(),
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        cityId: _selectedCity!.id,
-      );
+      final tokens = await _repository
+          .register(
+            name: _nameController.text.trim(),
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+            cityId: _selectedCity!.id,
+          )
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw DioException(
+              requestOptions: RequestOptions(path: '/auth/register'),
+              type: DioExceptionType.connectionTimeout,
+            ),
+          );
 
       await AuthService.instance.login(
         accessToken: tokens.accessToken,
@@ -179,7 +194,7 @@ class RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/onboarding');
+      Navigator.pushReplacementNamed(context, '/styleguide');
     } on DioException catch (e) {
       if (!mounted) return;
 
