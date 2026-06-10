@@ -6,7 +6,6 @@ import 'package:conectaparana/features/register/data/models/services/city_servic
 import 'package:conectaparana/features/register/data/models/services/city_model.dart';
 import 'package:conectaparana/core/auth/auth_service.dart';
 import 'package:dio/dio.dart';
-import 'package:go_router/go_router.dart';
 
 class _PasswordRules {
   static final _especial = RegExp(
