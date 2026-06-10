@@ -165,11 +165,6 @@ class RegisterScreenState extends State<RegisterScreen> {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
-    if (mounted) {
-      setState(() => _isLoading = false);
-      context.go('/styleguide');
-    }
 
     try {
       final tokens = await _repository
