@@ -75,7 +75,7 @@ class _LoginScreenState extends State<LoginScreen> {
           accessToken: fakeAccessToken,
           refreshToken: fakeRefreshToken,
         );
-      } 
+      }
 
       if (mounted) {
         final pending = AppRouter.instance.consumePendingDeepLink();
@@ -119,62 +119,105 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildHero() {
     return Container(
       width: double.infinity,
-      color: const Color(0xFF006733),
-      padding: EdgeInsets.fromLTRB(
-        24,
-        MediaQuery.of(context).padding.top + 24,
-        24,
-        40,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      color: const Color(0xFF00122E),
+      child: Stack(
         children: [
-          Row(
-            children: [
-              Image.asset(
-                'assets/images/paranalogo.png',
-                width: 32,
-                errorBuilder: (context, e, s) => const SizedBox(width: 32),
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerRight,
+                  end: Alignment.centerLeft,
+                  colors: [Color.fromARGB(255, 7, 47, 111), Color(0xFF003D1A)],
+                ),
               ),
-              const SizedBox(width: 8),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'CONECTA',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 10,
-                      letterSpacing: 2,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    'Paraná',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          const Text(
-            'A sua cidade\nno seu bolso.',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.w900,
-              height: 1.2,
             ),
           ),
-          const SizedBox(height: 12),
-          const Text(
-            'Acesse comunicados, serviços e alertas da sua cidade.',
-            style: TextStyle(color: Colors.white70, fontSize: 14, height: 1.5),
+
+          Positioned(
+            left: -80,
+            top: -80,
+            child: Container(
+              width: 380,
+              height: 380,
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF00E676).withValues(alpha: 0.55),
+                    const Color(0xFF00C853).withValues(alpha: 0.2),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.35, 1.0],
+                  radius: 0.65,
+                ),
+              ),
+            ),
+          ),
+
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              24,
+              MediaQuery.of(context).padding.top + 24,
+              24,
+              40,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Image.asset(
+                      'assets/images/paranalogo.png',
+                      width: 32,
+                      errorBuilder: (context, e, s) =>
+                          const SizedBox(width: 32),
+                    ),
+                    const SizedBox(width: 8),
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'CONECTA',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 10,
+                            letterSpacing: 2,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          'Paraná',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                const Text(
+                  'A sua cidade\nno seu bolso.',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Acesse comunicados, serviços e alertas da sua cidade.',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -251,7 +294,10 @@ class _LoginScreenState extends State<LoginScreen> {
             width: double.infinity,
             height: 52,
             child: ElevatedButton(
-              onPressed: _isLoading || _emailError != null || _passwordError != null ? null : _login,
+              onPressed:
+                  _isLoading || _emailError != null || _passwordError != null
+                  ? null
+                  : _login,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF006733),
                 foregroundColor: Colors.white,
@@ -343,7 +389,9 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const Text('Não tem conta? '),
               GestureDetector(
-                onTap: () => Navigator.pushNamed(context, '/register'),
+                onTap: () {
+                  context.push(AppRoutes.register);
+                },
                 child: const Text(
                   'Criar conta',
                   style: TextStyle(
