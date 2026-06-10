@@ -29,7 +29,7 @@ void main() {
     return MaterialApp(
       home: RegisterScreen(cityService: FakeCityService()),
       routes: {
-        '/onboarding': (_) => const Scaffold(body: Text('Onboarding')),
+        '/styleguide': (_) => const Scaffold(body: Text('Styleguide')),
         '/login': (_) => const Scaffold(body: Text('Login')),
       },
     );
@@ -242,7 +242,7 @@ void main() {
       expect(fakeAuth.loginCalled, isTrue);
       expect(fakeAuth.lastAccessToken, 'fake-access-token');
       expect(fakeAuth.lastRefreshToken, 'fake-refresh-token');
-      expect(find.text('Onboarding'), findsOneWidget);
+      expect(find.text('Styleguide'), findsOneWidget);
     });
   });
 }
