@@ -170,7 +170,6 @@ class RegisterScreenState extends State<RegisterScreen> {
       setState(() => _isLoading = false);
       context.go('/styleguide');
     }
-    return;
 
     try {
       final tokens = await _repository
