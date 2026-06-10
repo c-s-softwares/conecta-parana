@@ -10,6 +10,7 @@ import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { TABLE_PREFIX } from '../../../../common/types/ulid.types';
 import { IsTablePrefixedUlid } from '../../../../common/validators/is-table-prefixed-ulid.validator';
+import { Match } from '../../../../common/validators/match.validator';
 
 export class RegisterDto {
   @ApiProperty({ example: 'João Silva', minLength: 2, maxLength: 100 })
@@ -35,6 +36,11 @@ export class RegisterDto {
     message: 'password deve conter pelo menos 1 letra e 1 número',
   })
   password!: string;
+
+  @ApiProperty({ example: 'Senha123', description: 'Confirmação da senha' })
+  @IsString()
+  @Match('password', { message: 'confirmPassword deve ser igual a password' })
+  confirmPassword!: string;
 
   @ApiProperty({
     example: 'cit_01HZX3Y4Q9F8TAB1C2DKEYH9MN',

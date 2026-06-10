@@ -19,4 +19,9 @@ export const AUTH_ERRORS = defineErrors({
    */
   REGISTRATION_FAILED:
     'Não foi possível processar o registro. Verifique seus dados e tente novamente.',
+
+  INVALID_OR_EXPIRED_CODE: 'Código inválido, expirado ou já utilizado',
+
+  WEAK_PASSWORD:
+    'A senha deve ter no mínimo 8 caracteres, incluindo pelo menos 1 letra e 1 número',
 });
