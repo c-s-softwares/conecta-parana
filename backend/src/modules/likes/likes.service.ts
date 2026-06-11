@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../config/prisma.service';
 import { CreateLikeToggleDto } from './dto/request/create-like-toggle.dto';
 import { LikeToggleResponseDto } from './dto/response/like-toggle-response.dto';
@@ -57,8 +58,8 @@ export class LikesService {
     // Verificar se a entidade alvo existe
     await this.assertTargetExists(targetType, targetId);
 
-    // Verificar se o like já existe
-    const existingLike = await this.prisma.client.like.findFirst({
+    // Tentar deletar o like existente de forma otimizada
+    const deleteResult = await this.prisma.client.like.deleteMany({
       where: {
         userId,
         [targetField]: targetId,
@@ -66,19 +67,29 @@ export class LikesService {
     });
 
     let liked = false;
-    if (existingLike) {
-      await this.prisma.client.like.delete({
-        where: { id: existingLike.id },
-      });
+    if (deleteResult.count > 0) {
+      liked = false;
     } else {
-      await this.prisma.client.like.create({
-        data: {
-          id: generateId(TABLE_PREFIX.LIKE),
-          userId,
-          [targetField]: targetId,
-        },
-      });
-      liked = true;
+      try {
+        await this.prisma.client.like.create({
+          data: {
+            id: generateId(TABLE_PREFIX.LIKE),
+            userId,
+            [targetField]: targetId,
+          },
+        });
+        liked = true;
+      } catch (error) {
+        // Se ocorrer um erro de duplicidade (P2002) devido a concorrência, consideramos que o like foi criado por outro processo
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2002'
+        ) {
+          liked = true;
+        } else {
+          throw error;
+        }
+      }
     }
 
     // Gerenciamento de Cache

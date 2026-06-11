@@ -3,6 +3,7 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../config/prisma.service';
 import { CreateSaveToggleDto } from './dto/request/create-save-toggle.dto';
 import { SaveToggleResponseDto } from './dto/response/save-toggle-response.dto';
@@ -55,8 +56,8 @@ export class SavesService {
     // Verificar se a entidade alvo existe
     await this.assertTargetExists(targetType, targetId);
 
-    // Verificar se o save já existe
-    const existingSave = await this.prisma.client.save.findFirst({
+    // Tentar deletar o save existente de forma otimizada
+    const deleteResult = await this.prisma.client.save.deleteMany({
       where: {
         userId,
         [targetField]: targetId,
@@ -64,19 +65,29 @@ export class SavesService {
     });
 
     let saved = false;
-    if (existingSave) {
-      await this.prisma.client.save.delete({
-        where: { id: existingSave.id },
-      });
+    if (deleteResult.count > 0) {
+      saved = false;
     } else {
-      await this.prisma.client.save.create({
-        data: {
-          id: generateId(TABLE_PREFIX.SAVE),
-          userId,
-          [targetField]: targetId,
-        },
-      });
-      saved = true;
+      try {
+        await this.prisma.client.save.create({
+          data: {
+            id: generateId(TABLE_PREFIX.SAVE),
+            userId,
+            [targetField]: targetId,
+          },
+        });
+        saved = true;
+      } catch (error) {
+        // Se ocorrer um erro de duplicidade (P2002) devido a concorrência, consideramos que o save foi criado por outro processo
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2002'
+        ) {
+          saved = true;
+        } else {
+          throw error;
+        }
+      }
     }
 
     return { saved };
@@ -87,15 +98,21 @@ export class SavesService {
       where: { userId },
       include: {
         event: true,
-        communicate: true,
-        news: true,
-        local: true,
+        communicate: {
+          where: { isActive: true },
+        },
+        news: {
+          where: { isActive: true },
+        },
+        local: {
+          where: { deletedAt: null },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    const localIds = saves.map((s) => s.localId).filter(Boolean) as string[];
-    const eventIds = saves.map((s) => s.eventId).filter(Boolean) as string[];
+    const localIds = saves.map((s) => s.local?.id).filter(Boolean) as string[];
+    const eventIds = saves.map((s) => s.event?.id).filter(Boolean) as string[];
 
     // Buscar e mapear as coordenadas dos Locals
     const localCoordsMap = new Map<string, { lat: number; lng: number }>();
@@ -172,7 +189,7 @@ export class SavesService {
           isActive: save.news.isActive,
           cityId: save.news.cityId,
         });
-      } else if (save.local && !save.local.deletedAt) {
+      } else if (save.local) {
         const coords = localCoordsMap.get(save.local.id) ?? null;
         result.locals.push({
           id: save.local.id,
