@@ -20,6 +20,7 @@ import { LikeToggleResponseDto } from './dto/response/like-toggle-response.dto';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
+import { SkipCacheInvalidation } from '../../common/decorators/skip-cache-invalidation.decorator';
 
 @ApiTags('likes')
 @Controller('likes')
@@ -28,6 +29,7 @@ export class LikesController {
   constructor(private readonly likesService: LikesService) {}
 
   @Post('toggle')
+  @SkipCacheInvalidation()
   @HttpCode(200)
   @Roles(Role.CIDADAO)
   @UseGuards(RolesGuard)
