@@ -139,6 +139,9 @@ model Like {
   communicate Communicate? @relation(fields: [communicateId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   news        News?        @relation(fields: [newsId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
+  @@unique([userId, eventId], name: "uniq_like_user_event")
+  @@unique([userId, communicateId], name: "uniq_like_user_communicate")
+  @@unique([userId, newsId], name: "uniq_like_user_news")
   @@map("likes")
 }
 
@@ -158,6 +161,10 @@ model Save {
   news        News?        @relation(fields: [newsId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   local       Local?       @relation(fields: [localId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
+  @@unique([userId, eventId], name: "uniq_save_user_event")
+  @@unique([userId, communicateId], name: "uniq_save_user_communicate")
+  @@unique([userId, newsId], name: "uniq_save_user_news")
+  @@unique([userId, localId], name: "uniq_save_user_local")
   @@map("saves")
 }
 
