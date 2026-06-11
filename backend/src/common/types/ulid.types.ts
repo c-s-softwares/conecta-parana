@@ -15,4 +15,5 @@ export const TABLE_PREFIX = {
   REFRESH_TOKEN: 'rfk_',
   TICKET: 'tkt_',
   TICKET_COMMENT: 'tkc_',
+  COMMUNICATE: 'cmt',
 } as const;
