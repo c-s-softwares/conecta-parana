@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { SavesService } from './saves.service';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 
@@ -29,6 +30,7 @@ const mockPrisma = {
       findFirst: jest.fn(),
       create: jest.fn(),
       delete: jest.fn(),
+      deleteMany: jest.fn(),
       findMany: jest.fn(),
     },
   },
@@ -54,7 +56,7 @@ describe('SavesService', () => {
       mockPrisma.client.local.findFirst.mockResolvedValue({
         id: MOCK_LOCAL_ID,
       });
-      mockPrisma.client.save.findFirst.mockResolvedValue(null);
+      mockPrisma.client.save.deleteMany.mockResolvedValue({ count: 0 });
       mockPrisma.client.save.create.mockResolvedValue({ id: 'sav_1' });
 
       const result = await service.toggleSave(
@@ -63,6 +65,7 @@ describe('SavesService', () => {
       );
 
       expect(result).toEqual({ saved: true });
+      expect(mockPrisma.client.save.deleteMany).toHaveBeenCalled();
       expect(mockPrisma.client.save.create).toHaveBeenCalled();
     });
 
@@ -70,8 +73,7 @@ describe('SavesService', () => {
       mockPrisma.client.local.findFirst.mockResolvedValue({
         id: MOCK_LOCAL_ID,
       });
-      mockPrisma.client.save.findFirst.mockResolvedValue({ id: 'sav_1' });
-      mockPrisma.client.save.delete.mockResolvedValue({ id: 'sav_1' });
+      mockPrisma.client.save.deleteMany.mockResolvedValue({ count: 1 });
 
       const result = await service.toggleSave(
         { localId: MOCK_LOCAL_ID },
@@ -79,7 +81,33 @@ describe('SavesService', () => {
       );
 
       expect(result).toEqual({ saved: false });
-      expect(mockPrisma.client.save.delete).toHaveBeenCalled();
+      expect(mockPrisma.client.save.deleteMany).toHaveBeenCalled();
+      expect(mockPrisma.client.save.create).not.toHaveBeenCalled();
+    });
+
+    it('deve considerar saved: true se ocorrer erro P2002 (concorrência) ao tentar criar o save', async () => {
+      mockPrisma.client.local.findFirst.mockResolvedValue({
+        id: MOCK_LOCAL_ID,
+      });
+      mockPrisma.client.save.deleteMany.mockResolvedValue({ count: 0 });
+
+      const errorP2002 = new Prisma.PrismaClientKnownRequestError(
+        'Erro de duplicidade concorrente',
+        {
+          code: 'P2002',
+          clientVersion: '7.4.2',
+        },
+      );
+      mockPrisma.client.save.create.mockRejectedValue(errorP2002);
+
+      const result = await service.toggleSave(
+        { localId: MOCK_LOCAL_ID },
+        MOCK_USER_ID,
+      );
+
+      expect(result).toEqual({ saved: true });
+      expect(mockPrisma.client.save.deleteMany).toHaveBeenCalled();
+      expect(mockPrisma.client.save.create).toHaveBeenCalled();
     });
 
     it('deve lancar BadRequestException se nenhum target for informado', async () => {
@@ -226,6 +254,75 @@ describe('SavesService', () => {
         lat: -25.123,
         lng: -49.123,
       });
+    });
+
+    it('deve filtrar os itens inativos ou deletados a nível de banco e não retorná-los', async () => {
+      const mockSavesWithInactives = [
+        {
+          id: 'sav_1',
+          userId: MOCK_USER_ID,
+          eventId: null,
+          communicateId: MOCK_COMMUNICATE_ID,
+          newsId: null,
+          localId: null,
+          event: null,
+          communicate: null, // nulo pois o banco filtrou isActive: true
+          news: null,
+          local: null,
+        },
+        {
+          id: 'sav_2',
+          userId: MOCK_USER_ID,
+          eventId: null,
+          communicateId: null,
+          newsId: MOCK_NEWS_ID,
+          localId: null,
+          event: null,
+          communicate: null,
+          news: null, // nulo pois o banco filtrou isActive: true
+          local: null,
+        },
+        {
+          id: 'sav_3',
+          userId: MOCK_USER_ID,
+          eventId: null,
+          communicateId: null,
+          newsId: null,
+          localId: MOCK_LOCAL_ID,
+          event: null,
+          communicate: null,
+          news: null,
+          local: null, // nulo pois o banco filtrou deletedAt: null
+        },
+      ];
+
+      mockPrisma.client.save.findMany.mockResolvedValue(mockSavesWithInactives);
+
+      const result = await service.findMySaves(MOCK_USER_ID);
+
+      // Garante que a query do prisma findMany foi chamada com os filtros corretos a nível de banco
+      expect(mockPrisma.client.save.findMany).toHaveBeenCalledWith({
+        where: { userId: MOCK_USER_ID },
+        include: {
+          event: true,
+          communicate: {
+            where: { isActive: true },
+          },
+          news: {
+            where: { isActive: true },
+          },
+          local: {
+            where: { deletedAt: null },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      // Garante que o retorno está limpo de recursos inativos ou deletados
+      expect(result.events).toHaveLength(0);
+      expect(result.locals).toHaveLength(0);
+      expect(result.communicates).toHaveLength(0);
+      expect(result.news).toHaveLength(0);
     });
   });
 });

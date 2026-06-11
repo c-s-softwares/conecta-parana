@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { LikesService } from './likes.service';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 
@@ -25,6 +26,7 @@ const mockPrisma = {
       findFirst: jest.fn(),
       create: jest.fn(),
       delete: jest.fn(),
+      deleteMany: jest.fn(),
       count: jest.fn(),
     },
   },
@@ -65,7 +67,7 @@ describe('LikesService', () => {
       mockPrisma.client.event.findUnique.mockResolvedValue({
         id: MOCK_EVENT_ID,
       });
-      mockPrisma.client.like.findFirst.mockResolvedValue(null);
+      mockPrisma.client.like.deleteMany.mockResolvedValue({ count: 0 });
       mockPrisma.client.like.create.mockResolvedValue({ id: 'lke_1' });
       mockPrisma.client.like.count.mockResolvedValue(5);
 
@@ -75,6 +77,7 @@ describe('LikesService', () => {
       );
 
       expect(result).toEqual({ liked: true, count: 5 });
+      expect(mockPrisma.client.like.deleteMany).toHaveBeenCalled();
       expect(mockPrisma.client.like.create).toHaveBeenCalled();
       expect(mockCache.del).toHaveBeenCalledWith(
         `likes:count:event:${MOCK_EVENT_ID}`,
@@ -90,8 +93,7 @@ describe('LikesService', () => {
       mockPrisma.client.event.findUnique.mockResolvedValue({
         id: MOCK_EVENT_ID,
       });
-      mockPrisma.client.like.findFirst.mockResolvedValue({ id: 'lke_1' });
-      mockPrisma.client.like.delete.mockResolvedValue({ id: 'lke_1' });
+      mockPrisma.client.like.deleteMany.mockResolvedValue({ count: 1 });
       mockPrisma.client.like.count.mockResolvedValue(4);
 
       const result = await service.toggleLike(
@@ -100,7 +102,8 @@ describe('LikesService', () => {
       );
 
       expect(result).toEqual({ liked: false, count: 4 });
-      expect(mockPrisma.client.like.delete).toHaveBeenCalled();
+      expect(mockPrisma.client.like.deleteMany).toHaveBeenCalled();
+      expect(mockPrisma.client.like.create).not.toHaveBeenCalled();
       expect(mockCache.del).toHaveBeenCalledWith(
         `likes:count:event:${MOCK_EVENT_ID}`,
       );
@@ -109,6 +112,32 @@ describe('LikesService', () => {
         4,
         30000,
       );
+    });
+
+    it('deve considerar liked: true se ocorrer erro P2002 (concorrência) ao tentar criar o like', async () => {
+      mockPrisma.client.event.findUnique.mockResolvedValue({
+        id: MOCK_EVENT_ID,
+      });
+      mockPrisma.client.like.deleteMany.mockResolvedValue({ count: 0 });
+
+      const errorP2002 = new Prisma.PrismaClientKnownRequestError(
+        'Erro de duplicidade concorrente',
+        {
+          code: 'P2002',
+          clientVersion: '7.4.2',
+        },
+      );
+      mockPrisma.client.like.create.mockRejectedValue(errorP2002);
+      mockPrisma.client.like.count.mockResolvedValue(1);
+
+      const result = await service.toggleLike(
+        { eventId: MOCK_EVENT_ID },
+        MOCK_USER_ID,
+      );
+
+      expect(result).toEqual({ liked: true, count: 1 });
+      expect(mockPrisma.client.like.deleteMany).toHaveBeenCalled();
+      expect(mockPrisma.client.like.create).toHaveBeenCalled();
     });
 
     it('deve lancar BadRequestException se nenhum target for informado', async () => {
