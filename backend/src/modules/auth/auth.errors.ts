@@ -1,4 +1,5 @@
 import { defineErrors } from '../../common/errors/define-errors';
+import { STRONG_PASSWORD_MESSAGE } from '../../common/utils/password.util';
 
 export const AUTH_ERRORS = defineErrors({
   INVALID_PASSWORD: 'Senha incorreta',
@@ -19,4 +20,8 @@ export const AUTH_ERRORS = defineErrors({
    */
   REGISTRATION_FAILED:
     'Não foi possível processar o registro. Verifique seus dados e tente novamente.',
+
+  INVALID_OR_EXPIRED_CODE: 'Código inválido, expirado ou já utilizado',
+
+  WEAK_PASSWORD: STRONG_PASSWORD_MESSAGE,
 });
