@@ -3,10 +3,13 @@ import {
   ExecutionContext,
   ForbiddenException,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { PrismaService } from '../../config/prisma.service';
 import { JwtPayload } from '../../modules/auth/strategies/jwt.strategy';
+import { apiError, ROLE_DENIED } from '../errors/api-error';
+import { SHARED_ERRORS } from '../errors/shared-errors';
 
 @Injectable()
 export class SuperAdminGuard implements CanActivate {
@@ -17,13 +20,11 @@ export class SuperAdminGuard implements CanActivate {
     const payload = request['user'] as JwtPayload | undefined;
 
     if (!payload?.sub) {
-      throw new ForbiddenException('Acesso negado: Usuário não identificado');
+      throw new UnauthorizedException(apiError(SHARED_ERRORS.UNAUTHENTICATED));
     }
 
     if (payload.role !== 'ADMIN') {
-      throw new ForbiddenException(
-        'Acesso negado: Permissão de ADMIN requerida',
-      );
+      throw new ForbiddenException(apiError(ROLE_DENIED, ['ADMIN']));
     }
 
     const user = await this.prisma.client.user.findUnique({
@@ -33,7 +34,7 @@ export class SuperAdminGuard implements CanActivate {
 
     if (!user || user.role !== 'ADMIN' || user.cityId !== null) {
       throw new ForbiddenException(
-        'Acesso negado: Requer privilégios de Super Admin ',
+        apiError(SHARED_ERRORS.SUPER_ADMIN_REQUIRED),
       );
     }
 

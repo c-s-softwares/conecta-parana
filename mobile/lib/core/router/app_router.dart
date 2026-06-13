@@ -1,12 +1,15 @@
 import 'package:app_links/app_links.dart';
 import 'package:conectaparana/core/auth/auth_service.dart';
 import 'package:conectaparana/core/auth/presentation/pages/login_screen.dart';
+import 'package:conectaparana/core/auth/presentation/register_screen.dart';
 import 'package:conectaparana/core/config/environment.dart';
 import 'package:conectaparana/core/router/deep_link_parser.dart';
 import 'package:conectaparana/core/router/deep_link_route.dart';
 import 'package:conectaparana/core/router/navigator_key.dart';
 import 'package:conectaparana/core/shell/main_shell.dart';
+import 'package:conectaparana/dev/fakes/fake_event_repository.dart';
 import 'package:conectaparana/features/events/presentation/pages/events_page.dart';
+import 'package:conectaparana/features/events/presentation/pages/event_detail_page.dart';
 import 'package:conectaparana/features/home/presentation/pages/home_page.dart';
 import 'package:conectaparana/features/map/presentation/pages/map_page.dart';
 import 'package:conectaparana/features/profile/presentation/pages/profile_page.dart';
@@ -20,24 +23,29 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 abstract class AppRoutes {
-  static const splash       = '/';
-  static const login        = '/login';
-  static const onboarding   = '/onboarding';
+  static const splash = '/';
+  static const login = '/login';
+  static const register = '/register';
+  static const onboarding = '/onboarding';
 
-  static const home         = '/home';
-  static const events       = '/events';
-  static const map          = '/map';
-  static const tickets      = '/tickets';
-  static const profile      = '/profile';
+  static const home = '/home';
+  static const events = '/events';
+  static const map = '/map';
+  static const tickets = '/tickets';
+  static const profile = '/profile';
 
-  static const event        = '/events/:id';
-  static const comunicado   = '/home/comunicado/:id';
-  static const news         = '/home/news/:id';
-  static const local        = '/map/:id';
-  static const ticket       = '/tickets/:id';
+  static const event = '/events/:id';
+  static const homeEvent = '/home/event/:id';
+  static const comunicado = '/home/comunicado/:id';
+  static const news = '/home/news/:id';
+  static const local = '/map/:id';
+  static const ticket = '/tickets/:id';
   static const notification = '/home/notification/:id';
 
-  static const styleguide   = '/styleguide';
+  static const styleguide = '/styleguide';
+
+  // DEV ONLY — rotas com dados mockados, sem precisar de backend
+  static const devEventDetail = '/dev/event/:id';
 }
 
 class AppRouter {
@@ -72,15 +80,14 @@ class AppRouter {
   late final GoRouter router = _buildRouter();
 
   Future<void> init() async {
-
     try {
       final initialUri = await _appLinks.getInitialLink();
       if (initialUri != null) {
         if (kDebugMode) debugPrint('[DeepLink] cold start link: $initialUri');
         _handleIncomingLink(initialUri);
       }
-    } catch(e) {
-        if (kDebugMode) debugPrint('[DeepLink] erro ao ler initial link: $e');
+    } catch (e) {
+      if (kDebugMode) debugPrint('[DeepLink] erro ao ler initial link: $e');
     }
 
     _appLinks.uriLinkStream.listen((uri) {
@@ -131,6 +138,10 @@ class AppRouter {
           builder: (context, state) => const LoginScreen(),
         ),
         GoRoute(
+          path: AppRoutes.register,
+          builder: (context, state) => const RegisterScreen(),
+        ),
+        GoRoute(
           path: AppRoutes.onboarding,
           builder: (context, state) => const StyleguideScreen(),
         ),
@@ -139,88 +150,112 @@ class AppRouter {
           builder: (context, state) => const StyleguideScreen(),
         ),
 
+        // DEV ONLY — abre EventDetailPage com dados mockados, sem backend
+        GoRoute(
+          path: AppRoutes.devEventDetail,
+          builder: (context, state) => EventDetailPage(
+            eventId: state.pathParameters['id']!,
+            repository: const FakeEventRepository(),
+          ),
+        ),
+
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {
             return MainShell(navigationShell: navigationShell);
           },
           branches: [
             // Inicio
-            StatefulShellBranch(routes: [
-              GoRoute(
-                path: AppRoutes.home,
-                builder: (context, state) => const HomePage(),
-                routes: [
-                  GoRoute(
-                    path: 'comunicado/:id',
-                    builder: (context, state) =>
-                        _detailPlaceholder('comunicado', state),
-                  ),
-                  GoRoute(
-                    path: 'news/:id',
-                    builder: (context, state) =>
-                        _detailPlaceholder('news', state),
-                  ),
-                  GoRoute(
-                    path: 'notification/:id',
-                    builder: (context, state) =>
-                        _detailPlaceholder('notification', state),
-                  ),
-                ],
-              ),
-            ]),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: AppRoutes.home,
+                  builder: (context, state) => const HomePage(),
+                  routes: [
+                    GoRoute(
+                      path: 'event/:id',
+                      builder: (context, state) =>
+                          EventDetailPage(eventId: state.pathParameters['id']!),
+                    ),
+                    GoRoute(
+                      path: 'comunicado/:id',
+                      builder: (context, state) =>
+                          _detailPlaceholder('comunicado', state),
+                    ),
+                    GoRoute(
+                      path: 'news/:id',
+                      builder: (context, state) =>
+                          _detailPlaceholder('news', state),
+                    ),
+                    GoRoute(
+                      path: 'notification/:id',
+                      builder: (context, state) =>
+                          _detailPlaceholder('notification', state),
+                    ),
+                  ],
+                ),
+              ],
+            ),
 
             // Eventos
-            StatefulShellBranch(routes: [
-              GoRoute(
-                path: AppRoutes.events,
-                builder: (context, state) => const EventsPage(),
-                routes: [
-                  GoRoute(
-                    path: ':id',
-                    builder: (context, state) =>
-                        _detailPlaceholder('event', state),
-                  ),
-                ],
-              ),
-            ]),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: AppRoutes.events,
+                  builder: (context, state) => const EventsPage(),
+                  routes: [
+                    GoRoute(
+                      path: ':id',
+                      builder: (context, state) =>
+                          _detailPlaceholder('event', state),
+                    ),
+                  ],
+                ),
+              ],
+            ),
 
             // Mapa
-            StatefulShellBranch(routes: [
-              GoRoute(
-                path: AppRoutes.map,
-                builder: (context, state) => const MapPage(),
-                routes: [
-                  GoRoute(
-                    path: ':id',
-                    builder: (context, state) =>
-                        _detailPlaceholder('local', state),
-                  ),
-                ],
-              ),
-            ]),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: AppRoutes.map,
+                  builder: (context, state) => const MapPage(),
+                  routes: [
+                    GoRoute(
+                      path: ':id',
+                      builder: (context, state) =>
+                          _detailPlaceholder('local', state),
+                    ),
+                  ],
+                ),
+              ],
+            ),
 
             // Tickets
-            StatefulShellBranch(routes: [
-              GoRoute(
-                path: AppRoutes.tickets,
-                builder: (context, state) => const TicketsPage(),
-                routes: [
-                  GoRoute(
-                    path: ':id',
-                    builder: (context, state) =>
-                        _detailPlaceholder('ticket', state),
-                  ),
-                ],
-              ),
-            ]),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: AppRoutes.tickets,
+                  builder: (context, state) => const TicketsPage(),
+                  routes: [
+                    GoRoute(
+                      path: ':id',
+                      builder: (context, state) =>
+                          _detailPlaceholder('ticket', state),
+                    ),
+                  ],
+                ),
+              ],
+            ),
 
             // Perfil
-            StatefulShellBranch(routes: [
-              GoRoute(
-                path: AppRoutes.profile,
-                builder: (context, state) => const ProfilePage(),
-              ),
-            ]),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: AppRoutes.profile,
+                  builder: (context, state) => const ProfilePage(),
+                ),
+              ],
+            ),
           ],
         ),
       ],
@@ -231,7 +266,7 @@ class AppRouter {
     final isLoggedIn = AuthService.instance.currentUser.value != null;
     final location = state.matchedLocation;
 
-    const publicRoutes = {AppRoutes.splash, AppRoutes.login};
+    const publicRoutes = {AppRoutes.splash, AppRoutes.login, AppRoutes.register};
     final isPublic = publicRoutes.contains(location);
 
     if (isLoggedIn && isPublic) {

@@ -8,7 +8,10 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { ForbiddenException, ValidationPipe } from '@nestjs/common';
 import { SentryExceptionFilter } from './common/sentry-exception.filter';
+import { JsonParseExceptionFilter } from './common/filters/json-parse-exception.filter';
+import { MulterExceptionFilter } from './common/filters/multer-exception.filter';
 import { validationPipeConfig } from './config/validation-pipe.config';
+import { getLocalStorageDir } from './modules/storage/local-storage.service';
 
 const glitchtipDsn = process.env.GLITCHTIP_DSN;
 if (glitchtipDsn) {
@@ -49,11 +52,25 @@ async function bootstrap(): Promise<void> {
     },
   });
 
-  // Filter global de exceções enviadas para o GlitchTip
+  // Filters globais:
+  // - JsonParseExceptionFilter: transforma BadRequest do body-parser em { code, message }.
+  // - MulterExceptionFilter: transforma erros do multer (LIMIT_FILE_SIZE etc) em { code, message }.
+  // - SentryExceptionFilter: captura 5xx e crashes inesperados no GlitchTip.
+  // Mais específicos primeiro - o Nest aplica o mais específico para o tipo da exceção.
   const { httpAdapter } = app.get(HttpAdapterHost);
-  app.useGlobalFilters(new SentryExceptionFilter(httpAdapter));
+  app.useGlobalFilters(
+    new SentryExceptionFilter(httpAdapter),
+    new JsonParseExceptionFilter(),
+    new MulterExceptionFilter(),
+  );
 
   app.useGlobalPipes(new ValidationPipe(validationPipeConfig));
+
+  // Serve arquivos do driver `local` do StorageService em /dev-uploads/...
+  // Em modo `oci` o diretório não existe (ou fica vazio) e o handler só
+  // responde 404 para qualquer URL - sem impacto pratico em prod, pois as
+  // URLs geradas lá apontam para o bucket Oracle.
+  app.useStaticAssets(getLocalStorageDir(), { prefix: '/dev-uploads' });
 
   if (configService.get<string>('NODE_ENV') !== 'production') {
     const config = new DocumentBuilder()

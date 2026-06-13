@@ -1,13 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/config/prisma.service';
 import { generateId } from '../src/common/utils/ulid.util';
 import { TABLE_PREFIX } from '../src/common/types/ulid.types';
-
-import { validationPipeConfig } from '../src/config/validation-pipe.config';
+import { buildTestApp } from './helpers/test-app';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication<App>;
@@ -37,9 +36,7 @@ describe('Auth (e2e)', () => {
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe(validationPipeConfig));
-    await app.init();
+    app = await buildTestApp(moduleFixture);
 
     api = () => request(app.getHttpServer());
 
@@ -88,6 +85,7 @@ describe('Auth (e2e)', () => {
         name: 'Teste E2E',
         email: MOCK_TEST_USER.email,
         password: MOCK_TEST_USER.password,
+        confirmPassword: MOCK_TEST_USER.password,
         cityId: testCityId,
       })
       .expect(201);
@@ -98,20 +96,20 @@ describe('Auth (e2e)', () => {
     expect(response.body).not.toHaveProperty('role');
   });
 
-  it('POST /auth/register — normalizar email com trim e lowercase', async () => {
+  it('POST /auth/register — normaliza email com trim e lowercase no check de duplicidade', async () => {
     const response = await api()
       .post('/auth/register')
       .send({
         name: 'Teste E2E',
         email: '  E2E@TESTE.COM  ',
         password: MOCK_TEST_USER.password,
+        confirmPassword: MOCK_TEST_USER.password,
         cityId: testCityId,
       })
-      .expect(409);
+      .expect(400);
 
-    // 409(email ja existe)
     const body = response.body as { code: string };
-    expect(body.code).toBe('email_exists');
+    expect(body.code).toBe('registration_failed');
   });
 
   it('POST /auth/register —  retornar 400 sem cityId', async () => {
@@ -121,6 +119,7 @@ describe('Auth (e2e)', () => {
         name: 'Teste Sem Cidade',
         email: 'sem-cidade@teste.com',
         password: MOCK_TEST_USER.password,
+        confirmPassword: MOCK_TEST_USER.password,
       })
       .expect(400);
 
@@ -136,6 +135,7 @@ describe('Auth (e2e)', () => {
         name: 'Teste Formato Invalido',
         email: 'formato-invalido@teste.com',
         password: MOCK_TEST_USER.password,
+        confirmPassword: MOCK_TEST_USER.password,
         cityId: 'invalido',
       })
       .expect(400);
@@ -152,6 +152,7 @@ describe('Auth (e2e)', () => {
         name: 'Teste Cidade Inexistente',
         email: 'cidade-inexistente@teste.com',
         password: MOCK_TEST_USER.password,
+        confirmPassword: MOCK_TEST_USER.password,
         cityId: `${TABLE_PREFIX.CITY}00000000000000000000000000`,
       })
       .expect(404);
@@ -217,16 +218,23 @@ describe('Auth (e2e)', () => {
     await api().get('/auth/me').expect(401);
   });
 
-  it('POST /auth/register — deve retornar 409 com email duplicado', async () => {
-    await api()
+  it('POST /auth/register — deve retornar 400 genérico com email já cadastrado (sem revelar existência)', async () => {
+    const response = await api()
       .post('/auth/register')
       .send({
         name: 'Teste E2E',
         email: MOCK_TEST_USER.email,
         password: MOCK_TEST_USER.password,
+        confirmPassword: MOCK_TEST_USER.password,
         cityId: testCityId,
       })
-      .expect(409);
+      .expect(400);
+
+    const body = response.body as { code: string; message: string };
+    expect(body.code).toBe('registration_failed');
+    // Mensagem propositalmente genérica para evitar enumeração de emails.
+    expect(body.message).not.toContain('Email');
+    expect(body.message).not.toContain('cadastrado');
   });
 
   it('POST /auth/login — deve retornar 401 com senha errada', async () => {

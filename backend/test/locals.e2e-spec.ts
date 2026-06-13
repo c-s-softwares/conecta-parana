@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/config/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { TABLE_PREFIX } from '../src/common/types/ulid.types';
-import { validationPipeConfig } from '../src/config/validation-pipe.config';
+import { buildTestApp } from './helpers/test-app';
 
 describe('Locals (e2e)', () => {
   let app: INestApplication<App>;
@@ -38,15 +38,17 @@ describe('Locals (e2e)', () => {
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe(validationPipeConfig));
+    app = await buildTestApp(moduleFixture);
 
     prisma = moduleFixture.get<PrismaService>(PrismaService);
     jwtService = moduleFixture.get<JwtService>(JwtService);
 
-    await app.init();
-
     // 1. Limpeza completa
+    // Photo.local tem onDelete: Restrict, entao photos referenciando precisam
+    // sair antes do deleteMany de locals para nao violar a FK.
+    await prisma.client.photo.deleteMany({
+      where: { localId: { startsWith: TABLE_PREFIX.LOCAL } },
+    });
     await prisma.client.local.deleteMany({
       where: { id: { startsWith: TABLE_PREFIX.LOCAL } },
     });
@@ -135,6 +137,9 @@ describe('Locals (e2e)', () => {
   });
 
   afterAll(async () => {
+    await prisma.client.photo.deleteMany({
+      where: { localId: { startsWith: TABLE_PREFIX.LOCAL } },
+    });
     await prisma.client.local.deleteMany({
       where: { id: { startsWith: TABLE_PREFIX.LOCAL } },
     });
