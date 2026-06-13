@@ -57,6 +57,8 @@ PORT=3000
 NODE_ENV=development
 ```
 
+As demais variáveis (JWT, CORS, Redis, GlitchTip, storage) já vêm preenchidas com placeholders no `.env.example`. Storage de fotos vem em modo `local` por padrão - ver seção 9 se precisar trocar.
+
 ### Mobile
 
 ```bash
@@ -180,3 +182,33 @@ flutter test integration_test/     # Testes de integração
 ```
 
 Você também pode rodar os testes direto pela IDE caso esteja disponível.
+
+## 9. Storage de arquivos em dev
+
+O backend tem dois drivers (`STORAGE_DRIVER`):
+
+- `local` (**padrão em dev**): persiste em `backend/.local-uploads/` e serve em `http://localhost:3000/dev-uploads/<key>`. **Dispensa qualquer configuração Oracle.**
+- `oci`: integra com Oracle Cloud Object Storage real.
+
+Para desenvolver, basta manter `STORAGE_DRIVER=local` no seu `.env` (padrão do `.env.example`). As envs `OCI_*` ficam em branco - são validadas pelo Joi apenas quando o driver é `oci`. Arquivos enviados via `POST /uploads/photos` vão para o seu disco, isolados de outros devs.
+
+Se você precisar testar contra OCI real localmente (raro - normalmente só para debugar problemas específicos do SDK), gere uma chave Oracle pessoal e aponte para um bucket próprio. Nunca usar buckets compartilhados de outros ambientes do seu `.env` local.
+
+## 10. Email transacional em dev
+
+O backend tem dois drivers (`MAIL_DRIVER`):
+
+- `mock` (**padrão em dev**): loga os parâmetros no console sem enviar emails reais. **Dispensa qualquer configuração Resend.**
+- `resend`: integra com a API do Resend para envio real.
+
+Para desenvolver, basta manter `MAIL_DRIVER=mock` no seu `.env` (padrão do `.env.example`). As envs `RESEND_API_KEY` e `MAIL_FROM` ficam em branco - são validadas pelo Joi apenas quando o driver é `resend`. Chamadas a `sendVerificationCode` e `sendPasswordResetCode` aparecem no log do backend com todos os dados (destinatário, código, validade).
+
+Se você precisar testar envio real localmente (raro - normalmente só para validar templates no email client), crie uma conta gratuita em [resend.com](https://resend.com), gere uma API key pessoal e configure:
+
+```env
+MAIL_DRIVER=resend
+RESEND_API_KEY=re_sua_chave_aqui
+MAIL_FROM=seuemail@email.com
+```
+
+O free tier do Resend permite 100 emails/dia - suficiente para testes manuais.

@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { Server } from 'http';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -7,6 +7,7 @@ import type { Cache } from 'cache-manager';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/config/prisma.service';
 import * as bcrypt from 'bcryptjs';
+import { buildTestApp } from './helpers/test-app';
 
 const ADMIN_CREDENTIALS = {
   email: 'admin@conecta.local',
@@ -38,18 +39,10 @@ describe('Cities Cache Invalidation (e2e)', () => {
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
+    app = await buildTestApp(moduleFixture);
 
     prisma = moduleFixture.get<PrismaService>(PrismaService);
     cacheManager = moduleFixture.get<Cache>(CACHE_MANAGER);
-    await app.init();
     server = app.getHttpServer() as Server;
 
     // Limpa completamente o cache antes de iniciar o teste para garantir um ambiente limpo

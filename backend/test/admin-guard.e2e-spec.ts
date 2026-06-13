@@ -5,6 +5,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { Role } from '@prisma/client';
+import { buildTestApp } from './helpers/test-app';
 
 describe('AdminController (e2e)', () => {
   let app: INestApplication<App>;
@@ -15,9 +16,8 @@ describe('AdminController (e2e)', () => {
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    app = await buildTestApp(moduleFixture);
     app.enableShutdownHooks();
-    await app.init();
 
     jwtService = moduleFixture.get<JwtService>(JwtService);
   });

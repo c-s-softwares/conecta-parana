@@ -5,7 +5,7 @@ import { generateId } from '../utils/ulid.util';
 import { TABLE_PREFIX } from '../types/ulid.types';
 import { PaginationQueryDto } from '../dto/request/pagination-query.dto';
 import { PaginatedResponseDto } from '../dto/response/paginated-response.dto';
-import { apiError, StaticCode } from '../errors/api-error';
+import { apiError } from '../errors/api-error';
 
 type TablePrefix = (typeof TABLE_PREFIX)[keyof typeof TABLE_PREFIX];
 
@@ -32,9 +32,9 @@ export interface BaseCrudConfig {
   /** Nome legível da entidade para mensagens de erro padrão (ex: 'Cidade') */
   entityName: string;
   /** Código de erro padrão para registro duplicado (Unique Constraint - P2002) */
-  duplicateErrorKey?: StaticCode;
+  duplicateErrorKey?: string;
   /** Código de erro padrão para registro não encontrado (NotFound) */
-  notFoundErrorKey?: StaticCode;
+  notFoundErrorKey?: string;
   /** Ativa comportamento de Soft-Delete (atualiza 'deletedAt' ao invés de remover fisicamente) */
   softDelete?: boolean;
 }

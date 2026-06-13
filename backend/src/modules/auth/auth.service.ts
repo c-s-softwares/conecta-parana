@@ -1,8 +1,8 @@
 import {
   Injectable,
   UnauthorizedException,
-  ConflictException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -13,7 +13,10 @@ import { LoginDto } from './dto/request/login.dto';
 import { LogoutAllDto } from './dto/request/logout-all.dto';
 import { generateId } from '../../common/utils/ulid.util';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
-import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
+import { apiError } from '../../common/errors/api-error';
+import { AUTH_ERRORS } from './auth.errors';
+import { CITIES_ERRORS } from '../cities/cities.errors';
+import { SHARED_ERRORS } from '../../common/errors/shared-errors';
 
 @Injectable()
 export class AuthService {
@@ -28,11 +31,10 @@ export class AuthService {
       where: { email: dto.email },
     });
 
+    // Não diferencia "email já existe" de outras falhas de registro para evitar
+    // enumeração de usuários via /auth/register. Ver AUTH_ERRORS.REGISTRATION_FAILED.
     if (exists) {
-      throw new ConflictException({
-        code: 'email_exists',
-        message: 'Email já cadastrado',
-      });
+      throw new BadRequestException(apiError(AUTH_ERRORS.REGISTRATION_FAILED));
     }
 
     const city = await this.prisma.client.city.findFirst({
@@ -40,7 +42,7 @@ export class AuthService {
     });
 
     if (!city) {
-      throw new NotFoundException(apiError(API_ERROR_CODE.CITY_NOT_FOUND));
+      throw new NotFoundException(apiError(CITIES_ERRORS.CITY_NOT_FOUND));
     }
 
     const hashed = await hash(dto.password, 10);
@@ -64,13 +66,17 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('Credenciais inválidas');
+      throw new UnauthorizedException(
+        apiError(AUTH_ERRORS.INVALID_CREDENTIALS),
+      );
     }
 
     const passwordMatch = await compare(dto.password, user.password);
 
     if (!passwordMatch) {
-      throw new UnauthorizedException('Credenciais inválidas');
+      throw new UnauthorizedException(
+        apiError(AUTH_ERRORS.INVALID_CREDENTIALS),
+      );
     }
 
     return this.generateTokens(user.id, user.email, user.role, user.cityId);
@@ -82,7 +88,9 @@ export class AuthService {
     });
 
     if (!stored || stored.expiresAt < new Date()) {
-      throw new UnauthorizedException('Refresh token inválido ou expirado');
+      throw new UnauthorizedException(
+        apiError(AUTH_ERRORS.INVALID_REFRESH_TOKEN),
+      );
     }
 
     await this.prisma.client.refreshToken.delete({ where: { token } });
@@ -99,7 +107,13 @@ export class AuthService {
       where: { id: userId },
     });
 
-    return { id: user.id, name: user.name, email: user.email, role: user.role };
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      cityId: user.cityId,
+    };
   }
 
   async logout(token: string): Promise<void> {
@@ -114,18 +128,13 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException({
-        code: 'unauthenticated',
-        message: 'Usuário não autenticado',
-      });
+      throw new UnauthorizedException(apiError(SHARED_ERRORS.UNAUTHENTICATED));
     }
 
     const passwordMatch = await compare(dto.password, user.password);
 
     if (!passwordMatch) {
-      throw new UnauthorizedException(
-        apiError(API_ERROR_CODE.INVALID_PASSWORD),
-      );
+      throw new UnauthorizedException(apiError(AUTH_ERRORS.INVALID_PASSWORD));
     }
 
     await this.prisma.client.refreshToken.deleteMany({

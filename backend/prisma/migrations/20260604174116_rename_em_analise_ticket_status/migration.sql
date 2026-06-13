@@ -1,0 +1,1 @@
+UPDATE "tickets" SET "status" = 'em_analise' WHERE "status" = 'em_análise';
