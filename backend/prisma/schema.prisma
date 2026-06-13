@@ -182,8 +182,11 @@ model News {
   description String
   type        String
   linkType    String  @map("link_type")
-  isActive    Boolean @map("is_active")
+  isActive    Boolean @default(true) @map("is_active")
   cityId      String  @map("city_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   city      City       @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   favorites Favorite[]
