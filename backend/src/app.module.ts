@@ -19,6 +19,7 @@ import { TicketsModule } from './modules/tickets/tickets.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { HttpCacheInterceptor } from './common/interceptors/http-cache.interceptor';
 import { PinoLoggerModule } from './config/logger.module';
+import { NewsModule } from './modules/news/news.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { PinoLoggerModule } from './config/logger.module';
     TicketsModule,
     UploadsModule,
     RedisCacheModule,
+    NewsModule,
   ],
   controllers: [AppController],
   providers: [
