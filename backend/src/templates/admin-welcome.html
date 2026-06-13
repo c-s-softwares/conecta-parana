@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bem-vindo ao Conecta Paraná</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body style="margin:0; padding:0; background-color:#EEF3F0; font-family:'Plus Jakarta Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#EEF3F0; padding:40px 16px;">
+    <tr>
+      <td align="center">
+
+        <!-- Cartão de email -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:540px; background-color:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 8px 32px rgba(0,51,25,0.10);">
+
+          <!-- ── Cabeçalho ── -->
+          <tr>
+            <td style="background-color:#006733; background-image:linear-gradient(160deg, #006733 0%, #004D26 100%); padding:32px 36px 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td valign="middle">
+                    <table role="presentation" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="width:8px; height:8px; background-color:#6BCF9A; border-radius:50%; vertical-align:middle;"></td>
+                        <td style="padding-left:8px; vertical-align:middle;">
+                          <span style="color:rgba(255,255,255,0.60); font-size:11px; font-weight:600; letter-spacing:1.8px; text-transform:uppercase;">Plataforma de participação cidadã</span>
+                        </td>
+                      </tr>
+                    </table>
+                    <h1 style="margin:6px 0 0; color:#ffffff; font-size:26px; font-weight:800; letter-spacing:-0.5px; line-height:1.1;">Conecta Paraná</h1>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ── Corpo ── -->
+          <tr>
+            <td style="padding:36px 36px 28px;">
+
+              <!-- Título -->
+              <h2 style="margin:0 0 4px; color:#0D1F15; font-size:20px; font-weight:700; letter-spacing:-0.3px;">Bem-vindo, {{name}}!</h2>
+              <p style="margin:0 0 10px; color:#4A7A5E; font-size:13px; font-weight:500;">Administrador — {{cityName}}</p>
+              <!-- Linha de destaque -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:22px;">
+                <tr>
+                  <td style="height:2px; background-color:#E5EDE8;"></td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 24px; color:#3D5245; font-size:14px; line-height:1.7;">
+                Sua conta de administrador foi criada na plataforma Conecta Paraná para a cidade de
+                <strong style="color:#0D1F15;">{{cityName}}</strong>.
+                Use as credenciais abaixo para fazer seu primeiro acesso.
+              </p>
+
+              <!-- ── Caixa de credenciais ── -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                <tr>
+                  <td style="background-color:#F0F7F3; border-radius:12px; border:1px solid #C8DDD3; padding:24px 24px 20px;">
+                    <p style="margin:0 0 14px; color:#4A7A5E; font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase;">Suas credenciais de acesso</p>
+
+                    <!-- Linha de email -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+                      <tr>
+                        <td style="width:60px; padding-right:12px; vertical-align:top;">
+                          <p style="margin:0; color:#6B8F7A; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; padding-top:1px;">Email</p>
+                        </td>
+                        <td style="vertical-align:top;">
+                          <p style="margin:0; color:#0D1F15; font-size:14px; font-weight:600; word-break:break-all;">{{email}}</p>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <!-- Divisor -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+                      <tr>
+                        <td style="height:1px; background-color:#D8EAE1;"></td>
+                      </tr>
+                    </table>
+
+                    <!-- Linha de senha -->
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="width:60px; padding-right:12px; vertical-align:top;">
+                          <p style="margin:0; color:#6B8F7A; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; padding-top:1px;">Senha</p>
+                        </td>
+                        <td style="vertical-align:top;">
+                          <p style="margin:0; font-size:20px; font-weight:800; letter-spacing:4px; color:#006733; font-family:'Courier New', Courier, monospace;">{{password}}</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- ── Aviso de segurança ── -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:0;">
+                <tr>
+                  <td style="background-color:#FFF8E6; border-left:3px solid #D4A017; border-radius:0 8px 8px 0; padding:14px 16px;">
+                    <p style="margin:0 0 4px; color:#7A5C00; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">⚠ Troque sua senha no primeiro acesso</p>
+                    <p style="margin:0; color:#7A5C00; font-size:12px; line-height:1.6;">
+                      Esta é uma senha provisória gerada automaticamente. Por segurança, altere-a
+                      imediatamente após fazer login na plataforma. Nunca compartilhe suas credenciais.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- ── Rodapé ── -->
+          <tr>
+            <td style="padding:0 36px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="border-top:1px solid #E5EDE8; padding:20px 0 24px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td>
+                          <p style="margin:0 0 3px; color:#6B8F7A; font-size:11px; font-weight:600;">Conecta Paraná</p>
+                          <p style="margin:0; color:#9DB5A5; font-size:11px;">Plataforma de participação cidadã</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+        </table>
+        <!-- Fim do cartão de email -->
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

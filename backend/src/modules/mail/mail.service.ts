@@ -9,6 +9,13 @@ export interface SendCodeParams {
   expiresAt: Date;
 }
 
+export interface SendAdminWelcomeParams {
+  email: string;
+  name: string;
+  password: string;
+  cityName: string;
+}
+
 export interface SendResult {
   messageId: string;
 }
@@ -31,6 +38,10 @@ export abstract class MailService {
   abstract sendVerificationCode(params: SendCodeParams): Promise<SendResult>;
 
   abstract sendPasswordResetCode(params: SendCodeParams): Promise<SendResult>;
+
+  abstract sendAdminWelcome(
+    params: SendAdminWelcomeParams,
+  ): Promise<SendResult>;
 
   /**
    * Carrega um template HTML de `backend/src/templates/<name>.html`.
