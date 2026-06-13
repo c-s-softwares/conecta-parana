@@ -70,7 +70,7 @@ export class CommunicateController extends BaseCrudController<
 
   @Post()
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Criar comunicado' })
   @ApiResponse({ status: 201, description: 'Comunicado criado com sucesso' })
@@ -89,7 +89,7 @@ export class CommunicateController extends BaseCrudController<
 
   @Patch(':id')
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Atualizar comunicado' })
   @ApiResponse({
@@ -111,7 +111,7 @@ export class CommunicateController extends BaseCrudController<
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Deletar comunicado' })
   @ApiResponse({ status: 204, description: 'Comunicado deletado com sucesso' })
