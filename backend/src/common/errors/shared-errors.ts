@@ -17,4 +17,7 @@ export const SHARED_ERRORS = defineErrors({
   MALFORMED_JSON: 'Corpo da requisição contém JSON inválido',
   NOT_OWNER_OR_ADMIN:
     'Acesso negado: você não é o proprietário deste recurso nem administrador desta cidade',
+  MULTIPLE_TARGETS: 'Mais de um campo de target enviado',
+  NO_TARGET: 'Nenhum target enviado',
+  TARGET_NOT_FOUND: 'ID alvo inexistente',
 });
