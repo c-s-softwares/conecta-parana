@@ -150,7 +150,6 @@ describe('CommunicateService', () => {
     ).rejects.toThrow(ForbiddenException);
   });
 
-
   it('deve criar comunicado usando cityId enviado no payload se Super Admin', async () => {
     mockPrisma.client.communicate.create.mockResolvedValue(MOCK_COMMUNICATE);
 
