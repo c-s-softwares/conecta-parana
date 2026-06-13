@@ -6,9 +6,9 @@ import { CommunicateService } from './communicates.service';
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 
-const MOCK_COMMUNICATE_ID = `${TABLE_PREFIX.COMMUNICATE}_01HZX3Y4Q9F8TAB1C2DKEYH9MN`;
-const MOCK_CITY_ID = `${TABLE_PREFIX.CITY}_01HZX3Y4Q9F8TAB1C2DKEYH9MN`;
-const MOCK_USER_ID = `${TABLE_PREFIX.USER}_01HZX3Y4Q9F8TAB1C2DKEYH9MN`;
+const MOCK_COMMUNICATE_ID = `${TABLE_PREFIX.COMMUNICATE}01HZX3Y4Q9F8TAB1C2DKEYH9MN`;
+const MOCK_CITY_ID = `${TABLE_PREFIX.CITY}01HZX3Y4Q9F8TAB1C2DKEYH9MN`;
+const MOCK_USER_ID = `${TABLE_PREFIX.USER}01HZX3Y4Q9F8TAB1C2DKEYH9MN`;
 
 const MOCK_COMMUNICATE = {
   id: MOCK_COMMUNICATE_ID,
@@ -39,7 +39,7 @@ const mockAdminUser = {
 };
 
 const mockSuperAdminUser = {
-  id: `${TABLE_PREFIX.USER}_SUPERADMIN`,
+  id: `${TABLE_PREFIX.USER}SUPERADMIN`,
   cityId: null,
   role: Role.SUPER_ADMIN,
 };
@@ -133,7 +133,7 @@ describe('CommunicateService', () => {
   it('deve lançar city_scope_denied se ADMIN tentar alterar comunicado de outra cidade', async () => {
     mockPrisma.client.communicate.findUnique.mockResolvedValue({
       ...MOCK_COMMUNICATE,
-      cityId: `${TABLE_PREFIX.CITY}_OUTRA`,
+      cityId: `${TABLE_PREFIX.CITY}OUTRA`,
     });
 
     await expect(
@@ -197,7 +197,7 @@ describe('CommunicateService', () => {
   it('deve permitir atualizar comunicado de qualquer cidade se Super Admin', async () => {
     mockPrisma.client.communicate.findUnique.mockResolvedValue({
       ...MOCK_COMMUNICATE,
-      cityId: `${TABLE_PREFIX.CITY}_OUTRA`,
+      cityId: `${TABLE_PREFIX.CITY}OUTRA`,
     });
     mockPrisma.client.communicate.update.mockResolvedValue({
       ...MOCK_COMMUNICATE,

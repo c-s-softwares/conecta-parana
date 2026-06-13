@@ -104,7 +104,7 @@ export class CommunicateService extends BaseCrudService<
 
     const communicate = await this.prisma.client.communicate.create({
       data: {
-        id: `${TABLE_PREFIX.COMMUNICATE}_${Date.now()}`,
+        id: `${TABLE_PREFIX.COMMUNICATE}${Date.now()}`,
         title: dto.title,
         description: dto.description,
         isActive: dto.isActive ?? true,
