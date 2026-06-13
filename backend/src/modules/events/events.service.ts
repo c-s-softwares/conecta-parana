@@ -15,7 +15,10 @@ import { Role } from '@prisma/client';
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 import { generateId } from '../../common/utils/ulid.util';
-import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
+import { apiError } from '../../common/errors/api-error';
+import { EVENT_ERRORS } from './events.errors';
+import { SHARED_ERRORS } from '../../common/errors/shared-errors';
+import { LOCALS_ERRORS } from '../locals/locals.errors';
 
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
@@ -54,7 +57,7 @@ export class EventsService extends BaseCrudService<
       tablePrefix: TABLE_PREFIX.EVENT,
       entityName: 'Evento',
       softDelete: true,
-      notFoundErrorKey: API_ERROR_CODE.EVENT_NOT_FOUND,
+      notFoundErrorKey: EVENT_ERRORS.EVENT_NOT_FOUND,
     });
   }
 
@@ -197,7 +200,7 @@ export class EventsService extends BaseCrudService<
     })) as EventEntity | null;
 
     if (!current) {
-      throw new NotFoundException(apiError(API_ERROR_CODE.EVENT_NOT_FOUND));
+      throw new NotFoundException(apiError(EVENT_ERRORS.EVENT_NOT_FOUND));
     }
 
     this.validateAdminCityScope(current.cityId, user);
@@ -236,7 +239,7 @@ export class EventsService extends BaseCrudService<
       });
 
     if (updated.count === 0) {
-      throw new ConflictException(apiError(API_ERROR_CODE.EVENT_CHANGED));
+      throw new ConflictException(apiError(EVENT_ERRORS.EVENT_CHANGED));
     }
 
     const newEntity = await this.findOne(id);
@@ -255,7 +258,7 @@ export class EventsService extends BaseCrudService<
     })) as EventEntity | null;
 
     if (!event) {
-      throw new NotFoundException(apiError(API_ERROR_CODE.EVENT_NOT_FOUND));
+      throw new NotFoundException(apiError(EVENT_ERRORS.EVENT_NOT_FOUND));
     }
 
     this.validateAdminCityScope(event.cityId, user);
@@ -286,7 +289,7 @@ export class EventsService extends BaseCrudService<
 
   private validateAdminCityScope(cityId: string, user: JwtPayload): void {
     if (user.role === Role.ADMIN && user.cityId && user.cityId !== cityId) {
-      throw new ForbiddenException(apiError(API_ERROR_CODE.CITY_SCOPE_DENIED));
+      throw new ForbiddenException(apiError(SHARED_ERRORS.CITY_SCOPE_DENIED));
     }
   }
 
@@ -295,7 +298,7 @@ export class EventsService extends BaseCrudService<
     cityId: string,
   ): Promise<void> {
     if (localId === null) {
-      throw new NotFoundException(apiError(API_ERROR_CODE.LOCAL_NOT_FOUND));
+      throw new NotFoundException(apiError(LOCALS_ERRORS.LOCAL_NOT_FOUND));
     }
 
     const local = await this.prisma.client.local.findFirst({
@@ -308,31 +311,29 @@ export class EventsService extends BaseCrudService<
     });
 
     if (!local) {
-      throw new NotFoundException(apiError(API_ERROR_CODE.LOCAL_NOT_FOUND));
+      throw new NotFoundException(apiError(LOCALS_ERRORS.LOCAL_NOT_FOUND));
     }
 
     if (local.cityId !== cityId) {
-      throw new ForbiddenException(apiError(API_ERROR_CODE.CITY_SCOPE_DENIED));
+      throw new ForbiddenException(apiError(SHARED_ERRORS.CITY_SCOPE_DENIED));
     }
   }
 
   private validateEventDate(eventDate: string): void {
     if (new Date(eventDate).getTime() < Date.now()) {
-      throw new BadRequestException(
-        apiError(API_ERROR_CODE.EVENT_DATE_IN_PAST),
-      );
+      throw new BadRequestException(apiError(EVENT_ERRORS.EVENT_DATE_IN_PAST));
     }
   }
 
   private validateType(type: string): void {
     if (!VALID_EVENT_TYPES.includes(type)) {
-      throw new BadRequestException(apiError(API_ERROR_CODE.INVALID_TYPE));
+      throw new BadRequestException(apiError(EVENT_ERRORS.INVALID_TYPE));
     }
   }
 
   private validateStatus(status: string): void {
     if (!VALID_EVENT_STATUS.includes(status)) {
-      throw new BadRequestException(apiError(API_ERROR_CODE.INVALID_STATUS));
+      throw new BadRequestException(apiError(EVENT_ERRORS.INVALID_STATUS));
     }
   }
 

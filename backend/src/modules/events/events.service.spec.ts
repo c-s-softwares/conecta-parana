@@ -22,7 +22,7 @@ const MOCK_EVENT = {
   description: 'Evento da cidade',
   type: 'cultural',
   status: 'publicado',
-  eventDate: new Date('2026-06-12T19:00:00Z'),
+  eventDate: new Date('2030-06-12T19:00:00Z'),
 
   cityId: MOCK_CITY_ID,
   userId: 'usr_123',
@@ -196,7 +196,7 @@ describe('EventsService', () => {
             description: 'Teste',
             type: 'abc',
             status: 'publicado',
-            eventDate: '2026-06-12T19:00:00Z',
+            eventDate: '2030-06-12T19:00:00Z',
             cityId: MOCK_CITY_ID,
           },
           {
@@ -215,7 +215,7 @@ describe('EventsService', () => {
             description: 'Teste',
             type: 'cultural',
             status: 'abc',
-            eventDate: '2026-06-12T19:00:00Z',
+            eventDate: '2030-06-12T19:00:00Z',
             cityId: MOCK_CITY_ID,
           },
           {
@@ -254,7 +254,7 @@ describe('EventsService', () => {
           description: 'Evento da cidade',
           type: 'cultural',
           status: 'publicado',
-          eventDate: '2026-06-12T19:00:00Z',
+          eventDate: '2030-06-12T19:00:00Z',
           cityId: MOCK_CITY_ID,
         },
         {
