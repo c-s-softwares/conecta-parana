@@ -205,8 +205,9 @@ describe('News (e2e)', () => {
       })
       .expect(201);
 
-    const response = await request(app.getHttpServer())
-      .get(`/news?cityId=${maringaId}`);
+    const response = await request(app.getHttpServer()).get(
+      `/news?cityId=${maringaId}`,
+    );
     if (response.status !== 200) {
       console.log('Error GET /news?cityId:', response.body);
     }
@@ -239,4 +240,3 @@ describe('News (e2e)', () => {
     expect(found).toBeUndefined();
   });
 });
-

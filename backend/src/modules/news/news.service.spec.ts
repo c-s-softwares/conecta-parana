@@ -1,10 +1,16 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { PrismaService } from '../../config/prisma.service';
 
 import { NewsService } from './news.service';
 import { CreateNewsDto } from './dto/request/create-news.dto';
+import type { JwtPayload } from '../auth/strategies/jwt.strategy';
 
 const BASE_DTO = {
   title: 'Título válido',
@@ -18,13 +24,13 @@ const CITY_ADMIN_USER = {
   sub: 'usr_123',
   role: 'ADMIN',
   cityId: 'cit_jwt',
-} as never;
+} as unknown as JwtPayload;
 
 const SUPER_ADMIN_USER = {
   sub: 'usr_super',
   role: 'ADMIN',
   cityId: null,
-} as never;
+} as unknown as JwtPayload;
 
 describe('NewsService', () => {
   let service: NewsService;
@@ -66,7 +72,10 @@ describe('NewsService', () => {
 
   it('deve lançar BadRequestException para linkType inválido', async () => {
     await expect(
-      service.create({ ...BASE_DTO, linkType: 'link_invalido' }, SUPER_ADMIN_USER),
+      service.create(
+        { ...BASE_DTO, linkType: 'link_invalido' },
+        SUPER_ADMIN_USER,
+      ),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -125,7 +134,11 @@ describe('NewsService', () => {
       isActive: true,
     });
 
-    const result = await service.update('nws_123', { title: 'Novo título' }, SUPER_ADMIN_USER);
+    const result = await service.update(
+      'nws_123',
+      { title: 'Novo título' },
+      SUPER_ADMIN_USER,
+    );
 
     expect(result.title).toBe('Novo título');
     expect(mockPrisma.client.news.update).toHaveBeenCalledWith(
@@ -158,7 +171,9 @@ describe('NewsService', () => {
   it('deve lançar NotFoundException quando a notícia não for encontrada', async () => {
     mockPrisma.client.news.findFirst.mockResolvedValue(null);
 
-    await expect(service.findOne('id_inexistente')).rejects.toThrow(NotFoundException);
+    await expect(service.findOne('id_inexistente')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('deve lançar ForbiddenException quando ADMIN tentar modificar notícia de outra cidade', async () => {
@@ -169,17 +184,17 @@ describe('NewsService', () => {
       isActive: true,
     });
 
-    await expect(service.update('nws_123', { title: 'T' }, CITY_ADMIN_USER)).rejects.toThrow(ForbiddenException);
-    await expect(service.remove('nws_123', CITY_ADMIN_USER)).rejects.toThrow(ForbiddenException);
+    await expect(
+      service.update('nws_123', { title: 'T' }, CITY_ADMIN_USER),
+    ).rejects.toThrow(ForbiddenException);
+    await expect(service.remove('nws_123', CITY_ADMIN_USER)).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('deve lançar BadRequestException quando Super Admin não informar cityId', async () => {
     await expect(
-      service.create(
-        { ...BASE_DTO, cityId: undefined },
-        SUPER_ADMIN_USER,
-      ),
+      service.create({ ...BASE_DTO, cityId: undefined }, SUPER_ADMIN_USER),
     ).rejects.toThrow(BadRequestException);
   });
 });
-
