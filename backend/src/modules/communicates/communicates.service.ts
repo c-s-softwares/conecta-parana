@@ -164,7 +164,12 @@ export class CommunicateService extends BaseCrudService<
     payloadCityId: string | undefined,
     user: AuthUser,
   ): string {
-    void payloadCityId;
+    if (user.role === Role.SUPER_ADMIN) {
+      if (!payloadCityId) {
+        throw new BadRequestException(apiError(SHARED_ERRORS.CITY_REQUIRED));
+      }
+      return payloadCityId;
+    }
 
     if (!user.cityId) {
       throw new ForbiddenException(apiError(SHARED_ERRORS.CITY_SCOPE_DENIED));
@@ -174,6 +179,10 @@ export class CommunicateService extends BaseCrudService<
   }
 
   private validateCityScope(entityCityId: string, user: AuthUser): void {
+    if (user.role === Role.SUPER_ADMIN) {
+      return;
+    }
+
     if (entityCityId !== user.cityId) {
       throw new ForbiddenException(apiError(SHARED_ERRORS.CITY_SCOPE_DENIED));
     }
