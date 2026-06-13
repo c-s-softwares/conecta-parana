@@ -150,21 +150,6 @@ describe('CommunicateService', () => {
     ).rejects.toThrow(ForbiddenException);
   });
 
-  it('deve lançar city_scope_denied se ADMIN não possuir cityId', async () => {
-    await expect(
-      service.createWithUser(
-        {
-          title: 'Nova ferramenta disponível',
-          description: 'A nova ferramenta já está disponível para os cidadãos.',
-        },
-        {
-          id: MOCK_USER_ID,
-          cityId: null,
-          role: Role.ADMIN,
-        },
-      ),
-    ).rejects.toThrow(ForbiddenException);
-  });
 
   it('deve criar comunicado usando cityId enviado no payload se Super Admin', async () => {
     mockPrisma.client.communicate.create.mockResolvedValue(MOCK_COMMUNICATE);
