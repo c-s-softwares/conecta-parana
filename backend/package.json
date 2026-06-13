@@ -20,6 +20,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json --runInBand",
+    "test:all": "npm run lint && npm run test && npm run test:e2e",
     "test:mutation": "npx stryker run",
     "prisma:generate": "npx prisma generate",
     "prisma:migrate:dev": "npx prisma migrate dev",
@@ -55,6 +56,7 @@
     "passport-jwt": "^4.0.1",
     "pino-http": "^11.0.0",
     "reflect-metadata": "^0.2.2",
+    "resend": "^6.12.4",
     "rxjs": "^7.8.1",
     "sharp": "^0.34.5",
     "ulid": "^3.0.2"

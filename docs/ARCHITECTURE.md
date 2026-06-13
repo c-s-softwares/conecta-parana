@@ -187,14 +187,23 @@ O enum `Role` tem apenas dois valores: `ADMIN` e `CIDADAO`. O Super Admin não �
 
 ### Códigos de erro (contrato backend)
 
-O backend devolve `{ code, message }`: `code` é o identificador de máquina; `message` é o motivo em PT-BR. O `/admin` mapeia o `code` para a mensagem ao usuário (mapa próprio e independente).
+O backend devolve `{ code, message }`: `code` é o identificador de máquina (snake_case ASCII); `message` é o motivo em PT-BR. O `/admin` e o mobile mantêm mapas próprios `code -> mensagem ao usuário`.
 
-| Code | HTTP | Quando |
+Codes vivem em dois lugares:
+
+- **Codes globais** (auth, throttling, validation): `backend/src/common/errors/shared-errors.ts`.
+- **Codes por módulo**: `backend/src/modules/<modulo>/<modulo>.errors.ts` via `defineErrors({ ... })`. Resolvidos em runtime pelo `apiError(code)`.
+
+Exemplos representativos:
+
+| Code | HTTP | Origem |
 |---|---|---|
-| `unauthenticated` | 401 | Token ausente, inválido ou expirado |
-| `role_denied` | 403 | Role insuficiente para o endpoint |
-| `city_scope_denied` | 403 | Admin municipal atuando em recurso de outra cidade |
-| `city_required` | 400 | Super Admin sem informar `cityId` no payload |
+| `unauthenticated` | 401 | global (`JwtAuthGuard`) |
+| `validation_failed` | 400 | global (`ValidationPipe`) - `message` é o array de erros de campo |
+| `city_scope_denied` | 403 | global (`CityScopeGuard`) |
+| `<modulo>_<motivo>` | varia | catálogo do módulo (ex: `city_not_found`, `invalid_or_expired_code`) |
+
+Para a lista completa, consultar os catálogos. Codes `role_denied` e `validation_failed` têm `message` dinâmica e são tratados como caso especial em `apiError()`.
 
 ### Web Admin: rotas e guards
 
@@ -222,27 +231,7 @@ O `error.interceptor.ts` normaliza todos os erros HTTP em um objeto `AppError { 
 2. `error.status` - `STATUS_MAP`
 3. Fallback genérico
 
-### Tabela de comportamento por status
-
-| Status | Toast PT-BR | Repassado ao componente |
-|---|---|---|
-| 401 (chamada autenticada) | "Sessão expirada, faça login novamente." (apenas se refresh falhar) | Não - refresh automático transparente |
-| 400 | Nenhum | Sim - `AppError` com `details` para destacar campos no form |
-| 403 | "Acesso negado." | Sim - `AppError` |
-| 404 | Nenhum | Sim - `AppError` com `details` para exibir "não encontrado" |
-| 429 | Mensagem vinda do backend (`error.error.message`) | Sim - `AppError` |
-| 5xx | "Erro do servidor. Tente novamente em instantes." | Sim - `AppError` |
-| 0 / rede | "Sem conexão com o servidor." + botão "Tentar novamente" | Sim - `AppError` |
-
-Codes planejados:
-
-| Code | Status HTTP | Mensagem PT-BR |
-|---|---|---|
-| `unauthenticated` | 401 | "Sessão expirada, faça login novamente." |
-| `role_denied` | 403 | "Acesso negado para este papel." |
-| `city_scope_denied` | 403 | "Você só pode atuar na sua cidade." |
-| `validation_failed` | 400 | Passthrough sem toast |
-| `too_many_attempts` | 429 | Mensagem vinda do backend |
+O mapa `ERROR_CODE_MAP` em `admin/src/app/core/interceptors/error.interceptor.ts` define as mensagens por code. Códigos novos do backend que precisem de tradução PT-BR específica entram nesse mapa; o restante cai no `STATUS_MAP` por status HTTP ou no fallback.
 
 ---
 
