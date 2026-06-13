@@ -1,0 +1,3 @@
+export const VERIFICATION_CODE_LENGTH = 6;
+
+export const VERIFICATION_CODE_EXPIRATION_MS = 10 * 60 * 1000;

@@ -48,15 +48,16 @@ model User {
   // avatarUrl String? @map("avatar_url")
   // avatarThumbUrl String? @map("avatar_thumb_url")
 
-  city                 City?          @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  city                 City?               @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   refresh_tokens       RefreshToken[]
+  passwordResetCodes   PasswordResetCode[]
   events               Event[]
   photos               Photo[]
   likes                Like[]
   favorites            Favorite[]
   notifications        Notification[]
-  suggestions          Suggestion[]   @relation("UserSuggestions")
-  respondedSuggestions Suggestion[]   @relation("ResponderSuggestions")
+  suggestions          Suggestion[]        @relation("UserSuggestions")
+  respondedSuggestions Suggestion[]        @relation("ResponderSuggestions")
   locals               Local[]
   communicates         Communicate[]
   tickets              Ticket[]       @relation("UserTickets")
@@ -80,6 +81,19 @@ model RefreshToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("refresh_tokens")
+}
+
+model PasswordResetCode {
+  id        String    @id
+  userId    String    @map("user_id")
+  codeHash  String    @unique @map("code_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_codes")
 }
 
 model Event {

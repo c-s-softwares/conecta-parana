@@ -85,6 +85,7 @@ describe('Auth (e2e)', () => {
         name: 'Teste E2E',
         email: MOCK_TEST_USER.email,
         password: MOCK_TEST_USER.password,
+        confirmPassword: MOCK_TEST_USER.password,
         cityId: testCityId,
       })
       .expect(201);
@@ -102,6 +103,7 @@ describe('Auth (e2e)', () => {
         name: 'Teste E2E',
         email: '  E2E@TESTE.COM  ',
         password: MOCK_TEST_USER.password,
+        confirmPassword: MOCK_TEST_USER.password,
         cityId: testCityId,
       })
       .expect(400);
@@ -117,6 +119,7 @@ describe('Auth (e2e)', () => {
         name: 'Teste Sem Cidade',
         email: 'sem-cidade@teste.com',
         password: MOCK_TEST_USER.password,
+        confirmPassword: MOCK_TEST_USER.password,
       })
       .expect(400);
 
@@ -132,6 +135,7 @@ describe('Auth (e2e)', () => {
         name: 'Teste Formato Invalido',
         email: 'formato-invalido@teste.com',
         password: MOCK_TEST_USER.password,
+        confirmPassword: MOCK_TEST_USER.password,
         cityId: 'invalido',
       })
       .expect(400);
@@ -148,6 +152,7 @@ describe('Auth (e2e)', () => {
         name: 'Teste Cidade Inexistente',
         email: 'cidade-inexistente@teste.com',
         password: MOCK_TEST_USER.password,
+        confirmPassword: MOCK_TEST_USER.password,
         cityId: `${TABLE_PREFIX.CITY}00000000000000000000000000`,
       })
       .expect(404);
@@ -220,6 +225,7 @@ describe('Auth (e2e)', () => {
         name: 'Teste E2E',
         email: MOCK_TEST_USER.email,
         password: MOCK_TEST_USER.password,
+        confirmPassword: MOCK_TEST_USER.password,
         cityId: testCityId,
       })
       .expect(400);

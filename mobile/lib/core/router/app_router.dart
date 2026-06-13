@@ -1,13 +1,16 @@
 import 'package:app_links/app_links.dart';
 import 'package:conectaparana/core/auth/auth_service.dart';
 import 'package:conectaparana/core/auth/presentation/pages/login_screen.dart';
+import 'package:conectaparana/core/auth/presentation/register_screen.dart';
 import 'package:conectaparana/core/config/environment.dart';
 import 'package:conectaparana/core/router/deep_link_parser.dart';
 import 'package:conectaparana/core/router/deep_link_route.dart';
 import 'package:conectaparana/core/router/navigator_key.dart';
 import 'package:conectaparana/core/shell/main_shell.dart';
+import 'package:conectaparana/dev/fakes/fake_event_repository.dart';
 import 'package:conectaparana/features/events/presentation/pages/events_page.dart';
 import 'package:conectaparana/features/onboarding/presentation/pages/city_selector_screen.dart';
+import 'package:conectaparana/features/events/presentation/pages/event_detail_page.dart';
 import 'package:conectaparana/features/home/presentation/pages/home_page.dart';
 import 'package:conectaparana/features/map/presentation/pages/map_page.dart';
 import 'package:conectaparana/features/profile/presentation/pages/profile_page.dart';
@@ -19,7 +22,6 @@ import 'package:conectaparana/shared/widgets/styleguide_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:conectaparana/core/auth/presentation/register_screen.dart';
 
 abstract class AppRoutes {
   static const splash = '/';
@@ -34,6 +36,7 @@ abstract class AppRoutes {
   static const profile = '/profile';
 
   static const event = '/events/:id';
+  static const homeEvent = '/home/event/:id';
   static const comunicado = '/home/comunicado/:id';
   static const news = '/home/news/:id';
   static const local = '/map/:id';
@@ -41,6 +44,9 @@ abstract class AppRoutes {
   static const notification = '/home/notification/:id';
 
   static const styleguide = '/styleguide';
+
+  // DEV ONLY — rotas com dados mockados, sem precisar de backend
+  static const devEventDetail = '/dev/event/:id';
 }
 
 class AppRouter {
@@ -145,17 +151,32 @@ class AppRouter {
           builder: (context, state) => const StyleguideScreen(),
         ),
 
+        // DEV ONLY — abre EventDetailPage com dados mockados, sem backend
+        GoRoute(
+          path: AppRoutes.devEventDetail,
+          builder: (context, state) => EventDetailPage(
+            eventId: state.pathParameters['id']!,
+            repository: const FakeEventRepository(),
+          ),
+        ),
+
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {
             return MainShell(navigationShell: navigationShell);
           },
           branches: [
+            // Inicio
             StatefulShellBranch(
               routes: [
                 GoRoute(
                   path: AppRoutes.home,
                   builder: (context, state) => const HomePage(),
                   routes: [
+                    GoRoute(
+                      path: 'event/:id',
+                      builder: (context, state) =>
+                          EventDetailPage(eventId: state.pathParameters['id']!),
+                    ),
                     GoRoute(
                       path: 'comunicado/:id',
                       builder: (context, state) =>
@@ -176,6 +197,7 @@ class AppRouter {
               ],
             ),
 
+            // Eventos
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -192,6 +214,7 @@ class AppRouter {
               ],
             ),
 
+            // Mapa
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -208,6 +231,7 @@ class AppRouter {
               ],
             ),
 
+            // Tickets
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -224,6 +248,7 @@ class AppRouter {
               ],
             ),
 
+            // Perfil
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -242,7 +267,7 @@ class AppRouter {
     final isLoggedIn = AuthService.instance.currentUser.value != null;
     final location = state.matchedLocation;
 
-    const publicRoutes = {AppRoutes.splash, AppRoutes.login, AppRoutes.register, AppRoutes.styleguide};
+    const publicRoutes = {AppRoutes.splash, AppRoutes.login, AppRoutes.register};
     final isPublic = publicRoutes.contains(location);
 
     if (isLoggedIn && isPublic) {

@@ -44,6 +44,11 @@ describe('Locals (e2e)', () => {
     jwtService = moduleFixture.get<JwtService>(JwtService);
 
     // 1. Limpeza completa
+    // Photo.local tem onDelete: Restrict, entao photos referenciando precisam
+    // sair antes do deleteMany de locals para nao violar a FK.
+    await prisma.client.photo.deleteMany({
+      where: { localId: { startsWith: TABLE_PREFIX.LOCAL } },
+    });
     await prisma.client.local.deleteMany({
       where: { id: { startsWith: TABLE_PREFIX.LOCAL } },
     });
@@ -132,6 +137,9 @@ describe('Locals (e2e)', () => {
   });
 
   afterAll(async () => {
+    await prisma.client.photo.deleteMany({
+      where: { localId: { startsWith: TABLE_PREFIX.LOCAL } },
+    });
     await prisma.client.local.deleteMany({
       where: { id: { startsWith: TABLE_PREFIX.LOCAL } },
     });

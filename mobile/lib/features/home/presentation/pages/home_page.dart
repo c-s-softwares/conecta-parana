@@ -1,17 +1,8 @@
-import 'package:conectaparana/core/auth/auth_service.dart';
-import 'package:conectaparana/core/auth/auth_user.dart';
-import 'package:conectaparana/core/router/app_router.dart';
-import 'package:conectaparana/features/home/data/repositories/feed_repository_impl.dart';
-import 'package:conectaparana/features/home/presentation/providers/feed_notifier.dart';
-import 'package:conectaparana/features/home/presentation/widgets/feed_item_card.dart';
-import 'package:conectaparana/features/home/presentation/widgets/feed_skeleton.dart';
-import 'package:conectaparana/features/register/data/models/services/city_model.dart';
-import 'package:conectaparana/shared/widgets/feedback/app_toast.dart';
-import 'package:conectaparana/shared/widgets/misc/empty_state.dart';
-import 'package:conectaparana/shared/widgets/navigation/app_header.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:conectaparana/dev/event_detail_preview_screen.dart';
 
 class HomePage extends StatefulWidget {
   final FeedNotifier? mockNotifier;
@@ -245,20 +236,40 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF006733),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+              onPressed: () {
+                context.push('/styleguide');
+              },
+              child: const Text('Abrir Styleguide'),
+            ),
+
+            if (kDebugMode) ...[
+              const SizedBox(height: 24),
+              const Divider(indent: 40, endIndent: 40),
+              const SizedBox(height: 8),
+              const Text(
+                'DEV',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.grey,
+                  letterSpacing: 1,
                 ),
               ),
-              onPressed: _notifier.load,
-              child: const Text('Tentar novamente'),
-            ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const EventDetailPreviewScreen(),
+                  ),
+                ),
+                icon: const Icon(Icons.event_outlined, size: 16),
+                label: const Text('Preview — Detalhe de Evento'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF006733),
+                  side: const BorderSide(color: Color(0xFF006733)),
+                ),
+              ),
+            ],
           ],
         ),
       ),
