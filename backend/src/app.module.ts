@@ -17,6 +17,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { SuggestionsModule } from './modules/suggestions/suggestions.module';
 import { HttpCacheInterceptor } from './common/interceptors/http-cache.interceptor';
 import { PinoLoggerModule } from './config/logger.module';
+import { EventsModule } from './modules/events/events.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { PinoLoggerModule } from './config/logger.module';
     NotificationsModule,
     SuggestionsModule,
     RedisCacheModule,
+    EventsModule,
   ],
   controllers: [AppController],
   providers: [

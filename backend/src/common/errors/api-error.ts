@@ -14,6 +14,14 @@ export const API_ERROR_CODE = {
   CITY_REQUIRED: 'city_required',
   VALIDATION_FAILED: 'validation_failed',
   TOO_MANY_ATTEMPTS: 'too_many_attempts',
+
+  EVENT_NOT_FOUND: 'event_not_found',
+  EVENT_CHANGED: 'event_changed',
+  EVENT_DATE_IN_PAST: 'event_date_in_past',
+  INVALID_TYPE: 'invalid_type',
+  INVALID_STATUS: 'invalid_status',
+  COORDINATES_LOCAL_MISMATCH: 'coordinates_local_mismatch',
+
   CITY_NOT_FOUND: 'city_not_found',
   CITY_DUPLICATE: 'city_duplicate',
   CITY_HAS_CONTENT: 'city_has_content',
@@ -48,6 +56,15 @@ const STATIC_MESSAGE: Record<StaticCode, string> = {
   [API_ERROR_CODE.CITY_SCOPE_DENIED]:  'ADMIN só pode atuar em sua própria cidade',
   [API_ERROR_CODE.CITY_REQUIRED]:      'Super Admin deve informar a cidade (cityId) no payload',
   [API_ERROR_CODE.TOO_MANY_ATTEMPTS]:  'Muitas tentativas. Aguarde e tente novamente.',
+
+
+  [API_ERROR_CODE.EVENT_NOT_FOUND]:    'Evento não encontrado',
+  [API_ERROR_CODE.EVENT_CHANGED]:      'Evento alterado por outro processo',
+  [API_ERROR_CODE.EVENT_DATE_IN_PAST]: 'Data do evento não pode estar no passado',
+  [API_ERROR_CODE.INVALID_TYPE]:       'Tipo de evento inválido',
+  [API_ERROR_CODE.INVALID_STATUS]:     'Status de evento inválido',
+  [API_ERROR_CODE.COORDINATES_LOCAL_MISMATCH]: 'As coordenadas informadas diferem do local informado',
+
   [API_ERROR_CODE.CITY_NOT_FOUND]:     'Cidade não encontrada',
   [API_ERROR_CODE.CITY_DUPLICATE]:     'Cidade já cadastrada',
   [API_ERROR_CODE.CITY_HAS_CONTENT]:   'Cidade possui conteúdo associado',
