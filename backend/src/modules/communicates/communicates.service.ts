@@ -164,7 +164,8 @@ export class CommunicateService extends BaseCrudService<
     payloadCityId: string | undefined,
     user: AuthUser,
   ): string {
-    if (user.role === Role.SUPER_ADMIN) {
+    const isSuperAdmin = user.role === Role.ADMIN && user.cityId === null;
+    if (isSuperAdmin) {
       if (!payloadCityId) {
         throw new BadRequestException(apiError(SHARED_ERRORS.CITY_REQUIRED));
       }
@@ -179,7 +180,8 @@ export class CommunicateService extends BaseCrudService<
   }
 
   private validateCityScope(entityCityId: string, user: AuthUser): void {
-    if (user.role === Role.SUPER_ADMIN) {
+    const isSuperAdmin = user.role === Role.ADMIN && user.cityId === null;
+    if (isSuperAdmin) {
       return;
     }
 

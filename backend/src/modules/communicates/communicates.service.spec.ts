@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Role } from '@prisma/client';
 
 import { CommunicateService } from './communicates.service';
@@ -41,7 +45,7 @@ const mockAdminUser = {
 const mockSuperAdminUser = {
   id: `${TABLE_PREFIX.USER}SUPERADMIN`,
   cityId: null,
-  role: Role.SUPER_ADMIN,
+  role: Role.ADMIN,
 };
 
 describe('CommunicateService', () => {
@@ -73,6 +77,7 @@ describe('CommunicateService', () => {
 
     expect(result).toEqual(MOCK_COMMUNICATE);
     expect(mockPrisma.client.communicate.create).toHaveBeenCalledWith({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       data: expect.objectContaining({
         title: 'Nova ferramenta disponível',
         description: 'A nova ferramenta já está disponível para os cidadãos.',
@@ -175,6 +180,7 @@ describe('CommunicateService', () => {
 
     expect(result).toEqual(MOCK_COMMUNICATE);
     expect(mockPrisma.client.communicate.create).toHaveBeenCalledWith({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       data: expect.objectContaining({
         cityId: MOCK_CITY_ID,
         userId: mockSuperAdminUser.id,
