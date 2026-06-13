@@ -23,7 +23,8 @@ import { PaginationQueryDto } from '../../common/dto/request/pagination-query.dt
 
 import { VALID_CATEGORY_ICONS } from './constants/category-icons';
 
-import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
+import { apiError } from '../../common/errors/api-error';
+import { CATEGORY_ERRORS } from './categories.errors';
 
 interface RedisCacheClient {
   keys(pattern: string): Promise<string[]>;
@@ -51,8 +52,8 @@ export class CategoryService extends BaseCrudService<
       tablePrefix: TABLE_PREFIX.CATEGORY,
       entityName: 'Categoria',
       softDelete: true,
-      duplicateErrorKey: 'category_duplicate',
-      notFoundErrorKey: 'category_not_found',
+      duplicateErrorKey: CATEGORY_ERRORS.CATEGORY_DUPLICATE,
+      notFoundErrorKey: CATEGORY_ERRORS.CATEGORY_NOT_FOUND,
     });
   }
 
@@ -76,7 +77,7 @@ export class CategoryService extends BaseCrudService<
 
   protected toCreateData(dto: CreateCategoryDto): Record<string, unknown> {
     if (!VALID_CATEGORY_ICONS.includes(dto.icon)) {
-      throw new BadRequestException(apiError(API_ERROR_CODE.INVALID_ICON));
+      throw new BadRequestException(apiError(CATEGORY_ERRORS.INVALID_ICON));
     }
 
     return {
@@ -87,7 +88,7 @@ export class CategoryService extends BaseCrudService<
 
   protected toUpdateData(dto: UpdateCategoryDto): Record<string, unknown> {
     if (dto.icon !== undefined && !VALID_CATEGORY_ICONS.includes(dto.icon)) {
-      throw new BadRequestException(apiError(API_ERROR_CODE.INVALID_ICON));
+      throw new BadRequestException(apiError(CATEGORY_ERRORS.INVALID_ICON));
     }
 
     return {
@@ -122,7 +123,9 @@ export class CategoryService extends BaseCrudService<
     });
 
     if (category && category._count.locals > 0) {
-      throw new ConflictException(apiError(API_ERROR_CODE.CATEGORY_HAS_LOCALS));
+      throw new ConflictException(
+        apiError(CATEGORY_ERRORS.CATEGORY_HAS_LOCALS),
+      );
     }
   }
 

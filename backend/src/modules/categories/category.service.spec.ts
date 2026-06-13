@@ -15,7 +15,8 @@ import { PrismaService } from '../../config/prisma.service';
 
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 
-import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
+import { apiError } from '../../common/errors/api-error';
+import { CATEGORY_ERRORS } from './categories.errors';
 
 const MOCK_CATEGORY_ID = `${TABLE_PREFIX.CATEGORY}01HZX3Y4Q9F8TAB1C2DKEYH9MN`;
 
@@ -142,7 +143,7 @@ describe('CategoryService', () => {
           icon: 'medical-cross',
         }),
       ).rejects.toThrow(
-        new ConflictException(apiError(API_ERROR_CODE.CATEGORY_DUPLICATE)),
+        new ConflictException(apiError(CATEGORY_ERRORS.CATEGORY_DUPLICATE)),
       );
     });
   });
@@ -188,7 +189,7 @@ describe('CategoryService', () => {
           name: 'Saúde',
         }),
       ).rejects.toThrow(
-        new ConflictException(apiError(API_ERROR_CODE.CATEGORY_DUPLICATE)),
+        new ConflictException(apiError(CATEGORY_ERRORS.CATEGORY_DUPLICATE)),
       );
     });
   });
@@ -225,7 +226,7 @@ describe('CategoryService', () => {
       });
 
       await expect(service.remove(MOCK_CATEGORY_ID)).rejects.toThrow(
-        new ConflictException(apiError(API_ERROR_CODE.CATEGORY_HAS_LOCALS)),
+        new ConflictException(apiError(CATEGORY_ERRORS.CATEGORY_HAS_LOCALS)),
       );
     });
   });
