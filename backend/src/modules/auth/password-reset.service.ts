@@ -10,6 +10,7 @@ import { hash } from 'bcryptjs';
 import { randomInt, createHash } from 'crypto';
 import { PrismaService } from '../../config/prisma.service';
 import { MailService } from '../mail/mail.service';
+import { EmailVerificationService } from './email-verification.service';
 import { ForgotPasswordDto } from './dto/request/forgot-password.dto';
 import { ResetPasswordDto } from './dto/request/reset-password.dto';
 import { generateId } from '../../common/utils/ulid.util';
@@ -34,6 +35,7 @@ export class PasswordResetService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
+    private readonly emailVerification: EmailVerificationService,
     @Inject(CACHE_MANAGER) private readonly cache: Cache,
   ) {}
 
@@ -46,6 +48,18 @@ export class PasswordResetService {
 
     if (!user) {
       return { message: GENERIC_FORGOT_MESSAGE };
+    }
+
+    // Trade-off de enumeração aceito: a resposta `email_not_verified` aqui
+    // diferencia "email existe mas não verificado" de "email não existe" (que
+    // retorna 200 genérico). UX > privacidade nesse ponto - sem isso, usuário
+    // legítimo não verificado não saberia o que fazer. Reavaliar no futuro.
+    if (!user.emailVerifiedAt) {
+      await this.emailVerification.sendNewCodeFor({
+        id: user.id,
+        email: user.email,
+      });
+      throw new BadRequestException(apiError(AUTH_ERRORS.EMAIL_NOT_VERIFIED));
     }
 
     const code = this.generateNumericCode();
