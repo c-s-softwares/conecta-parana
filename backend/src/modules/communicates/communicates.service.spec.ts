@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Role } from '@prisma/client';
 
 import { CommunicateService } from './communicates.service';
@@ -36,6 +36,12 @@ const mockAdminUser = {
   id: MOCK_USER_ID,
   cityId: MOCK_CITY_ID,
   role: Role.ADMIN,
+};
+
+const mockSuperAdminUser = {
+  id: `${TABLE_PREFIX.USER}_SUPERADMIN`,
+  cityId: null,
+  role: Role.SUPER_ADMIN,
 };
 
 describe('CommunicateService', () => {
@@ -153,5 +159,57 @@ describe('CommunicateService', () => {
         },
       ),
     ).rejects.toThrow(ForbiddenException);
+  });
+
+  it('deve criar comunicado usando cityId enviado no payload se Super Admin', async () => {
+    mockPrisma.client.communicate.create.mockResolvedValue(MOCK_COMMUNICATE);
+
+    const result = await service.createWithUser(
+      {
+        title: 'Nova ferramenta disponível',
+        description: 'A nova ferramenta já está disponível para os cidadãos.',
+        cityId: MOCK_CITY_ID,
+      },
+      mockSuperAdminUser,
+    );
+
+    expect(result).toEqual(MOCK_COMMUNICATE);
+    expect(mockPrisma.client.communicate.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        cityId: MOCK_CITY_ID,
+        userId: mockSuperAdminUser.id,
+      }),
+    });
+  });
+
+  it('deve lançar city_required se Super Admin não informar cityId na criação', async () => {
+    await expect(
+      service.createWithUser(
+        {
+          title: 'Nova ferramenta disponível',
+          description: 'A nova ferramenta já está disponível para os cidadãos.',
+        },
+        mockSuperAdminUser,
+      ),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('deve permitir atualizar comunicado de qualquer cidade se Super Admin', async () => {
+    mockPrisma.client.communicate.findUnique.mockResolvedValue({
+      ...MOCK_COMMUNICATE,
+      cityId: `${TABLE_PREFIX.CITY}_OUTRA`,
+    });
+    mockPrisma.client.communicate.update.mockResolvedValue({
+      ...MOCK_COMMUNICATE,
+      title: 'Título atualizado',
+    });
+
+    const result = await service.updateWithUser(
+      MOCK_COMMUNICATE_ID,
+      { title: 'Título atualizado' },
+      mockSuperAdminUser,
+    );
+
+    expect(result.title).toBe('Título atualizado');
   });
 });
