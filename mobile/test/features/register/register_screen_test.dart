@@ -243,9 +243,7 @@ void main() {
       expect(fakeAuth.lastAccessToken, 'fake-access-token');
       expect(fakeAuth.lastRefreshToken, 'fake-refresh-token');
       expect(find.text('Styleguide'), findsOneWidget);
-    },
-    skip: true,
-    );
+    }, skip: true);
   });
 }
 

@@ -10,15 +10,15 @@ class RegisterRepository {
     final response = await ApiClient.instance.dio.post(
       '/auth/register',
       data: {
-        'name':     name,
-        'email':    email,
+        'name': name,
+        'email': email,
         'password': password,
-        'cityId':   cityId,
+        'cityId': cityId,
       },
     );
 
     return (
-      accessToken:  response.data['accessToken']  as String,
+      accessToken: response.data['accessToken'] as String,
       refreshToken: response.data['refreshToken'] as String,
     );
   }

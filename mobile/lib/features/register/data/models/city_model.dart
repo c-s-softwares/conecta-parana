@@ -13,9 +13,5 @@ class City {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'state': state,
-  };
+  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'state': state};
 }
