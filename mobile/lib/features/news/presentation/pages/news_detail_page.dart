@@ -112,6 +112,20 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                       backgroundColor: Colors.black45,
                       child: IconButton(
                         icon: const Icon(
+                          Icons.bookmark_border,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {},
+                      ),
+                    ),
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: CircleAvatar(
+                      backgroundColor: Colors.black45,
+                      child: IconButton(
+                        icon: const Icon(
                           Icons.share_outlined,
                           color: Colors.white,
                         ),
@@ -276,29 +290,42 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                       const SizedBox(height: 24),
 
                       Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
+                        spacing: 8,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.start,
                         children: [
                           OutlinedButton.icon(
                             onPressed: () {},
-                            icon: const Icon(Icons.favorite_border),
+                            icon: const Icon(Icons.favorite_border, size: 16),
                             label: const Text('142'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 15,
+                              ),
+                              minimumSize: const Size(0, 36),
+                            ),
                           ),
-
-                          const SizedBox(width: 12),
-
                           OutlinedButton.icon(
                             onPressed: () {},
-                            icon: const Icon(Icons.bookmark_border),
+                            icon: const Icon(Icons.bookmark_border, size: 16),
                             label: const Text('Salvar'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 15,
+                              ),
+                              minimumSize: const Size(0, 36),
+                            ),
                           ),
-
-                          const SizedBox(width: 12),
-
                           OutlinedButton.icon(
                             onPressed: () {},
-                            icon: const Icon(Icons.share_outlined),
+                            icon: const Icon(Icons.share_outlined, size: 16),
                             label: const Text('28'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 15,
+                              ),
+                              minimumSize: const Size(0, 36),
+                            ),
                           ),
                         ],
                       ),

@@ -29,11 +29,14 @@ class _NewsPhotoCarouselState extends State<NewsPhotoCarousel> {
       );
     }
 
-    return Stack(
-      children: [
-        SizedBox(
-          height: 260,
-          child: PageView.builder(
+    return SizedBox(
+      height: 260,
+      width: double.infinity,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          PageView.builder(
+            clipBehavior: Clip.hardEdge,
             itemCount: widget.photos.length,
             onPageChanged: (index) {
               setState(() => _currentIndex = index);
@@ -54,6 +57,7 @@ class _NewsPhotoCarouselState extends State<NewsPhotoCarousel> {
                   widget.photos[index],
                   fit: BoxFit.cover,
                   width: double.infinity,
+                  height: double.infinity,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
                       color: const Color(0xFFE8F5EE),
@@ -66,31 +70,31 @@ class _NewsPhotoCarouselState extends State<NewsPhotoCarousel> {
               );
             },
           ),
-        ),
 
-        Positioned(
-          bottom: 16,
-          left: 0,
-          right: 0,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(widget.photos.length, (index) {
-              final selected = index == _currentIndex;
+          Positioned(
+            bottom: 16,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(widget.photos.length, (index) {
+                final selected = index == _currentIndex;
 
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: selected ? 18 : 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: selected ? Colors.white : Colors.white70,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              );
-            }),
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: selected ? 18 : 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: selected ? Colors.white : Colors.white70,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                );
+              }),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
