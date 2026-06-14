@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:conectaparana/dev/event_detail_preview_screen.dart';
+import 'package:conectaparana/dev/news_detail_preview_screen.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -37,6 +38,7 @@ class HomePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
+
               OutlinedButton.icon(
                 onPressed: () => Navigator.of(context).push(
                   MaterialPageRoute(
@@ -45,6 +47,24 @@ class HomePage extends StatelessWidget {
                 ),
                 icon: const Icon(Icons.event_outlined, size: 16),
                 label: const Text('Preview — Detalhe de Evento'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF006733),
+                  side: const BorderSide(color: Color(0xFF006733)),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const NewsDetailPreviewScreen(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.article_outlined, size: 16),
+                label: const Text('Preview — Detalhe de Notícia'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFF006733),
                   side: const BorderSide(color: Color(0xFF006733)),

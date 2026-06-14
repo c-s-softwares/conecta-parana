@@ -21,6 +21,7 @@ import 'package:conectaparana/shared/widgets/styleguide_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/news/presentation/pages/news_detail_page.dart';
 
 abstract class AppRoutes {
   static const splash = '/';
@@ -183,8 +184,11 @@ class AppRouter {
                     ),
                     GoRoute(
                       path: 'news/:id',
-                      builder: (context, state) =>
-                          _detailPlaceholder('news', state),
+                      builder: (context, state) {
+                        final id = state.pathParameters['id']!;
+
+                        return NewsDetailPage(id: id);
+                      },
                     ),
                     GoRoute(
                       path: 'notification/:id',
@@ -266,7 +270,11 @@ class AppRouter {
     final isLoggedIn = AuthService.instance.currentUser.value != null;
     final location = state.matchedLocation;
 
-    const publicRoutes = {AppRoutes.splash, AppRoutes.login, AppRoutes.register};
+    const publicRoutes = {
+      AppRoutes.splash,
+      AppRoutes.login,
+      AppRoutes.register,
+    };
     final isPublic = publicRoutes.contains(location);
 
     if (isLoggedIn && isPublic) {
