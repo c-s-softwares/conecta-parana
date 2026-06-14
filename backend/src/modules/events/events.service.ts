@@ -327,7 +327,7 @@ export class EventsService extends BaseCrudService<
 
   private validateType(type: string): void {
     if (!VALID_EVENT_TYPES.includes(type)) {
-      throw new BadRequestException(apiError(EVENT_ERRORS.INVALID_TYPE));
+      throw new BadRequestException(apiError(EVENT_ERRORS.INVALID_EVENT_TYPE));
     }
   }
 
