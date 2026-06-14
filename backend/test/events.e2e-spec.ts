@@ -102,9 +102,10 @@ describe('Events (e2e)', () => {
         eventDate: new Date('2026-12-31T20:00:00Z'),
         cityId,
         userId: `${TABLE_PREFIX.USER}e2esuper`,
-        updatedAt: new Date('2025-01-01T10:00:00Z'), // fixed old date
       },
     });
+
+    await prisma.client.$executeRaw`UPDATE events SET updated_at = '2025-01-01T10:00:00.000Z'::timestamp WHERE id = ${eventId}`;
 
     // simular que outro processo alterou o evento no banco
     await prisma.client.event.update({
