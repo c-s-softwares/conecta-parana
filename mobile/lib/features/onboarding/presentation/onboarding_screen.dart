@@ -36,58 +36,97 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _cityService = widget.cityService ?? CityService();
   }
 
+  void _dismissKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
   void _goToNeighborhood(City city) {
+    _dismissKeyboard();
+
     setState(() {
       _selectedCity = city;
       _step = 1;
     });
   }
 
-  void _goToPermissions() => setState(() => _step = 2);
+  void _goToPermissions() {
+    _dismissKeyboard();
 
-  void _conclude() => Navigator.pushReplacementNamed(context, '/home');
+    setState(() => _step = 2);
+  }
+
+  void _conclude() {
+    _dismissKeyboard();
+
+    Navigator.pushReplacementNamed(context, '/home');
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            transitionBuilder: (child, animation) => FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0.05, 0),
-                  end: Offset.zero,
-                ).animate(animation),
-                child: child,
-              ),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.05, 0),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
             ),
-            child: switch (_step) {
-              0 => StepCityScreen(
-                key: const ValueKey('step_city'),
-                repository: _repository,
-                cityService: _cityService,
-                preselectedCityId: widget.preselectedCityId,
-                onNext: _goToNeighborhood,
-              ),
-              1 => StepNeighborhoodScreen(
-                key: const ValueKey('step_neighborhood'),
-                repository: _repository,
-                cityName: _selectedCity?.name ?? '',
-                onNext: _goToPermissions,
-              ),
-              _ => StepPermissionsScreen(
-                key: const ValueKey('step_permissions'),
-                onConclude: _conclude,
-              ),
-            },
           ),
+          child: _buildStep(),
         ),
       ),
+    );
+  }
+
+  Widget _buildStep() {
+    switch (_step) {
+      case 0:
+        return Padding(
+          key: const ValueKey('step_city'),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+          child: StepCityScreen(
+            repository: _repository,
+            cityService: _cityService,
+            preselectedCityId: widget.preselectedCityId,
+            onNext: _goToNeighborhood,
+          ),
+        );
+      case 1:
+        return _scrollableStep(
+          key: const ValueKey('step_neighborhood'),
+          child: StepNeighborhoodScreen(
+            repository: _repository,
+            cityName: _selectedCity?.name ?? '',
+            onNext: _goToPermissions,
+          ),
+        );
+      default:
+        return _scrollableStep(
+          key: const ValueKey('step_permissions'),
+          child: StepPermissionsScreen(onConclude: _conclude),
+        );
+    }
+  }
+
+  Widget _scrollableStep({required Key key, required Widget child}) {
+    return LayoutBuilder(
+      key: key,
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight - 56),
+            child: IntrinsicHeight(child: child),
+          ),
+        );
+      },
     );
   }
 }

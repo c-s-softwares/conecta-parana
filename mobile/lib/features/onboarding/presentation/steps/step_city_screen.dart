@@ -58,7 +58,9 @@ class _StepCityScreenState extends State<StepCityScreen> {
               .firstOrNull;
         }
       });
-    } catch (_) {
+    } catch (e, s) {
+      debugPrint('ERRO getCities: $e');
+      debugPrint('STACK: $s');
       if (!mounted) return;
       setState(() {
         _loadingCities = false;

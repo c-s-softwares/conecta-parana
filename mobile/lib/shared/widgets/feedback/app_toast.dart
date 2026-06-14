@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum AppToastVariant {
-  success, 
-  error,   
-  info, warning,    
-}
+enum AppToastVariant { success, error, info, warning }
 
 class AppToast {
   static void show(
@@ -34,9 +30,7 @@ class AppToast {
         ),
         backgroundColor: colors,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         margin: const EdgeInsets.all(16),
         duration: const Duration(seconds: 3),
       ),
