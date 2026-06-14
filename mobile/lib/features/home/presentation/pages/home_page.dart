@@ -3,6 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:conectaparana/dev/event_detail_preview_screen.dart';
+import 'package:conectaparana/core/auth/auth_service.dart';
+import 'package:conectaparana/core/auth/auth_user.dart';
+import 'package:conectaparana/core/router/app_router.dart';
+import 'package:conectaparana/features/register/data/models/services/city_model.dart';
+import 'package:conectaparana/shared/widgets/feedback/app_toast.dart';
+import 'package:conectaparana/shared/widgets/misc/empty_state.dart';
+import 'package:conectaparana/shared/widgets/misc/section_header.dart';
+import 'package:conectaparana/shared/widgets/navigation/app_header.dart';
+import 'package:conectaparana/dev/fakes/fake_feed_repository.dart';
+import 'package:conectaparana/dev/fakes/fake_home_highlights.dart';
+import '../../data/repositories/feed_repository_impl.dart';
+import '../../domain/repositories/feed_repository.dart';
+import '../providers/feed_notifier.dart';
+import '../widgets/alert_banner.dart';
+import '../widgets/events_carousel.dart';
+import '../widgets/feed_item_card.dart';
+import '../widgets/feed_skeleton.dart';
+import '../widgets/featured_banner_card.dart';
+import '../widgets/home_greeting_header.dart';
+import '../widgets/services_grid.dart';
 
 class HomePage extends StatefulWidget {
   final FeedNotifier? mockNotifier;
@@ -35,6 +55,11 @@ class _HomePageState extends State<HomePage> {
     _init();
   }
 
+  FeedRepository _feedRepository() {
+    if (kDebugMode) return const FakeFeedRepository();
+    return FeedRepositoryImpl();
+  }
+
   Future<void> _init() async {
     final user = AuthService.instance.currentUser.value;
     final cityId = user?.cityId;
@@ -43,7 +68,7 @@ class _HomePageState extends State<HomePage> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) context.go(AppRoutes.onboarding);
       });
-      _notifier = FeedNotifier(repository: FeedRepositoryImpl(), cityId: '');
+      _notifier = FeedNotifier(repository: _feedRepository(), cityId: '');
       return;
     }
 
@@ -64,7 +89,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     _notifier = FeedNotifier(
-      repository: FeedRepositoryImpl(),
+      repository: _feedRepository(),
       cityId: cityId,
       lat: lat,
       lng: lng,
@@ -159,18 +184,39 @@ class _HomePageState extends State<HomePage> {
     switch (state.status) {
       case FeedStatus.initial:
       case FeedStatus.loading:
-        return const FeedSkeleton();
+        return ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            ..._highlightSections(),
+            const SectionHeader(title: 'Mais comunicados'),
+            const FeedSkeleton(),
+          ],
+        );
 
       case FeedStatus.empty:
-        return const EmptyState(
-          icon: Icons.inbox_outlined,
-          title: 'Nada por aqui ainda',
-          subtitle:
-              'Assim que houver novidades para sua cidade, elas aparecerão aqui.',
+        return ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            ..._highlightSections(),
+            const SectionHeader(title: 'Mais comunicados'),
+            const EmptyState(
+              icon: Icons.inbox_outlined,
+              title: 'Nada por aqui ainda',
+              subtitle:
+                  'Assim que houver novidades para sua cidade, elas aparecerão aqui.',
+            ),
+          ],
         );
 
       case FeedStatus.errorFirst:
-        return _buildFirstLoadError();
+        return ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            ..._highlightSections(),
+            const SectionHeader(title: 'Mais comunicados'),
+            _buildFirstLoadError(),
+          ],
+        );
 
       case FeedStatus.success:
       case FeedStatus.refreshing:
@@ -180,10 +226,31 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  List<Widget> _highlightSections() {
+    const highlights = fakeHomeHighlights;
+
+    return [
+      const HomeGreetingHeader(),
+      if (highlights.alert != null) AlertBanner(alert: highlights.alert!),
+      if (highlights.featuredBanner != null)
+        FeaturedBannerCard(
+          banner: highlights.featuredBanner!,
+          onTap: () => context.push(highlights.featuredBanner!.detailRoute),
+        ),
+      const SectionHeader(title: 'Serviços', actionLabel: 'Todos'),
+      ServicesGrid(services: highlights.services),
+      const SectionHeader(title: 'Eventos próximos', actionLabel: 'Ver tudo'),
+      EventsCarousel(events: highlights.events),
+      const SizedBox(height: 8),
+    ];
+  }
+
   Widget _buildFeedList(FeedState state) {
     final showFooter =
         state.status == FeedStatus.loadingMore ||
         state.status == FeedStatus.errorMore;
+
+    final sections = _highlightSections();
 
     return RefreshIndicator(
       color: const Color(0xFF006733),
@@ -192,11 +259,26 @@ class _HomePageState extends State<HomePage> {
         key: const PageStorageKey('feed_list'),
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(top: 8, bottom: 24),
-        itemCount: state.items.length + (showFooter ? 1 : 0),
+        padding: const EdgeInsets.only(bottom: 24),
+        cacheExtent: 3000,
+        itemCount:
+            sections.length + 1 + state.items.length + (showFooter ? 1 : 0),
         itemBuilder: (context, index) {
-          if (index < state.items.length) {
-            final item = state.items[index];
+          if (index < sections.length) {
+            return sections[index];
+          }
+
+          if (index == sections.length) {
+            return const SectionHeader(
+              title: 'Mais comunicados',
+              actionLabel: 'Ver tudo',
+            );
+          }
+
+          final itemIndex = index - sections.length - 1;
+
+          if (itemIndex < state.items.length) {
+            final item = state.items[itemIndex];
             return FeedItemCard(
               key: ValueKey(item.id),
               item: item,
