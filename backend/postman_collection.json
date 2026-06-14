@@ -1726,6 +1726,153 @@
                     }
                 }
             ]
+        },
+        {
+            "name": "likes",
+            "description": "Endpoints de Likes para recursos",
+            "item": [
+                {
+                    "id": "e0a4f5d2-df08-410a-8bf8-d3c9fa57b9c1",
+                    "name": "Toggle Like",
+                    "request": {
+                        "name": "Toggle Like",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "likes",
+                                "toggle"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"eventId\": \"evt_01HZX3Y4Q9F8TAB1C2DKEYH9ZZ\"\n}",
+                            "options": {
+                                "raw": {
+                                    "headerFamily": "json",
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{bearerToken}}"
+                                }
+                            ]
+                        }
+                    },
+                    "response": [],
+                    "event": [],
+                    "protocolProfileBehavior": {
+                        "disableBodyPruning": true
+                    }
+                }
+            ]
+        },
+        {
+            "name": "saves",
+            "description": "Endpoints de Saves/Favoritos para recursos",
+            "item": [
+                {
+                    "id": "e0a4f5d2-df08-410a-8bf8-d3c9fa57b9c2",
+                    "name": "Toggle Save",
+                    "request": {
+                        "name": "Toggle Save",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "saves",
+                                "toggle"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"localId\": \"loc_01HZX3Y4Q9F8TAB1C2DKEYH9ZZ\"\n}",
+                            "options": {
+                                "raw": {
+                                    "headerFamily": "json",
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{bearerToken}}"
+                                }
+                            ]
+                        }
+                    },
+                    "response": [],
+                    "event": [],
+                    "protocolProfileBehavior": {
+                        "disableBodyPruning": true
+                    }
+                },
+                {
+                    "id": "e0a4f5d2-df08-410a-8bf8-d3c9fa57b9c3",
+                    "name": "Listar meus Saves",
+                    "request": {
+                        "name": "Listar meus Saves",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "saves",
+                                "me"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "method": "GET",
+                        "body": {},
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{bearerToken}}"
+                                }
+                            ]
+                        }
+                    },
+                    "response": [],
+                    "event": [],
+                    "protocolProfileBehavior": {
+                        "disableBodyPruning": true
+                    }
+                }
+            ]
         }
     ],
     "event": [],
