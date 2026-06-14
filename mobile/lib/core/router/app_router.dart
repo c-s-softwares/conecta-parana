@@ -21,10 +21,12 @@ import 'package:conectaparana/shared/widgets/styleguide_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:conectaparana/features/communicates/presentation/pages/communicate_detail_page.dart';
 
 abstract class AppRoutes {
   static const splash = '/';
   static const login = '/login';
+
   static const register = '/register';
   static const onboarding = '/onboarding';
 
@@ -124,7 +126,7 @@ class AppRouter {
   GoRouter _buildRouter() {
     return GoRouter(
       navigatorKey: navigatorKey,
-      initialLocation: AppRoutes.splash,
+      initialLocation: 'AppRoutes.splash',
       debugLogDiagnostics: Environment.isDev,
       redirect: _redirect,
       errorBuilder: (context, state) => const NotFoundScreen(),
@@ -178,8 +180,11 @@ class AppRouter {
                     ),
                     GoRoute(
                       path: 'comunicado/:id',
-                      builder: (context, state) =>
-                          _detailPlaceholder('comunicado', state),
+                      builder: (context, state) {
+                        final id = state.pathParameters['id'] ?? '';
+
+                        return CommunicateDetailPage(communicateId: id);
+                      },
                     ),
                     GoRoute(
                       path: 'news/:id',
@@ -266,7 +271,11 @@ class AppRouter {
     final isLoggedIn = AuthService.instance.currentUser.value != null;
     final location = state.matchedLocation;
 
-    const publicRoutes = {AppRoutes.splash, AppRoutes.login, AppRoutes.register};
+    const publicRoutes = {
+      AppRoutes.splash,
+      AppRoutes.login,
+      AppRoutes.register,
+    };
     final isPublic = publicRoutes.contains(location);
 
     if (isLoggedIn && isPublic) {
