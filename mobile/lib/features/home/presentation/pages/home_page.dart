@@ -260,6 +260,7 @@ class _HomePageState extends State<HomePage> {
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 24),
+        // ignore: deprecated_member_use
         cacheExtent: 3000,
         itemCount:
             sections.length + 1 + state.items.length + (showFooter ? 1 : 0),
