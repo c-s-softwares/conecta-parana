@@ -74,15 +74,45 @@ void main() {
       await notifier.load();
       await tester.pumpAndSettle();
 
+      final feedList = find.byType(ListView);
+      expect(feedList, findsOneWidget);
+
+      final scrollableFeed = find.byWidgetPredicate(
+        (widget) =>
+            widget is Scrollable &&
+            widget.physics is AlwaysScrollableScrollPhysics,
+      );
+
+      await tester.scrollUntilVisible(
+        find.text('Evento da chamada 1'),
+        300,
+        scrollable: scrollableFeed,
+      );
       expect(find.text('Evento da chamada 1'), findsOneWidget);
+
+      await tester.scrollUntilVisible(
+        find.text('Notícia da chamada 1'),
+        300,
+        scrollable: scrollableFeed,
+      );
       expect(find.text('Notícia da chamada 1'), findsOneWidget);
 
-      await tester.fling(find.byType(ListView), const Offset(0, 400), 800);
+      final scrollableState = tester.state<ScrollableState>(scrollableFeed);
+      scrollableState.position.jumpTo(0);
+      await tester.pump();
+
+      await tester.fling(feedList, const Offset(0, 400), 800);
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
       await tester.pumpAndSettle();
 
       expect(callCount, greaterThanOrEqualTo(2));
+
+      await tester.scrollUntilVisible(
+        find.text('Evento da chamada $callCount'),
+        300,
+        scrollable: scrollableFeed,
+      );
       expect(find.text('Evento da chamada $callCount'), findsOneWidget);
     },
   );

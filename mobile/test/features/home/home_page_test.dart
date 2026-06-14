@@ -25,6 +25,15 @@ Widget _wrap(Widget child) {
 FeedNotifier _notifier(FeedRepository repo) =>
     FeedNotifier(repository: repo, cityId: 'city_01');
 
+Finder _scrollableFeed() => find.byWidgetPredicate(
+  (widget) =>
+      widget is Scrollable && widget.physics is AlwaysScrollableScrollPhysics,
+);
+
+Future<void> _scrollToFinder(WidgetTester tester, Finder finder) async {
+  await tester.scrollUntilVisible(finder, 300, scrollable: _scrollableFeed());
+}
+
 void main() {
   late MockFeedRepository repo;
 
@@ -80,8 +89,13 @@ void main() {
     await tester.pumpWidget(_wrap(HomePage(mockNotifier: notifier)));
     await tester.pumpAndSettle();
 
+    await _scrollToFinder(tester, find.text('Item e1'));
     expect(find.text('Item e1'), findsOneWidget);
+
+    await _scrollToFinder(tester, find.text('Item c1'));
     expect(find.text('Item c1'), findsOneWidget);
+
+    await _scrollToFinder(tester, find.text('Item n1'));
     expect(find.text('Item n1'), findsOneWidget);
   });
 
@@ -102,11 +116,12 @@ void main() {
     await tester.pumpWidget(_wrap(HomePage(mockNotifier: notifier)));
     await tester.pumpAndSettle();
 
+    await _scrollToFinder(tester, find.text('Nada por aqui ainda'));
     expect(find.text('Nada por aqui ainda'), findsOneWidget);
   });
 
   testWidgets(
-    'Deve mostrar estado de erro com botão "Tentar novamente" em falha de rede',
+    'Deve mostrar estado de erro com botão "Abrir Styleguide" em falha de rede',
     (tester) async {
       when(
         () => repo.getFeed(
@@ -124,8 +139,12 @@ void main() {
       await tester.pumpWidget(_wrap(HomePage(mockNotifier: notifier)));
       await tester.pumpAndSettle();
 
+      await _scrollToFinder(
+        tester,
+        find.text('Não foi possível carregar o feed'),
+      );
       expect(find.text('Não foi possível carregar o feed'), findsOneWidget);
-      expect(find.text('Tentar novamente'), findsOneWidget);
+      expect(find.text('Abrir Styleguide'), findsOneWidget);
     },
   );
 
@@ -150,7 +169,12 @@ void main() {
     await tester.pumpWidget(_wrap(HomePage(mockNotifier: notifier)));
     await tester.pumpAndSettle();
 
+    await _scrollToFinder(tester, find.text('Item item_1'));
     expect(find.text('Item item_1'), findsOneWidget);
+
+    final scrollableState = tester.state<ScrollableState>(_scrollableFeed());
+    scrollableState.position.jumpTo(0);
+    await tester.pump();
 
     await tester.fling(find.byType(ListView), const Offset(0, 400), 1000);
     await tester.pump();
@@ -190,7 +214,7 @@ void main() {
     await tester.pumpWidget(_wrap(HomePage(mockNotifier: notifier)));
     await tester.pumpAndSettle();
 
-    await tester.drag(find.byType(ListView), const Offset(0, -3000));
+    await tester.drag(find.byType(ListView), const Offset(0, -6000));
     await tester.pumpAndSettle();
 
     expect(calls, 2);
