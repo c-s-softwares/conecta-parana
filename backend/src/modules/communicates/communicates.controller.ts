@@ -80,7 +80,7 @@ export class CommunicateController extends BaseCrudController<
   })
   @ApiResponse({ status: 401, description: 'Token ausente ou inválido' })
   @ApiResponse({ status: 403, description: 'Acesso negado' })
-  CreateCommunicate(
+  override create(
     @Body() dto: CreateCommunicateDto,
     @Req() req: AuthRequest,
   ) {
@@ -100,7 +100,7 @@ export class CommunicateController extends BaseCrudController<
   @ApiResponse({ status: 401, description: 'Token ausente ou inválido' })
   @ApiResponse({ status: 403, description: 'Acesso negado' })
   @ApiResponse({ status: 404, description: 'Comunicado não encontrado' })
-  UpdateCommunicate(
+  override update(
     @Param('id') id: string,
     @Body() dto: UpdateCommunicateDto,
     @Req() req: AuthRequest,
@@ -118,7 +118,7 @@ export class CommunicateController extends BaseCrudController<
   @ApiResponse({ status: 401, description: 'Token ausente ou inválido' })
   @ApiResponse({ status: 403, description: 'Acesso negado' })
   @ApiResponse({ status: 404, description: 'Comunicado não encontrado' })
-  removeCommunicate(@Param('id') id: string, @Req() req: AuthRequest) {
+  override remove(@Param('id') id: string, @Req() req: AuthRequest) {
     return this.communicateService.removeWithUser(id, req.user);
   }
 }
