@@ -80,10 +80,7 @@ export class CommunicateController extends BaseCrudController<
   })
   @ApiResponse({ status: 401, description: 'Token ausente ou inválido' })
   @ApiResponse({ status: 403, description: 'Acesso negado' })
-  override create(
-    @Body() dto: CreateCommunicateDto,
-    @Req() req: AuthRequest,
-  ) {
+  override create(@Body() dto: CreateCommunicateDto, @Req() req: AuthRequest) {
     return this.communicateService.createWithUser(dto, req.user);
   }
 

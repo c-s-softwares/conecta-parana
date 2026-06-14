@@ -162,7 +162,12 @@ export class CommunicateService extends BaseCrudService<
       this.getDelegate().count({ where }),
     ]);
 
-    return { items: items.map((i) => this.toResponse(i)), total, page, pageSize };
+    return {
+      items: items.map((i) => this.toResponse(i)),
+      total,
+      page,
+      pageSize,
+    };
   }
 
   private async findCommunicateOrFail(id: string) {
