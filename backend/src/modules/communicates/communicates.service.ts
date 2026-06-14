@@ -147,6 +147,24 @@ export class CommunicateService extends BaseCrudService<
     });
   }
 
+  override async findAll(query: QueryComunicadoDto) {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 10;
+    const where = { ...this.buildBaseWhere(), ...this.buildSearchWhere(query) };
+
+    const [items, total] = await Promise.all([
+      this.getDelegate().findMany({
+        where,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: { id: 'desc' },
+      }),
+      this.getDelegate().count({ where }),
+    ]);
+
+    return { items: items.map((i) => this.toResponse(i)), total, page, pageSize };
+  }
+
   private async findCommunicateOrFail(id: string) {
     const communicate = await this.prisma.client.communicate.findUnique({
       where: { id },
