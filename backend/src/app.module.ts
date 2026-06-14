@@ -22,6 +22,7 @@ import { SavesModule } from './modules/saves/saves.module';
 import { HttpCacheInterceptor } from './common/interceptors/http-cache.interceptor';
 import { PinoLoggerModule } from './config/logger.module';
 import { EventsModule } from './modules/events/events.module';
+import { NewsModule } from './modules/news/news.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { EventsModule } from './modules/events/events.module';
     SavesModule,
     RedisCacheModule,
     EventsModule,
+    NewsModule,
   ],
   controllers: [AppController],
   providers: [
