@@ -126,7 +126,7 @@ class AppRouter {
   GoRouter _buildRouter() {
     return GoRouter(
       navigatorKey: navigatorKey,
-      initialLocation: 'AppRoutes.splash',
+      initialLocation: '/home/comunicado/cmt_1', //AppRoutes.splash
       debugLogDiagnostics: Environment.isDev,
       redirect: _redirect,
       errorBuilder: (context, state) => const NotFoundScreen(),
