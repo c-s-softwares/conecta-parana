@@ -21,6 +21,8 @@ import { LikesModule } from './modules/likes/likes.module';
 import { SavesModule } from './modules/saves/saves.module';
 import { HttpCacheInterceptor } from './common/interceptors/http-cache.interceptor';
 import { PinoLoggerModule } from './config/logger.module';
+import { EventsModule } from './modules/events/events.module';
+import { NewsModule } from './modules/news/news.module';
 import { CategoryModule } from './modules/categories/category.module';
 
 @Module({
@@ -54,6 +56,8 @@ import { CategoryModule } from './modules/categories/category.module';
     LikesModule,
     SavesModule,
     RedisCacheModule,
+    EventsModule,
+    NewsModule,
     CategoryModule,
   ],
   controllers: [AppController],

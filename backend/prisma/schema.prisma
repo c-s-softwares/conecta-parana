@@ -109,6 +109,10 @@ model Event {
   userId  String  @map("user_id")
   localId String? @map("local_id")
 
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
   city  City   @relation(fields: [cityId], references: [id], onDelete: Cascade)
   user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   local Local? @relation(fields: [localId], references: [id], onDelete: Restrict, onUpdate: Cascade)
