@@ -1,12 +1,14 @@
 import { Transform } from 'class-transformer';
 import {
   IsEmail,
+  IsNotEmpty,
   IsString,
-  Matches,
   MaxLength,
   MinLength,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsTablePrefixedUlid } from '../../../common/validators/is-table-prefixed-ulid.validator';
+import { TABLE_PREFIX } from '../../../common/types/ulid.types';
 
 export class CreateAdminUserDto {
   @ApiProperty({
@@ -28,15 +30,16 @@ export class CreateAdminUserDto {
     example: 'joao@maringa.pr.gov.br',
   })
   @IsEmail()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   email: string;
 
   @ApiProperty({
     description: 'ULID da cidade à qual o admin será vinculado (prefixo cit_)',
     example: 'cit_01HZX3Y4Q9F8TAB1C2DKEYH9MN',
   })
-  @IsString()
-  @Matches(/^cit_/, {
-    message: 'cityId deve ser um ULID de cidade válido (prefixo cit_)',
-  })
+  @IsNotEmpty()
+  @IsTablePrefixedUlid(TABLE_PREFIX.CITY)
   cityId: string;
 }

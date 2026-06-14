@@ -12,7 +12,7 @@ import { hash } from 'bcryptjs';
 // IDs fixos para facilitar cleanup idempotente
 const SUPER_ADMIN_ID = 'usr_e2e_superadmin00000000000001';
 const CITY_ADMIN_ID = 'usr_e2e_cityadmin000000000000001';
-const TEST_CITY_ID = 'cit_e2e_admintest0000000000000001';
+const TEST_CITY_ID = 'cit_e2e00000000000000000000001';
 
 const SUPER_ADMIN_EMAIL = 'e2e-super-admin@test.com';
 const CITY_ADMIN_EMAIL = 'e2e-city-admin@test.com';
