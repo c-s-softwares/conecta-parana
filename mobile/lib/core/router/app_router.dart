@@ -328,7 +328,10 @@ class AppRouter {
   }
 
   String? _redirect(BuildContext context, GoRouterState state) {
-    final isLoggedIn = AuthService.instance.currentUser.value != null;
+    final user = AuthService.instance.currentUser.value;
+    final isLoggedIn = user != null;
+    final cityId = user?.cityId.trim();
+    final hasCity = cityId != null && cityId.isNotEmpty && cityId != 'null';
     final location = state.matchedLocation;
 
     const publicRoutes = {
@@ -343,7 +346,13 @@ class AppRouter {
 
     if (isLoggedIn && isPublic) {
       final pending = consumePendingDeepLink();
-      return pending ?? AppRoutes.home;
+      if (pending != null) return pending;
+
+      if (location == AppRoutes.register) {
+        return AppRoutes.onboarding;
+      }
+
+      return hasCity ? AppRoutes.home : AppRoutes.onboarding;
     }
 
     if (!isLoggedIn && !isPublic) {

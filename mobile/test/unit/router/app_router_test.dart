@@ -69,8 +69,7 @@ void main() {
       ];
 
       for (final route in detailRoutes) {
-        expect(route, contains(':id'),
-            reason: '$route deve conter :id');
+        expect(route, contains(':id'), reason: '$route deve conter :id');
       }
     });
 
@@ -83,8 +82,11 @@ void main() {
       ];
 
       for (final route in publicRoutes) {
-        expect(route, isNot(contains(':id')),
-            reason: '$route não deve conter :id');
+        expect(
+          route,
+          isNot(contains(':id')),
+          reason: '$route não deve conter :id',
+        );
       }
     });
   });

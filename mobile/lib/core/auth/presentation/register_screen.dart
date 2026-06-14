@@ -5,6 +5,8 @@ import 'package:conectaparana/shared/widgets/pages/webview_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:conectaparana/core/auth/auth_service.dart';
+import 'package:dio/dio.dart';
 
 class _PasswordRules {
   static final _especial = RegExp(
@@ -162,10 +164,59 @@ class RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _isLoading = true);
 
-    await Future.delayed(const Duration(seconds: 1));
-    if (mounted) {
+    try {
+      final tokens = await (widget.repository ?? RegisterRepository()).register(
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        cityId: _selectedCity!.id,
+      );
+
+      await AuthService.instance.login(
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      );
+
+      if (!mounted) return;
+
       setState(() => _isLoading = false);
-      context.go('/styleguide');
+      context.go('/onboarding');
+    } on DioException catch (e) {
+      if (!mounted) return;
+
+      final data = e.response?.data;
+      final code = data is Map ? data['code']?.toString() : null;
+
+      if (e.response?.statusCode == 409 || code == 'email_exists') {
+        setState(() {
+          _emailExists = true;
+          _emailError = 'Este e-mail já está cadastrado.';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      setState(() => _isLoading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Erro ao criar conta. Verifique sua conexão e tente novamente.',
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+
+      setState(() => _isLoading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Erro ao criar conta. Verifique sua conexão e tente novamente.',
+          ),
+        ),
+      );
     }
   }
 
