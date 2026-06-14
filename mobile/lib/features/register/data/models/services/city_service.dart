@@ -51,13 +51,12 @@ class CityService {
       }
     }
 
-    final response = await ApiClient.instance.dio.get('/cities');
+    try {
+      final response = await ApiClient.instance.dio.get('/cities');
 
-    final items = response.data['items'] as List;
-
-    final cities = items
-        .map((e) => City.fromJson(e as Map<String, dynamic>))
-        .toList();
+      final cities = (response.data as List)
+          .map((e) => City.fromJson(e as Map<String, dynamic>))
+          .toList();
 
       _memCache = cities;
       _memCacheTime = now;
