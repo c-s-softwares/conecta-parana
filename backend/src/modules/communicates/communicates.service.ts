@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 import { BaseCrudService } from '../../common/services/base-crud.service';
+import { generateId } from '../../common/utils/ulid.util';
 import { apiError } from '../../common/errors/api-error';
 import { SHARED_ERRORS } from '../../common/errors/shared-errors';
 import { COMUNICADOS_ERRORS } from './communicates.errors';
@@ -104,7 +105,7 @@ export class CommunicateService extends BaseCrudService<
 
     const communicate = await this.prisma.client.communicate.create({
       data: {
-        id: `${TABLE_PREFIX.COMMUNICATE}${Date.now()}`,
+        id: generateId(TABLE_PREFIX.COMMUNICATE),
         title: dto.title,
         description: dto.description,
         isActive: dto.isActive ?? true,
