@@ -23,6 +23,7 @@ import { HttpCacheInterceptor } from './common/interceptors/http-cache.intercept
 import { PinoLoggerModule } from './config/logger.module';
 import { EventsModule } from './modules/events/events.module';
 import { NewsModule } from './modules/news/news.module';
+import { CategoryModule } from './modules/categories/category.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { NewsModule } from './modules/news/news.module';
     RedisCacheModule,
     EventsModule,
     NewsModule,
+    CategoryModule,
   ],
   controllers: [AppController],
   providers: [
