@@ -206,8 +206,12 @@ class AppRouter {
                   routes: [
                     GoRoute(
                       path: ':id',
-                      builder: (context, state) =>
-                          _detailPlaceholder('event', state),
+                      builder: (context, state) => EventDetailPage(
+                        eventId: state.pathParameters['id']!,
+                        repository: kDebugMode
+                            ? const FakeEventRepository()
+                            : null,
+                      ),
                     ),
                   ],
                 ),
