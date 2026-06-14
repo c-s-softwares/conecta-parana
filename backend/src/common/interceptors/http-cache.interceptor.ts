@@ -6,11 +6,13 @@ import {
   Inject,
   Logger,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { Request } from 'express';
 import { from, Observable } from 'rxjs';
 import { concatMap, map } from 'rxjs/operators';
+import { SKIP_CACHE_INVALIDATION_KEY } from '../decorators/skip-cache-invalidation.decorator';
 
 interface KeyvRedisClient {
   keys(pattern: string): Promise<string[]>;
@@ -59,7 +61,10 @@ interface CacheManagerWithStores {
 export class HttpCacheInterceptor implements NestInterceptor {
   private readonly logger = new Logger(HttpCacheInterceptor.name);
 
-  constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: Cache) {}
+  constructor(
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    private readonly reflector: Reflector,
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const http = context.switchToHttp();
@@ -67,10 +72,18 @@ export class HttpCacheInterceptor implements NestInterceptor {
     const method = request.method;
     const path = request.path;
 
-    // Se for uma requisição de escrita (POST, PUT, PATCH, DELETE), dispara invalidação
+    const skipInvalidation = this.reflector.getAllAndOverride<boolean>(
+      SKIP_CACHE_INVALIDATION_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
+    // Se for uma requisição de escrita (POST, PUT, PATCH, DELETE) e não pular invalidação, dispara invalidação
     // ANTES de propagar a resposta para o cliente. Garante consistência:
     // o GET imediatamente posterior não pega cache stale.
-    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    if (
+      ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method) &&
+      !skipInvalidation
+    ) {
       return next
         .handle()
         .pipe(
