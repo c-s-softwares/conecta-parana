@@ -105,7 +105,8 @@ describe('Events (e2e)', () => {
       },
     });
 
-    await prisma.client.$executeRaw`UPDATE events SET updated_at = '2025-01-01T10:00:00.000Z'::timestamp WHERE id = ${eventId}`;
+    await prisma.client
+      .$executeRaw`UPDATE events SET updated_at = '2025-01-01T10:00:00.000Z'::timestamp WHERE id = ${eventId}`;
 
     // simular que outro processo alterou o evento no banco
     await prisma.client.event.update({
