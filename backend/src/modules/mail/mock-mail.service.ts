@@ -1,5 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { MailService, SendCodeParams, SendResult } from './mail.service';
+import {
+  MailService,
+  SendAdminWelcomeParams,
+  SendCodeParams,
+  SendResult,
+} from './mail.service';
 
 /**
  * Driver `mock` do {@link MailService}: loga no console sem enviar
@@ -16,7 +21,7 @@ export class MockMailService extends MailService {
 
   readonly sentEmails: Array<{
     method: string;
-    params: SendCodeParams;
+    params: SendCodeParams | SendAdminWelcomeParams;
     messageId: string;
   }> = [];
 
@@ -28,12 +33,25 @@ export class MockMailService extends MailService {
     return Promise.resolve(this.record('sendPasswordResetCode', params));
   }
 
-  private record(method: string, params: SendCodeParams): SendResult {
+  sendAdminWelcome(params: SendAdminWelcomeParams): Promise<SendResult> {
+    return Promise.resolve(this.record('sendAdminWelcome', params));
+  }
+
+  private record(
+    method: string,
+    params: SendCodeParams | SendAdminWelcomeParams,
+  ): SendResult {
     const messageId = `mock_${Date.now()}`;
 
-    this.logger.log(
-      `[MOCK] ${method} -> ${params.email} (code: ${params.code}, expires: ${params.expiresAt.toISOString()})`,
-    );
+    if ('code' in params) {
+      this.logger.log(
+        `[MOCK] ${method} -> ${params.email} (code: ${params.code}, expires: ${params.expiresAt.toISOString()})`,
+      );
+    } else {
+      this.logger.log(
+        `[MOCK] ${method} -> ${params.email} (name: ${params.name}, city: ${params.cityName}, password: ${params.password})`,
+      );
+    }
 
     this.sentEmails.push({ method, params, messageId });
     return { messageId };
