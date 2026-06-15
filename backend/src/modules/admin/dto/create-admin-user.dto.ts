@@ -23,7 +23,7 @@ export class CreateAdminUserDto {
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim() : value,
   )
-  name: string;
+  name!: string;
 
   @ApiProperty({
     description: 'Email institucional do administrador (deve ser único)',
@@ -33,7 +33,7 @@ export class CreateAdminUserDto {
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim().toLowerCase() : value,
   )
-  email: string;
+  email!: string;
 
   @ApiProperty({
     description: 'ULID da cidade à qual o admin será vinculado (prefixo cit_)',
@@ -41,5 +41,5 @@ export class CreateAdminUserDto {
   })
   @IsNotEmpty()
   @IsTablePrefixedUlid(TABLE_PREFIX.CITY)
-  cityId: string;
+  cityId!: string;
 }

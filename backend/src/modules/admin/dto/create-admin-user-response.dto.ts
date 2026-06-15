@@ -6,32 +6,32 @@ export class CreateAdminUserResponseDto {
     description: 'ULID do usuário criado',
     example: 'usr_01HZX3Y4Q9F8TAB1C2DKEYH9MN',
   })
-  id: string;
+  id!: string;
 
   @ApiProperty({
     description: 'Nome do administrador',
     example: 'João da Silva',
   })
-  name: string;
+  name!: string;
 
   @ApiProperty({
     description: 'Email do administrador',
     example: 'joao@maringa.pr.gov.br',
   })
-  email: string;
+  email!: string;
 
   @ApiProperty({
     description: 'ULID da cidade à qual o admin foi vinculado',
     example: 'cit_01HZX3Y4Q9F8TAB1C2DKEYH9MN',
   })
-  cityId: string;
+  cityId!: string;
 
   @ApiProperty({
     description: 'Role do usuário criado',
     enum: Role,
     example: Role.ADMIN,
   })
-  role: Role;
+  role!: Role;
 
   @ApiProperty({
     description:
@@ -40,5 +40,5 @@ export class CreateAdminUserResponseDto {
       'acione o reenvio manual.',
     example: true,
   })
-  emailSent: boolean;
+  emailSent!: boolean;
 }

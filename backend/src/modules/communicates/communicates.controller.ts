@@ -80,8 +80,8 @@ export class CommunicateController extends BaseCrudController<
   })
   @ApiResponse({ status: 401, description: 'Token ausente ou inválido' })
   @ApiResponse({ status: 403, description: 'Acesso negado' })
-  override create(@Body() dto: CreateCommunicateDto, @Req() req: AuthRequest) {
-    return this.communicateService.createWithUser(dto, req.user);
+  override create(@Body() dto: CreateCommunicateDto, @Req() req?: AuthRequest) {
+    return this.communicateService.createWithUser(dto, req?.user);
   }
 
   @Patch(':id')
@@ -100,9 +100,9 @@ export class CommunicateController extends BaseCrudController<
   override update(
     @Param('id') id: string,
     @Body() dto: UpdateCommunicateDto,
-    @Req() req: AuthRequest,
+    @Req() req?: AuthRequest,
   ) {
-    return this.communicateService.updateWithUser(id, dto, req.user);
+    return this.communicateService.updateWithUser(id, dto, req?.user);
   }
 
   @Delete(':id')
@@ -115,7 +115,7 @@ export class CommunicateController extends BaseCrudController<
   @ApiResponse({ status: 401, description: 'Token ausente ou inválido' })
   @ApiResponse({ status: 403, description: 'Acesso negado' })
   @ApiResponse({ status: 404, description: 'Comunicado não encontrado' })
-  override remove(@Param('id') id: string, @Req() req: AuthRequest) {
-    return this.communicateService.removeWithUser(id, req.user);
+  override remove(@Param('id') id: string, @Req() req?: AuthRequest) {
+    return this.communicateService.removeWithUser(id, req?.user);
   }
 }
