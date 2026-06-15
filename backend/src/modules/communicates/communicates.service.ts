@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
@@ -99,9 +100,10 @@ export class CommunicateService extends BaseCrudService<
 
   async createWithUser(
     dto: CreateCommunicateDto,
-    user: AuthUser,
+    user?: AuthUser,
   ): Promise<CommunicateResponse> {
-    const cityId = this.resolveCityId(dto.cityId, user);
+    const currentUser = this.requireUser(user);
+    const cityId = this.resolveCityId(dto.cityId, currentUser);
 
     const communicate = await this.prisma.client.communicate.create({
       data: {
@@ -110,7 +112,7 @@ export class CommunicateService extends BaseCrudService<
         description: dto.description,
         isActive: dto.isActive ?? true,
         cityId,
-        userId: user.id,
+        userId: currentUser.id,
       },
     });
 
@@ -120,11 +122,12 @@ export class CommunicateService extends BaseCrudService<
   async updateWithUser(
     id: string,
     dto: UpdateCommunicateDto,
-    user: AuthUser,
+    user?: AuthUser,
   ): Promise<CommunicateResponse> {
+    const currentUser = this.requireUser(user);
     const communicate = await this.findCommunicateOrFail(id);
 
-    this.validateCityScope(communicate.cityId, user);
+    this.validateCityScope(communicate.cityId, currentUser);
 
     const updated = await this.prisma.client.communicate.update({
       where: { id },
@@ -134,10 +137,11 @@ export class CommunicateService extends BaseCrudService<
     return this.toResponse(updated);
   }
 
-  async removeWithUser(id: string, user: AuthUser): Promise<void> {
+  async removeWithUser(id: string, user?: AuthUser): Promise<void> {
+    const currentUser = this.requireUser(user);
     const communicate = await this.findCommunicateOrFail(id);
 
-    this.validateCityScope(communicate.cityId, user);
+    this.validateCityScope(communicate.cityId, currentUser);
 
     await this.prisma.client.communicate.update({
       where: { id },
@@ -212,5 +216,13 @@ export class CommunicateService extends BaseCrudService<
     if (entityCityId !== user.cityId) {
       throw new ForbiddenException(apiError(SHARED_ERRORS.CITY_SCOPE_DENIED));
     }
+  }
+
+  private requireUser(user?: AuthUser): AuthUser {
+    if (!user) {
+      throw new UnauthorizedException(apiError(SHARED_ERRORS.UNAUTHENTICATED));
+    }
+
+    return user;
   }
 }
