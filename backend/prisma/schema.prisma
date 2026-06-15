@@ -102,6 +102,7 @@ model Event {
   description String
   type        String
   status      String
+  priority    Boolean                               @default(false)
   coordinates Unsupported("geometry(Point, 4326)")?
   eventDate   DateTime                              @map("event_date")
 
@@ -227,6 +228,7 @@ model Communicate {
   title       String
   description String
   isActive    Boolean @map("is_active")
+  priority    Boolean @default(false)
   cityId      String  @map("city_id")
   userId      String  @map("user_id")
 
