@@ -25,6 +25,7 @@ import { CommunicateModule } from './modules/communicates/communicates.module';
 import { EventsModule } from './modules/events/events.module';
 import { NewsModule } from './modules/news/news.module';
 import { CategoryModule } from './modules/categories/category.module';
+import { FeedModule } from './modules/feed/feed.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { CategoryModule } from './modules/categories/category.module';
     EventsModule,
     NewsModule,
     CategoryModule,
+    FeedModule,
   ],
   controllers: [AppController],
   providers: [
