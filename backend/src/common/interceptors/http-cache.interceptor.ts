@@ -55,7 +55,10 @@ interface CacheManagerWithStores {
  * - **Fallback**: Caso não consiga detectar ou acessar estruturas internas do driver específico, o interceptor tenta um fallback simplificado utilizando o método `del` padrão do Cache Manager na chave exata do recurso base.
  *
  * @important
- * **Aviso de Manutenção:** Este interceptor depende de propriedades privadas e internas dos drivers de cache (`_client`, `_store`, `stores[0]`) que não fazem parte da API pública ou tipada do `@nestjs/cache-manager` e `cache-manager`. Atualizações futuras dessas dependências ou de pacotes relacionados podem quebrar a lógica de invalidação de cache de forma silenciosa. É crucial que qualquer atualização nessas dependências seja acompanhada de testes rigorosos neste interceptor (especialmente testes de E2E de invalidação de cache).
+ * **Aviso de Manutenção:** Este interceptor depende de propriedades privadas e internas dos drivers de cache (`_client`, `_store`, `stores[0]`)
+ *  que não fazem parte da API pública ou tipada do `@nestjs/cache-manager` e `cache-manager`.
+ *  Atualizações futuras dessas dependências ou de pacotes relacionados podem quebrar a lógica de invalidação de cache de forma silenciosa.
+ * É crucial que qualquer atualização nessas dependências seja acompanhada de testes rigorosos neste interceptor (especialmente testes de E2E de invalidação de cache).
  */
 @Injectable()
 export class HttpCacheInterceptor implements NestInterceptor {

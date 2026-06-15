@@ -148,7 +148,7 @@ describe('PasswordReset (e2e)', () => {
       .send({ email: MOCK_USER.email })
       .expect(200);
 
-    const code = mail.sentEmails[0].params.code;
+    const code = (mail.sentEmails[0].params as { code: string }).code;
 
     const resetResponse = await api()
       .post('/auth/reset-password')
@@ -197,7 +197,7 @@ describe('PasswordReset (e2e)', () => {
       .send({ email: MOCK_USER.email })
       .expect(200);
 
-    const code = mail.sentEmails[0].params.code;
+    const code = (mail.sentEmails[0].params as { code: string }).code;
 
     await api()
       .post('/auth/reset-password')
@@ -227,7 +227,7 @@ describe('PasswordReset (e2e)', () => {
       .send({ email: MOCK_USER.email })
       .expect(200);
 
-    const code = mail.sentEmails[0].params.code;
+    const code = (mail.sentEmails[0].params as { code: string }).code;
 
     const response = await api()
       .post('/auth/reset-password')

@@ -261,6 +261,33 @@ suporta um custom scheme próprio (`conectaparana://share/...`).
 
 > Custom schemes são menos seguros que Universal Links — qualquer app pode registrar o mesmo scheme. Em produção o fluxo principal sempre usa HTTPS.
 
+## Algoritmo de Ordenação do Feed
+
+O feed editorial da aba Home é uma lista combinada de **Eventos**, **Comunicados** e **Notícias** ordenada pelo backend (`GET /feed`). O mobile exibe a ordem exatamente como recebida — nenhuma reordenação é feita no cliente.
+
+### Paginação por cursor
+
+O endpoint retorna `nextCursor` (string base64 opaca) e `hasMore: bool`. O cliente passa `cursor=` na próxima requisição. O backend garante estabilidade de cursor: novos itens inseridos entre páginas não causam duplicatas. Cursors expirados ou malformados retornam `400 invalid_cursor` — o mobile reinicia a lista do início silenciosamente.
+
+### Parâmetros do endpoint
+
+| Campo    | Tipo   | Obrigatório | Notas                          |
+|----------|--------|-------------|--------------------------------|
+| `cityId` | string | Sim         | ULID `cit_`. Ausente → `400 city_required` e redirect para `/onboarding`. |
+| `lat`    | float  | Não         | Melhora ordenação por proximidade. |
+| `lng`    | float  | Não         | Idem. Nunca solicitado automaticamente na Home (regra M-08). |
+| `cursor` | string | Não         | Paginação. Ausente = primeira página. |
+| `limit`  | int    | Não         | Default 20, máximo 50.         |
+
+### Comportamento de cache no mobile
+
+- **Pull-to-refresh**: invalida o cursor local e busca sem `cursor`, garantindo dados frescos.
+- **Scroll infinito**: acumula itens em memória usando o `cursor` da última página recebida.
+- **Cache em memória**: o `FeedNotifier` mantém o estado enquanto a aba Home permanece montada. Trocar de aba e voltar **não** recarrega — mantém posição de scroll.
+- **Cache no backend**: TTL de 2 minutos (responsabilidade do backend, transparente para o mobile).
+
+---
+
 ## Bottom Navigation — tap em aba já ativa
 
 Tap em uma aba já ativa faz pop até o root dessa aba. Se o usuário já estiver no root, o tap não tem efeito.
