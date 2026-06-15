@@ -9,6 +9,7 @@ import 'package:conectaparana/core/router/navigator_key.dart';
 import 'package:conectaparana/core/shell/main_shell.dart';
 import 'package:conectaparana/dev/fakes/fake_event_repository.dart';
 import 'package:conectaparana/features/events/presentation/pages/events_page.dart';
+import 'package:conectaparana/features/onboarding/presentation/pages/city_selector_screen.dart';
 import 'package:conectaparana/features/events/presentation/pages/event_detail_page.dart';
 import 'package:conectaparana/features/home/presentation/pages/home_page.dart';
 import 'package:conectaparana/features/map/presentation/pages/map_page.dart';
@@ -143,7 +144,7 @@ class AppRouter {
         ),
         GoRoute(
           path: AppRoutes.onboarding,
-          builder: (context, state) => const StyleguideScreen(),
+          builder: (context, state) => const CitySelectorScreen(),
         ),
         GoRoute(
           path: AppRoutes.styleguide,
@@ -205,8 +206,12 @@ class AppRouter {
                   routes: [
                     GoRoute(
                       path: ':id',
-                      builder: (context, state) =>
-                          _detailPlaceholder('event', state),
+                      builder: (context, state) => EventDetailPage(
+                        eventId: state.pathParameters['id']!,
+                        repository: kDebugMode
+                            ? const FakeEventRepository()
+                            : null,
+                      ),
                     ),
                   ],
                 ),

@@ -112,7 +112,7 @@ export class AuthService {
       name: user.name,
       email: user.email,
       role: user.role,
-      cityId: user.cityId,
+      city: user.cityId,
     };
   }
 

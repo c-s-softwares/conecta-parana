@@ -86,6 +86,99 @@ final _eventos = {
   'evt_fake_completo': _eventCompleto,
   'evt_fake_simples': _eventSemFotosSemMapa,
   'evt_fake_cancelado': _eventCancelado,
+  'evt_aniversario': EventDetail(
+    id: 'evt_aniversario',
+    title: 'Aniversário de Maringá',
+    description:
+        'Comemoração oficial do aniversário da cidade, com shows, food trucks '
+        'e atividades para toda a família na Praça da Catedral.',
+    type: 'Cultural',
+    status: 'publicado',
+    eventDate: DateTime(2026, 5, 10, 18, 0),
+    cityId: 'cit_fake',
+    local: const EventLocal(id: 'loc_catedral', name: 'Praça da Catedral'),
+    photos: const [
+      EventPhoto(
+        id: 'pho_aniversario',
+        url: 'https://picsum.photos/seed/aniversario/800/500',
+        thumbUrl: 'https://picsum.photos/seed/aniversario/400/250',
+      ),
+    ],
+    likesCount: 0,
+    likedByMe: false,
+    savedByMe: false,
+  ),
+  'evt_festival_nipo': EventDetail(
+    id: 'evt_festival_nipo',
+    title: 'Festival Nipo-Brasileiro',
+    description:
+        'Festival que celebra a cultura japonesa na cidade, com gastronomia, '
+        'apresentações culturais e exposições no Parque do Ingá.',
+    type: 'Cultural',
+    status: 'publicado',
+    eventDate: DateTime(2026, 5, 15, 0, 0),
+    eventEndDate: DateTime(2026, 5, 17, 23, 59),
+    cityId: 'cit_fake',
+    local: const EventLocal(id: 'loc_inga', name: 'Parque do Ingá'),
+    photos: const [
+      EventPhoto(
+        id: 'pho_nipo',
+        url: 'https://picsum.photos/seed/festivalnipo/800/500',
+        thumbUrl: 'https://picsum.photos/seed/festivalnipo/400/250',
+      ),
+    ],
+    likesCount: 0,
+    likedByMe: false,
+    savedByMe: false,
+  ),
+  'evt_feira_organica': EventDetail(
+    id: 'evt_feira_organica',
+    title: 'Feira Orgânica do Parque',
+    description:
+        'Feira semanal de produtos orgânicos, com produtores locais, '
+        'realizada toda quarta-feira no Parque dos Pioneiros.',
+    type: 'Feira',
+    status: 'publicado',
+    eventDate: DateTime(2026, 5, 13, 7, 0),
+    cityId: 'cit_fake',
+    local: const EventLocal(id: 'loc_pioneiros', name: 'Parque dos Pioneiros'),
+    photos: const [],
+    likesCount: 0,
+    likedByMe: false,
+    savedByMe: false,
+  ),
+  'evt_audiencia_orcamento': EventDetail(
+    id: 'evt_audiencia_orcamento',
+    title: 'Audiência pública — Orçamento 2026',
+    description:
+        'Audiência pública para discussão do orçamento municipal de 2026, '
+        'aberta à participação popular na Câmara Municipal.',
+    type: 'Educação',
+    status: 'publicado',
+    eventDate: DateTime(2026, 5, 12, 19, 0),
+    cityId: 'cit_fake',
+    local: const EventLocal(id: 'loc_camara', name: 'Câmara Municipal'),
+    photos: const [],
+    likesCount: 0,
+    likedByMe: false,
+    savedByMe: false,
+  ),
+  'evt_corrida_trabalhador': EventDetail(
+    id: 'evt_corrida_trabalhador',
+    title: 'Corrida do Trabalhador',
+    description:
+        'Corrida tradicional realizada no feriado do Dia do Trabalhador, '
+        'com percurso pela Av. Brasil e largada gratuita.',
+    type: 'Esporte',
+    status: 'publicado',
+    eventDate: DateTime(2026, 5, 18, 7, 30),
+    cityId: 'cit_fake',
+    local: const EventLocal(id: 'loc_avbrasil', name: 'Av. Brasil'),
+    photos: const [],
+    likesCount: 0,
+    likedByMe: false,
+    savedByMe: false,
+  ),
 };
 
 class FakeEventRepository implements EventRepository {
