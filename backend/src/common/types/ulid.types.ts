@@ -17,4 +17,5 @@ export const TABLE_PREFIX = {
   TICKET: 'tkt_',
   TICKET_COMMENT: 'tkc_',
   PASSWORD_RESET_CODE: 'prc_',
+  EMAIL_VERIFICATION_CODE: 'evc_',
 } as const;
