@@ -6,7 +6,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/config/prisma.service';
-import { MailService } from '../src/modules/mail/mail.service';
+import { MailService, SendCodeParams } from '../src/modules/mail/mail.service';
 import { MockMailService } from '../src/modules/mail/mock-mail.service';
 import { generateId } from '../src/common/utils/ulid.util';
 import { TABLE_PREFIX } from '../src/common/types/ulid.types';
@@ -97,7 +97,8 @@ describe('EmailVerification (e2e)', () => {
   it('fluxo integrado: register -> verify-email -> login passa a funcionar', async () => {
     await registerUser();
 
-    const code = mail.sentEmails[0].params.code;
+    const params = mail.sentEmails[0].params as SendCodeParams;
+    const code = params.code;
 
     await api()
       .post('/auth/verify-email')
