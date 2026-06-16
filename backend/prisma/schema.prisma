@@ -44,6 +44,7 @@ model User {
   password String
   role     Role    @default(CIDADAO)
   cityId   String? @map("city_id")
+  lastCityUpdateAt DateTime? @map("last_city_update_at")
   // TODO: descomentar quando o upload de avatar do cidadao for ativado no app mobile.
   // avatarUrl String? @map("avatar_url")
   // avatarThumbUrl String? @map("avatar_thumb_url")
