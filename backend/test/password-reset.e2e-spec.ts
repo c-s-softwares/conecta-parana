@@ -37,6 +37,9 @@ describe('PasswordReset (e2e)', () => {
     await prisma.client.passwordResetCode.deleteMany({
       where: { user: { email: MOCK_USER.email } },
     });
+    await prisma.client.emailVerificationCode.deleteMany({
+      where: { user: { email: MOCK_USER.email } },
+    });
     await prisma.client.user.deleteMany({ where: { email: MOCK_USER.email } });
 
     await api()
@@ -48,7 +51,12 @@ describe('PasswordReset (e2e)', () => {
         confirmPassword: MOCK_USER.password,
         cityId: testCityId,
       })
-      .expect(201);
+      .expect(200);
+
+    await prisma.client.user.update({
+      where: { email: MOCK_USER.email },
+      data: { emailVerifiedAt: new Date() },
+    });
   }
 
   async function clearRateLimit(): Promise<void> {
@@ -59,7 +67,10 @@ describe('PasswordReset (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(MailService)
+      .useClass(MockMailService)
+      .compile();
 
     app = await buildTestApp(moduleFixture);
     api = () => request(app.getHttpServer());
@@ -87,6 +98,9 @@ describe('PasswordReset (e2e)', () => {
     await prisma.client.passwordResetCode.deleteMany({
       where: { user: { email: MOCK_USER.email } },
     });
+    await prisma.client.emailVerificationCode.deleteMany({
+      where: { user: { email: MOCK_USER.email } },
+    });
     await prisma.client.user.deleteMany({ where: { email: MOCK_USER.email } });
     await prisma.client.city.deleteMany({
       where: { name: 'Cidade Reset E2E', state: 'PR' },
@@ -96,9 +110,9 @@ describe('PasswordReset (e2e)', () => {
   });
 
   beforeEach(async () => {
-    mail.sentEmails.length = 0;
     await clearRateLimit();
     await ensureUser();
+    mail.sentEmails.length = 0;
   });
 
   it('POST /auth/forgot-password - envia código quando email existe', async () => {
