@@ -212,3 +212,7 @@ MAIL_FROM=seuemail@email.com
 ```
 
 O free tier do Resend permite 100 emails/dia - suficiente para testes manuais.
+
+## 11. Extensões PostgreSQL (pg_trgm)
+
+O banco de dados do Conecta Paraná utiliza a extensão `pg_trgm` (além do PostGIS) para permitir a busca de texto fuzzy eficiente com a operação `ILIKE`. O Prisma garante a criação da extensão nas migrations, e adicionamos índices GIN trigram customizados nas tabelas (ex: Event, Communicate, News, Local) via SQL explícito (em `migration.sql`) para o serviço global de busca, acelerando a resolução de strings contidas no meio dos textos (o clássico `%termo%`) e evitando a ocorrência de varreduras na tabela inteira (Full Table Scan).
