@@ -4,7 +4,6 @@ import { UsersService } from './users.service';
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 import { USERS_ERRORS } from './users.errors';
-import { CITIES_ERRORS } from '../cities/cities.errors';
 import { CITY_UPDATE_THROTTLE_SECONDS } from './users.constants';
 
 const MOCK_USER_ID = `${TABLE_PREFIX.USER}01HZX3Y4Q9F8TAB1C2DKEYH9US`;
@@ -40,6 +39,7 @@ describe('UsersService', () => {
 
   describe('updateUserCity', () => {
     it('deve atualizar a cidade com sucesso quando lastCityUpdateAt é null (primeira chamada)', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-06-16T12:00:00.000Z'));
       const now = new Date();
       const mockUser = {
         id: MOCK_USER_ID,
@@ -72,9 +72,10 @@ describe('UsersService', () => {
       });
       expect(mockPrisma.client.user.update).toHaveBeenCalledWith({
         where: { id: MOCK_USER_ID },
-        data: expect.objectContaining({ cityId: MOCK_CITY_ID }),
+        data: { cityId: MOCK_CITY_ID, lastCityUpdateAt: now },
         select: { id: true, cityId: true, lastCityUpdateAt: true },
       });
+      jest.useRealTimers();
     });
 
     it('deve atualizar com sucesso quando lastCityUpdateAt excede a janela de throttle', async () => {
