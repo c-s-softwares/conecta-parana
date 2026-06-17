@@ -4,9 +4,12 @@ import 'package:conectaparana/core/auth/presentation/forgot_password/forgot_pass
 import 'package:conectaparana/core/auth/presentation/forgot_password/forgot_password_controller.dart';
 import 'package:conectaparana/core/auth/presentation/forgot_password/data/forgot_password_repository.dart';
 
-class _HappyRepository extends ForgotPasswordRepository {
+class _HappyRepository implements ForgotPasswordRepository {
   @override
   Future<void> forgotPassword({required String email}) async {}
+
+  @override
+  Future<void> verifyCode({required String email, required String code}) async {}
 
   @override
   Future<void> resetPassword({
@@ -16,9 +19,12 @@ class _HappyRepository extends ForgotPasswordRepository {
   }) async {}
 }
 
-class _InvalidCodeRepository extends ForgotPasswordRepository {
+class _InvalidCodeRepository implements ForgotPasswordRepository {
   @override
   Future<void> forgotPassword({required String email}) async {}
+
+  @override
+  Future<void> verifyCode({required String email, required String code}) async {}
 
   @override
   Future<void> resetPassword({
@@ -32,9 +38,12 @@ class _InvalidCodeRepository extends ForgotPasswordRepository {
   }
 }
 
-class _WeakPasswordRepository extends ForgotPasswordRepository {
+class _WeakPasswordRepository implements ForgotPasswordRepository {
   @override
   Future<void> forgotPassword({required String email}) async {}
+
+  @override
+  Future<void> verifyCode({required String email, required String code}) async {}
 
   @override
   Future<void> resetPassword({
@@ -60,6 +69,7 @@ void main() {
   ) async {
     await tester.enterText(find.byType(TextFormField), 'teste@email.com');
     await tester.pumpAndSettle();
+
     await tester.tap(find.text('Enviar código'));
     await tester.pumpAndSettle();
 
@@ -68,13 +78,13 @@ void main() {
       await tester.enterText(caixas.at(i), '1');
       await tester.pumpAndSettle();
     }
+
     await tester.tap(find.text('Verificar código'));
     await tester.pumpAndSettle();
   }
 
   testWidgets('avança do passo 1 ao 3', (tester) async {
     final controller = ForgotPasswordController(repository: _HappyRepository());
-
     await tester.pumpWidget(buildApp(controller));
     await tester.pumpAndSettle();
 
@@ -90,7 +100,6 @@ void main() {
     final controller = ForgotPasswordController(
       repository: _InvalidCodeRepository(),
     );
-
     await tester.pumpWidget(buildApp(controller));
     await tester.pumpAndSettle();
 
@@ -99,6 +108,7 @@ void main() {
     await tester.enterText(find.byType(TextField).at(0), 'Senha@123');
     await tester.enterText(find.byType(TextField).at(1), 'Senha@123');
     await tester.pumpAndSettle();
+
     await tester.ensureVisible(find.text('Redefinir senha'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Redefinir senha'));
@@ -112,18 +122,20 @@ void main() {
     final controller = ForgotPasswordController(
       repository: _WeakPasswordRepository(),
     );
-
     await tester.pumpWidget(buildApp(controller));
     await tester.pumpAndSettle();
 
     await irAtePasso3(tester, controller);
+
     await tester.enterText(find.byType(TextField).at(0), 'Senha@123');
     await tester.enterText(find.byType(TextField).at(1), 'Senha@123');
     await tester.pumpAndSettle();
+
     await tester.ensureVisible(find.text('Redefinir senha'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Redefinir senha'));
     await tester.pumpAndSettle();
+
     expect(controller.currentStep, 2);
     expect(controller.weakPasswordError, isTrue);
   });
