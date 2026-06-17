@@ -96,4 +96,36 @@ describe('SearchService', () => {
     expect(mockPrisma.client.news.findMany).toHaveBeenCalled();
     expect(mockPrisma.client.event.findMany).not.toHaveBeenCalled();
   });
+
+  it('deve normalizar types com espaços (ex: "events , locals") e efetuar a busca', async () => {
+    mockPrisma.client.event.findMany.mockResolvedValue([]);
+    mockPrisma.client.event.count.mockResolvedValue(0);
+    mockPrisma.client.local.findMany.mockResolvedValue([]);
+    mockPrisma.client.local.count.mockResolvedValue(0);
+
+    const dto: SearchQueryDto = { q: 'teste', types: 'events , locals' };
+    const result = await service.search(dto);
+
+    expect(result).toHaveProperty('events');
+    expect(result).toHaveProperty('locals');
+    expect(result).not.toHaveProperty('news');
+    expect(result).not.toHaveProperty('communicates');
+
+    expect(mockPrisma.client.event.findMany).toHaveBeenCalled();
+    expect(mockPrisma.client.local.findMany).toHaveBeenCalled();
+  });
+
+  it('deve deduplicar types com itens repetidos (ex: "news,news") executando a busca apenas uma vez', async () => {
+    mockPrisma.client.news.findMany.mockResolvedValue([]);
+    mockPrisma.client.news.count.mockResolvedValue(0);
+
+    const dto: SearchQueryDto = { q: 'teste', types: 'news,news' };
+    const result = await service.search(dto);
+
+    expect(result).toHaveProperty('news');
+    expect(result).not.toHaveProperty('events');
+
+    expect(mockPrisma.client.news.findMany).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.client.news.count).toHaveBeenCalledTimes(1);
+  });
 });

@@ -23,12 +23,9 @@ describe('SearchController (e2e)', () => {
 
   describe('GET /search', () => {
     it('deve retornar erro se a query for menor que 3 caracteres (400 validation_failed se não informado, query_too_short se muito curta)', async () => {
-      // ValidationPipe deve pegar ausência
       let response = await request(app.getHttpServer()).get('/search');
       expect(response.status).toBe(400);
 
-      // ValidationPipe deve pegar string < 3? Não configuramos MinLength(3) no class-validator para ser flexível com trim,
-      // O validator falha se usar MinLength. Mas fizemos a verificação no controller/service.
       response = await request(app.getHttpServer()).get('/search?q=ab');
       expect(response.status).toBe(400);
       const body = response.body as { code: string };
@@ -48,7 +45,6 @@ describe('SearchController (e2e)', () => {
       const response = await request(app.getHttpServer()).get(
         '/search?q=teste',
       );
-      if (response.status !== 200) console.log(response.body);
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('events');
       expect(response.body).toHaveProperty('communicates');
