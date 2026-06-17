@@ -4,7 +4,6 @@ import '../forgot_password_controller.dart';
 
 class Step2Code extends StatefulWidget {
   final ForgotPasswordController controller;
-
   const Step2Code({super.key, required this.controller});
 
   @override
@@ -20,11 +19,32 @@ class _Step2CodeState extends State<Step2Code> {
   static const Color _disabledButton = Color(0xFFE8ECE8);
   static const Color _disabledText = Color(0xFF9AA29A);
 
-  final List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
   final List<TextEditingController> _controllers = List.generate(
     6,
     (index) => TextEditingController(),
   );
+  late final List<FocusNode> _focusNodes;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNodes = List.generate(6, (i) {
+      return FocusNode(
+        onKeyEvent: (node, event) {
+          if (event is KeyDownEvent &&
+              event.logicalKey == LogicalKeyboardKey.backspace &&
+              _controllers[i].text.isEmpty &&
+              i > 0) {
+            _controllers[i - 1].clear();
+            _focusNodes[i - 1].requestFocus();
+            _syncCode();
+            return KeyEventResult.handled;
+          }
+          return KeyEventResult.ignored;
+        },
+      );
+    });
+  }
 
   @override
   void dispose() {
@@ -43,8 +63,7 @@ class _Step2CodeState extends State<Step2Code> {
       for (int i = 0; i < 6; i++) {
         _controllers[i].text = i < digits.length ? digits[i] : '';
       }
-
-      final next = digits.length >= 6 ? 5 : digits.length;
+      final next = digits.length.clamp(0, 5);
       _focusNodes[next].requestFocus();
       _syncCode();
       return;
@@ -52,10 +71,7 @@ class _Step2CodeState extends State<Step2Code> {
 
     if (value.isNotEmpty && index < 5) {
       _focusNodes[index + 1].requestFocus();
-    } else if (value.isEmpty && index > 0) {
-      _focusNodes[index - 1].requestFocus();
     }
-
     _syncCode();
   }
 
