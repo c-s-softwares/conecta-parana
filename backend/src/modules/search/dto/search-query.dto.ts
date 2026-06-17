@@ -9,6 +9,9 @@ import {
   Min,
 } from 'class-validator';
 
+import { IsTablePrefixedUlid } from '../../../common/validators/is-table-prefixed-ulid.validator';
+import { TABLE_PREFIX } from '../../../common/types/ulid.types';
+
 export class SearchQueryDto {
   @ApiProperty({
     description: 'Termo de busca. Mínimo de 3 caracteres.',
@@ -26,6 +29,7 @@ export class SearchQueryDto {
   })
   @IsOptional()
   @IsString()
+  @IsTablePrefixedUlid(TABLE_PREFIX.CITY)
   cityId?: string;
 
   @ApiPropertyOptional({

@@ -1,8 +1,18 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { Event, Communicate, News, Local } from '@prisma/client';
 import { PrismaService } from '../../config/prisma.service';
 import { SearchQueryDto } from './dto/search-query.dto';
 import { apiError } from '../../common/errors/api-error';
 import { SEARCH_ERRORS } from './search.errors';
+
+export type SearchGroup<T> = { items: T[]; total: number };
+
+export interface SearchResults {
+  events?: SearchGroup<Event>;
+  communicates?: SearchGroup<Communicate>;
+  news?: SearchGroup<News>;
+  locals?: SearchGroup<Local>;
+}
 
 const VALID_TYPES = ['events', 'communicates', 'news', 'locals'];
 
@@ -10,7 +20,7 @@ const VALID_TYPES = ['events', 'communicates', 'news', 'locals'];
 export class SearchService {
   constructor(private prisma: PrismaService) {}
 
-  async search(dto: SearchQueryDto) {
+  async search(dto: SearchQueryDto): Promise<SearchResults> {
     const q = dto.q?.trim() ?? '';
 
     if (q.length < 3) {
@@ -24,7 +34,7 @@ export class SearchService {
       if (invalid) {
         throw new BadRequestException(apiError(SEARCH_ERRORS.INVALID_TYPES));
       }
-      parsedTypes = typesList;
+      parsedTypes = Array.from(new Set(typesList));
     }
 
     const limit = dto.limit ?? 10;
@@ -32,13 +42,9 @@ export class SearchService {
 
     const baseWhere = cityId ? { cityId } : {};
 
-    const results: Record<string, any> = {};
+    const results: SearchResults = {};
 
     const promises: Promise<void>[] = [];
-
-    // Para cada grupo que deve estar no resultado de acordo com types (ou default)
-    // Se o tipo não estiver na lista parsedTypes, omitimos da resposta.
-    // Wait, a regra de negócio diz: "Quando types não é informado, os quatro grupos sempre vêm. Quando types filtra grupos, os grupos omitidos saem da resposta."
 
     if (parsedTypes.includes('events')) {
       const whereClause = {
