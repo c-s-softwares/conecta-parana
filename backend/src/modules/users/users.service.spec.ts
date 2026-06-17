@@ -72,10 +72,30 @@ describe('UsersService', () => {
       });
       expect(mockPrisma.client.user.update).toHaveBeenCalledWith({
         where: { id: MOCK_USER_ID },
-        data: { cityId: MOCK_CITY_ID, lastCityUpdateAt: now },
+        data: { city: { connect: { id: MOCK_CITY_ID } }, lastCityUpdateAt: now },
         select: { id: true, cityId: true, lastCityUpdateAt: true },
       });
       jest.useRealTimers();
+    });
+
+    it('deve retornar a cidade atual (idempotência) sem atualizar se for a mesma cidade', async () => {
+      const pastDate = new Date();
+      const mockUser = {
+        id: MOCK_USER_ID,
+        cityId: MOCK_CITY_ID,
+        lastCityUpdateAt: pastDate,
+      };
+
+      mockPrisma.client.user.findUniqueOrThrow.mockResolvedValue(mockUser);
+
+      const result = await service.updateUserCity(MOCK_USER_ID, MOCK_CITY_ID);
+
+      expect(result.id).toBe(MOCK_USER_ID);
+      expect(result.cityId).toBe(MOCK_CITY_ID);
+      expect(result.lastCityUpdateAt).toBe(pastDate);
+
+      expect(mockPrisma.client.city.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.client.user.update).not.toHaveBeenCalled();
     });
 
     it('deve atualizar com sucesso quando lastCityUpdateAt excede a janela de throttle', async () => {

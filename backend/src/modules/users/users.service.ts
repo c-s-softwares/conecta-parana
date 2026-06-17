@@ -9,15 +9,27 @@ import { apiError } from '../../common/errors/api-error';
 import { USERS_ERRORS } from './users.errors';
 import { CITIES_ERRORS } from '../cities/cities.errors';
 import { CITY_UPDATE_THROTTLE_SECONDS } from './users.constants';
+import { UpdateUserCityResponseDto } from './dto/response/update-user-city-response.dto';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async updateUserCity(userId: string, cityId: string) {
+  async updateUserCity(
+    userId: string,
+    cityId: string,
+  ): Promise<UpdateUserCityResponseDto> {
     const user = await this.prisma.client.user.findUniqueOrThrow({
       where: { id: userId },
     });
+
+    if (user.cityId === cityId) {
+      return {
+        id: user.id,
+        cityId: user.cityId,
+        lastCityUpdateAt: user.lastCityUpdateAt,
+      } as UpdateUserCityResponseDto;
+    }
 
     if (user.lastCityUpdateAt) {
       const diffInMs = Date.now() - user.lastCityUpdateAt.getTime();
@@ -41,7 +53,7 @@ export class UsersService {
     const updatedUser = await this.prisma.client.user.update({
       where: { id: userId },
       data: {
-        cityId,
+        city: { connect: { id: cityId } },
         lastCityUpdateAt: new Date(),
       },
       select: {
@@ -51,6 +63,6 @@ export class UsersService {
       },
     });
 
-    return updatedUser;
+    return updatedUser as UpdateUserCityResponseDto;
   }
 }

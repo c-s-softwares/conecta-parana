@@ -51,8 +51,6 @@ describe('Users - PUT /users/me/city (e2e)', () => {
         email: 'e2e-cidadao-city@test.com',
         password: 'hash',
         role: 'CIDADAO',
-        cityId: null,
-        lastCityUpdateAt: null,
       },
     });
 
@@ -118,13 +116,29 @@ describe('Users - PUT /users/me/city (e2e)', () => {
     const response = await request(app.getHttpServer() as unknown as Server)
       .put('/users/me/city')
       .set('Authorization', `Bearer ${normalUserToken}`)
+      .send({ cityId: testCityId1 });
+
+    if (response.status !== 200) {
+      console.log('STATUS:', response.status, 'BODY:', response.body);
+    }
+    expect(response.status).toBe(200);
+
+    const body = response.body as Record<string, any>;
+    expect(body.id).toBe(testUserId);
+    expect(body.cityId).toBe(testCityId1);
+    expect(body.lastCityUpdateAt).toBeDefined();
+  });
+
+  it('deve retornar 200 sem erro de throttle se a cidade enviada for a mesma que o usuário já possui (idempotência)', async () => {
+    const response = await request(app.getHttpServer() as unknown as Server)
+      .put('/users/me/city')
+      .set('Authorization', `Bearer ${normalUserToken}`)
       .send({ cityId: testCityId1 })
       .expect(200);
 
     const body = response.body as Record<string, any>;
     expect(body.id).toBe(testUserId);
     expect(body.cityId).toBe(testCityId1);
-    expect(body.lastCityUpdateAt).toBeDefined();
   });
 
   it('deve retornar 429 update_too_frequent na segunda chamada em sequência rápida', async () => {
