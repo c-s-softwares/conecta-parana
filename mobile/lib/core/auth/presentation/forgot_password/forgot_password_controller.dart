@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'data/forgot_password_repository.dart';
@@ -6,7 +7,7 @@ class ForgotPasswordController extends ChangeNotifier {
   final ForgotPasswordRepository _repository;
 
   ForgotPasswordController({ForgotPasswordRepository? repository})
-    : _repository = repository ?? ForgotPasswordRepository();
+    : _repository = repository ?? ForgotPasswordRepository.create();
 
   final PageController pageController = PageController();
   int currentStep = 0;
@@ -15,14 +16,15 @@ class ForgotPasswordController extends ChangeNotifier {
   String _code = '';
   String _newPassword = '';
   String _confirmPassword = '';
-
   bool isPasswordVisible = false;
   bool isConfirmPasswordVisible = false;
-
   bool isLoading = false;
   String? errorMessage;
   bool weakPasswordError = false;
   int resendCooldown = 0;
+
+  Timer? _cooldownTimer;
+  bool _disposed = false;
 
   void togglePasswordVisibility() {
     isPasswordVisible = !isPasswordVisible;
@@ -97,15 +99,22 @@ class ForgotPasswordController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> startCooldown() async {
+  void startCooldown() {
+    _cooldownTimer?.cancel();
     resendCooldown = 60;
     notifyListeners();
 
-    while (resendCooldown > 0) {
-      await Future.delayed(const Duration(seconds: 1));
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_disposed) {
+        timer.cancel();
+        return;
+      }
       resendCooldown--;
       notifyListeners();
-    }
+      if (resendCooldown <= 0) {
+        timer.cancel();
+      }
+    });
   }
 
   Future<bool> submitEmail() async {
@@ -118,6 +127,7 @@ class ForgotPasswordController extends ChangeNotifier {
       await _repository.forgotPassword(email: email);
       isLoading = false;
       nextStep();
+      startCooldown();
       return true;
     } on DioException catch (e) {
       isLoading = false;
@@ -145,10 +155,25 @@ class ForgotPasswordController extends ChangeNotifier {
     }
   }
 
-  void verifyCode() {
+  Future<void> verifyCode() async {
     if (code.length < 6) return;
+    isLoading = true;
     errorMessage = null;
-    nextStep();
+    notifyListeners();
+
+    try {
+      await _repository.verifyCode(email: email, code: code);
+      isLoading = false;
+      nextStep();
+    } on ForgotPasswordException catch (e) {
+      isLoading = false;
+      if (e.type == ForgotPasswordError.invalidOrExpiredCode) {
+        errorMessage = 'Código inválido ou expirado. Solicite um novo.';
+      } else {
+        errorMessage = 'Erro ao verificar código. Tente novamente.';
+      }
+      notifyListeners();
+    }
   }
 
   Future<bool> resetPassword() async {
@@ -169,24 +194,25 @@ class ForgotPasswordController extends ChangeNotifier {
       return true;
     } on ForgotPasswordException catch (e) {
       isLoading = false;
-
       if (e.type == ForgotPasswordError.invalidOrExpiredCode) {
-        currentStep = 1; 
+        currentStep = 1;
         errorMessage = 'Código inválido. Solicite um novo.';
         _animateToCurrentStep();
       } else if (e.type == ForgotPasswordError.weakPassword) {
         weakPasswordError = true;
         notifyListeners();
       } else {
+        errorMessage = 'Erro inesperado. Tente novamente.';
         notifyListeners();
       }
-
       return false;
     }
   }
 
   @override
   void dispose() {
+    _disposed = true;
+    _cooldownTimer?.cancel();
     pageController.dispose();
     super.dispose();
   }
