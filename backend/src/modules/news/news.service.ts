@@ -49,6 +49,12 @@ export class NewsService extends BaseCrudService<
     this.validateType(dto.type);
     this.validateLinkType(dto.linkType);
 
+    /**
+     * TODO (pós-MVP): introduzir coluna priority em News,
+     * espelhando o que foi feito em Event e Communicate. Hoje a Home
+     * Mobile usa apenas 1 notícia (a mais recente ativa) como destaque, então a
+     * flag não é necessária.
+     * */
     return {
       title: dto.title,
       description: dto.description,

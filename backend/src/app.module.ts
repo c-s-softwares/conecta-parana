@@ -25,6 +25,7 @@ import { CommunicateModule } from './modules/communicates/communicates.module';
 import { EventsModule } from './modules/events/events.module';
 import { NewsModule } from './modules/news/news.module';
 import { CategoryModule } from './modules/categories/category.module';
+import { FeedModule } from './modules/feed/feed.module';
 import { UsersModule } from './modules/users/users.module';
 import { SearchModule } from './modules/search/search.module';
 
@@ -63,6 +64,7 @@ import { SearchModule } from './modules/search/search.module';
     EventsModule,
     NewsModule,
     CategoryModule,
+    FeedModule,
     UsersModule,
     SearchModule,
   ],
