@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'package:conectaparana/shared/widgets/misc/delayed_display.dart';
 import 'package:flutter/material.dart';
 import 'package:conectaparana/shared/widgets/misc/empty_state.dart';
 
@@ -47,7 +47,7 @@ class ListStateView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return _DelayedDisplay(child: loadingSkeleton);
+      return DelayedDisplay(child: loadingSkeleton);
     }
 
     if (hasError) {
@@ -82,40 +82,4 @@ class ListStateView extends StatelessWidget {
 
     return builder(context);
   }
-}
-
-class _DelayedDisplay extends StatefulWidget {
-  const _DelayedDisplay({
-    required this.child,
-    this.delay = const Duration(milliseconds: 200),
-  });
-
-  final Widget child;
-  final Duration delay;
-
-  @override
-  State<_DelayedDisplay> createState() => _DelayedDisplayState();
-}
-
-class _DelayedDisplayState extends State<_DelayedDisplay> {
-  bool _visible = false;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer(widget.delay, () {
-      if (mounted) setState(() => _visible = true);
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) =>
-      _visible ? widget.child : const SizedBox.shrink();
 }

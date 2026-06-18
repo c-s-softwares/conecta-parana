@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
-import 'package:conectaparana/dev/event_detail_preview_screen.dart';
 import 'package:conectaparana/core/auth/auth_service.dart';
 import 'package:conectaparana/core/auth/auth_user.dart';
 import 'package:conectaparana/core/router/app_router.dart';
@@ -23,6 +22,7 @@ import '../widgets/feed_skeleton.dart';
 import '../widgets/featured_banner_card.dart';
 import '../widgets/home_greeting_header.dart';
 import '../widgets/services_grid.dart';
+import 'package:conectaparana/shared/widgets/misc/delayed_display.dart';
 
 class HomePage extends StatefulWidget {
   final FeedNotifier? mockNotifier;
@@ -138,7 +138,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
@@ -189,7 +188,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             ..._highlightSections(),
             const SectionHeader(title: 'Mais comunicados'),
-            const FeedSkeleton(),
+            const DelayedDisplay(child: FeedSkeleton()),
           ],
         );
 
@@ -199,11 +198,13 @@ class _HomePageState extends State<HomePage> {
           children: [
             ..._highlightSections(),
             const SectionHeader(title: 'Mais comunicados'),
-            const EmptyState(
+            EmptyState(
               icon: Icons.inbox_outlined,
               title: 'Nada por aqui ainda',
               subtitle:
                   'Assim que houver novidades para sua cidade, elas aparecerão aqui.',
+              buttonLabel: 'Atualizar',
+              onButtonTap: _notifier.refresh,
             ),
           ],
         );
@@ -214,7 +215,13 @@ class _HomePageState extends State<HomePage> {
           children: [
             ..._highlightSections(),
             const SectionHeader(title: 'Mais comunicados'),
-            _buildFirstLoadError(),
+            EmptyState(
+              icon: Icons.cloud_off_outlined,
+              title: 'Não foi possível carregar o feed.',
+              subtitle: 'Verifique sua conexão e tente novamente.',
+              buttonLabel: 'Tentar novamente',
+              onButtonTap: _notifier.load,
+            ),
           ],
         );
 
@@ -293,68 +300,6 @@ class _HomePageState extends State<HomePage> {
 
           return _ErrorMoreFooter(onRetry: _notifier.loadMore);
         },
-      ),
-    );
-  }
-
-  Widget _buildFirstLoadError() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.wifi_off_outlined, size: 56, color: Colors.grey),
-            const SizedBox(height: 16),
-            const Text(
-              'Não foi possível carregar o feed',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Verifique sua conexão e tente novamente.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () {
-                context.push('/styleguide');
-              },
-              child: const Text('Abrir Styleguide'),
-            ),
-
-            if (kDebugMode) ...[
-              const SizedBox(height: 24),
-              const Divider(indent: 40, endIndent: 40),
-              const SizedBox(height: 8),
-              const Text(
-                'DEV',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.grey,
-                  letterSpacing: 1,
-                ),
-              ),
-              const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const EventDetailPreviewScreen(),
-                  ),
-                ),
-                icon: const Icon(Icons.event_outlined, size: 16),
-                label: const Text('Preview — Detalhe de Evento'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF006733),
-                  side: const BorderSide(color: Color(0xFF006733)),
-                ),
-              ),
-            ],
-          ],
-        ),
       ),
     );
   }
