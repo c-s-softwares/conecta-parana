@@ -21,7 +21,7 @@ export class SearchQueryDto {
   })
   @IsString()
   @MaxLength(100)
-  q: string;
+  q!: string;
 
   @ApiPropertyOptional({
     description: 'Filtrar resultados por uma cidade específica (ULID).',

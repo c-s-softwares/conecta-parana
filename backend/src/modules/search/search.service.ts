@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Event, Communicate, News, Local } from '@prisma/client';
+import { Event, Communicate, News, Local, Prisma } from '@prisma/client';
 import { PrismaService } from '../../config/prisma.service';
 import { SearchQueryDto } from './dto/search-query.dto';
 import { apiError } from '../../common/errors/api-error';
@@ -47,7 +47,7 @@ export class SearchService {
     const promises: Promise<void>[] = [];
 
     if (parsedTypes.includes('events')) {
-      const whereClause = {
+      const whereClause: Prisma.EventWhereInput = {
         ...baseWhere,
         deletedAt: null,
         OR: [
@@ -71,7 +71,7 @@ export class SearchService {
     }
 
     if (parsedTypes.includes('communicates')) {
-      const whereClause = {
+      const whereClause: Prisma.CommunicateWhereInput = {
         ...baseWhere,
         isActive: true,
         OR: [
@@ -95,7 +95,7 @@ export class SearchService {
     }
 
     if (parsedTypes.includes('news')) {
-      const whereClause = {
+      const whereClause: Prisma.NewsWhereInput = {
         ...baseWhere,
         isActive: true,
         OR: [
@@ -119,7 +119,7 @@ export class SearchService {
     }
 
     if (parsedTypes.includes('locals')) {
-      const whereClause = {
+      const whereClause: Prisma.LocalWhereInput = {
         ...baseWhere,
         deletedAt: null,
         OR: [
