@@ -24,4 +24,6 @@ export const AUTH_ERRORS = defineErrors({
   INVALID_OR_EXPIRED_CODE: 'Código inválido, expirado ou já utilizado',
 
   WEAK_PASSWORD: STRONG_PASSWORD_MESSAGE,
+
+  EMAIL_NOT_VERIFIED: 'Email ainda não verificado. Confirme o código enviado.',
 });

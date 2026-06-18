@@ -6,6 +6,8 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/config/prisma.service';
+import { MailService } from './../src/modules/mail/mail.service';
+import { MockMailService } from './../src/modules/mail/mock-mail.service';
 import * as bcrypt from 'bcryptjs';
 import { buildTestApp } from './helpers/test-app';
 
@@ -37,7 +39,10 @@ describe('Cities Cache Invalidation (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(MailService)
+      .useClass(MockMailService)
+      .compile();
 
     app = await buildTestApp(moduleFixture);
 
@@ -48,17 +53,22 @@ describe('Cities Cache Invalidation (e2e)', () => {
     // Limpa completamente o cache antes de iniciar o teste para garantir um ambiente limpo
     await cacheManager.clear();
 
-    // Garante que o usuário administrador do seed existe no banco de testes
     const hashedPassword = await bcrypt.hash(ADMIN_CREDENTIALS.password, 10);
     await prisma.client.user.upsert({
       where: { email: ADMIN_CREDENTIALS.email },
-      update: { role: 'ADMIN', password: hashedPassword, name: 'Admin' },
+      update: {
+        role: 'ADMIN',
+        password: hashedPassword,
+        name: 'Admin',
+        emailVerifiedAt: new Date(),
+      },
       create: {
         id: 'usr_seed_admin',
         email: ADMIN_CREDENTIALS.email,
         name: 'Admin',
         password: hashedPassword,
         role: 'ADMIN',
+        emailVerifiedAt: new Date(),
       },
     });
 

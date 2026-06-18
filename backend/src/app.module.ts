@@ -26,6 +26,7 @@ import { EventsModule } from './modules/events/events.module';
 import { NewsModule } from './modules/news/news.module';
 import { CategoryModule } from './modules/categories/category.module';
 import { FeedModule } from './modules/feed/feed.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { FeedModule } from './modules/feed/feed.module';
     NewsModule,
     CategoryModule,
     FeedModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [

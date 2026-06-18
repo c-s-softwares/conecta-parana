@@ -1873,6 +1873,63 @@
                     }
                 }
             ]
+        },
+        {
+            "name": "users",
+            "description": "",
+            "item": [
+                {
+                    "id": "e8d7c4b1-8b2d-4bf7-8e6f-cb5e982ad1f4",
+                    "name": "Atualizar cidade do cidadão",
+                    "request": {
+                        "name": "Atualizar cidade do cidadão",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "users",
+                                "me",
+                                "city"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"cityId\": \"cit_MARI\"\n}",
+                            "options": {
+                                "raw": {
+                                    "headerFamily": "json",
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{bearerToken}}"
+                                }
+                            ]
+                        }
+                    },
+                    "response": [],
+                    "event": [],
+                    "protocolProfileBehavior": {
+                        "disableBodyPruning": true
+                    }
+                }
+            ]
         }
     ],
     "event": [],
