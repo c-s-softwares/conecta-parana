@@ -1930,6 +1930,109 @@
                     }
                 }
             ]
+        },
+        {
+            "name": "search",
+            "description": "",
+            "item": [
+                {
+                    "id": "e4585da8-96bf-4e08-9fd0-cda5a329ef31",
+                    "name": "Busca Global Completa",
+                    "request": {
+                        "name": "Busca Global Completa",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "search"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "feira"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ],
+                            "variable": []
+                        },
+                        "method": "GET",
+                        "body": {},
+                        "auth": null
+                    },
+                    "response": []
+                },
+                {
+                    "id": "f516a2b8-93bc-4281-a6ef-3f2d26d03d32",
+                    "name": "Busca com Filtros (Cidade e Tipos)",
+                    "request": {
+                        "name": "Busca com Filtros (Cidade e Tipos)",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "search"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "evento"
+                                },
+                                {
+                                    "key": "cityId",
+                                    "value": "cit_01HGW5SDRT1234567890ABCDEF"
+                                },
+                                {
+                                    "key": "types",
+                                    "value": "events,locals"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "5"
+                                }
+                            ],
+                            "variable": []
+                        },
+                        "method": "GET",
+                        "body": {},
+                        "auth": null
+                    },
+                    "response": []
+                },
+                {
+                    "id": "a1d3f9b8-d2bc-4672-8efc-1c5c1630d6bf",
+                    "name": "Busca com erro (Query Curta)",
+                    "request": {
+                        "name": "Busca com erro (Query Curta)",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "search"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "ab"
+                                }
+                            ],
+                            "variable": []
+                        },
+                        "method": "GET",
+                        "body": {},
+                        "auth": null
+                    },
+                    "response": []
+                }
+            ]
         }
     ],
     "event": [],

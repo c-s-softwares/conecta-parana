@@ -26,6 +26,7 @@ import { EventsModule } from './modules/events/events.module';
 import { NewsModule } from './modules/news/news.module';
 import { CategoryModule } from './modules/categories/category.module';
 import { UsersModule } from './modules/users/users.module';
+import { SearchModule } from './modules/search/search.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { UsersModule } from './modules/users/users.module';
     NewsModule,
     CategoryModule,
     UsersModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [
