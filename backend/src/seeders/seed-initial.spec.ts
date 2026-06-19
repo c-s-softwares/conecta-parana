@@ -39,6 +39,9 @@ const mockPrisma = {
 
 beforeAll(() => {
   jest.spyOn(Logger.prototype, 'error').mockImplementation();
+  jest.spyOn(console, 'log').mockImplementation();
+  jest.spyOn(console, 'warn').mockImplementation();
+  jest.spyOn(console, 'error').mockImplementation();
 });
 
 beforeEach(() => {
