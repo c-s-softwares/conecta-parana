@@ -33,6 +33,12 @@ const mockPrisma = {
       create: jest.fn(),
       update: jest.fn(),
     },
+    like: {
+      findFirst: jest.fn(),
+    },
+    save: {
+      findFirst: jest.fn(),
+    },
   },
 };
 
@@ -201,5 +207,85 @@ describe('CommunicateService', () => {
     );
 
     expect(result.title).toBe('Título atualizado');
+  });
+
+  describe('findOneDetail', () => {
+    const USER_ID = 'usr_detail';
+    const AUTHOR_NAME = 'João da Silva';
+
+    const buildRow = (overrides: Record<string, unknown> = {}) => ({
+      ...MOCK_COMMUNICATE,
+      user: { name: AUTHOR_NAME },
+      photos: [],
+      _count: { likes: 0 },
+      ...overrides,
+    });
+
+    it('anônimo: retorna authorName, photos e likesCount com flags=false', async () => {
+      mockPrisma.client.communicate.findFirst.mockResolvedValue(
+        buildRow({
+          photos: [
+            {
+              id: 'pho_1',
+              url: 'https://obj/o/pho_1.webp',
+              thumbUrl: 'https://obj/o/pho_1-thumb.webp',
+            },
+          ],
+          _count: { likes: 7 },
+        }),
+      );
+
+      const result = await service.findOneDetail(MOCK_COMMUNICATE_ID);
+
+      expect(result.authorName).toBe(AUTHOR_NAME);
+      expect(result.likesCount).toBe(7);
+      expect(result.liked).toBe(false);
+      expect(result.saved).toBe(false);
+      expect(result.photos).toHaveLength(1);
+      expect(result.photos[0]).toMatchObject({
+        entityType: 'communicate',
+        entityId: MOCK_COMMUNICATE_ID,
+      });
+      expect(mockPrisma.client.like.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.client.save.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('logado com like e save: ambas as flags true', async () => {
+      mockPrisma.client.communicate.findFirst.mockResolvedValue(buildRow());
+      mockPrisma.client.like.findFirst.mockResolvedValue({ id: 'lke_1' });
+      mockPrisma.client.save.findFirst.mockResolvedValue({ id: 'sav_1' });
+
+      const result = await service.findOneDetail(MOCK_COMMUNICATE_ID, USER_ID);
+
+      expect(result.liked).toBe(true);
+      expect(result.saved).toBe(true);
+      expect(mockPrisma.client.like.findFirst).toHaveBeenCalledWith({
+        where: { userId: USER_ID, communicateId: MOCK_COMMUNICATE_ID },
+        select: { id: true },
+      });
+      expect(mockPrisma.client.save.findFirst).toHaveBeenCalledWith({
+        where: { userId: USER_ID, communicateId: MOCK_COMMUNICATE_ID },
+        select: { id: true },
+      });
+    });
+
+    it('logado sem like nem save: ambas as flags false', async () => {
+      mockPrisma.client.communicate.findFirst.mockResolvedValue(buildRow());
+      mockPrisma.client.like.findFirst.mockResolvedValue(null);
+      mockPrisma.client.save.findFirst.mockResolvedValue(null);
+
+      const result = await service.findOneDetail(MOCK_COMMUNICATE_ID, USER_ID);
+
+      expect(result.liked).toBe(false);
+      expect(result.saved).toBe(false);
+    });
+
+    it('lança NotFoundException quando comunicado inativo ou inexistente', async () => {
+      mockPrisma.client.communicate.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.findOneDetail(MOCK_COMMUNICATE_ID, USER_ID),
+      ).rejects.toThrow(NotFoundException);
+    });
   });
 });
