@@ -2,11 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CategoryResponse {
   @ApiProperty()
-  id: string;
+  id!: string;
 
   @ApiProperty()
-  name: string;
+  name!: string;
 
   @ApiProperty()
-  icon: string;
+  icon!: string;
 }

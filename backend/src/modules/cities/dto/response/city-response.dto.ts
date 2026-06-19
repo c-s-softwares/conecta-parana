@@ -2,11 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CityResponse {
   @ApiProperty()
-  id: string;
+  id!: string;
 
   @ApiProperty()
-  name: string;
+  name!: string;
 
   @ApiProperty()
-  state: string;
+  state!: string;
 }
