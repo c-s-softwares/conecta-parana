@@ -44,14 +44,11 @@ export class SavesController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Target inválido, nulo ou múltiplos targets informados',
+    description: 'validation_failed | no_target | multiple_targets',
   })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Acesso negado: requer papel CIDADAO',
-  })
-  @ApiResponse({ status: 404, description: 'Recurso alvo não encontrado' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied' })
+  @ApiResponse({ status: 404, description: 'target_not_found' })
   async toggleSave(
     @Body() dto: CreateSaveToggleDto,
     @Request() req: ExpressRequest,
@@ -71,11 +68,8 @@ export class SavesController {
     description: 'Lista de recursos salvos retornada com sucesso',
     type: SavesGroupedResponseDto,
   })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Acesso negado: requer papel CIDADAO',
-  })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied' })
   async findMySaves(
     @Request() req: ExpressRequest,
   ): Promise<SavesGroupedResponseDto> {

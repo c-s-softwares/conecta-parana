@@ -18,7 +18,6 @@ import { NewsResponse } from '../news/dto/response/news-response.dto';
 import { EventResponse } from '../events/dto/response/event-response.dto';
 import { CommunicateResponse } from '../communicates/dto/response/communicate-response.dto';
 
-const MAIN_NEWS_LIMIT = 1;
 const EVENTS_LIMIT = 4;
 const COMMUNICATES_LIMIT = 4;
 const WINDOW_PAST_MS = 24 * 60 * 60 * 1000;
@@ -138,7 +137,6 @@ export class FeedService {
     const news = await this.prisma.client.news.findFirst({
       where: { cityId, isActive: true },
       orderBy: { id: 'desc' },
-      take: MAIN_NEWS_LIMIT,
     });
     if (!news) return null;
     return {

@@ -28,23 +28,10 @@ export class UsersController {
     description: 'Cidade atualizada com sucesso',
     type: UpdateUserCityResponseDto,
   })
-  @ApiResponse({
-    status: 400,
-    description: 'Erro de validação (validation_failed)',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Token ausente ou inválido',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Cidade não encontrada (city_not_found)',
-  })
-  @ApiResponse({
-    status: 429,
-    description:
-      'Atualizações em janela menor que 60 segundos (update_too_frequent)',
-  })
+  @ApiResponse({ status: 400, description: 'validation_failed' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 404, description: 'city_not_found' })
+  @ApiResponse({ status: 429, description: 'update_too_frequent' })
   async updateCity(
     @Req() req: RequestWithUser,
     @Body() dto: UpdateUserCityDto,

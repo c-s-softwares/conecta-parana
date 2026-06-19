@@ -20,6 +20,7 @@ export class SearchController {
     status: 200,
     description: 'Resultados da busca agrupados por tipo de entidade.',
   })
+  @ApiResponse({ status: 400, description: 'validation_failed' })
   async search(@Query() query: SearchQueryDto): Promise<SearchResults> {
     return this.searchService.search(query);
   }
