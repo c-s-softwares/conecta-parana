@@ -27,7 +27,10 @@ import { UpdateEventDto } from './dto/request/update-event.dto';
 import { QueryEventsDto } from './dto/request/query-events.dto';
 
 import { BaseCrudService } from '../../common/services/base-crud.service';
-import { EventResponse } from './dto/response/event-response.dto';
+import {
+  EventDetailResponse,
+  EventResponse,
+} from './dto/response/event-response.dto';
 
 type EventEntity = {
   id: string;
@@ -84,13 +87,10 @@ export class EventsService extends BaseCrudService<
   }
 
   protected toCreateData(dto: CreateEventDto): Record<string, unknown> {
-    // This is handled in the create override because it needs context.
-    // Returning dummy to satisfy abstract signature.
     return { ...dto };
   }
 
   protected toUpdateData(dto: UpdateEventDto): Record<string, unknown> {
-    // Handled in override
     return { ...dto };
   }
 
@@ -152,7 +152,6 @@ export class EventsService extends BaseCrudService<
     };
   }
 
-  // Override to include user context
   async create(dto: CreateEventDto, user?: JwtPayload): Promise<EventResponse> {
     if (!user) throw new ForbiddenException();
 
@@ -184,7 +183,6 @@ export class EventsService extends BaseCrudService<
     return this.toResponse(entity);
   }
 
-  // Override for user context and optimistic lock
   async update(
     id: string,
     dto: UpdateEventDto,
@@ -273,6 +271,52 @@ export class EventsService extends BaseCrudService<
     });
 
     await this.afterDelete(id);
+  }
+
+  /**
+   * Detalhe do evento para GET /events/:id. Inclui likesCount e flags de
+   * engajamento por usuário logado. Quando userId não é informado (anônimo),
+   * liked/saved são false. Quando informado, dispara 2 queries adicionais
+   * (like + save) em paralelo.
+   */
+  async findOneDetail(
+    id: string,
+    userId?: string,
+  ): Promise<EventDetailResponse> {
+    const event = await this.prisma.client.event.findFirst({
+      where: { id, deletedAt: null },
+      include: {
+        _count: { select: { likes: true } },
+      },
+    });
+
+    if (!event) {
+      throw new NotFoundException(apiError(EVENT_ERRORS.EVENT_NOT_FOUND));
+    }
+
+    let liked = false;
+    let saved = false;
+    if (userId) {
+      const [likeExists, saveExists] = await Promise.all([
+        this.prisma.client.like.findFirst({
+          where: { userId, eventId: id },
+          select: { id: true },
+        }),
+        this.prisma.client.save.findFirst({
+          where: { userId, eventId: id },
+          select: { id: true },
+        }),
+      ]);
+      liked = !!likeExists;
+      saved = !!saveExists;
+    }
+
+    return {
+      ...this.toResponse(event),
+      likesCount: event._count.likes,
+      liked,
+      saved,
+    };
   }
 
   private resolveCityId(cityId: string | undefined, user: JwtPayload): string {
