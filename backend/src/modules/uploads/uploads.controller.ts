@@ -54,12 +54,19 @@ export class UploadsController {
         },
         entityType: {
           type: 'string',
-          enum: ['event', 'local', 'ticket', 'user_avatar'],
+          enum: [
+            'event',
+            'local',
+            'ticket',
+            'news',
+            'communicate',
+            'user_avatar',
+          ],
         },
         entityId: {
           type: 'string',
           description:
-            'ULID da entidade alvo. Obrigatório para event, local e ticket; ignorado para user_avatar.',
+            'ULID da entidade alvo. Obrigatório para event, local, ticket, news e communicate; ignorado para user_avatar.',
         },
       },
     },
