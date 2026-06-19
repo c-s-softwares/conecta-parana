@@ -67,6 +67,7 @@ export async function buildAdmins(
 ) {
   const hashedAdminPassword = await bcrypt.hash(adminPassword, 10);
   const superPassword = await bcrypt.hash(superAdminPassword, 10);
+  const adminVerifiedAt = new Date();
   return {
     superAdmin: {
       id: superAdminId,
@@ -75,6 +76,7 @@ export async function buildAdmins(
       password: superPassword,
       role: 'ADMIN' as const,
       cityId: null,
+      emailVerifiedAt: adminVerifiedAt,
     },
     admins: [
       {
@@ -84,6 +86,7 @@ export async function buildAdmins(
         password: hashedAdminPassword,
         role: 'ADMIN' as const,
         cityId: CITY_IDS.maringa,
+        emailVerifiedAt: adminVerifiedAt,
       },
       {
         id: ADMIN_IDS.curitiba,
@@ -92,6 +95,7 @@ export async function buildAdmins(
         password: hashedAdminPassword,
         role: 'ADMIN' as const,
         cityId: CITY_IDS.curitiba,
+        emailVerifiedAt: adminVerifiedAt,
       },
       {
         id: ADMIN_IDS.paicandu,
@@ -100,6 +104,7 @@ export async function buildAdmins(
         password: hashedAdminPassword,
         role: 'ADMIN' as const,
         cityId: CITY_IDS.paicandu,
+        emailVerifiedAt: adminVerifiedAt,
       },
     ],
   };

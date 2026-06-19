@@ -33,6 +33,7 @@ async function main() {
       name,
       password: hashed,
       role: Role.ADMIN,
+      emailVerifiedAt: new Date(),
     },
     select: { id: true, email: true, name: true, role: true },
   });
