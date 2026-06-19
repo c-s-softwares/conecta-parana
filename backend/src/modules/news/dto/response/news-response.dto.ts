@@ -1,4 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { PhotoResponseDto } from '../../../uploads/dto/response/photo-response.dto';
 
 export class NewsResponse {
   @ApiProperty({
@@ -29,9 +30,18 @@ export class NewsResponse {
   @ApiProperty({
     example: 'interno',
     enum: ['interno', 'externo'],
-    description: 'Tipo de link da notícia',
+    description:
+      'Tipo de link da notícia. interno abre a tela de detalhe no mobile; externo abre linkUrl no navegador.',
   })
   linkType!: string;
+
+  @ApiPropertyOptional({
+    example: 'https://exemplo.com/noticia',
+    description:
+      'URL externa da notícia. Obrigatório quando linkType=externo; null/undefined quando linkType=interno.',
+    nullable: true,
+  })
+  linkUrl?: string | null;
 
   @ApiProperty({
     example: true,
@@ -54,4 +64,32 @@ export class NewsResponse {
     example: '2026-06-08T01:00:00.000Z',
   })
   updatedAt!: Date;
+}
+
+export class NewsDetailResponse extends NewsResponse {
+  @ApiProperty({
+    type: () => [PhotoResponseDto],
+    description: 'Fotos anexadas à notícia (max 10).',
+  })
+  photos!: PhotoResponseDto[];
+
+  @ApiProperty({
+    example: 12,
+    description: 'Total de likes na notícia.',
+  })
+  likesCount!: number;
+
+  @ApiProperty({
+    example: false,
+    description:
+      'Indica se o usuário autenticado deu like na notícia. Sempre false para anônimos.',
+  })
+  liked!: boolean;
+
+  @ApiProperty({
+    example: false,
+    description:
+      'Indica se o usuário autenticado salvou a notícia. Sempre false para anônimos.',
+  })
+  saved!: boolean;
 }

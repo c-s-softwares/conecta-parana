@@ -45,6 +45,12 @@ describe('NewsService', () => {
         update: jest.fn(),
         delete: jest.fn(),
       },
+      like: {
+        findFirst: jest.fn(),
+      },
+      save: {
+        findFirst: jest.fn(),
+      },
     },
   };
 
@@ -196,5 +202,147 @@ describe('NewsService', () => {
     await expect(
       service.create({ ...BASE_DTO, cityId: undefined }, SUPER_ADMIN_USER),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  describe('linkUrl', () => {
+    it('persiste linkUrl quando linkType=externo', async () => {
+      mockPrisma.client.news.create.mockResolvedValue({
+        id: 'nws_123',
+        ...BASE_DTO,
+        isActive: true,
+      });
+
+      await service.create(
+        {
+          ...BASE_DTO,
+          linkType: 'externo',
+          linkUrl: 'https://exemplo.com/x',
+        },
+        SUPER_ADMIN_USER,
+      );
+
+      expect(mockPrisma.client.news.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            linkType: 'externo',
+            linkUrl: 'https://exemplo.com/x',
+          }),
+        }),
+      );
+    });
+
+    it('ignora linkUrl quando linkType=interno (persiste null)', async () => {
+      mockPrisma.client.news.create.mockResolvedValue({
+        id: 'nws_123',
+        ...BASE_DTO,
+        isActive: true,
+      });
+
+      await service.create(
+        {
+          ...BASE_DTO,
+          linkType: 'interno',
+          linkUrl: 'https://nao-deve-persistir.com',
+        },
+        SUPER_ADMIN_USER,
+      );
+
+      expect(mockPrisma.client.news.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            linkType: 'interno',
+            linkUrl: null,
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('findOneDetail', () => {
+    const NEWS_ID = 'nws_detail';
+    const USER_ID = 'usr_detail';
+
+    const buildNewsRow = (overrides: Record<string, unknown> = {}) => ({
+      id: NEWS_ID,
+      title: 'Notícia',
+      description: 'Descrição da notícia',
+      type: 'saude',
+      linkType: 'interno',
+      linkUrl: null,
+      isActive: true,
+      cityId: 'cit_x',
+      createdAt: new Date('2026-06-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-06-02T00:00:00.000Z'),
+      photos: [],
+      _count: { likes: 0 },
+      ...overrides,
+    });
+
+    it('anônimo: retorna liked=false e saved=false sem queries extras', async () => {
+      mockPrisma.client.news.findFirst.mockResolvedValue(
+        buildNewsRow({
+          photos: [
+            {
+              id: 'pho_1',
+              url: 'https://obj/o/pho_1.webp',
+              thumbUrl: 'https://obj/o/pho_1-thumb.webp',
+            },
+          ],
+          _count: { likes: 12 },
+        }),
+      );
+
+      const result = await service.findOneDetail(NEWS_ID);
+
+      expect(result.likesCount).toBe(12);
+      expect(result.liked).toBe(false);
+      expect(result.saved).toBe(false);
+      expect(result.photos).toHaveLength(1);
+      expect(result.photos[0]).toMatchObject({
+        id: 'pho_1',
+        entityType: 'news',
+        entityId: NEWS_ID,
+      });
+      expect(mockPrisma.client.like.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.client.save.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('logado com like e save: retorna ambos true', async () => {
+      mockPrisma.client.news.findFirst.mockResolvedValue(buildNewsRow());
+      mockPrisma.client.like.findFirst.mockResolvedValue({ id: 'lke_1' });
+      mockPrisma.client.save.findFirst.mockResolvedValue({ id: 'sav_1' });
+
+      const result = await service.findOneDetail(NEWS_ID, USER_ID);
+
+      expect(result.liked).toBe(true);
+      expect(result.saved).toBe(true);
+      expect(mockPrisma.client.like.findFirst).toHaveBeenCalledWith({
+        where: { userId: USER_ID, newsId: NEWS_ID },
+        select: { id: true },
+      });
+      expect(mockPrisma.client.save.findFirst).toHaveBeenCalledWith({
+        where: { userId: USER_ID, newsId: NEWS_ID },
+        select: { id: true },
+      });
+    });
+
+    it('logado sem like nem save: retorna ambos false', async () => {
+      mockPrisma.client.news.findFirst.mockResolvedValue(buildNewsRow());
+      mockPrisma.client.like.findFirst.mockResolvedValue(null);
+      mockPrisma.client.save.findFirst.mockResolvedValue(null);
+
+      const result = await service.findOneDetail(NEWS_ID, USER_ID);
+
+      expect(result.liked).toBe(false);
+      expect(result.saved).toBe(false);
+    });
+
+    it('lança NotFoundException quando a notícia não existe ou está inativa', async () => {
+      mockPrisma.client.news.findFirst.mockResolvedValue(null);
+
+      await expect(service.findOneDetail(NEWS_ID, USER_ID)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
   });
 });
