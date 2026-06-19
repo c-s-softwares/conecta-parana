@@ -19,6 +19,7 @@ import { Role } from '@prisma/client';
 import { AdminService } from './admin.service';
 import { CreateAdminUserDto } from './dto/create-admin-user.dto';
 import { CreateAdminUserResponseDto } from './dto/create-admin-user-response.dto';
+import { AdminUserResponseDto } from './dto/admin-user-response.dto';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -29,15 +30,34 @@ export class AdminController {
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Endpoint de teste — acesso restrito a ADMIN' })
+  @ApiOperation({ summary: 'Endpoint de teste - acesso restrito a ADMIN' })
   @ApiResponse({ status: 200, description: 'Acesso permitido para ADMIN' })
-  @ApiResponse({ status: 401, description: 'Token ausente ou inválido' })
-  @ApiResponse({
-    status: 403,
-    description: 'Acesso negado — role insuficiente',
-  })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied' })
   getAdminTest(): { message: string } {
     return { message: 'Acesso admin autorizado com sucesso' };
+  }
+
+  @Get('users')
+  @UseGuards(SuperAdminGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Listar todos os administradores (Super Admin)',
+    description:
+      'Retorna a lista de usuários com role ADMIN (inclui o próprio Super Admin com cityId/cityName null). Sem paginação no MVP. Ordenado por cidade (NULLS FIRST) e nome.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de administradores retornada com sucesso',
+    type: [AdminUserResponseDto],
+  })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({
+    status: 403,
+    description: 'role_denied | super_admin_required',
+  })
+  listAdmins(): Promise<AdminUserResponseDto[]> {
+    return this.adminService.listAdmins();
   }
 
   @Post('users')
