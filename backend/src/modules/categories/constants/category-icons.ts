@@ -3,4 +3,5 @@ export const VALID_CATEGORY_ICONS = [
   'food',
   'education',
   'tourism',
+  'public-service',
 ];
