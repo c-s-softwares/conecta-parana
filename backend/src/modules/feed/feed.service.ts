@@ -53,12 +53,12 @@ type EventEntity = {
  * separar "data de publicação" de "data de edição" e "data de criação".
  *
  * TODO: invalidação cross-recurso via pub/sub. Hoje uma mutação em
- * events/comunicados/news invalida apenas o cache do path da mutação via
+ * events/communicates/news invalida apenas o cache do path da mutação via
  * HttpCacheInterceptor, não o cache do /feed. O feed pode ficar até 2 minutos
  * stale após uma mutação. Aceitável para o MVP. Quando a entrega imediata
  * virar requisito de produto, introduzir canal pub/sub que dispara
  * invalidação de feed:v1:${cityId} a partir do afterSave/afterDelete dos
- * services de events/comunicados/news.
+ * services de events/communicates/news.
  */
 @Injectable()
 export class FeedService {

@@ -40,8 +40,8 @@ type AuthRequest = Request & {
   };
 };
 
-@ApiTags('comunicados')
-@Controller('comunicados')
+@ApiTags('communicates')
+@Controller('communicates')
 export class CommunicateController extends BaseCrudController<
   CommunicateResponse,
   CreateCommunicateDto,
