@@ -25,6 +25,16 @@ export async function runSeed(
     throw new Error('seed_disallowed_in_production');
   }
 
+  const superAdminEmail = process.env.SEED_SUPER_ADMIN_EMAIL;
+  const superAdminPassword = process.env.SEED_SUPER_ADMIN_PASSWORD;
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD;
+
+  if (!superAdminEmail || !superAdminPassword || !adminPassword) {
+    throw new Error(
+      'seed_missing_env_vars: SEED_SUPER_ADMIN_EMAIL, SEED_SUPER_ADMIN_PASSWORD e SEED_ADMIN_PASSWORD são obrigatórios',
+    );
+  }
+
   const cityCount = await prisma.city.count();
   const userCount = await prisma.user.count();
   const hasData = cityCount > 0 || userCount > 0;
@@ -33,16 +43,13 @@ export async function runSeed(
     throw new Error('seed_data_present');
   }
 
-  const superAdminEmail =
-    process.env.SEED_SUPER_ADMIN_EMAIL ?? 'superadmin@conecta.local';
-  const superAdminPassword =
-    process.env.SEED_SUPER_ADMIN_PASSWORD ?? 'super123';
   const superAdminId = generateId(TABLE_PREFIX.USER);
 
   const { superAdmin, admins } = await buildAdmins(
     superAdminId,
     superAdminEmail,
     superAdminPassword,
+    adminPassword,
   );
 
   await prisma.$transaction(
@@ -91,14 +98,6 @@ export async function runSeed(
   console.log(`  communicates: ${COMMUNICATES.length}`);
   console.log(`  news: ${NEWS.length}`);
 
-  if (
-    superAdminPassword === 'super123' ||
-    superAdminEmail === 'superadmin@conecta.local'
-  ) {
-    console.warn(
-      '[seed-initial] AVISO: credenciais de super admin estao em valores padrao - TROCAR EM STAGING antes de qualquer uso real',
-    );
-  }
   if (force) {
     console.warn(
       '[seed-initial] AVISO: banco foi limpo e repopulado com --force',
@@ -115,15 +114,19 @@ async function main() {
     await runSeed(prisma, { force });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
+    if (message.startsWith('seed_missing_env_vars')) {
+      console.error(`[seed-initial] ${message}`);
+      process.exit(1);
+    }
     if (message === 'seed_data_present') {
       console.log(
-        '[seed-initial] seed_data_present - banco ja tem dados. Use --force para reseeder.',
+        '[seed-initial] seed_data_present - banco já tem dados. Use --force para reseeder.',
       );
       process.exit(1);
     }
     if (message === 'seed_disallowed_in_production') {
       console.error(
-        '[seed-initial] seed_disallowed_in_production - seed nao pode rodar em producao.',
+        '[seed-initial] seed_disallowed_in_production - seed não pode rodar em producão.',
       );
       process.exit(1);
     }

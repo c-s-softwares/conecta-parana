@@ -10,17 +10,17 @@ const adapter = new PrismaPg({
 
 const prisma = new PrismaClient({ adapter });
 
-/**
- * @description
- * Captura os valores de seed via .env, criptografa a senha recebida,
- * atualiza ou cria um usuário com os valores informados.
- * @note
- * Por conta do upsert, é possível atualizar usuários, cuidado com o uso em staging e produção.
- */
 async function main() {
-  const email = process.env.ADMIN_SEED_EMAIL ?? 'admin@conecta.local';
-  const password = process.env.ADMIN_SEED_PASSWORD ?? 'admin123';
-  const name = process.env.ADMIN_SEED_NAME ?? 'Admin';
+  const email = process.env.ADMIN_SEED_EMAIL;
+  const password = process.env.ADMIN_SEED_PASSWORD;
+  const name = process.env.ADMIN_SEED_NAME;
+
+  if (!email || !password || !name) {
+    console.error(
+      '[seed-admin] ADMIN_SEED_EMAIL, ADMIN_SEED_PASSWORD e ADMIN_SEED_NAME são obrigatórios',
+    );
+    process.exit(1);
+  }
 
   const hashed = await bcrypt.hash(password, 10);
 

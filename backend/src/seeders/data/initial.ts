@@ -63,8 +63,9 @@ export async function buildAdmins(
   superAdminId: string,
   superAdminEmail: string,
   superAdminPassword: string,
+  adminPassword: string,
 ) {
-  const adminPassword = await bcrypt.hash('admin123', 10);
+  const hashedAdminPassword = await bcrypt.hash(adminPassword, 10);
   const superPassword = await bcrypt.hash(superAdminPassword, 10);
   return {
     superAdmin: {
@@ -80,7 +81,7 @@ export async function buildAdmins(
         id: ADMIN_IDS.maringa,
         name: 'Admin Maringá',
         email: 'admin.maringa@conecta.local',
-        password: adminPassword,
+        password: hashedAdminPassword,
         role: 'ADMIN' as const,
         cityId: CITY_IDS.maringa,
       },
@@ -88,7 +89,7 @@ export async function buildAdmins(
         id: ADMIN_IDS.curitiba,
         name: 'Admin Curitiba',
         email: 'admin.curitiba@conecta.local',
-        password: adminPassword,
+        password: hashedAdminPassword,
         role: 'ADMIN' as const,
         cityId: CITY_IDS.curitiba,
       },
@@ -96,7 +97,7 @@ export async function buildAdmins(
         id: ADMIN_IDS.paicandu,
         name: 'Admin Paiçandu',
         email: 'admin.paicandu@conecta.local',
-        password: adminPassword,
+        password: hashedAdminPassword,
         role: 'ADMIN' as const,
         cityId: CITY_IDS.paicandu,
       },

@@ -241,22 +241,21 @@ O pipeline de staging executa após o build:
 npm run seed:initial
 ```
 
-Esse script usa o artefato compilado (`dist/`) e lê as credenciais do super admin via env:
+Esse script usa o artefato compilado (`dist/`) e **exige** as três env vars abaixo - cancela com exit 1 se qualquer uma estiver ausente:
 
 ```env
 SEED_SUPER_ADMIN_EMAIL=...
 SEED_SUPER_ADMIN_PASSWORD=...
+SEED_ADMIN_PASSWORD=...
 ```
 
-**Troque esses valores no ambiente de staging** - os defaults (`superadmin@conecta.local` / `super123`) são apenas para dev local e o seeder emite um aviso se detectar os valores padrão.
+Configure essas variáveis nos secrets do ambiente de staging antes de rodar o seed.
 
 ### Credenciais geradas pelo seed
 
 | Conta | Email | Senha |
 |---|---|---|
 | Super Admin | `$SEED_SUPER_ADMIN_EMAIL` | `$SEED_SUPER_ADMIN_PASSWORD` |
-| Admin Maringá | `admin.maringa@conecta.local` | `admin123` |
-| Admin Curitiba | `admin.curitiba@conecta.local` | `admin123` |
-| Admin Paiçandu | `admin.paicandu@conecta.local` | `admin123` |
-
-> Troque as senhas de admin em staging antes de qualquer teste com dados sensíveis.
+| Admin Maringá | `admin.maringa@conecta.local` | `$SEED_ADMIN_PASSWORD` |
+| Admin Curitiba | `admin.curitiba@conecta.local` | `$SEED_ADMIN_PASSWORD` |
+| Admin Paiçandu | `admin.paicandu@conecta.local` | `$SEED_ADMIN_PASSWORD` |
