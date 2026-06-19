@@ -38,6 +38,7 @@ abstract class AppRoutes {
   static const map = '/map';
   static const tickets = '/tickets';
   static const profile = '/profile';
+  static const favorites = '/profile/favorites';
 
   static const event = '/events/:id';
   static const homeEvent = '/home/event/:id';

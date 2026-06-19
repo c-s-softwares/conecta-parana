@@ -16,6 +16,13 @@ class ProfilePage extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/profile/suggestions'),
           ),
+
+          ListTile(
+            leading: const Icon(Icons.bookmark_outline),
+            title: const Text('Meus Salvos'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/profile/favorites'),
+          ),
         ],
       ),
     );
