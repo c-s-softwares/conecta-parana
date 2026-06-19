@@ -35,6 +35,9 @@ const mockPrisma = {
       update: jest.fn(),
       delete: jest.fn(),
     },
+    save: {
+      findFirst: jest.fn(),
+    },
     $queryRaw: jest.fn(),
     $executeRaw: jest.fn(),
   },
@@ -85,7 +88,47 @@ describe('LocalsService', () => {
       expect(result.coordinates).toEqual({ lat: -23.45, lng: -51.95 });
     });
 
-    it('deve lancar NotFoundException se o local nao existir', async () => {
+    it('anônimo: retorna saved=false sem consultar a tabela saves', async () => {
+      mockPrisma.client.local.findFirst.mockResolvedValue(MOCK_LOCAL);
+      mockPrisma.client.$queryRaw.mockResolvedValue([
+        { lng: -51.95, lat: -23.45 },
+      ]);
+
+      const result = await service.findOne(MOCK_LOCAL_ID);
+
+      expect(result.saved).toBe(false);
+      expect(mockPrisma.client.save.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('logado com save: retorna saved=true', async () => {
+      mockPrisma.client.local.findFirst.mockResolvedValue(MOCK_LOCAL);
+      mockPrisma.client.$queryRaw.mockResolvedValue([
+        { lng: -51.95, lat: -23.45 },
+      ]);
+      mockPrisma.client.save.findFirst.mockResolvedValue({ id: 'sav_1' });
+
+      const result = await service.findOne(MOCK_LOCAL_ID, MOCK_USER_ID);
+
+      expect(result.saved).toBe(true);
+      expect(mockPrisma.client.save.findFirst).toHaveBeenCalledWith({
+        where: { userId: MOCK_USER_ID, localId: MOCK_LOCAL_ID },
+        select: { id: true },
+      });
+    });
+
+    it('logado sem save: retorna saved=false', async () => {
+      mockPrisma.client.local.findFirst.mockResolvedValue(MOCK_LOCAL);
+      mockPrisma.client.$queryRaw.mockResolvedValue([
+        { lng: -51.95, lat: -23.45 },
+      ]);
+      mockPrisma.client.save.findFirst.mockResolvedValue(null);
+
+      const result = await service.findOne(MOCK_LOCAL_ID, MOCK_USER_ID);
+
+      expect(result.saved).toBe(false);
+    });
+
+    it('deve lançar NotFoundException se o local não existir', async () => {
       mockPrisma.client.local.findFirst.mockResolvedValue(null);
 
       await expect(service.findOne('loc_invalido')).rejects.toThrow(

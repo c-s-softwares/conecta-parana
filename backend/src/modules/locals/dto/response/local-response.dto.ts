@@ -41,6 +41,14 @@ export class LocalResponseDto {
   @ApiProperty({ example: 'usr_01HZX3Y4Q9F8TAB1C2DKEYH9ZZ' })
   userId!: string;
 
+  @ApiProperty({
+    example: false,
+    required: false,
+    description:
+      'Indica se o usuário autenticado salvou o local. Sempre false para anônimos e na listagem (findAll/findNearby). Preenchido apenas no detalhe (GET /locals/:id).',
+  })
+  saved?: boolean;
+
   // TODO: descomentar quando a listagem de Local com fotos for ativada.
   // Importar PhotoResponseDto do modulo uploads e popular via include do Prisma.
   // @ApiProperty({ type: () => [PhotoResponseDto], required: false })
