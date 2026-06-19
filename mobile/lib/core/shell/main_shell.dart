@@ -109,6 +109,7 @@ class _BadgeSlot extends StatelessWidget {
 
   final int? badgeCount;
   
+  // ignore: unused_element_parameter
   const _BadgeSlot({required this.tab, required this.child, this.badgeCount});
 
   @override
