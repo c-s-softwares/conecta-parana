@@ -6,8 +6,18 @@ class FakeSuggestionRepository implements SuggestionRepository {
 
   @override
   Future<List<Suggestion>> getMySuggestions() async {
-    await Future.delayed(const Duration(milliseconds: 600)); 
+    await Future.delayed(const Duration(milliseconds: 600));
     return _fakeSuggestions;
+  }
+
+  @override
+  Future<void> createSuggestion({
+    required String subject,
+    required String message,
+    required String category,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 600));
+    return;
   }
 }
 
