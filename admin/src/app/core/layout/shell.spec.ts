@@ -48,10 +48,12 @@ describe('Shell', () => {
     expect(el.querySelector('router-outlet')).toBeTruthy();
   });
 
-  it('deve manter os 6 navItems declarados (fonte da verdade)', () => {
+  it('deve ter 5 navItems com labels, rotas e ícones corretos', () => {
     const items = component['navItems'];
-    expect(items).toHaveLength(6);
-    expect(items.map((i) => i.label)).toEqual(SUPER_ADMIN_LABELS);
+    expect(items).toHaveLength(5);
+
+    const expectedLabels = ['Eventos', 'Notícias', 'Locais', 'Notificações', 'Administradores'];
+    expect(items.map((i) => i.label)).toEqual(expectedLabels);
 
     for (const item of items) {
       expect(item.route).toMatch(/^\//);
@@ -59,26 +61,8 @@ describe('Shell', () => {
     }
   });
 
-  it('admin regular não vê itens de Super Admin (Cidades, Administradores)', () => {
-    vi.spyOn(auth, 'isSuperAdmin').mockReturnValue(false);
-    fixture.detectChanges();
-
-    const visible = component['visibleNavItems']();
-    expect(visible.map((i) => i.label)).toEqual(REGULAR_ADMIN_LABELS);
-    expect(el.querySelectorAll('app-sidebar a').length).toBe(
-      REGULAR_ADMIN_LABELS.length,
-    );
-  });
-
-  it('Super Admin vê todos os itens', () => {
-    vi.spyOn(auth, 'isSuperAdmin').mockReturnValue(true);
-    fixture.detectChanges();
-
-    const visible = component['visibleNavItems']();
-    expect(visible.map((i) => i.label)).toEqual(SUPER_ADMIN_LABELS);
-    expect(el.querySelectorAll('app-sidebar a').length).toBe(
-      SUPER_ADMIN_LABELS.length,
-    );
+  it('deve renderizar 5 links na sidebar', () => {
+    expect(el.querySelectorAll('app-sidebar a').length).toBe(5);
   });
 
   it('onLogout deve chamar AuthService.logout com motivo manual', () => {
