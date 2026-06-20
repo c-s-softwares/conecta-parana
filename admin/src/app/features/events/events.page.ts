@@ -17,10 +17,8 @@ interface EventsFormValues {
   type: string;
   description: string;
   event_date: string;
-  category_id: string;
   latitude: number | null;
   longitude: number | null;
-  local_id: string;
 }
 
 @Component({
@@ -50,10 +48,8 @@ export class EventsPage extends CrudPage<EventsFormValues> {
     type: ['', Validators.required],
     description: ['', [Validators.required, Validators.minLength(10)]],
     event_date: ['', futureDateValidator],
-    category_id: [''],
     latitude: [null as number | null, [Validators.min(-90), Validators.max(90)]],
     longitude: [null as number | null, [Validators.min(-180), Validators.max(180)]],
-    local_id: [''],
   });
 
   protected defaultFormValues(): EventsFormValues {
@@ -62,10 +58,8 @@ export class EventsPage extends CrudPage<EventsFormValues> {
       type: '',
       description: '',
       event_date: '',
-      category_id: '',
       latitude: null,
       longitude: null,
-      local_id: '',
     };
   }
 

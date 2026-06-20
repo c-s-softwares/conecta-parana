@@ -60,40 +60,21 @@
         ></textarea>
       </app-form-field>
 
-      <!-- Data do Evento / Categoria -->
-      <div class="grid grid-cols-2 gap-4">
-        <app-form-field
-          label="Data do Evento"
-          fieldId="event_date"
-          [required]="false"
-          [showError]="eventDateTouched && !!eventDateError"
-          [errorMessage]="eventDateError"
-        >
-          <input
-            id="event_date"
-            formControlName="event_date"
-            type="datetime-local"
-            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-        </app-form-field>
-
-        <app-form-field
-          label="Categoria"
-          fieldId="category_id"
-          [required]="false"
-          [showError]="false"
-          [errorMessage]="''"
-        >
-          <select
-            id="category_id"
-            formControlName="category_id"
-            class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="">Selecione...</option>
-            <!-- TODO: carregar categorias da API -->
-          </select>
-        </app-form-field>
-      </div>
+      <!-- Data do Evento -->
+      <app-form-field
+        label="Data do Evento"
+        fieldId="event_date"
+        [required]="false"
+        [showError]="eventDateTouched && !!eventDateError"
+        [errorMessage]="eventDateError"
+      >
+        <input
+          id="event_date"
+          formControlName="event_date"
+          type="datetime-local"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </app-form-field>
 
       <!-- Latitude / Longitude -->
       <div class="grid grid-cols-2 gap-4">
@@ -131,24 +112,6 @@
           />
         </app-form-field>
       </div>
-
-      <!-- Local (opcional) -->
-      <app-form-field
-        label="Local (opcional)"
-        fieldId="local_id"
-        [required]="false"
-        [showError]="false"
-        [errorMessage]="''"
-      >
-        <select
-          id="local_id"
-          formControlName="local_id"
-          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          <option value="">Selecione um local...</option>
-          <!-- TODO: carregar locais da API -->
-        </select>
-      </app-form-field>
 
       <!-- Fotos -->
       <div>

@@ -70,10 +70,8 @@ describe('EventsPage', () => {
         type: '',
         description: '',
         event_date: '',
-        category_id: '',
         latitude: null,
         longitude: null,
-        local_id: '',
       });
     });
   });
@@ -369,10 +367,8 @@ describe('EventsPage', () => {
 
       expect(spy).toHaveBeenCalledWith('events', expect.objectContaining({
         event_date: '',
-        category_id: '',
         latitude: null,
         longitude: null,
-        local_id: '',
       }));
     });
   });
