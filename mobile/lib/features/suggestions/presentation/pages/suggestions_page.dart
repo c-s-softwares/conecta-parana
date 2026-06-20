@@ -40,7 +40,19 @@ class _SuggestionsPageState extends State<SuggestionsPage> {
     super.dispose();
   }
 
-  void _openNew() => context.push('/profile/suggestions/new');
+  Future<void> _openNew() async {
+    final created = await context.push<bool>('/profile/suggestions/new');
+
+    if (!mounted) return;
+
+    if (created == true) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Sugestão enviada')));
+
+      await _notifier.refresh();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
