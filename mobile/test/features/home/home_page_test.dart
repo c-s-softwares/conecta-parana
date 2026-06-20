@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:conectaparana/features/home/domain/entities/feed_item.dart';
 import 'package:conectaparana/features/home/domain/entities/feed_page.dart';
 import 'package:conectaparana/features/home/domain/repositories/feed_repository.dart';
@@ -121,7 +120,7 @@ void main() {
   });
 
   testWidgets(
-    'Deve mostrar estado de erro com botão "Abrir Styleguide" em falha de rede',
+    'Deve mostrar estado de erro com botão "Tentar novamente" em falha de rede',
     (tester) async {
       when(
         () => repo.getFeed(
@@ -139,12 +138,27 @@ void main() {
       await tester.pumpWidget(_wrap(HomePage(mockNotifier: notifier)));
       await tester.pumpAndSettle();
 
-      await _scrollToFinder(
-        tester,
-        find.text('Não foi possível carregar o feed'),
-      );
-      expect(find.text('Não foi possível carregar o feed'), findsOneWidget);
-      expect(find.text('Abrir Styleguide'), findsOneWidget);
+      await _scrollToFinder(tester, find.text('Tentar novamente'));
+
+      expect(find.byIcon(Icons.cloud_off_outlined), findsOneWidget);
+      expect(find.text('Tentar novamente'), findsOneWidget);
+
+      await tester.ensureVisible(find.text('Tentar novamente'));
+      await tester.pumpAndSettle();
+
+      clearInteractions(repo);
+      await tester.tap(find.text('Tentar novamente'));
+      await tester.pump();
+
+      verify(
+        () => repo.getFeed(
+          cityId: any(named: 'cityId'),
+          lat: any(named: 'lat'),
+          lng: any(named: 'lng'),
+          cursor: any(named: 'cursor'),
+          limit: any(named: 'limit'),
+        ),
+      ).called(1);
     },
   );
 
