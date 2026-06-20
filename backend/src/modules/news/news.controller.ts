@@ -29,7 +29,10 @@ import { NewsService } from './news.service';
 import { CreateNewsDto } from './dto/request/create-news.dto';
 import { UpdateNewsDto } from './dto/request/update-news.dto';
 import { QueryNewsDto } from './dto/request/query-news.dto';
-import { NewsResponse } from './dto/response/news-response.dto';
+import {
+  NewsDetailResponse,
+  NewsResponse,
+} from './dto/response/news-response.dto';
 
 type AuthRequest = Request & {
   user?: JwtPayload;
@@ -56,18 +59,37 @@ export class NewsController extends BaseCrudController<
 
   @Get(':id')
   @Public()
-  @ApiOperation({ summary: 'Buscar notícia por ID' })
-  @ApiResponse({ status: 200, description: 'Notícia encontrada' })
-  @ApiResponse({ status: 404, description: 'Notícia não encontrada' })
-  override findOne(@Param('id') id: string) {
-    return this.newsService.findOne(id);
+  @ApiOperation({
+    summary: 'Buscar notícia por ID com photos e flags de engajamento',
+    description:
+      'Endpoint público com auth opcional. Quando o token JWT é enviado, os campos liked e saved refletem o estado do usuário; sem token, ambos retornam false.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Notícia encontrada',
+    type: NewsDetailResponse,
+  })
+  @ApiResponse({ status: 404, description: 'news_not_found' })
+  override findOne(@Param('id') id: string, @Req() req?: AuthRequest) {
+    return this.newsService.findOneDetail(id, req?.user?.sub);
   }
 
   @Post()
   @AdminRoute()
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Criar notícia' })
-  @ApiResponse({ status: 201, description: 'Notícia criada com sucesso' })
+  @ApiOperation({ summary: 'Criar notícia (ADMIN)' })
+  @ApiResponse({
+    status: 201,
+    description: 'Notícia criada com sucesso',
+    type: NewsResponse,
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'validation_failed | invalid_type | invalid_link_type | city_required',
+  })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied | city_scope_denied' })
   override create(@Body() dto: CreateNewsDto, @Req() req?: AuthRequest) {
     return this.newsService.create(dto, req?.user);
   }
@@ -75,8 +97,19 @@ export class NewsController extends BaseCrudController<
   @Patch(':id')
   @AdminRoute()
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Atualizar notícia' })
-  @ApiResponse({ status: 200, description: 'Notícia atualizada com sucesso' })
+  @ApiOperation({ summary: 'Atualizar notícia (ADMIN da cidade)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Notícia atualizada com sucesso',
+    type: NewsResponse,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'validation_failed | invalid_type | invalid_link_type',
+  })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied | city_scope_denied' })
+  @ApiResponse({ status: 404, description: 'news_not_found' })
   override update(
     @Param('id') id: string,
     @Body() dto: UpdateNewsDto,
@@ -89,8 +122,11 @@ export class NewsController extends BaseCrudController<
   @AdminRoute()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Deletar notícia' })
+  @ApiOperation({ summary: 'Deletar notícia (soft delete, ADMIN da cidade)' })
   @ApiResponse({ status: 204, description: 'Notícia deletada com sucesso' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied | city_scope_denied' })
+  @ApiResponse({ status: 404, description: 'news_not_found' })
   override remove(@Param('id') id: string, @Req() req?: AuthRequest) {
     return this.newsService.remove(id, req?.user);
   }

@@ -48,6 +48,14 @@ const mockPrisma = {
     local: {
       findFirst: jest.fn(),
     },
+
+    like: {
+      findFirst: jest.fn(),
+    },
+
+    save: {
+      findFirst: jest.fn(),
+    },
   },
 };
 
@@ -370,6 +378,68 @@ describe('EventsService', () => {
           sub: 'usr_123',
           role: 'ADMIN',
         } as never),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('findOneDetail', () => {
+    const USER_ID = 'usr_detail';
+
+    const buildRow = (overrides: Record<string, unknown> = {}) => ({
+      ...MOCK_EVENT,
+      _count: { likes: 0 },
+      ...overrides,
+    });
+
+    it('anônimo: retorna likesCount com flags=false (sem queries extras)', async () => {
+      mockPrisma.client.event.findFirst.mockResolvedValue(
+        buildRow({ _count: { likes: 9 } }),
+      );
+
+      const result = await service.findOneDetail(MOCK_EVENT_ID);
+
+      expect(result.likesCount).toBe(9);
+      expect(result.liked).toBe(false);
+      expect(result.saved).toBe(false);
+      expect(mockPrisma.client.like.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.client.save.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('logado com like e save: ambas as flags true', async () => {
+      mockPrisma.client.event.findFirst.mockResolvedValue(buildRow());
+      mockPrisma.client.like.findFirst.mockResolvedValue({ id: 'lke_1' });
+      mockPrisma.client.save.findFirst.mockResolvedValue({ id: 'sav_1' });
+
+      const result = await service.findOneDetail(MOCK_EVENT_ID, USER_ID);
+
+      expect(result.liked).toBe(true);
+      expect(result.saved).toBe(true);
+      expect(mockPrisma.client.like.findFirst).toHaveBeenCalledWith({
+        where: { userId: USER_ID, eventId: MOCK_EVENT_ID },
+        select: { id: true },
+      });
+      expect(mockPrisma.client.save.findFirst).toHaveBeenCalledWith({
+        where: { userId: USER_ID, eventId: MOCK_EVENT_ID },
+        select: { id: true },
+      });
+    });
+
+    it('logado sem engajamento: ambas as flags false', async () => {
+      mockPrisma.client.event.findFirst.mockResolvedValue(buildRow());
+      mockPrisma.client.like.findFirst.mockResolvedValue(null);
+      mockPrisma.client.save.findFirst.mockResolvedValue(null);
+
+      const result = await service.findOneDetail(MOCK_EVENT_ID, USER_ID);
+
+      expect(result.liked).toBe(false);
+      expect(result.saved).toBe(false);
+    });
+
+    it('lança NotFoundException quando evento foi soft-deleted ou inexistente', async () => {
+      mockPrisma.client.event.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.findOneDetail(MOCK_EVENT_ID, USER_ID),
       ).rejects.toThrow(NotFoundException);
     });
   });

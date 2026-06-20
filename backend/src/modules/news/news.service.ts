@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 
@@ -14,12 +15,16 @@ import { apiError } from '../../common/errors/api-error';
 import { SHARED_ERRORS } from '../../common/errors/shared-errors';
 
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
+import { ENTITY_TYPES } from '../uploads/constants/entity-type';
 
 import { NEWS_ERRORS } from './news.errors';
 import { CreateNewsDto } from './dto/request/create-news.dto';
 import { UpdateNewsDto } from './dto/request/update-news.dto';
 import { QueryNewsDto } from './dto/request/query-news.dto';
-import { NewsResponse } from './dto/response/news-response.dto';
+import {
+  NewsDetailResponse,
+  NewsResponse,
+} from './dto/response/news-response.dto';
 import { VALID_LINK_TYPES, VALID_NEWS_TYPES } from './constants/news.constants';
 
 @Injectable()
@@ -60,6 +65,8 @@ export class NewsService extends BaseCrudService<
       description: dto.description,
       type: dto.type,
       linkType: dto.linkType,
+      // linkUrl so vai pro banco quando linkType=externo (regra do produto).
+      linkUrl: dto.linkType === 'externo' ? (dto.linkUrl ?? null) : null,
       isActive: dto.isActive ?? true,
       cityId: dto.cityId,
     };
@@ -82,7 +89,11 @@ export class NewsService extends BaseCrudService<
       ...(dto.type !== undefined && { type: dto.type }),
       ...(dto.linkType !== undefined && {
         linkType: dto.linkType,
+        // Quando linkType muda, sincroniza linkUrl (apaga em interno, atualiza em externo).
+        linkUrl: dto.linkType === 'externo' ? (dto.linkUrl ?? null) : null,
       }),
+      ...(dto.linkType === undefined &&
+        dto.linkUrl !== undefined && { linkUrl: dto.linkUrl }),
       ...(dto.isActive !== undefined && {
         isActive: dto.isActive,
       }),
@@ -138,6 +149,69 @@ export class NewsService extends BaseCrudService<
       where: { id },
       data: { isActive: false },
     });
+  }
+
+  /**
+   * Detalhe da notícia para o GET /news/:id. Inclui photos, likesCount e flags
+   * de engajamento por usuário logado. Quando userId não é informado (anônimo),
+   * liked/saved são false e não há query extra. Quando informado, dispara 2
+   * queries adicionais (like + save) em paralelo.
+   */
+  async findOneDetail(
+    id: string,
+    userId?: string,
+  ): Promise<NewsDetailResponse> {
+    const news = await this.prisma.client.news.findFirst({
+      where: { id, isActive: true },
+      include: {
+        photos: true,
+        _count: { select: { likes: true } },
+      },
+    });
+
+    if (!news) {
+      throw new NotFoundException(apiError(NEWS_ERRORS.NEWS_NOT_FOUND));
+    }
+
+    let liked = false;
+    let saved = false;
+    if (userId) {
+      const [likeExists, saveExists] = await Promise.all([
+        this.prisma.client.like.findFirst({
+          where: { userId, newsId: id },
+          select: { id: true },
+        }),
+        this.prisma.client.save.findFirst({
+          where: { userId, newsId: id },
+          select: { id: true },
+        }),
+      ]);
+      liked = !!likeExists;
+      saved = !!saveExists;
+    }
+
+    return {
+      id: news.id,
+      title: news.title,
+      description: news.description,
+      type: news.type,
+      linkType: news.linkType,
+      linkUrl: news.linkUrl,
+      isActive: news.isActive,
+      cityId: news.cityId,
+      createdAt: news.createdAt,
+      updatedAt: news.updatedAt,
+      photos: news.photos.map((p) => ({
+        id: p.id,
+        url: p.url,
+        thumbUrl: p.thumbUrl,
+        entityType: ENTITY_TYPES.NEWS,
+        entityId: news.id,
+      })),
+      likesCount: news._count.likes,
+      liked,
+      saved,
+    };
   }
 
   private requireUser(user?: JwtPayload): JwtPayload {

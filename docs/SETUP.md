@@ -212,3 +212,50 @@ MAIL_FROM=seuemail@email.com
 ```
 
 O free tier do Resend permite 100 emails/dia - suficiente para testes manuais.
+
+## 11. Seed inicial (cenário MVP)
+
+O seed inicial popula o banco com um cenário coerente de MVP: 3 cidades, 5 categorias, 4 admins, 10 locais, 5 eventos, 3 comunicados e 2 notícias. Use-o para desenvolver e integrar o mobile contra dados realistas.
+
+> **Proibido em produção.** O seeder recusa rodar quando `NODE_ENV=production` (exit 1). Use apenas em dev local e staging.
+
+### Dev local
+
+```bash
+cd backend
+
+# Popula banco vazio
+npm run db:seed
+
+# Apaga tudo e repopula (útil após migrações ou mudança de fixtures)
+npm run db:seed -- --force
+```
+
+Aliases equivalentes: `npm run db:seed:initial` e `npm run dev:seed:initial`.
+
+### Staging (CI/CD)
+
+O pipeline de staging executa após o build:
+
+```bash
+npm run seed:initial
+```
+
+Esse script usa o artefato compilado (`dist/`) e **exige** as três env vars abaixo - cancela com exit 1 se qualquer uma estiver ausente:
+
+```env
+SEED_SUPER_ADMIN_EMAIL=...
+SEED_SUPER_ADMIN_PASSWORD=...
+SEED_ADMIN_PASSWORD=...
+```
+
+Configure essas variáveis nos secrets do ambiente de staging antes de rodar o seed.
+
+### Credenciais geradas pelo seed
+
+| Conta | Email | Senha |
+|---|---|---|
+| Super Admin | `$SEED_SUPER_ADMIN_EMAIL` | `$SEED_SUPER_ADMIN_PASSWORD` |
+| Admin Maringá | `admin.maringa@conecta.local` | `$SEED_ADMIN_PASSWORD` |
+| Admin Curitiba | `admin.curitiba@conecta.local` | `$SEED_ADMIN_PASSWORD` |
+| Admin Paiçandu | `admin.paicandu@conecta.local` | `$SEED_ADMIN_PASSWORD` |

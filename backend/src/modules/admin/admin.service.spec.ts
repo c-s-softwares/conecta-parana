@@ -37,6 +37,7 @@ const mockPrisma = {
   client: {
     user: {
       findUnique: jest.fn(),
+      findMany: jest.fn(),
       create: jest.fn(),
     },
     city: {
@@ -178,6 +179,69 @@ describe('AdminService', () => {
           where: expect.objectContaining({ deletedAt: null }),
         }),
       );
+    });
+  });
+
+  describe('listAdmins', () => {
+    const SUPER_ADMIN_USER_ID = `${TABLE_PREFIX.USER}SUPERADMIN`;
+    const CITY_MGA = `${TABLE_PREFIX.CITY}MGA`;
+    const CITY_PCD = `${TABLE_PREFIX.CITY}PCD`;
+
+    it('retorna admins ordenados com cityName resolvido via JOIN', async () => {
+      mockPrisma.client.user.findMany.mockResolvedValue([
+        {
+          id: SUPER_ADMIN_USER_ID,
+          name: 'Super',
+          email: 'super@conecta.local',
+          cityId: null,
+          city: null,
+          role: Role.ADMIN,
+        },
+        {
+          id: MOCK_USER_ID,
+          name: 'João',
+          email: 'joao@maringa.pr.gov.br',
+          cityId: CITY_MGA,
+          city: { name: 'Maringá' },
+          role: Role.ADMIN,
+        },
+        {
+          id: `${TABLE_PREFIX.USER}PCD1`,
+          name: 'Ana',
+          email: 'ana@paicandu.pr.gov.br',
+          cityId: CITY_PCD,
+          city: { name: 'Paiçandu' },
+          role: Role.ADMIN,
+        },
+      ]);
+
+      const result = await service.listAdmins();
+
+      expect(result).toHaveLength(3);
+      expect(result[0]).toMatchObject({
+        id: SUPER_ADMIN_USER_ID,
+        cityId: null,
+        cityName: null,
+      });
+      expect(result[1]).toMatchObject({
+        cityId: CITY_MGA,
+        cityName: 'Maringá',
+      });
+
+      expect(mockPrisma.client.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { role: Role.ADMIN },
+          orderBy: [{ cityId: 'asc' }, { name: 'asc' }],
+        }),
+      );
+    });
+
+    it('retorna lista vazia quando não há admins', async () => {
+      mockPrisma.client.user.findMany.mockResolvedValue([]);
+
+      const result = await service.listAdmins();
+
+      expect(result).toEqual([]);
     });
   });
 });

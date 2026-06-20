@@ -18,7 +18,6 @@ import { NewsResponse } from '../news/dto/response/news-response.dto';
 import { EventResponse } from '../events/dto/response/event-response.dto';
 import { CommunicateResponse } from '../communicates/dto/response/communicate-response.dto';
 
-const MAIN_NEWS_LIMIT = 1;
 const EVENTS_LIMIT = 4;
 const COMMUNICATES_LIMIT = 4;
 const WINDOW_PAST_MS = 24 * 60 * 60 * 1000;
@@ -53,12 +52,12 @@ type EventEntity = {
  * separar "data de publicação" de "data de edição" e "data de criação".
  *
  * TODO: invalidação cross-recurso via pub/sub. Hoje uma mutação em
- * events/comunicados/news invalida apenas o cache do path da mutação via
+ * events/communicates/news invalida apenas o cache do path da mutação via
  * HttpCacheInterceptor, não o cache do /feed. O feed pode ficar até 2 minutos
  * stale após uma mutação. Aceitável para o MVP. Quando a entrega imediata
  * virar requisito de produto, introduzir canal pub/sub que dispara
  * invalidação de feed:v1:${cityId} a partir do afterSave/afterDelete dos
- * services de events/comunicados/news.
+ * services de events/communicates/news.
  */
 @Injectable()
 export class FeedService {
@@ -138,7 +137,6 @@ export class FeedService {
     const news = await this.prisma.client.news.findFirst({
       where: { cityId, isActive: true },
       orderBy: { id: 'desc' },
-      take: MAIN_NEWS_LIMIT,
     });
     if (!news) return null;
     return {

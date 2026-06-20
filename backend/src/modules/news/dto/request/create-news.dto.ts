@@ -1,11 +1,14 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 import {
   IsBoolean,
+  IsNotEmpty,
   IsOptional,
   IsString,
+  IsUrl,
   MaxLength,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 
 export class CreateNewsDto {
@@ -39,11 +42,23 @@ export class CreateNewsDto {
 
   @ApiProperty({
     example: 'interno',
-    description: 'Define se a notícia abre internamente ou externamente',
+    description:
+      'Define se a notícia abre internamente (tela de detalhe no mobile) ou externamente (linkUrl no navegador).',
     enum: ['interno', 'externo'],
   })
   @IsString()
   linkType!: string;
+
+  @ApiPropertyOptional({
+    example: 'https://exemplo.com/noticia',
+    description:
+      'URL externa da notícia. Obrigatório quando linkType=externo; ignorado quando linkType=interno.',
+  })
+  @ValidateIf((o: CreateNewsDto) => o.linkType === 'externo')
+  @IsString()
+  @IsNotEmpty({ message: 'linkUrl é obrigatório quando linkType=externo' })
+  @IsUrl({}, { message: 'linkUrl deve ser uma URL válida' })
+  linkUrl?: string;
 
   @ApiProperty({
     example: true,

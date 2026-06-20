@@ -58,3 +58,25 @@ export class EventResponse {
   })
   updatedAt!: Date;
 }
+
+export class EventDetailResponse extends EventResponse {
+  @ApiProperty({
+    example: 12,
+    description: 'Total de likes no evento.',
+  })
+  likesCount!: number;
+
+  @ApiProperty({
+    example: false,
+    description:
+      'Indica se o usuário autenticado deu like no evento. Sempre false para anônimos.',
+  })
+  liked!: boolean;
+
+  @ApiProperty({
+    example: false,
+    description:
+      'Indica se o usuário autenticado salvou o evento. Sempre false para anônimos.',
+  })
+  saved!: boolean;
+}
