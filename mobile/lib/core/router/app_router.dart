@@ -22,6 +22,7 @@ import 'package:conectaparana/shared/widgets/styleguide_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:conectaparana/features/suggestions/presentation/pages/suggestions_page.dart';
 
 abstract class AppRoutes {
   static const splash = '/';
@@ -42,6 +43,9 @@ abstract class AppRoutes {
   static const local = '/map/:id';
   static const ticket = '/tickets/:id';
   static const notification = '/home/notification/:id';
+
+  static const suggestions = '/profile/suggestions';
+  static const newSuggestion = '/profile/suggestions/new';
 
   static const styleguide = '/styleguide';
 
@@ -258,6 +262,23 @@ class AppRouter {
                 GoRoute(
                   path: AppRoutes.profile,
                   builder: (context, state) => const ProfilePage(),
+                  routes: [
+                    GoRoute(
+                      path: 'suggestions',
+                      builder: (context, state) => const SuggestionsPage(),
+                      routes: [
+                        GoRoute(
+                          path: 'new',
+                          builder: (context, state) => Scaffold(
+                            appBar: AppBar(title: const Text('Nova Sugestão')),
+                            body: const Center(
+                              child: Text('Em construção (CPR-94)'),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ],
             ),

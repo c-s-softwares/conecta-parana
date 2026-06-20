@@ -5,6 +5,7 @@ enum AppBadgeVariant {
   orange, 
   teal,   
   red,   
+  neutral,
 }
 
 class AppBadge extends StatelessWidget {
@@ -21,6 +22,7 @@ class AppBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = _getColors();
 
+    
     return Semantics(
       label: label,
       child: Container(
@@ -60,6 +62,13 @@ class AppBadge extends StatelessWidget {
       return {
         'background': const Color(0xFFE0F2F1),
         'text': const Color(0xFF2A7A7A),
+      };
+    }
+
+    if (variant == AppBadgeVariant.neutral) {
+      return {
+        'background': const Color(0xFFF0F0F0),
+        'text': const Color(0xFF616161),
       };
     }
 
