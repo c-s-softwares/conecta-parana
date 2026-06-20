@@ -13,13 +13,11 @@ export class Shell {
   private readonly auth = inject(AuthService);
 
   protected readonly navItems: NavItem[] = [
-    { label: 'Postagens', route: '/posts', icon: 'pencil-square' },
     { label: 'Eventos', route: '/events', icon: 'calendar-days' },
     { label: 'Notícias', route: '/news', icon: 'newspaper' },
     { label: 'Locais', route: '/locals', icon: 'map-pin' },
     { label: 'Notificações', route: '/notifications', icon: 'bell' },
     { label: 'Administradores', route: '/admins', icon: 'pencil-square' },
-    // TODO: futuramente exibir a tela "criar Adm" apenas para Super Admin.
   ];
 
   onLogout(): void {
