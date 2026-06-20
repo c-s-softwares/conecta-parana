@@ -1,97 +1,65 @@
+import { getMessageForCode } from './define-errors';
+
+export type ApiErrorBody = { code: string; message: string | string[] };
+
+export const ROLE_DENIED = 'role_denied';
+export const VALIDATION_FAILED = 'validation_failed';
+
 /**
- * Fonte única de verdade para os corpos de erro da API.
+ * Constrói o corpo padrão de erro da API.
  *
- * Contrato: o backend devolve `{ code, message }`, onde `code` é o
- * identificador de máquina e `message` é o *motivo* em PT-BR. O frontend
- * (/admin) tem o próprio mapa `code -> mensagem ao usuário`.
+ * Contrato HTTP: `{ code, message }`, onde `code` é o identificador de
+ * máquina (snake_case) e `message` é o motivo em PT-BR. O frontend mantém
+ * o próprio mapa `code -> mensagem ao usuário final`.
  *
- * O backend nunca decide o texto final do usuário, apenas o motivo.
+ * Como adicionar um novo erro de módulo:
+ *   1. Declare o catálogo em `modules/<modulo>/<modulo>.errors.ts` usando
+ *      `defineErrors({ MEU_CODE: 'mensagem em PT-BR' })`.
+ *   2. Importe e use:
+ *        throw new BadRequestException(apiError(MEU_MODULO_ERRORS.MEU_CODE));
+ *   Não é necessário alterar este arquivo nem `define-errors.ts`.
+ *
+ * Codes globais (auth/throttling) vivem em `shared-errors.ts`.
+ *
+ * Codes com mensagem dinâmica recebem argumentos extras:
+ *   apiError(ROLE_DENIED, ['ADMIN'])           -> "Acesso negado: requer role ADMIN"
+ *   apiError(VALIDATION_FAILED, [msg1, msg2])  -> message é o array de validações
+ *
+ * Codes não registrados lançam erro em runtime - registre-os via `defineErrors`.
  */
-export const API_ERROR_CODE = {
-  UNAUTHENTICATED: 'unauthenticated',
-  ROLE_DENIED: 'role_denied',
-  CITY_SCOPE_DENIED: 'city_scope_denied',
-  CITY_REQUIRED: 'city_required',
-  VALIDATION_FAILED: 'validation_failed',
-  TOO_MANY_ATTEMPTS: 'too_many_attempts',
-  CITY_NOT_FOUND: 'city_not_found',
-  CITY_DUPLICATE: 'city_duplicate',
-  CITY_HAS_CONTENT: 'city_has_content',
-  LOCAL_NOT_FOUND: 'local_not_found',
-  INVALID_COORDINATES: 'invalid_coordinates',
-  RADIUS_TOO_LARGE: 'radius_too_large',
-  INVALID_PASSWORD: 'invalid_password',
-  MESSAGE_TOO_LONG: 'message_too_long',
-  SUBJECT_TOO_LONG: 'subject_too_long',
-  INVALID_STATUS_TRANSITION: 'invalid_status_transition',
-  USER_WITHOUT_CITY: 'user_without_city',
-  NOT_OWNER_OR_ADMIN: 'not_owner_or_admin',
-  SUGGESTION_NOT_FOUND: 'suggestion_not_found',
-} as const;
-
-export type ApiErrorCode = (typeof API_ERROR_CODE)[keyof typeof API_ERROR_CODE];
-
-// validation_failed devolve uma lista de mensagens de validação, por isso string[].
-export type ApiErrorBody = { code: ApiErrorCode; message: string | string[] };
-
-// Códigos cujo motivo é fixo (não dependem de dado dinâmico).
-export type StaticCode = Exclude<
-  ApiErrorCode,
-  typeof API_ERROR_CODE.ROLE_DENIED | typeof API_ERROR_CODE.VALIDATION_FAILED
->;
-
-// Alinhamento manual proposital - melhora legibilidade da tabela code
-// IDEIA: usar ESLint Stylistic e retirar o prettier no futuro
-// prettier-ignore
-const STATIC_MESSAGE: Record<StaticCode, string> = {
-  [API_ERROR_CODE.UNAUTHENTICATED]:    'Token ausente, inválido ou expirado',
-  [API_ERROR_CODE.CITY_SCOPE_DENIED]:  'ADMIN só pode atuar em sua própria cidade',
-  [API_ERROR_CODE.CITY_REQUIRED]:      'Super Admin deve informar a cidade (cityId) no payload',
-  [API_ERROR_CODE.TOO_MANY_ATTEMPTS]:  'Muitas tentativas. Aguarde e tente novamente.',
-  [API_ERROR_CODE.CITY_NOT_FOUND]:     'Cidade não encontrada',
-  [API_ERROR_CODE.CITY_DUPLICATE]:     'Cidade já cadastrada',
-  [API_ERROR_CODE.CITY_HAS_CONTENT]:   'Cidade possui conteúdo associado',
-  [API_ERROR_CODE.LOCAL_NOT_FOUND]:    'Local não encontrado',
-  [API_ERROR_CODE.INVALID_COORDINATES]:'Coordenadas inválidas (latitude deve ser entre -90 e 90, longitude entre -180 e 180)',
-  [API_ERROR_CODE.RADIUS_TOO_LARGE]:   'Raio máximo de busca permitido de 50km (50000 metros)',
-  [API_ERROR_CODE.INVALID_PASSWORD]:   'Senha incorreta',
-  [API_ERROR_CODE.MESSAGE_TOO_LONG]:   'Mensagem excede o limite de 1000 caracteres',
-  [API_ERROR_CODE.SUBJECT_TOO_LONG]:   'Assunto excede o limite de 200 caracteres',
-  [API_ERROR_CODE.INVALID_STATUS_TRANSITION]: 'Transição de status inválida',
-  [API_ERROR_CODE.USER_WITHOUT_CITY]:  'Cidadão sem cidade associada não pode enviar sugestões',
-  [API_ERROR_CODE.NOT_OWNER_OR_ADMIN]: 'Acesso negado: você não é o proprietário desta sugestão ou administrador desta cidade',
-  [API_ERROR_CODE.SUGGESTION_NOT_FOUND]: 'Sugestão não encontrada',
-};
-
-// Função para manter a(s) role(s) exigida(s) dentro do motivo.
-const roleDeniedMessage = (roles: string[]): string => {
-  return roles.length > 0
-    ? `Acesso negado: requer role ${roles.join(' ou ')}`
-    : 'Acesso negado: role não identificada';
-};
 
 export function apiError(
-  code: typeof API_ERROR_CODE.ROLE_DENIED,
+  code: typeof ROLE_DENIED,
   roles: string[],
 ): ApiErrorBody;
-
 export function apiError(
-  code: typeof API_ERROR_CODE.VALIDATION_FAILED,
+  code: typeof VALIDATION_FAILED,
   messages: string[],
 ): ApiErrorBody;
+export function apiError(code: string): ApiErrorBody;
 
-export function apiError(code: StaticCode): ApiErrorBody;
-
-export function apiError(
-  code: ApiErrorCode,
-  detail: string[] = [],
-): ApiErrorBody {
-  switch (code) {
-    case API_ERROR_CODE.ROLE_DENIED:
-      return { code, message: roleDeniedMessage(detail) };
-    case API_ERROR_CODE.VALIDATION_FAILED:
-      return { code, message: detail };
-    default:
-      return { code, message: STATIC_MESSAGE[code] };
+export function apiError(code: string, detail: string[] = []): ApiErrorBody {
+  if (code === ROLE_DENIED) {
+    return {
+      code,
+      message:
+        detail.length > 0
+          ? `Acesso negado: requer role ${detail.join(' ou ')}`
+          : 'Acesso negado: role não identificada',
+    };
   }
+
+  if (code === VALIDATION_FAILED) {
+    return { code, message: detail };
+  }
+
+  const message = getMessageForCode(code);
+
+  if (message === undefined) {
+    throw new Error(
+      `apiError: code "${code}" não registrado. Defina-o em um arquivo *.errors.ts via defineErrors().`,
+    );
+  }
+
+  return { code, message };
 }

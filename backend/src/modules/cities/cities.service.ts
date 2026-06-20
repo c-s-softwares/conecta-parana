@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, Inject } from '@nestjs/common';
+import { Injectable, ConflictException, Inject, Logger } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { PrismaService } from '../../config/prisma.service';
@@ -8,7 +8,8 @@ import { CreateCityDto } from './dto/request/create-city.dto';
 import { UpdateCityDto } from './dto/request/update-city.dto';
 import { CityResponse } from './dto/response/city-response.dto';
 import { PaginationQueryDto } from '../../common/dto/request/pagination-query.dto';
-import { apiError, API_ERROR_CODE } from '../../common/errors/api-error';
+import { apiError } from '../../common/errors/api-error';
+import { CITIES_ERRORS } from './cities.errors';
 
 interface RedisCacheClient {
   keys(pattern: string): Promise<string[]>;
@@ -28,6 +29,8 @@ export class CitiesService extends BaseCrudService<
   CreateCityDto,
   UpdateCityDto
 > {
+  private readonly logger = new Logger(CitiesService.name);
+
   constructor(
     prisma: PrismaService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
@@ -35,8 +38,8 @@ export class CitiesService extends BaseCrudService<
     super(prisma, {
       tablePrefix: TABLE_PREFIX.CITY,
       entityName: 'Cidade',
-      duplicateErrorKey: 'city_duplicate',
-      notFoundErrorKey: 'city_not_found',
+      duplicateErrorKey: CITIES_ERRORS.CITY_DUPLICATE,
+      notFoundErrorKey: CITIES_ERRORS.CITY_NOT_FOUND,
       softDelete: true,
     });
   }
@@ -102,7 +105,7 @@ export class CitiesService extends BaseCrudService<
     if (cityWithRelations) {
       const { users, events, locals, news } = cityWithRelations._count;
       if (users > 0 || events > 0 || locals > 0 || news > 0) {
-        throw new ConflictException(apiError(API_ERROR_CODE.CITY_HAS_CONTENT));
+        throw new ConflictException(apiError(CITIES_ERRORS.CITY_HAS_CONTENT));
       }
     }
   }
@@ -140,7 +143,8 @@ export class CitiesService extends BaseCrudService<
       }
     } catch (err) {
       // Impede que falhas de infraestrutura de cache interrompam o fluxo principal do CRUD
-      console.error('Erro ao limpar cache de cidades:', err);
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`Erro ao limpar cache de cidades: ${message}`);
     }
   }
 }

@@ -2,12 +2,16 @@ import 'package:app_links/app_links.dart';
 import 'package:conectaparana/core/auth/auth_service.dart';
 import 'package:conectaparana/core/auth/presentation/forgot_password/forgot_password_page.dart';
 import 'package:conectaparana/core/auth/presentation/pages/login_screen.dart';
+import 'package:conectaparana/core/auth/presentation/register_screen.dart';
 import 'package:conectaparana/core/config/environment.dart';
 import 'package:conectaparana/core/router/deep_link_parser.dart';
 import 'package:conectaparana/core/router/deep_link_route.dart';
 import 'package:conectaparana/core/router/navigator_key.dart';
 import 'package:conectaparana/core/shell/main_shell.dart';
+import 'package:conectaparana/dev/fakes/fake_event_repository.dart';
 import 'package:conectaparana/features/events/presentation/pages/events_page.dart';
+import 'package:conectaparana/features/onboarding/presentation/pages/city_selector_screen.dart';
+import 'package:conectaparana/features/events/presentation/pages/event_detail_page.dart';
 import 'package:conectaparana/features/home/presentation/pages/home_page.dart';
 import 'package:conectaparana/features/map/presentation/pages/map_page.dart';
 import 'package:conectaparana/features/profile/presentation/pages/profile_page.dart';
@@ -24,6 +28,7 @@ abstract class AppRoutes {
   static const splash = '/';
   static const login = '/login';
   static const forgotPassword = '/forgot-password';
+  static const register = '/register';
   static const onboarding = '/onboarding';
 
   static const home = '/home';
@@ -33,6 +38,7 @@ abstract class AppRoutes {
   static const profile = '/profile';
 
   static const event = '/events/:id';
+  static const homeEvent = '/home/event/:id';
   static const comunicado = '/home/comunicado/:id';
   static const news = '/home/news/:id';
   static const local = '/map/:id';
@@ -40,6 +46,9 @@ abstract class AppRoutes {
   static const notification = '/home/notification/:id';
 
   static const styleguide = '/styleguide';
+
+  // DEV ONLY — rotas com dados mockados, sem precisar de backend
+  static const devEventDetail = '/dev/event/:id';
 }
 
 class AppRouter {
@@ -136,12 +145,25 @@ class AppRouter {
           builder: (context, state) => const ForgotPasswordPage(),
         ),
         GoRoute(
+          path: AppRoutes.register,
+          builder: (context, state) => const RegisterScreen(),
+        ),
+        GoRoute(
           path: AppRoutes.onboarding,
-          builder: (context, state) => const StyleguideScreen(),
+          builder: (context, state) => const CitySelectorScreen(),
         ),
         GoRoute(
           path: AppRoutes.styleguide,
           builder: (context, state) => const StyleguideScreen(),
+        ),
+
+        // DEV ONLY — abre EventDetailPage com dados mockados, sem backend
+        GoRoute(
+          path: AppRoutes.devEventDetail,
+          builder: (context, state) => EventDetailPage(
+            eventId: state.pathParameters['id']!,
+            repository: const FakeEventRepository(),
+          ),
         ),
 
         StatefulShellRoute.indexedStack(
@@ -149,12 +171,18 @@ class AppRouter {
             return MainShell(navigationShell: navigationShell);
           },
           branches: [
+            // Inicio
             StatefulShellBranch(
               routes: [
                 GoRoute(
                   path: AppRoutes.home,
                   builder: (context, state) => const HomePage(),
                   routes: [
+                    GoRoute(
+                      path: 'event/:id',
+                      builder: (context, state) =>
+                          EventDetailPage(eventId: state.pathParameters['id']!),
+                    ),
                     GoRoute(
                       path: 'comunicado/:id',
                       builder: (context, state) =>
@@ -184,14 +212,19 @@ class AppRouter {
                   routes: [
                     GoRoute(
                       path: ':id',
-                      builder: (context, state) =>
-                          _detailPlaceholder('event', state),
+                      builder: (context, state) => EventDetailPage(
+                        eventId: state.pathParameters['id']!,
+                        repository: kDebugMode
+                            ? const FakeEventRepository()
+                            : null,
+                      ),
                     ),
                   ],
                 ),
               ],
             ),
 
+            // Mapa
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -208,6 +241,7 @@ class AppRouter {
               ],
             ),
 
+            // Tickets
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -224,6 +258,7 @@ class AppRouter {
               ],
             ),
 
+            // Perfil
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -245,6 +280,7 @@ class AppRouter {
     const publicRoutes = {
       AppRoutes.splash,
       AppRoutes.login,
+      AppRoutes.register,
       AppRoutes.forgotPassword,
     };
     final isPublic = publicRoutes.contains(location);

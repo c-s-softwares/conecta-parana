@@ -1,4 +1,11 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -6,12 +13,18 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
+import { AdminService } from './admin.service';
+import { CreateAdminUserDto } from './dto/create-admin-user.dto';
+import { CreateAdminUserResponseDto } from './dto/create-admin-user-response.dto';
 
 @ApiTags('admin')
 @Controller('admin')
 export class AdminController {
+  constructor(private readonly adminService: AdminService) {}
+
   @Get('test')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
@@ -25,5 +38,47 @@ export class AdminController {
   })
   getAdminTest(): { message: string } {
     return { message: 'Acesso admin autorizado com sucesso' };
+  }
+
+  @Post('users')
+  @HttpCode(201)
+  @UseGuards(SuperAdminGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Cria um usuário ADMIN vinculado a uma cidade',
+    description:
+      'Exclusivo para Super Admin (ADMIN com cityId = null). ' +
+      'Gera senha provisória e dispara email de boas-vindas. ' +
+      'Falha no envio do email não desfaz a criação — verifique o flag emailSent.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Admin criado com sucesso',
+    type: CreateAdminUserResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'validation_failed — campos ausentes ou fora do formato',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'unauthenticated — sem token ou token inválido',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'role_denied — token não pertence a um Super Admin',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'city_not_found — cityId inexistente ou cidade deletada',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'email_exists — email já em uso em users',
+  })
+  createAdminUser(
+    @Body() dto: CreateAdminUserDto,
+  ): Promise<CreateAdminUserResponseDto> {
+    return this.adminService.createAdminUser(dto);
   }
 }

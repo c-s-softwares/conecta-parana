@@ -15,8 +15,19 @@ import { CitiesModule } from './modules/cities/cities.module';
 import { LocalsModule } from './modules/locals/locals.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { SuggestionsModule } from './modules/suggestions/suggestions.module';
+import { TicketsModule } from './modules/tickets/tickets.module';
+import { UploadsModule } from './modules/uploads/uploads.module';
+import { LikesModule } from './modules/likes/likes.module';
+import { SavesModule } from './modules/saves/saves.module';
 import { HttpCacheInterceptor } from './common/interceptors/http-cache.interceptor';
 import { PinoLoggerModule } from './config/logger.module';
+import { CommunicateModule } from './modules/communicates/communicates.module';
+import { EventsModule } from './modules/events/events.module';
+import { NewsModule } from './modules/news/news.module';
+import { CategoryModule } from './modules/categories/category.module';
+import { FeedModule } from './modules/feed/feed.module';
+import { UsersModule } from './modules/users/users.module';
+import { SearchModule } from './modules/search/search.module';
 
 @Module({
   imports: [
@@ -44,7 +55,18 @@ import { PinoLoggerModule } from './config/logger.module';
     LocalsModule,
     NotificationsModule,
     SuggestionsModule,
+    TicketsModule,
+    UploadsModule,
+    LikesModule,
+    SavesModule,
     RedisCacheModule,
+    CommunicateModule,
+    EventsModule,
+    NewsModule,
+    CategoryModule,
+    FeedModule,
+    UsersModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [

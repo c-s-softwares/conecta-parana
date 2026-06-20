@@ -1,5 +1,5 @@
 import { BadRequestException, ValidationPipeOptions } from '@nestjs/common';
-import { API_ERROR_CODE, apiError } from '../common/errors/api-error';
+import { apiError, VALIDATION_FAILED } from '../common/errors/api-error';
 
 export const validationPipeConfig: ValidationPipeOptions = {
   transform: true,
@@ -8,7 +8,7 @@ export const validationPipeConfig: ValidationPipeOptions = {
   exceptionFactory: (errors) =>
     new BadRequestException(
       apiError(
-        API_ERROR_CODE.VALIDATION_FAILED,
+        VALIDATION_FAILED,
         errors
           .flatMap((e) => Object.values(e.constraints ?? {}))
           .filter(Boolean),

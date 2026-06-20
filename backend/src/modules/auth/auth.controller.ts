@@ -7,35 +7,44 @@ import {
 } from '@nestjs/swagger';
 import type { Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
+import { PasswordResetService } from './password-reset.service';
+import { EmailVerificationService } from './email-verification.service';
 import { RegisterDto } from './dto/request/register.dto';
 import { LoginDto } from './dto/request/login.dto';
 import { RefreshDto } from './dto/request/refresh.dto';
 import { LogoutDto } from './dto/request/logout.dto';
 import { LogoutAllDto } from './dto/request/logout-all.dto';
+import { ForgotPasswordDto } from './dto/request/forgot-password.dto';
+import { ResetPasswordDto } from './dto/request/reset-password.dto';
+import { VerifyEmailDto } from './dto/request/verify-email.dto';
+import { ResendVerificationDto } from './dto/request/resend-verification.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { JwtPayload } from './strategies/jwt.strategy';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly passwordResetService: PasswordResetService,
+    private readonly emailVerificationService: EmailVerificationService,
+  ) {}
 
   @Post('register')
   @Public()
+  @HttpCode(200)
   @ApiOperation({ summary: 'Cadastrar novo usuário' })
-  @ApiResponse({ status: 201, description: 'Usuário criado com sucesso!' })
+  @ApiResponse({
+    status: 200,
+    description: 'Resposta genérica (não revela se o email existe)',
+  })
   @ApiResponse({
     status: 400,
-    description:
-      'Erro de validação (validation_failed): "Formato de id inválido" ou "O campo de ID da cidade é obrigatório"',
+    description: 'Erro de validação (validation_failed)',
   })
   @ApiResponse({
     status: 404,
     description: 'Cidade não encontrada (city_not_found)',
-  })
-  @ApiResponse({
-    status: 409,
-    description: 'Email já cadastrado (email_exists)',
   })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
@@ -46,7 +55,11 @@ export class AuthController {
   @HttpCode(200)
   @ApiOperation({ summary: 'Autenticar usuário' })
   @ApiResponse({ status: 200, description: 'Autenticação bem-sucedida' })
-  @ApiResponse({ status: 401, description: 'Credenciais inválidas' })
+  @ApiResponse({
+    status: 401,
+    description:
+      'Credenciais inválidas (invalid_credentials) OU email não verificado (email_not_verified)',
+  })
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
@@ -96,6 +109,75 @@ export class AuthController {
   })
   async logout(@Body() dto: LogoutDto) {
     await this.authService.logout(dto.refresh_token);
+  }
+
+  @Post('forgot-password')
+  @Public()
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Solicitar código de redefinição de senha' })
+  @ApiResponse({
+    status: 200,
+    description: 'Resposta genérica (não revela se o email existe)',
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Dados inválidos (validation_failed) OU email ainda não verificado (email_not_verified) - nesse caso, um código de verificação foi enviado',
+  })
+  @ApiResponse({
+    status: 429,
+    description: 'Muitas tentativas (too_many_attempts)',
+  })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.passwordResetService.forgotPassword(dto);
+  }
+
+  @Post('verify-email')
+  @Public()
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Confirmar email com código de verificação' })
+  @ApiResponse({ status: 200, description: 'Email verificado com sucesso' })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Código inválido/expirado (invalid_or_expired_code) OU dados inválidos (validation_failed)',
+  })
+  async verifyEmail(@Body() dto: VerifyEmailDto) {
+    return this.emailVerificationService.verify(dto);
+  }
+
+  @Post('resend-verification')
+  @Public()
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Reenviar código de verificação de email' })
+  @ApiResponse({
+    status: 200,
+    description: 'Resposta genérica (não revela se o email existe)',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Dados inválidos (validation_failed)',
+  })
+  @ApiResponse({
+    status: 429,
+    description: 'Muitas tentativas (too_many_attempts)',
+  })
+  async resendVerification(@Body() dto: ResendVerificationDto) {
+    return this.emailVerificationService.resend(dto);
+  }
+
+  @Post('reset-password')
+  @Public()
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Redefinir senha com código de verificação' })
+  @ApiResponse({ status: 200, description: 'Senha alterada com sucesso' })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Código inválido/expirado (invalid_or_expired_code) OU senha fraca (weak_password) OU dados inválidos (validation_failed)',
+  })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.passwordResetService.resetPassword(dto);
   }
 
   @Post('logout-all')

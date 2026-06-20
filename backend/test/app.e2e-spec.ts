@@ -2,8 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { Logger } from 'nestjs-pino';
 import { AppModule } from './../src/app.module';
+import { buildTestApp } from './helpers/test-app';
 
 const UUID_V4_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -16,10 +16,8 @@ describe('AppController (e2e)', () => {
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
-    app.useLogger(app.get(Logger));
+    app = await buildTestApp(moduleFixture);
     app.enableShutdownHooks();
-    await app.init();
   });
 
   afterEach(async () => {

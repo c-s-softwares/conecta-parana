@@ -1,13 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/config/prisma.service';
+import { MailService } from '../src/modules/mail/mail.service';
+import { MockMailService } from '../src/modules/mail/mock-mail.service';
 import { generateId } from '../src/common/utils/ulid.util';
 import { TABLE_PREFIX } from '../src/common/types/ulid.types';
-
-import { validationPipeConfig } from '../src/config/validation-pipe.config';
+import { buildTestApp } from './helpers/test-app';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication<App>;
@@ -35,11 +36,12 @@ describe('Auth (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(MailService)
+      .useClass(MockMailService)
+      .compile();
 
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe(validationPipeConfig));
-    await app.init();
+    app = await buildTestApp(moduleFixture);
 
     api = () => request(app.getHttpServer());
 
@@ -81,37 +83,49 @@ describe('Auth (e2e)', () => {
     await app.close();
   });
 
-  it('POST /auth/register — deve criar um usuário', async () => {
+  it('POST /auth/register — retorna mensagem genérica e cria usuário com emailVerifiedAt null', async () => {
     const response = await api()
       .post('/auth/register')
       .send({
         name: 'Teste E2E',
         email: MOCK_TEST_USER.email,
         password: MOCK_TEST_USER.password,
+        confirmPassword: MOCK_TEST_USER.password,
         cityId: testCityId,
       })
-      .expect(201);
+      .expect(200);
 
-    expect(response.body).toHaveProperty('id');
-    expect(response.body).toHaveProperty('email', MOCK_TEST_USER.email);
-    expect(response.body).not.toHaveProperty('password');
-    expect(response.body).not.toHaveProperty('role');
+    const body = response.body as { message: string };
+    expect(body.message).toContain('Cadastro concluído');
+    expect(body).not.toHaveProperty('id');
+    expect(body).not.toHaveProperty('email');
+
+    const created = await prisma.client.user.findUnique({
+      where: { email: MOCK_TEST_USER.email },
+    });
+    expect(created).not.toBeNull();
+    expect(created?.emailVerifiedAt).toBeNull();
+
+    await prisma.client.user.update({
+      where: { id: created!.id },
+      data: { emailVerifiedAt: new Date() },
+    });
   });
 
-  it('POST /auth/register — normalizar email com trim e lowercase', async () => {
+  it('POST /auth/register — normaliza email com trim e lowercase e retorna mesma mensagem genérica em duplicado', async () => {
     const response = await api()
       .post('/auth/register')
       .send({
         name: 'Teste E2E',
         email: '  E2E@TESTE.COM  ',
         password: MOCK_TEST_USER.password,
+        confirmPassword: MOCK_TEST_USER.password,
         cityId: testCityId,
       })
-      .expect(409);
+      .expect(200);
 
-    // 409(email ja existe)
-    const body = response.body as { code: string };
-    expect(body.code).toBe('email_exists');
+    const body = response.body as { message: string };
+    expect(body.message).toContain('Cadastro concluído');
   });
 
   it('POST /auth/register —  retornar 400 sem cityId', async () => {
@@ -121,6 +135,7 @@ describe('Auth (e2e)', () => {
         name: 'Teste Sem Cidade',
         email: 'sem-cidade@teste.com',
         password: MOCK_TEST_USER.password,
+        confirmPassword: MOCK_TEST_USER.password,
       })
       .expect(400);
 
@@ -136,6 +151,7 @@ describe('Auth (e2e)', () => {
         name: 'Teste Formato Invalido',
         email: 'formato-invalido@teste.com',
         password: MOCK_TEST_USER.password,
+        confirmPassword: MOCK_TEST_USER.password,
         cityId: 'invalido',
       })
       .expect(400);
@@ -152,6 +168,7 @@ describe('Auth (e2e)', () => {
         name: 'Teste Cidade Inexistente',
         email: 'cidade-inexistente@teste.com',
         password: MOCK_TEST_USER.password,
+        confirmPassword: MOCK_TEST_USER.password,
         cityId: `${TABLE_PREFIX.CITY}00000000000000000000000000`,
       })
       .expect(404);
@@ -217,16 +234,22 @@ describe('Auth (e2e)', () => {
     await api().get('/auth/me').expect(401);
   });
 
-  it('POST /auth/register — deve retornar 409 com email duplicado', async () => {
-    await api()
+  it('POST /auth/register — retorna 200 genérico com email já cadastrado (sem revelar existência)', async () => {
+    const response = await api()
       .post('/auth/register')
       .send({
         name: 'Teste E2E',
         email: MOCK_TEST_USER.email,
         password: MOCK_TEST_USER.password,
+        confirmPassword: MOCK_TEST_USER.password,
         cityId: testCityId,
       })
-      .expect(409);
+      .expect(200);
+
+    const body = response.body as { message: string };
+    // Mensagem propositalmente genérica para evitar enumeração de emails.
+    expect(body.message).not.toContain('já existe');
+    expect(body.message).not.toContain('cadastrado anteriormente');
   });
 
   it('POST /auth/login — deve retornar 401 com senha errada', async () => {

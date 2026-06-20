@@ -1,12 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { Server } from 'http';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from './../src/config/prisma.service';
+import { MailService } from './../src/modules/mail/mail.service';
+import { MockMailService } from './../src/modules/mail/mock-mail.service';
 import * as bcrypt from 'bcryptjs';
+import { buildTestApp } from './helpers/test-app';
 
 const ADMIN_CREDENTIALS = {
   email: 'admin@conecta.local',
@@ -36,36 +39,36 @@ describe('Cities Cache Invalidation (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(MailService)
+      .useClass(MockMailService)
+      .compile();
 
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
+    app = await buildTestApp(moduleFixture);
 
     prisma = moduleFixture.get<PrismaService>(PrismaService);
     cacheManager = moduleFixture.get<Cache>(CACHE_MANAGER);
-    await app.init();
     server = app.getHttpServer() as Server;
 
     // Limpa completamente o cache antes de iniciar o teste para garantir um ambiente limpo
     await cacheManager.clear();
 
-    // Garante que o usuário administrador do seed existe no banco de testes
     const hashedPassword = await bcrypt.hash(ADMIN_CREDENTIALS.password, 10);
     await prisma.client.user.upsert({
       where: { email: ADMIN_CREDENTIALS.email },
-      update: { role: 'ADMIN', password: hashedPassword, name: 'Admin' },
+      update: {
+        role: 'ADMIN',
+        password: hashedPassword,
+        name: 'Admin',
+        emailVerifiedAt: new Date(),
+      },
       create: {
         id: 'usr_seed_admin',
         email: ADMIN_CREDENTIALS.email,
         name: 'Admin',
         password: hashedPassword,
         role: 'ADMIN',
+        emailVerifiedAt: new Date(),
       },
     });
 
