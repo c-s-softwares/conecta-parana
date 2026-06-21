@@ -114,28 +114,27 @@ export class DashboardService {
   async getChart(
     period: 'month' | 'week' = 'month',
   ): Promise<DashboardChartResponseDto> {
-    const trunc = period === 'week' ? 'week' : 'month';
     const buckets = period === 'week' ? 12 : 6;
 
     type RawRow = { period: Date; count: bigint };
 
-    const cutoff = Prisma.sql`DATE_TRUNC(${trunc}, NOW()) - INTERVAL '${Prisma.raw(String(buckets - 1))} ${Prisma.raw(trunc)}s'`;
+    const cutoff = Prisma.sql`DATE_TRUNC(${period}, NOW()) - INTERVAL '${Prisma.raw(String(buckets - 1))} ${Prisma.raw(period)}s'`;
 
     const [communicateRows, eventRows, newsRows] = await Promise.all([
       this.prisma.client.$queryRaw<RawRow[]>`
-        SELECT DATE_TRUNC(${trunc}, created_at) AS period, COUNT(*) AS count
+        SELECT DATE_TRUNC(${period}, created_at) AS period, COUNT(*) AS count
         FROM communicates
         WHERE created_at >= ${cutoff}
         GROUP BY 1 ORDER BY 1
       `,
       this.prisma.client.$queryRaw<RawRow[]>`
-        SELECT DATE_TRUNC(${trunc}, created_at) AS period, COUNT(*) AS count
+        SELECT DATE_TRUNC(${period}, created_at) AS period, COUNT(*) AS count
         FROM events
         WHERE created_at >= ${cutoff} AND deleted_at IS NULL
         GROUP BY 1 ORDER BY 1
       `,
       this.prisma.client.$queryRaw<RawRow[]>`
-        SELECT DATE_TRUNC(${trunc}, created_at) AS period, COUNT(*) AS count
+        SELECT DATE_TRUNC(${period}, created_at) AS period, COUNT(*) AS count
         FROM news
         WHERE created_at >= ${cutoff}
         GROUP BY 1 ORDER BY 1

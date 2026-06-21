@@ -14,6 +14,11 @@ const mockPrisma = {
   },
 };
 
+const MOCK_CITY_NAME = 'Maringá';
+const MOCK_CITY_CURITIBA = 'Curitiba';
+const MOCK_USER_NAME = 'Admin Maringá';
+const MOCK_BUCKET_PERIOD = '2026-05-01T00:00:00.000Z';
+
 const mockAllZero = () => {
   mockPrisma.client.communicate.count.mockResolvedValue(0);
   mockPrisma.client.event.count.mockResolvedValue(0);
@@ -126,23 +131,23 @@ describe('DashboardService', () => {
   });
 
   describe('getChart', () => {
-    const makeRow = (isoDate: string, count: number) => ({
+    const makeChartRow = (isoDate: string, count: number) => ({
       period: new Date(isoDate),
       count: BigInt(count),
     });
 
     it('deve retornar buckets com contagens corretas para period=month', async () => {
       mockPrisma.client.$queryRaw
-        .mockResolvedValueOnce([makeRow('2026-05-01T00:00:00.000Z', 3)]) // communicates
-        .mockResolvedValueOnce([makeRow('2026-05-01T00:00:00.000Z', 1)]) // events
-        .mockResolvedValueOnce([makeRow('2026-05-01T00:00:00.000Z', 2)]); // news
+        .mockResolvedValueOnce([makeChartRow(MOCK_BUCKET_PERIOD, 3)]) // communicates
+        .mockResolvedValueOnce([makeChartRow(MOCK_BUCKET_PERIOD, 1)]) // events
+        .mockResolvedValueOnce([makeChartRow(MOCK_BUCKET_PERIOD, 2)]); // news
 
       const result = await service.getChart('month');
 
       expect(result.period).toBe('month');
       expect(result.buckets).toHaveLength(1);
       expect(result.buckets[0]).toEqual({
-        period: '2026-05-01T00:00:00.000Z',
+        period: MOCK_BUCKET_PERIOD,
         communicates: 3,
         events: 1,
         news: 2,
@@ -151,9 +156,9 @@ describe('DashboardService', () => {
 
     it('deve preencher com zero entidades sem registros num período', async () => {
       mockPrisma.client.$queryRaw
-        .mockResolvedValueOnce([makeRow('2026-04-01T00:00:00.000Z', 5)]) // communicates
+        .mockResolvedValueOnce([makeChartRow('2026-04-01T00:00:00.000Z', 5)]) // communicates
         .mockResolvedValueOnce([]) // events - sem dados em abril
-        .mockResolvedValueOnce([makeRow('2026-04-01T00:00:00.000Z', 2)]); // news
+        .mockResolvedValueOnce([makeChartRow('2026-04-01T00:00:00.000Z', 2)]); // news
 
       const result = await service.getChart('month');
 
@@ -181,9 +186,6 @@ describe('DashboardService', () => {
   describe('getRecentActivity', () => {
     const NOW = '2026-06-21T14:00:00.000Z';
     const OLDER = '2026-06-20T10:00:00.000Z';
-
-    const MOCK_CITY_NAME = 'Maringá';
-    const MOCK_USER_NAME = 'Admin Maringá';
 
     const makeRecord = (id: string, title: string, updatedAt: string) => ({
       id,
@@ -248,16 +250,16 @@ describe('DashboardService', () => {
   });
 
   describe('getTopCities', () => {
-    const makeRow = (cityId: string, cityName: string, total: number) => ({
+    const makeCityRow = (cityId: string, cityName: string, total: number) => ({
       cityId,
       cityName,
       total: BigInt(total),
     });
 
-    it('deve retornar cidades ordenadas por total decrescente', async () => {
+    it('deve retornar cidades ordenadas por total decrescente e converter bigint para number', async () => {
       mockPrisma.client.$queryRaw.mockResolvedValue([
-        makeRow('cit_1', 'Maringá', 30),
-        makeRow('cit_2', 'Curitiba', 20),
+        makeCityRow('cit_1', MOCK_CITY_NAME, 30),
+        makeCityRow('cit_2', MOCK_CITY_CURITIBA, 20),
       ]);
 
       const result = await service.getTopCities(10);
@@ -265,25 +267,15 @@ describe('DashboardService', () => {
       expect(result).toHaveLength(2);
       expect(result[0]).toEqual({
         cityId: 'cit_1',
-        cityName: 'Maringá',
+        cityName: MOCK_CITY_NAME,
         total: 30,
       });
       expect(result[1]).toEqual({
         cityId: 'cit_2',
-        cityName: 'Curitiba',
+        cityName: MOCK_CITY_CURITIBA,
         total: 20,
       });
-    });
-
-    it('deve converter bigint para number', async () => {
-      mockPrisma.client.$queryRaw.mockResolvedValue([
-        makeRow('cit_1', 'Maringá', 99),
-      ]);
-
-      const [item] = await service.getTopCities(10);
-
-      expect(typeof item.total).toBe('number');
-      expect(item.total).toBe(99);
+      expect(typeof result[0].total).toBe('number');
     });
 
     it('deve retornar array vazio quando não há publicações', async () => {
