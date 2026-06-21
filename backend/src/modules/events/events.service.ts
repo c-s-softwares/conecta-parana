@@ -34,7 +34,7 @@ type EventEntity = {
   title: string;
   description: string;
   type: string;
-  active: boolean;
+  isActive: boolean;
   eventDate: Date;
 
   cityId: string;
@@ -73,7 +73,7 @@ export class EventsService extends BaseCrudService<
       title: event.title,
       description: event.description,
       type: event.type,
-      active: event.active,
+      isActive: event.isActive,
       eventDate: event.eventDate,
       cityId: event.cityId,
       userId: event.userId,
@@ -95,7 +95,7 @@ export class EventsService extends BaseCrudService<
     const where: Record<string, unknown> = {
       ...(query.cityId && { cityId: query.cityId }),
       ...(query.type && { type: query.type }),
-      ...(query.active !== undefined && { active: query.active }),
+      ...(query.isActive !== undefined && { isActive: query.isActive }),
     };
 
     if (query.from || query.to) {
@@ -166,7 +166,7 @@ export class EventsService extends BaseCrudService<
         title: dto.title,
         description: dto.description,
         type: dto.type,
-        active: dto.active ?? true,
+        isActive: dto.isActive ?? true,
         eventDate: new Date(dto.eventDate),
         cityId,
         userId: user.sub,
@@ -221,7 +221,7 @@ export class EventsService extends BaseCrudService<
             description: dto.description,
           }),
           ...(dto.type !== undefined && { type: dto.type }),
-          ...(dto.active !== undefined && { active: dto.active }),
+          ...(dto.isActive !== undefined && { isActive: dto.isActive }),
           ...(dto.eventDate !== undefined && {
             eventDate: new Date(dto.eventDate),
           }),

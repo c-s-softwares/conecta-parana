@@ -35,11 +35,11 @@ export class CreateEventDto {
 
   @ApiPropertyOptional({
     example: true,
-    description: 'Indica se o evento está active',
+    description: 'Indica se o evento está ativo',
   })
   @IsOptional()
   @IsBoolean()
-  active?: boolean;
+  isActive?: boolean;
 
   @ApiPropertyOptional({
     example: 'cit_01HZX...',

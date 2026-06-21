@@ -19,8 +19,8 @@ export class EventResponse {
   @ApiProperty({ example: 'cultural', description: 'Tipo do evento' })
   type!: string;
 
-  @ApiProperty({ example: true, description: 'Indica se o evento está active' })
-  active!: boolean;
+  @ApiProperty({ example: true, description: 'Indica se o evento está ativo' })
+  isActive!: boolean;
 
   @ApiProperty({
     example: '2025-12-01T10:00:00Z',

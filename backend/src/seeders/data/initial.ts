@@ -247,7 +247,7 @@ export const EVENTS = [
     description:
       'Serviços gratuitos de aferição de pressão, glicemia, orientação nutricional e vacinação.',
     type: 'oficial',
-    active: true,
+    isActive: true,
     priority: true,
     eventDate: addDays(7),
     cityId: CITY_IDS.maringa,
@@ -260,7 +260,7 @@ export const EVENTS = [
     description:
       'Festival cultural com música ao vivo, artesanato e gastronomia regional no Parque do Ingá.',
     type: 'cultural',
-    active: true,
+    isActive: true,
     priority: false,
     eventDate: addDays(14),
     cityId: CITY_IDS.maringa,
@@ -273,7 +273,7 @@ export const EVENTS = [
     description:
       'Corrida de rua com percursos de 5km e 10km ao redor do Parque do Ingá.',
     type: 'esportivo',
-    active: true,
+    isActive: true,
     priority: false,
     eventDate: addDays(21),
     cityId: CITY_IDS.maringa,
@@ -286,7 +286,7 @@ export const EVENTS = [
     description:
       'Orientação sobre documentação veicular, habilitação e regularização de débitos com atendimento sem fila.',
     type: 'oficial',
-    active: true,
+    isActive: true,
     priority: false,
     eventDate: addDays(10),
     cityId: CITY_IDS.maringa,
@@ -299,7 +299,7 @@ export const EVENTS = [
     description:
       'Trilha guiada pelo Parque Barigui com foco em educação ambiental e fauna nativa.',
     type: 'esportivo',
-    active: true,
+    isActive: true,
     priority: false,
     eventDate: addDays(5),
     cityId: CITY_IDS.curitiba,

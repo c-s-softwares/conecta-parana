@@ -31,11 +31,11 @@ export class UpdateEventDto {
 
   @ApiPropertyOptional({
     example: true,
-    description: 'Indica se o evento está active',
+    description: 'Indica se o evento está ativo',
   })
   @IsOptional()
   @IsBoolean()
-  active?: boolean;
+  isActive?: boolean;
 
   @ApiPropertyOptional({
     example: '2025-12-01T10:00:00Z',

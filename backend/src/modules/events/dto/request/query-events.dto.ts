@@ -53,7 +53,7 @@ export class QueryEventsDto extends PaginationQueryDto {
     value === 'true' ? true : value === 'false' ? false : undefined,
   )
   @IsBoolean()
-  active?: boolean;
+  isActive?: boolean;
 
   @ApiPropertyOptional({
     example: '-25.4284',

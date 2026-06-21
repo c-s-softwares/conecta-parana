@@ -22,7 +22,6 @@ const EVENTS_LIMIT = 4;
 const COMMUNICATES_LIMIT = 4;
 const WINDOW_PAST_MS = 24 * 60 * 60 * 1000;
 const WINDOW_FUTURE_MS = 7 * 24 * 60 * 60 * 1000;
-const EVENT_STATUS_PUBLICADO = 'publicado';
 const CACHE_KEY_PREFIX = 'feed:v1';
 
 type EventEntity = {
@@ -30,7 +29,7 @@ type EventEntity = {
   title: string;
   description: string;
   type: string;
-  status: string;
+  isActive: boolean;
   eventDate: Date;
   cityId: string;
   userId: string;
@@ -156,7 +155,7 @@ export class FeedService {
     const events = await this.prisma.client.event.findMany({
       where: {
         cityId,
-        status: EVENT_STATUS_PUBLICADO,
+        isActive: true,
         priority: true,
         deletedAt: null,
       },
@@ -182,7 +181,7 @@ export class FeedService {
     const events = await this.prisma.client.event.findMany({
       where: {
         cityId,
-        status: EVENT_STATUS_PUBLICADO,
+        isActive: true,
         priority: false,
         deletedAt: null,
         eventDate: { gte: start, lte: end },
@@ -206,7 +205,7 @@ export class FeedService {
         title,
         description,
         type,
-        status,
+        is_active AS "isActive",
         event_date AS "eventDate",
         city_id AS "cityId",
         user_id AS "userId",
@@ -215,7 +214,7 @@ export class FeedService {
         updated_at AS "updatedAt"
       FROM events
       WHERE city_id = ${cityId}
-        AND status = ${EVENT_STATUS_PUBLICADO}
+        AND is_active = ${true}
         AND priority = false
         AND deleted_at IS NULL
         AND event_date >= ${start}
@@ -255,7 +254,7 @@ export class FeedService {
       title: event.title,
       description: event.description,
       type: event.type,
-      status: event.status,
+      isActive: event.isActive,
       eventDate: event.eventDate,
       cityId: event.cityId,
       userId: event.userId,
