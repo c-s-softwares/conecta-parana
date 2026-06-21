@@ -1,9 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../config/prisma.service';
 import {
   DashboardMetricsResponseDto,
   DeltaStatDto,
 } from './dto/response/dashboard-metrics-response.dto';
+import {
+  ChartBucketDto,
+  DashboardChartResponseDto,
+} from './dto/response/dashboard-chart-response.dto';
 
 @Injectable()
 export class DashboardService {
@@ -102,5 +107,61 @@ export class DashboardService {
     }
 
     return { total, thisMonth, lastMonth, delta, deltaPercent };
+  }
+
+  async getChart(
+    period: 'month' | 'week' = 'month',
+  ): Promise<DashboardChartResponseDto> {
+    const trunc = period === 'week' ? 'week' : 'month';
+    const buckets = period === 'week' ? 12 : 6;
+
+    type RawRow = { period: Date; count: bigint };
+
+    const cutoff = Prisma.sql`DATE_TRUNC(${trunc}, NOW()) - INTERVAL '${Prisma.raw(String(buckets - 1))} ${Prisma.raw(trunc)}s'`;
+
+    const [communicateRows, eventRows, newsRows] = await Promise.all([
+      this.prisma.client.$queryRaw<RawRow[]>`
+        SELECT DATE_TRUNC(${trunc}, created_at) AS period, COUNT(*) AS count
+        FROM communicates
+        WHERE created_at >= ${cutoff}
+        GROUP BY 1 ORDER BY 1
+      `,
+      this.prisma.client.$queryRaw<RawRow[]>`
+        SELECT DATE_TRUNC(${trunc}, created_at) AS period, COUNT(*) AS count
+        FROM events
+        WHERE created_at >= ${cutoff} AND deleted_at IS NULL
+        GROUP BY 1 ORDER BY 1
+      `,
+      this.prisma.client.$queryRaw<RawRow[]>`
+        SELECT DATE_TRUNC(${trunc}, created_at) AS period, COUNT(*) AS count
+        FROM news
+        WHERE created_at >= ${cutoff}
+        GROUP BY 1 ORDER BY 1
+      `,
+    ]);
+
+    const toMap = (rows: RawRow[]) =>
+      new Map(rows.map((r) => [r.period.toISOString(), Number(r.count)]));
+
+    const communicateMap = toMap(communicateRows);
+    const eventMap = toMap(eventRows);
+    const newsMap = toMap(newsRows);
+
+    const allPeriods = [
+      ...new Set([
+        ...communicateMap.keys(),
+        ...eventMap.keys(),
+        ...newsMap.keys(),
+      ]),
+    ].sort();
+
+    const result: ChartBucketDto[] = allPeriods.map((p) => ({
+      period: p,
+      communicates: communicateMap.get(p) ?? 0,
+      events: eventMap.get(p) ?? 0,
+      news: newsMap.get(p) ?? 0,
+    }));
+
+    return { period, buckets: result };
   }
 }

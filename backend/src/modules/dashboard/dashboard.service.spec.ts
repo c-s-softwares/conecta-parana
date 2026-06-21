@@ -9,6 +9,7 @@ const mockPrisma = {
     event: { count: jest.fn() },
     local: { count: jest.fn() },
     notification: { count: jest.fn() },
+    $queryRaw: jest.fn(),
   },
 };
 
@@ -120,6 +121,59 @@ describe('DashboardService', () => {
         [{ where: { isActive?: boolean } }]
       >;
       expect(calls.every((args) => args[0].where.isActive === true)).toBe(true);
+    });
+  });
+
+  describe('getChart', () => {
+    const makeRow = (isoDate: string, count: number) => ({
+      period: new Date(isoDate),
+      count: BigInt(count),
+    });
+
+    it('deve retornar buckets com contagens corretas para period=month', async () => {
+      mockPrisma.client.$queryRaw
+        .mockResolvedValueOnce([makeRow('2026-05-01T00:00:00.000Z', 3)]) // communicates
+        .mockResolvedValueOnce([makeRow('2026-05-01T00:00:00.000Z', 1)]) // events
+        .mockResolvedValueOnce([makeRow('2026-05-01T00:00:00.000Z', 2)]); // news
+
+      const result = await service.getChart('month');
+
+      expect(result.period).toBe('month');
+      expect(result.buckets).toHaveLength(1);
+      expect(result.buckets[0]).toEqual({
+        period: '2026-05-01T00:00:00.000Z',
+        communicates: 3,
+        events: 1,
+        news: 2,
+      });
+    });
+
+    it('deve preencher com zero entidades sem registros num período', async () => {
+      mockPrisma.client.$queryRaw
+        .mockResolvedValueOnce([makeRow('2026-04-01T00:00:00.000Z', 5)]) // communicates
+        .mockResolvedValueOnce([]) // events - sem dados em abril
+        .mockResolvedValueOnce([makeRow('2026-04-01T00:00:00.000Z', 2)]); // news
+
+      const result = await service.getChart('month');
+
+      expect(result.buckets[0].events).toBe(0);
+      expect(result.buckets[0].communicates).toBe(5);
+    });
+
+    it('deve usar period=month como padrão quando não informado', async () => {
+      mockPrisma.client.$queryRaw.mockResolvedValue([]);
+
+      const result = await service.getChart();
+
+      expect(result.period).toBe('month');
+    });
+
+    it('deve executar 3 queries em paralelo', async () => {
+      mockPrisma.client.$queryRaw.mockResolvedValue([]);
+
+      await service.getChart('week');
+
+      expect(mockPrisma.client.$queryRaw).toHaveBeenCalledTimes(3);
     });
   });
 });
