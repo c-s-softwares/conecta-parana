@@ -1,3 +1,4 @@
+import 'package:conectaparana/features/tickets/data/models/ticket_detail_model.dart';
 import 'package:conectaparana/features/tickets/data/models/ticket_model.dart';
 import 'package:conectaparana/features/tickets/data/repository/ticket_repository.dart';
 import 'package:conectaparana/features/tickets/presentation/pages/tickets_page.dart';
@@ -18,6 +19,17 @@ class _FakeRepository implements TicketRepository {
     if (errorToThrow != null) throw errorToThrow!;
     return ticketsToReturn ?? const [];
   }
+
+  @override
+  Future<TicketDetail> getTicketDetail(String id) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<TicketComment> addComment({
+    required String ticketId,
+    required String message,
+  }) async =>
+      throw UnimplementedError();
 }
 
 Ticket _makeTicket({
@@ -323,4 +335,15 @@ class _FakeRepositoryWithRetry implements TicketRepository {
 
   @override
   Future<List<Ticket>> getMyTickets() async => onLoad();
+
+  @override
+  Future<TicketDetail> getTicketDetail(String id) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<TicketComment> addComment({
+    required String ticketId,
+    required String message,
+  }) async =>
+      throw UnimplementedError();
 }
