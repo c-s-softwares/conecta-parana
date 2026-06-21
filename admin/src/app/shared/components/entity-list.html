@@ -11,16 +11,18 @@
         <button
           type="button"
           (click)="edit.emit(item)"
+          aria-label="Editar"
           class="cursor-pointer rounded-md p-1.5 text-gray-700 hover:bg-gray-300"
         >
-          <span [innerHTML]="editIcon"></span>
+          <ng-icon name="heroPencilSquare" size="20" aria-hidden="true" />
         </button>
         <button
           type="button"
           (click)="delete.emit(item)"
+          aria-label="Excluir"
           class="cursor-pointer rounded-md p-1.5 text-red-600 hover:bg-red-100"
         >
-          <span [innerHTML]="deleteIcon"></span>
+          <ng-icon name="heroTrash" size="20" aria-hidden="true" />
         </button>
       </div>
     </div>
