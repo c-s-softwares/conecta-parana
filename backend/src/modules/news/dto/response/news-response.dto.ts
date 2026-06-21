@@ -55,6 +55,13 @@ export class NewsResponse {
   })
   cityId!: string;
 
+  @ApiPropertyOptional({
+    example: 'usr_01HZ...',
+    nullable: true,
+    description: 'Usuário que criou a notícia',
+  })
+  userId?: string | null;
+
   @ApiProperty({
     example: '2026-06-08T01:00:00.000Z',
   })

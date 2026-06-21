@@ -354,6 +354,7 @@ export const NEWS = [
       'https://www.maringa.pr.gov.br/noticias/ati-60-prefeitura-de-maringa-lanca-projeto-para-promover-atividades-fisicas-orientadas-a-populacao/42518',
     isActive: true,
     cityId: CITY_IDS.maringa,
+    userId: ADMIN_IDS.maringa,
   },
   {
     id: generateId(TABLE_PREFIX.NEWS),
@@ -365,5 +366,6 @@ export const NEWS = [
     linkUrl: null,
     isActive: true,
     cityId: CITY_IDS.curitiba,
+    userId: ADMIN_IDS.curitiba,
   },
 ];
