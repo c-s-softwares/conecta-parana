@@ -16,10 +16,13 @@ import { DashboardService } from './dashboard.service';
 import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
 import { DashboardMetricsResponseDto } from './dto/response/dashboard-metrics-response.dto';
 import { DashboardChartResponseDto } from './dto/response/dashboard-chart-response.dto';
+import { DashboardActivityItemDto } from './dto/response/dashboard-activity-response.dto';
 import { QueryChartDto } from './dto/request/query-chart.dto';
+import { QueryActivityDto } from './dto/request/query-activity.dto';
 import {
   CACHE_TTL_1_HOUR,
   CACHE_TTL_2_MINUTES,
+  CACHE_TTL_30_SECONDS,
 } from '../../common/constants/cache.constants';
 
 @ApiTags('dashboard')
@@ -55,5 +58,21 @@ export class DashboardController {
   })
   getChart(@Query() query: QueryChartDto): Promise<DashboardChartResponseDto> {
     return this.dashboardService.getChart(query.period);
+  }
+
+  @Get('activity')
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(CACHE_TTL_30_SECONDS)
+  @ApiOperation({ summary: 'Feed de atividade recente por tipo (Super Admin)' })
+  @ApiResponse({ status: 200, type: [DashboardActivityItemDto] })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({
+    status: 403,
+    description: 'role_denied | super_admin_required',
+  })
+  getRecentActivity(
+    @Query() query: QueryActivityDto,
+  ): Promise<DashboardActivityItemDto[]> {
+    return this.dashboardService.getRecentActivity(query.limit);
   }
 }

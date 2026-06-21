@@ -5,9 +5,10 @@ import { PrismaService } from '../../config/prisma.service';
 
 const mockPrisma = {
   client: {
-    communicate: { count: jest.fn() },
-    event: { count: jest.fn() },
+    communicate: { count: jest.fn(), findMany: jest.fn() },
+    event: { count: jest.fn(), findMany: jest.fn() },
     local: { count: jest.fn() },
+    news: { findMany: jest.fn() },
     notification: { count: jest.fn() },
     $queryRaw: jest.fn(),
   },
@@ -174,6 +175,75 @@ describe('DashboardService', () => {
       await service.getChart('week');
 
       expect(mockPrisma.client.$queryRaw).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe('getRecentActivity', () => {
+    const NOW = '2026-06-21T14:00:00.000Z';
+    const OLDER = '2026-06-20T10:00:00.000Z';
+
+    const MOCK_CITY_NAME = 'Maringá';
+    const MOCK_USER_NAME = 'Admin Maringá';
+
+    const makeRecord = (id: string, title: string, updatedAt: string) => ({
+      id,
+      title,
+      city: { name: MOCK_CITY_NAME },
+      user: { name: MOCK_USER_NAME },
+      createdAt: new Date(OLDER),
+      updatedAt: new Date(updatedAt),
+    });
+
+    it('deve ordenar itens por updatedAt decrescente mesclando os três tipos', async () => {
+      mockPrisma.client.communicate.findMany.mockResolvedValue([
+        makeRecord('com_1', 'Comunicado A', OLDER),
+      ]);
+      mockPrisma.client.event.findMany.mockResolvedValue([
+        makeRecord('evt_1', 'Evento B', NOW),
+      ]);
+      mockPrisma.client.news.findMany.mockResolvedValue([
+        makeRecord('nws_1', 'Notícia C', '2026-06-21T12:00:00.000Z'),
+      ]);
+
+      const result = await service.getRecentActivity(10);
+
+      expect(result[0].id).toBe('evt_1');
+      expect(result[1].id).toBe('nws_1');
+      expect(result[2].id).toBe('com_1');
+      expect(result[0].type).toBe('event');
+    });
+
+    it('deve respeitar o limite informado', async () => {
+      const many = Array.from({ length: 5 }, (_, i) =>
+        makeRecord(`com_${i}`, `C${i}`, NOW),
+      );
+      mockPrisma.client.communicate.findMany.mockResolvedValue(many);
+      mockPrisma.client.event.findMany.mockResolvedValue(many);
+      mockPrisma.client.news.findMany.mockResolvedValue(many);
+
+      const result = await service.getRecentActivity(3);
+
+      expect(result).toHaveLength(3);
+    });
+
+    it('deve mapear campos corretamente', async () => {
+      mockPrisma.client.communicate.findMany.mockResolvedValue([
+        makeRecord('com_x', 'Título X', NOW),
+      ]);
+      mockPrisma.client.event.findMany.mockResolvedValue([]);
+      mockPrisma.client.news.findMany.mockResolvedValue([]);
+
+      const [item] = await service.getRecentActivity(10);
+
+      expect(item).toEqual({
+        id: 'com_x',
+        type: 'communicate',
+        title: 'Título X',
+        cityName: MOCK_CITY_NAME,
+        createdBy: MOCK_USER_NAME,
+        createdAt: new Date(OLDER).toISOString(),
+        updatedAt: new Date(NOW).toISOString(),
+      });
     });
   });
 });

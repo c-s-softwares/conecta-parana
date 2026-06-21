@@ -9,6 +9,7 @@ import {
   ChartBucketDto,
   DashboardChartResponseDto,
 } from './dto/response/dashboard-chart-response.dto';
+import { DashboardActivityItemDto } from './dto/response/dashboard-activity-response.dto';
 
 @Injectable()
 export class DashboardService {
@@ -163,5 +164,64 @@ export class DashboardService {
     }));
 
     return { period, buckets: result };
+  }
+
+  async getRecentActivity(limit = 10): Promise<DashboardActivityItemDto[]> {
+    const take = limit * 2;
+    const nestedSelect = {
+      id: true,
+      title: true,
+      city: { select: { name: true } },
+      user: { select: { name: true } },
+      createdAt: true,
+      updatedAt: true,
+    } as const;
+
+    const [communicates, events, news] = await Promise.all([
+      this.prisma.client.communicate.findMany({
+        select: nestedSelect,
+        orderBy: { updatedAt: 'desc' },
+        take,
+      }),
+      this.prisma.client.event.findMany({
+        where: { deletedAt: null },
+        select: nestedSelect,
+        orderBy: { updatedAt: 'desc' },
+        take,
+      }),
+      this.prisma.client.news.findMany({
+        select: nestedSelect,
+        orderBy: { updatedAt: 'desc' },
+        take,
+      }),
+    ]);
+
+    const toItem = (
+      type: DashboardActivityItemDto['type'],
+      r: {
+        id: string;
+        title: string;
+        city: { name: string };
+        user: { name: string } | null;
+        createdAt: Date;
+        updatedAt: Date;
+      },
+    ): DashboardActivityItemDto => ({
+      id: r.id,
+      type,
+      title: r.title,
+      cityName: r.city.name,
+      createdBy: r.user?.name ?? null,
+      createdAt: r.createdAt.toISOString(),
+      updatedAt: r.updatedAt.toISOString(),
+    });
+
+    return [
+      ...communicates.map((r) => toItem('communicate', r)),
+      ...events.map((r) => toItem('event', r)),
+      ...news.map((r) => toItem('news', r)),
+    ]
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+      .slice(0, limit);
   }
 }
