@@ -246,4 +246,52 @@ describe('DashboardService', () => {
       });
     });
   });
+
+  describe('getTopCities', () => {
+    const makeRow = (cityId: string, cityName: string, total: number) => ({
+      cityId,
+      cityName,
+      total: BigInt(total),
+    });
+
+    it('deve retornar cidades ordenadas por total decrescente', async () => {
+      mockPrisma.client.$queryRaw.mockResolvedValue([
+        makeRow('cit_1', 'Maringá', 30),
+        makeRow('cit_2', 'Curitiba', 20),
+      ]);
+
+      const result = await service.getTopCities(10);
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual({
+        cityId: 'cit_1',
+        cityName: 'Maringá',
+        total: 30,
+      });
+      expect(result[1]).toEqual({
+        cityId: 'cit_2',
+        cityName: 'Curitiba',
+        total: 20,
+      });
+    });
+
+    it('deve converter bigint para number', async () => {
+      mockPrisma.client.$queryRaw.mockResolvedValue([
+        makeRow('cit_1', 'Maringá', 99),
+      ]);
+
+      const [item] = await service.getTopCities(10);
+
+      expect(typeof item.total).toBe('number');
+      expect(item.total).toBe(99);
+    });
+
+    it('deve retornar array vazio quando não há publicações', async () => {
+      mockPrisma.client.$queryRaw.mockResolvedValue([]);
+
+      const result = await service.getTopCities(10);
+
+      expect(result).toEqual([]);
+    });
+  });
 });

@@ -10,6 +10,7 @@ import {
   DashboardChartResponseDto,
 } from './dto/response/dashboard-chart-response.dto';
 import { DashboardActivityItemDto } from './dto/response/dashboard-activity-response.dto';
+import { DashboardTopCitiesItemDto } from './dto/response/dashboard-top-cities-response.dto';
 
 @Injectable()
 export class DashboardService {
@@ -223,5 +224,30 @@ export class DashboardService {
     ]
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
       .slice(0, limit);
+  }
+
+  async getTopCities(limit = 10): Promise<DashboardTopCitiesItemDto[]> {
+    type RawRow = { cityId: string; cityName: string; total: bigint };
+
+    const rows = await this.prisma.client.$queryRaw<RawRow[]>`
+      SELECT c.id AS "cityId", c.name AS "cityName", COUNT(*) AS total
+      FROM (
+        SELECT city_id FROM communicates
+        UNION ALL
+        SELECT city_id FROM events WHERE deleted_at IS NULL
+        UNION ALL
+        SELECT city_id FROM news
+      ) AS combined
+      JOIN cities c ON c.id = combined.city_id
+      GROUP BY c.id, c.name
+      ORDER BY total DESC
+      LIMIT ${limit}
+    `;
+
+    return rows.map((r) => ({
+      cityId: r.cityId,
+      cityName: r.cityName,
+      total: Number(r.total),
+    }));
   }
 }

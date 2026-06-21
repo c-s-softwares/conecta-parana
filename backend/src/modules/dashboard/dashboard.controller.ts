@@ -17,6 +17,7 @@ import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
 import { DashboardMetricsResponseDto } from './dto/response/dashboard-metrics-response.dto';
 import { DashboardChartResponseDto } from './dto/response/dashboard-chart-response.dto';
 import { DashboardActivityItemDto } from './dto/response/dashboard-activity-response.dto';
+import { DashboardTopCitiesItemDto } from './dto/response/dashboard-top-cities-response.dto';
 import { QueryChartDto } from './dto/request/query-chart.dto';
 import { QueryActivityDto } from './dto/request/query-activity.dto';
 import {
@@ -74,5 +75,21 @@ export class DashboardController {
     @Query() query: QueryActivityDto,
   ): Promise<DashboardActivityItemDto[]> {
     return this.dashboardService.getRecentActivity(query.limit);
+  }
+
+  @Get('top-cities')
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(CACHE_TTL_2_MINUTES)
+  @ApiOperation({ summary: 'Cidades com mais publicações (Super Admin)' })
+  @ApiResponse({ status: 200, type: [DashboardTopCitiesItemDto] })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({
+    status: 403,
+    description: 'role_denied | super_admin_required',
+  })
+  getTopCities(
+    @Query() query: QueryActivityDto,
+  ): Promise<DashboardTopCitiesItemDto[]> {
+    return this.dashboardService.getTopCities(query.limit);
   }
 }
