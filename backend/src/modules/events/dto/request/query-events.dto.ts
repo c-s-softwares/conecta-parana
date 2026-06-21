@@ -1,10 +1,11 @@
-import { IsIn, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PaginationQueryDto } from '../../../../common/dto/request/pagination-query.dto';
 
 export class QueryEventsDto extends PaginationQueryDto {
   @ApiPropertyOptional({
-    example: 'city_01HZX...',
+    example: 'cit_01HZX...',
     description: 'Filtrar por cidade',
   })
   @IsOptional()
@@ -12,7 +13,7 @@ export class QueryEventsDto extends PaginationQueryDto {
   cityId?: string;
 
   @ApiPropertyOptional({
-    example: 'category_01HZX...',
+    example: 'cat_01HZX...',
     description: 'Filtrar por categoria do local',
   })
   @IsOptional()
@@ -36,7 +37,7 @@ export class QueryEventsDto extends PaginationQueryDto {
   to?: string;
 
   @ApiPropertyOptional({
-    example: 'CULTURAL',
+    example: 'cultural',
     description: 'Filtrar por tipo do evento',
   })
   @IsOptional()
@@ -44,12 +45,15 @@ export class QueryEventsDto extends PaginationQueryDto {
   type?: string;
 
   @ApiPropertyOptional({
-    example: 'SCHEDULED',
-    description: 'Filtrar por status do evento',
+    example: true,
+    description: 'Filtrar por eventos ativos (true) ou inativos (false)',
   })
   @IsOptional()
-  @IsString()
-  status?: string;
+  @Transform(({ value }: { value: string }) =>
+    value === 'true' ? true : value === 'false' ? false : undefined,
+  )
+  @IsBoolean()
+  active?: boolean;
 
   @ApiPropertyOptional({
     example: '-25.4284',

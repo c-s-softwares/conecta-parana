@@ -5,10 +5,3 @@ export const VALID_EVENT_TYPES = [
   'cultural',
   'outros',
 ];
-
-export const VALID_EVENT_STATUS = [
-  'rascunho',
-  'publicado',
-  'cancelado',
-  'encerrado',
-];

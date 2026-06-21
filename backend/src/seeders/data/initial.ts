@@ -247,7 +247,7 @@ export const EVENTS = [
     description:
       'Serviços gratuitos de aferição de pressão, glicemia, orientação nutricional e vacinação.',
     type: 'oficial',
-    status: 'publicado',
+    active: true,
     priority: true,
     eventDate: addDays(7),
     cityId: CITY_IDS.maringa,
@@ -260,7 +260,7 @@ export const EVENTS = [
     description:
       'Festival cultural com música ao vivo, artesanato e gastronomia regional no Parque do Ingá.',
     type: 'cultural',
-    status: 'publicado',
+    active: true,
     priority: false,
     eventDate: addDays(14),
     cityId: CITY_IDS.maringa,
@@ -273,7 +273,7 @@ export const EVENTS = [
     description:
       'Corrida de rua com percursos de 5km e 10km ao redor do Parque do Ingá.',
     type: 'esportivo',
-    status: 'publicado',
+    active: true,
     priority: false,
     eventDate: addDays(21),
     cityId: CITY_IDS.maringa,
@@ -286,7 +286,7 @@ export const EVENTS = [
     description:
       'Orientação sobre documentação veicular, habilitação e regularização de débitos com atendimento sem fila.',
     type: 'oficial',
-    status: 'publicado',
+    active: true,
     priority: false,
     eventDate: addDays(10),
     cityId: CITY_IDS.maringa,
@@ -299,7 +299,7 @@ export const EVENTS = [
     description:
       'Trilha guiada pelo Parque Barigui com foco em educação ambiental e fauna nativa.',
     type: 'esportivo',
-    status: 'publicado',
+    active: true,
     priority: false,
     eventDate: addDays(5),
     cityId: CITY_IDS.curitiba,
@@ -347,7 +347,7 @@ export const NEWS = [
     title:
       'ATI 60+: Prefeitura de Maringá lança projeto para promover atividades físicas à população idosa',
     description:
-      'Iniciativa vai levar profissionais de Educação Física para Academias da Terceira Idade (ATIs) e fortalecer ações de envelhecimento ativo no município.',
+      'Iniciativa vai levar profissionais de Educação Física para Academias da Terceira Idade (ATIs) e fortalecer ações de envelhecimento active no município.',
     type: 'saude',
     linkType: 'externo',
     linkUrl:

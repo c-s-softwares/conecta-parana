@@ -1,7 +1,4 @@
-import {
-  VALID_EVENT_STATUS,
-  VALID_EVENT_TYPES,
-} from './constants/events.constants';
+import { VALID_EVENT_TYPES } from './constants/events.constants';
 
 import {
   BadRequestException,
@@ -37,7 +34,7 @@ type EventEntity = {
   title: string;
   description: string;
   type: string;
-  status: string;
+  active: boolean;
   eventDate: Date;
 
   cityId: string;
@@ -76,7 +73,7 @@ export class EventsService extends BaseCrudService<
       title: event.title,
       description: event.description,
       type: event.type,
-      status: event.status,
+      active: event.active,
       eventDate: event.eventDate,
       cityId: event.cityId,
       userId: event.userId,
@@ -98,7 +95,7 @@ export class EventsService extends BaseCrudService<
     const where: Record<string, unknown> = {
       ...(query.cityId && { cityId: query.cityId }),
       ...(query.type && { type: query.type }),
-      ...(query.status && { status: query.status }),
+      ...(query.active !== undefined && { active: query.active }),
     };
 
     if (query.from || query.to) {
@@ -122,7 +119,6 @@ export class EventsService extends BaseCrudService<
     const pageSize = query.pageSize ?? 10;
 
     this.validateOptionalType(query.type);
-    this.validateOptionalStatus(query.status);
 
     const where = {
       ...this.buildBaseWhere(),
@@ -156,7 +152,6 @@ export class EventsService extends BaseCrudService<
     if (!user) throw new ForbiddenException();
 
     this.validateType(dto.type);
-    this.validateStatus(dto.status);
     this.validateEventDate(dto.eventDate);
 
     const cityId = this.resolveCityId(dto.cityId, user);
@@ -171,7 +166,7 @@ export class EventsService extends BaseCrudService<
         title: dto.title,
         description: dto.description,
         type: dto.type,
-        status: dto.status,
+        active: dto.active ?? true,
         eventDate: new Date(dto.eventDate),
         cityId,
         userId: user.sub,
@@ -204,7 +199,6 @@ export class EventsService extends BaseCrudService<
     this.validateAdminCityScope(current.cityId, user);
 
     if (dto.type) this.validateType(dto.type);
-    if (dto.status) this.validateStatus(dto.status);
 
     const cityId = dto.cityId ?? current.cityId;
 
@@ -227,7 +221,7 @@ export class EventsService extends BaseCrudService<
             description: dto.description,
           }),
           ...(dto.type !== undefined && { type: dto.type }),
-          ...(dto.status !== undefined && { status: dto.status }),
+          ...(dto.active !== undefined && { active: dto.active }),
           ...(dto.eventDate !== undefined && {
             eventDate: new Date(dto.eventDate),
           }),
@@ -273,12 +267,6 @@ export class EventsService extends BaseCrudService<
     await this.afterDelete(id);
   }
 
-  /**
-   * Detalhe do evento para GET /events/:id. Inclui likesCount e flags de
-   * engajamento por usuário logado. Quando userId não é informado (anônimo),
-   * liked/saved são false. Quando informado, dispara 2 queries adicionais
-   * (like + save) em paralelo.
-   */
   async findOneDetail(
     id: string,
     userId?: string,
@@ -375,17 +363,7 @@ export class EventsService extends BaseCrudService<
     }
   }
 
-  private validateStatus(status: string): void {
-    if (!VALID_EVENT_STATUS.includes(status)) {
-      throw new BadRequestException(apiError(EVENT_ERRORS.INVALID_STATUS));
-    }
-  }
-
   private validateOptionalType(type?: string): void {
     if (type) this.validateType(type);
-  }
-
-  private validateOptionalStatus(status?: string): void {
-    if (status) this.validateStatus(status);
   }
 }

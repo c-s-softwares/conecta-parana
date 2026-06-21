@@ -117,7 +117,7 @@ model Event {
   title       String
   description String
   type        String
-  status      String
+  active       Boolean                               @default(true)
   priority    Boolean                               @default(false)
   coordinates Unsupported("geometry(Point, 4326)")?
   eventDate   DateTime                              @map("event_date")
@@ -214,7 +214,8 @@ model Notification {
   id          String  @id
   title       String
   description String
-  isRead      Boolean @default(false) @map("is_read")
+  isRead      Boolean  @default(false) @map("is_read")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   userId        String  @map("user_id")
   eventId       String? @map("event_id")
