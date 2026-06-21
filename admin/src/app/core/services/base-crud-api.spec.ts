@@ -115,7 +115,7 @@ describe('BaseCrudApi', () => {
 
     it('deve enviar boolean false e number 0', () => {
       api.list({ filters: { isActive: false, count: 0 } }).subscribe();
-      const req = http.expectOne(BASE_URL);
+      const req = http.expectOne((r) => r.url === BASE_URL);
       expect(req.request.params.get('isActive')).toBe('false');
       expect(req.request.params.get('count')).toBe('0');
       req.flush(EMPTY_PAGE);

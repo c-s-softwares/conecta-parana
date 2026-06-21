@@ -47,6 +47,12 @@ export const routes: Routes = [
           import('./features/events/events.routes').then((m) => m.EVENTS_ROUTES),
       },
       {
+        path: 'cities',
+        canActivate: [superAdminGuard],
+        loadChildren: () =>
+          import('./features/cities/cities.routes').then((m) => m.CITIES_ROUTES),
+      },
+      {
         path: 'admins',
         canActivate: [superAdminGuard],
         loadChildren: () =>
