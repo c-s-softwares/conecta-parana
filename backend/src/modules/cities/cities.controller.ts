@@ -21,6 +21,7 @@ import {
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { CitiesService } from './cities.service';
 import { CityResponse } from './dto/response/city-response.dto';
+import { CityStatsResponse } from './dto/response/city-stats-response.dto';
 import { CreateCityDto } from './dto/request/create-city.dto';
 import { UpdateCityDto } from './dto/request/update-city.dto';
 import { CACHE_TTL_1_HOUR } from '../../common/constants/cache.constants';
@@ -48,6 +49,22 @@ export class CitiesController extends BaseCrudController<
   @ApiResponse({ status: 200, description: 'Lista paginada de cidades' })
   override findAll(@Query() query: PaginationQueryDto) {
     return super.findAll(query);
+  }
+
+  @Get('stats')
+  @Public()
+  @ApiOperation({
+    summary: 'Estatísticas agregadas de cidades',
+    description:
+      'Retorna total, quantas têm admin ativo (role ADMIN com email verificado) e quantas aguardam admin.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Estatísticas calculadas com sucesso',
+    type: CityStatsResponse,
+  })
+  getStats(): Promise<CityStatsResponse> {
+    return this.citiesService.getStats();
   }
 
   @Get(':id')
