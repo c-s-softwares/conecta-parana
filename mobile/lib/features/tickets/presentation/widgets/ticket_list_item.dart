@@ -225,6 +225,8 @@ class _StatusBadge extends StatelessWidget {
           background: const Color(0xFFF5F5F5),
           text: const Color(0xFF616161),
         );
+      case AppBadgeVariant.neutral:
+        throw UnimplementedError();
     }
   }
 }
