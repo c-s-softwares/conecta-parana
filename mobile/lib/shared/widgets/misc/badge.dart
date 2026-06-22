@@ -47,7 +47,7 @@ class AppBadge extends StatelessWidget {
     if (variant == AppBadgeVariant.orange) {
       return {
         'background': const Color(0xFFFFF3E0),
-        'text': const Color(0xFFD4820A),
+        'text': const Color(0xFFFF8F00),
       };
     }
 

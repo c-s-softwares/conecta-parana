@@ -24,6 +24,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:conectaparana/features/suggestions/presentation/pages/suggestions_page.dart';
+import 'package:conectaparana/dev/fakes/fake_suggestion_repository.dart';
+import 'package:conectaparana/features/suggestions/presentation/pages/new_suggestion_page.dart';
 
 abstract class AppRoutes {
   static const splash = '/';
@@ -253,8 +255,9 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: AppRoutes.tickets,
-                  builder: (context, state) =>
-                      TicketsPage(repository: FakeTicketRepository()), // const TicketsPage()
+                  builder: (context, state) => TicketsPage(
+                    repository: FakeTicketRepository(),
+                  ), // const TicketsPage()
                   routes: [
                     GoRoute(
                       path: ':id',
@@ -278,12 +281,10 @@ class AppRouter {
                       builder: (context, state) => const SuggestionsPage(),
                       routes: [
                         GoRoute(
+                          parentNavigatorKey: navigatorKey,
                           path: 'new',
-                          builder: (context, state) => Scaffold(
-                            appBar: AppBar(title: const Text('Nova Sugestão')),
-                            body: const Center(
-                              child: Text('Em construção (CPR-94)'),
-                            ),
+                          builder: (context, state) => const NewSuggestionPage(
+                            repository: FakeSuggestionRepository(),
                           ),
                         ),
                       ],
