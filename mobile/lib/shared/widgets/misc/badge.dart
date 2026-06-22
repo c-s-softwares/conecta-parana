@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum AppBadgeVariant {
-  green, 
-  orange, 
-  teal,   
-  red,   
-  neutral,
-}
+enum AppBadgeVariant { green, orange, teal, red, neutral, blue, grey, purple }
 
 class AppBadge extends StatelessWidget {
   final String label;
@@ -22,7 +16,6 @@ class AppBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = _getColors();
 
-    
     return Semantics(
       label: label,
       child: Container(
@@ -54,7 +47,7 @@ class AppBadge extends StatelessWidget {
     if (variant == AppBadgeVariant.orange) {
       return {
         'background': const Color(0xFFFFF3E0),
-        'text': const Color(0xFFD4820A),
+        'text': const Color(0xFFFF8F00),
       };
     }
 
@@ -69,6 +62,27 @@ class AppBadge extends StatelessWidget {
       return {
         'background': const Color(0xFFF0F0F0),
         'text': const Color(0xFF616161),
+      };
+    }
+
+    if (variant == AppBadgeVariant.blue) {
+      return {
+        'background': const Color(0xFFE3F2FD),
+        'text': const Color(0xFF1565C0),
+      };
+    }
+
+    if (variant == AppBadgeVariant.grey) {
+      return {
+        'background': const Color(0xFFF5F5F5),
+        'text': const Color(0xFF616161),
+      };
+    }
+
+    if (variant == AppBadgeVariant.purple) {
+      return {
+        'background': const Color(0xFFEDE7F6),
+        'text': const Color(0xFF7E57C2),
       };
     }
 

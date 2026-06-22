@@ -1,7 +1,8 @@
+import 'package:conectaparana/dev/fakes/fake_suggestion_repository.dart';
+import 'package:conectaparana/shared/widgets/misc/list_state_view.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:conectaparana/shared/widgets/misc/list_state_view.dart';
-import 'package:conectaparana/dev/fakes/fake_suggestion_repository.dart';
+
 import '../../domain/repositories/suggestion_repository.dart';
 import '../providers/suggestions_notifier.dart';
 import '../widgets/suggestion_list_item.dart';
@@ -22,6 +23,7 @@ class _SuggestionsPageState extends State<SuggestionsPage> {
   @override
   void initState() {
     super.initState();
+
     if (widget.mockNotifier != null) {
       _notifier = widget.mockNotifier!;
     } else {
@@ -127,8 +129,9 @@ class _SuggestionsPageState extends State<SuggestionsPage> {
                   hasActiveFilters:
                       state.hasActiveFilter && state.items.isNotEmpty,
                   onRetry: _notifier.load,
-                  onClearFilters: () =>
-                      _notifier.setFilter(SuggestionFilter.all),
+                  onClearFilters: () {
+                    _notifier.setFilter(SuggestionFilter.all);
+                  },
                   loadingSkeleton: const SuggestionsSkeleton(),
                   emptyIcon: Icons.lightbulb_outline,
                   emptyTitle: 'Você ainda não enviou sugestões.',
@@ -143,8 +146,11 @@ class _SuggestionsPageState extends State<SuggestionsPage> {
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       itemCount: state.visibleItems.length,
-                      itemBuilder: (context, i) =>
-                          SuggestionListItem(suggestion: state.visibleItems[i]),
+                      itemBuilder: (context, index) {
+                        return SuggestionListItem(
+                          suggestion: state.visibleItems[index],
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -176,15 +182,16 @@ class _FilterTabs extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
-        children: SuggestionFilter.values.map((f) {
-          final selected = f == active;
+        children: SuggestionFilter.values.map((filter) {
+          final selected = filter == active;
+
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: ChoiceChip(
-              label: Text(_labels[f]!),
+              label: Text(_labels[filter]!),
               selected: selected,
               showCheckmark: false,
-              onSelected: (_) => onChanged(f),
+              onSelected: (_) => onChanged(filter),
               selectedColor: const Color(0xFF006733),
               backgroundColor: Colors.white,
               labelStyle: TextStyle(
