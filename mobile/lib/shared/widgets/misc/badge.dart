@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum AppBadgeVariant { green, orange, teal, red, blue, grey, purple }
+enum AppBadgeVariant { green, orange, teal, red, neutral, blue, grey, purple }
 
 class AppBadge extends StatelessWidget {
   final String label;
@@ -55,6 +55,13 @@ class AppBadge extends StatelessWidget {
       return {
         'background': const Color(0xFFE0F2F1),
         'text': const Color(0xFF2A7A7A),
+      };
+    }
+
+    if (variant == AppBadgeVariant.neutral) {
+      return {
+        'background': const Color(0xFFF0F0F0),
+        'text': const Color(0xFF616161),
       };
     }
 
