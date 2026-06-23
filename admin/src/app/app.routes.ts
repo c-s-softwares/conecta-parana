@@ -7,12 +7,14 @@ import {
   unauthenticatedGuard,
 } from './core/guards/auth.guard';
 
+const loadPlaceholder = () =>
+  import('./shared/components/placeholder-page').then((m) => m.PlaceholderPage);
+
 export const routes: Routes = [
   {
     path: '',
     canMatch: [unauthenticatedGuard],
-    loadChildren: () =>
-      import('./features/login/login.routes').then((m) => m.LOGIN_ROUTES),
+    loadChildren: () => import('./features/login/login.routes').then((m) => m.LOGIN_ROUTES),
   },
   {
     path: '',
@@ -26,31 +28,23 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/dashboard/dashboard.routes').then((m) => m.DASHBOARD_ROUTES),
       },
+      { path: 'eventos', loadComponent: loadPlaceholder, data: { title: 'Eventos' } },
+      { path: 'comunicados', loadComponent: loadPlaceholder, data: { title: 'Comunicados' } },
+      { path: 'noticias', loadComponent: loadPlaceholder, data: { title: 'Notícias' } },
+      { path: 'locais', loadComponent: loadPlaceholder, data: { title: 'Locais' } },
+      { path: 'notificacoes', loadComponent: loadPlaceholder, data: { title: 'Notificações' } },
+      { path: 'sugestoes', loadComponent: loadPlaceholder, data: { title: 'Sugestões' } },
       {
-        path: 'news',
-        loadChildren: () =>
-          import('./features/news/news.routes').then((m) => m.NEWS_ROUTES),
-      },
-      {
-        path: 'locals',
-        loadChildren: () =>
-          import('./features/locals/locals.routes').then((m) => m.LOCALS_ROUTES),
-      },
-      {
-        path: 'notifications',
-        loadChildren: () =>
-          import('./features/notification/notification.routes').then((m) => m.NOTIFICATION_ROUTES),
-      },
-      {
-        path: 'events',
-        loadChildren: () =>
-          import('./features/events/events.routes').then((m) => m.EVENTS_ROUTES),
-      },
-      {
-        path: 'admins',
+        path: 'cidades',
         canActivate: [superAdminGuard],
-        loadChildren: () =>
-          import('./features/admins/admins.routes').then((m) => m.ADMINS_ROUTES),
+        loadComponent: loadPlaceholder,
+        data: { title: 'Cidades' },
+      },
+      {
+        path: 'administradores',
+        canActivate: [superAdminGuard],
+        loadComponent: loadPlaceholder,
+        data: { title: 'Administradores' },
       },
     ],
   },
