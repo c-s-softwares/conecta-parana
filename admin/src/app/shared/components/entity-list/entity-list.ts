@@ -1,7 +1,7 @@
 import { Component, inject, input, output, TemplateRef } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { HERO_ICONS } from '../icons/hero-icons';
+import { HERO_ICONS } from '../../icons/hero-icons';
 
 @Component({
   selector: 'app-entity-list',
