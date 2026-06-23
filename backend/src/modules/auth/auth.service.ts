@@ -134,6 +134,7 @@ export class AuthService {
   async getMe(userId: string) {
     const user = await this.prisma.client.user.findUniqueOrThrow({
       where: { id: userId },
+      include: { city: true },
     });
 
     return {
@@ -141,7 +142,8 @@ export class AuthService {
       name: user.name,
       email: user.email,
       role: user.role,
-      city: user.cityId,
+      cityId: user.cityId,
+      city: user.city?.name ?? null,
     };
   }
 

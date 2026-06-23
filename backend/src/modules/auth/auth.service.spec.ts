@@ -229,12 +229,16 @@ describe('AuthService', () => {
   });
 
   describe('getMe', () => {
-    it('deve retornar dados do usuário sem a senha', async () => {
+    const MOCK_CITY_NAME = 'Maringá';
+
+    it('retorna dados do usuário com cidade e sem a senha', async () => {
       mockPrisma.client.user.findUniqueOrThrow.mockResolvedValue({
         id: MOCK_USER.id,
         name: MOCK_USER.name,
         email: MOCK_USER.email,
         role: MOCK_USER.role,
+        cityId: MOCK_CITY_ID,
+        city: { id: MOCK_CITY_ID, name: MOCK_CITY_NAME },
       });
 
       const result = await service.getMe(MOCK_USER.id);
@@ -244,8 +248,25 @@ describe('AuthService', () => {
         name: MOCK_USER.name,
         email: MOCK_USER.email,
         role: MOCK_USER.role,
+        cityId: MOCK_CITY_ID,
+        city: MOCK_CITY_NAME,
       });
       expect(result).not.toHaveProperty('password');
+    });
+
+    it('retorna city null quando o usuário não tem cidade', async () => {
+      mockPrisma.client.user.findUniqueOrThrow.mockResolvedValue({
+        id: MOCK_USER.id,
+        name: MOCK_USER.name,
+        email: MOCK_USER.email,
+        role: MOCK_USER.role,
+        cityId: null,
+        city: null,
+      });
+
+      const result = await service.getMe(MOCK_USER.id);
+
+      expect(result).toMatchObject({ cityId: null, city: null });
     });
   });
   describe('logout', () => {

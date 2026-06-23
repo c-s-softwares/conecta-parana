@@ -205,6 +205,8 @@ describe('Auth (e2e)', () => {
       .expect(200);
 
     expect(response.body).toHaveProperty('email', MOCK_TEST_USER.email);
+    expect(response.body).toHaveProperty('cityId', testCityId);
+    expect(response.body).toHaveProperty('city', 'Cidade E2E');
     expect(response.body).not.toHaveProperty('password');
   });
 
