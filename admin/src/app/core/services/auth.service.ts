@@ -92,6 +92,46 @@ export class AuthService {
 
   /**
    * @description
+   * Passo 1 do reset: solicita o envio do código de redefinição para o email.
+   * Resposta sempre genérica (o backend não revela se o email existe).
+   */
+  forgotPassword(email: string): Observable<void> {
+    return this.http
+      .post<{ message: string }>(`${this.baseUrl}/auth/forgot-password`, { email })
+      .pipe(
+        map(() => undefined),
+        catchError((err: unknown) => throwError(() => this.mapResetError(err))),
+      );
+  }
+
+  /**
+   * @description
+   * Passo 2 do reset: valida o código recebido sem consumi-lo.
+   */
+  verifyResetCode(email: string, code: string): Observable<void> {
+    return this.http
+      .post<{ message: string }>(`${this.baseUrl}/auth/verify-reset-code`, { email, code })
+      .pipe(
+        map(() => undefined),
+        catchError((err: unknown) => throwError(() => this.mapResetError(err))),
+      );
+  }
+
+  /**
+   * @description
+   * Passo 3 do reset: define a nova senha consumindo o código.
+   */
+  resetPassword(email: string, code: string, newPassword: string): Observable<void> {
+    return this.http
+      .post<{ message: string }>(`${this.baseUrl}/auth/reset-password`, { email, code, newPassword })
+      .pipe(
+        map(() => undefined),
+        catchError((err: unknown) => throwError(() => this.mapResetError(err))),
+      );
+  }
+
+  /**
+   * @description
    * Logout local: limpa o storage, zera o usuário e navega para a raiz.
    */
   logout(reason: LogoutReason = 'manual'): void {
@@ -203,6 +243,24 @@ export class AuthService {
       if (err.status === 0) return new AuthError('server_unreachable');
       if (err.status === 401) return new AuthError('invalid_credentials');
       if (err.status === 429) return new AuthError('too_many_attempts');
+    }
+    return new AuthError('unknown');
+  }
+
+  /**
+   * @description
+   * Mapeia erros do fluxo de reset (forgot/verify/reset) lendo o `code` do backend.
+   */
+  private mapResetError(err: unknown): AuthError {
+    if (!(err instanceof HttpErrorResponse)) return new AuthError('unknown');
+    if (err.status === 0) return new AuthError('server_unreachable');
+
+    const code = (err.error as { code?: string } | null)?.code;
+    if (code === 'invalid_or_expired_code') return new AuthError('invalid_or_expired_code');
+    if (code === 'weak_password') return new AuthError('weak_password');
+    if (code === 'email_not_verified') return new AuthError('email_not_verified');
+    if (err.status === 429 || code === 'too_many_attempts') {
+      return new AuthError('too_many_attempts');
     }
     return new AuthError('unknown');
   }
