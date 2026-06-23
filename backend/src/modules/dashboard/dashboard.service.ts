@@ -112,7 +112,7 @@ export class DashboardService {
   }
 
   async getChart(
-    period: 'month' | 'week' = 'month',
+    period: 'week' | 'month' | 'year' = 'month',
   ): Promise<DashboardChartResponseDto> {
     const buckets = period === 'week' ? 12 : 6;
 

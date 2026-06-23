@@ -21,8 +21,8 @@ export class ChartBucketDto {
 }
 
 export class DashboardChartResponseDto {
-  @ApiProperty({ enum: ['month', 'week'], example: 'month' })
-  period!: 'month' | 'week';
+  @ApiProperty({ enum: ['week', 'month', 'year'], example: 'month' })
+  period!: 'week' | 'month' | 'year';
 
   @ApiProperty({ type: [ChartBucketDto] })
   buckets!: ChartBucketDto[];

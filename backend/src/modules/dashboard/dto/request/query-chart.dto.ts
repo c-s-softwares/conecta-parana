@@ -3,11 +3,11 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class QueryChartDto {
   @ApiPropertyOptional({
-    enum: ['month', 'week'],
+    enum: ['week', 'month', 'year'],
     example: 'month',
     description: 'Granularidade do agrupamento temporal',
   })
   @IsOptional()
-  @IsIn(['month', 'week'])
-  period?: 'month' | 'week';
+  @IsIn(['week', 'month', 'year'])
+  period?: 'week' | 'month' | 'year';
 }
