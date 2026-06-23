@@ -16,12 +16,13 @@ function makeJwt(payload: Partial<JwtClaims>): string {
   return `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64(payload)}.sig`;
 }
 
-// /auth/me nao retorna cityId; o service mescla a partir do token.
 const meResponse = {
   id: 'usr_super',
   name: 'Admin',
   email: 'admin@conecta.local',
   role: 'ADMIN' as const,
+  cityId: null,
+  city: null,
 };
 
 const superAdminToken = makeJwt({
@@ -46,6 +47,7 @@ const expectedSuperAdmin: AuthUser = {
   email: 'admin@conecta.local',
   role: 'ADMIN',
   cityId: null,
+  cityName: null,
 };
 
 describe('AuthService', () => {
@@ -201,11 +203,25 @@ describe('AuthService', () => {
   });
 
   describe('loadCurrentUser', () => {
-    it('popula o signal mesclando cityId do token', () => {
+    it('popula o signal com cityId e nome da cidade vindos do /auth/me', () => {
       localStorage.setItem('auth.access_token', cityAdminToken);
       service.loadCurrentUser().subscribe();
-      http.expectOne(`${environment.apiUrl}/auth/me`).flush(meResponse);
-      expect(service.currentUser()).toEqual({ ...meResponse, cityId: 'cit_maringa' });
+      http.expectOne(`${environment.apiUrl}/auth/me`).flush({
+        id: 'usr_city',
+        name: 'Admin Maringá',
+        email: 'admin.maringa@conecta.local',
+        role: 'ADMIN',
+        cityId: 'cit_maringa',
+        city: 'Maringá',
+      });
+      expect(service.currentUser()).toEqual({
+        id: 'usr_city',
+        name: 'Admin Maringá',
+        email: 'admin.maringa@conecta.local',
+        role: 'ADMIN',
+        cityId: 'cit_maringa',
+        cityName: 'Maringá',
+      });
     });
   });
 

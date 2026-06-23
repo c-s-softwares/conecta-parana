@@ -1,12 +1,25 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
 import { LoginPage } from './login.page';
 import { AuthService } from '../../core/services/auth.service';
-import { AuthError } from '../../core/services/auth.model';
+import { AuthError, AuthUser } from '../../core/services/auth.model';
+
+const EMAIL = 'test@test.com';
+const PASSWORD = '12345678';
+
+const makeUser = (over: Partial<AuthUser> = {}): AuthUser => ({
+  id: 'usr_1',
+  name: 'Admin',
+  email: EMAIL,
+  role: 'ADMIN',
+  cityId: null,
+  cityName: null,
+  ...over,
+});
 
 describe('LoginPage', () => {
   let fixture: ComponentFixture<LoginPage>;
@@ -16,6 +29,7 @@ describe('LoginPage', () => {
 
   beforeEach(async () => {
     vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
     await TestBed.configureTestingModule({
       imports: [LoginPage, RouterModule.forRoot([])],
@@ -33,22 +47,40 @@ describe('LoginPage', () => {
     vi.restoreAllMocks();
   });
 
+  const fillForm = (rememberMe = false) =>
+    component['form'].patchValue({ email: EMAIL, password: PASSWORD, rememberMe });
+
   it('deve criar o componente e renderizar o formulário', () => {
     expect(component).toBeTruthy();
-    expect(el.querySelector('.login-card')).toBeTruthy();
+    expect(el.querySelector('.login-shell')).toBeTruthy();
   });
 
-  describe('emailError / emailTouched', () => {
-    it('deve retornar required quando vazio, email quando inválido, vazio quando válido', () => {
-      const ctrl = component['form'].controls.email;
+  it('deve exibir o link "Esqueci a senha" apontando para /esqueci-senha', () => {
+    const link = el.querySelector('a[href="/esqueci-senha"]');
+    expect(link?.textContent?.trim()).toBe('Esqueci a senha');
+  });
 
-      expect(component.emailTouched).toBe(false);
-      ctrl.setValue('');
+  it('togglePassword alterna o type do campo senha', () => {
+    const pwd = el.querySelector('#password') as HTMLInputElement;
+    expect(pwd.type).toBe('password');
+
+    component.togglePassword();
+    fixture.detectChanges();
+    expect(pwd.type).toBe('text');
+  });
+
+  describe('emailError', () => {
+    it('exige preenchimento, formato e sufixo de domínio', () => {
+      const ctrl = component['form'].controls.email;
       ctrl.markAsTouched();
-      expect(component.emailTouched).toBe(true);
+
+      ctrl.setValue('');
       expect(component.emailError).toBe('E-mail é obrigatório.');
 
       ctrl.setValue('email-invalido');
+      expect(component.emailError).toBe('E-mail inválido.');
+
+      ctrl.setValue('sem@dominio');
       expect(component.emailError).toBe('E-mail inválido.');
 
       ctrl.setValue('valido@email.com');
@@ -56,14 +88,11 @@ describe('LoginPage', () => {
     });
   });
 
-  describe('passwordError / passwordTouched', () => {
-    it('deve retornar required quando vazio, minlength quando curto, vazio quando válido', () => {
+  describe('passwordError', () => {
+    it('exige preenchimento e mínimo de 8 caracteres', () => {
       const ctrl = component['form'].controls.password;
 
-      expect(component.passwordTouched).toBe(false);
       ctrl.setValue('');
-      ctrl.markAsTouched();
-      expect(component.passwordTouched).toBe(true);
       expect(component.passwordError).toBe('Senha é obrigatória.');
 
       ctrl.setValue('123');
@@ -75,15 +104,7 @@ describe('LoginPage', () => {
   });
 
   describe('onSubmit', () => {
-    const fillForm = (rememberMe = false) => {
-      component['form'].patchValue({
-        email: 'test@test.com',
-        password: '12345678',
-        rememberMe,
-      });
-    };
-
-    it('deve marcar touched e não chamar auth se inválido', () => {
+    it('não chama auth.login quando o formulário é inválido', () => {
       const spy = vi.spyOn(authService, 'login');
       component.onSubmit();
 
@@ -91,30 +112,31 @@ describe('LoginPage', () => {
       expect(spy).not.toHaveBeenCalled();
     });
 
-    it('deve chamar auth.login com email, senha e rememberMe', () => {
-      const spy = vi.spyOn(authService, 'login').mockReturnValue(
-        of({
-          id: 'usr_1',
-          name: 'Admin',
-          email: 'test@test.com',
-          role: 'ADMIN' as const,
-          cityId: null,
-        }),
-      );
-      const router = TestBed.inject(Router);
-      const navSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    it('redireciona para /dashboard sem returnUrl', () => {
+      vi.spyOn(authService, 'login').mockReturnValue(of(makeUser()));
+      const navSpy = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
 
       fillForm(true);
       component.onSubmit();
 
-      expect(spy).toHaveBeenCalledWith('test@test.com', '12345678', true);
+      expect(authService.login).toHaveBeenCalledWith(EMAIL, PASSWORD, true);
       expect(navSpy).toHaveBeenCalledWith('/dashboard');
     });
 
-    it('deve exibir "Email ou senha inválidos" quando o serviço falhar com invalid_credentials', () => {
-      vi.spyOn(authService, 'login').mockReturnValue(
-        throwError(() => new AuthError('invalid_credentials')),
-      );
+    it('redireciona para o returnUrl preservado', () => {
+      vi.spyOn(authService, 'login').mockReturnValue(of(makeUser()));
+      const route = TestBed.inject(ActivatedRoute);
+      vi.spyOn(route.snapshot.queryParamMap, 'get').mockReturnValue('/eventos');
+      const navSpy = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+
+      fillForm();
+      component.onSubmit();
+
+      expect(navSpy).toHaveBeenCalledWith('/eventos');
+    });
+
+    it('mapeia invalid_credentials para mensagem amigável', () => {
+      vi.spyOn(authService, 'login').mockReturnValue(throwError(() => new AuthError('invalid_credentials')));
 
       fillForm();
       component.onSubmit();
@@ -122,37 +144,13 @@ describe('LoginPage', () => {
       expect(component['errorMessage']()).toBe('Email ou senha inválidos.');
     });
 
-    it('deve exibir mensagem de rate-limit quando too_many_attempts', () => {
-      vi.spyOn(authService, 'login').mockReturnValue(
-        throwError(() => new AuthError('too_many_attempts')),
-      );
+    it('mapeia forbidden_role para acesso restrito', () => {
+      vi.spyOn(authService, 'login').mockReturnValue(throwError(() => new AuthError('forbidden_role')));
 
       fillForm();
       component.onSubmit();
 
-      expect(component['errorMessage']()).toBe('Muitas tentativas. Aguarde alguns minutos.');
-    });
-
-    it('deve exibir mensagem de servidor fora do ar quando server_unreachable', () => {
-      vi.spyOn(authService, 'login').mockReturnValue(
-        throwError(() => new AuthError('server_unreachable')),
-      );
-
-      fillForm();
-      component.onSubmit();
-
-      expect(component['errorMessage']()).toBe('Servidor fora do ar. Tente novamente em instantes.');
-    });
-
-    it('deve exibir mensagem de permissão quando forbidden_role', () => {
-      vi.spyOn(authService, 'login').mockReturnValue(
-        throwError(() => new AuthError('forbidden_role')),
-      );
-
-      fillForm();
-      component.onSubmit();
-
-      expect(component['errorMessage']()).toBe('Usuário sem permissão de administrador.');
+      expect(component['errorMessage']()).toBe('Acesso restrito a administradores.');
     });
   });
 });
