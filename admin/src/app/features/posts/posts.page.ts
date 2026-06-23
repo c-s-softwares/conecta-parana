@@ -1,9 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CrudPage } from '../../shared/utils/crud-page';
-import { PageHeader } from '../../shared/components/page-header';
-import { FormContainer } from '../../shared/components/form-container';
-import { FormField } from '../../shared/components/form-field';
+import { PageHeader } from '../../shared/components/page-header/page-header';
+import { FormContainer } from '../../shared/components/form-container/form-container';
+import { FormField } from '../../shared/components/form-field/form-field';
 import { noSpecialChars } from '../../shared/validators/no-special-chars.validator';
 import { Post, PostForm } from './posts.model';
 

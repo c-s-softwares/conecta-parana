@@ -1,9 +1,9 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { CrudPage } from '../../shared/utils/crud-page';
-import { PageHeader } from '../../shared/components/page-header';
-import { FormContainer } from '../../shared/components/form-container';
-import { FormField } from '../../shared/components/form-field';
+import { PageHeader } from '../../shared/components/page-header/page-header';
+import { FormContainer } from '../../shared/components/form-container/form-container';
+import { FormField } from '../../shared/components/form-field/form-field';
 
 interface NotificationFormValues {
   id: string;

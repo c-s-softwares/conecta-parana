@@ -1,11 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { CrudPage } from '../../shared/utils/crud-page';
-import { PageHeader } from '../../shared/components/page-header';
-import { FormContainer } from '../../shared/components/form-container';
-import { FormField } from '../../shared/components/form-field';
-import { EntityList } from '../../shared/components/entity-list';
-import { ConfirmDialog } from '../../shared/components/confirm-dialog';
+import { PageHeader } from '../../shared/components/page-header/page-header';
+import { FormContainer } from '../../shared/components/form-container/form-container';
+import { FormField } from '../../shared/components/form-field/form-field';
+import { EntityList } from '../../shared/components/entity-list/entity-list';
+import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
 import { ApiService } from '../../core/services/api.service';
 import { AdministratorItem, AdminForm } from './admins.model';
 

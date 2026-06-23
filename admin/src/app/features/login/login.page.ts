@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormField } from '../../shared/components/form-field';
+import { FormField } from '../../shared/components/form-field/form-field';
 import { AuthService } from '../../core/services/auth.service';
 import { AuthError, AuthErrorKind } from '../../core/services/auth.model';
 
