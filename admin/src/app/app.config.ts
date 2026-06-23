@@ -4,7 +4,9 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideHotToastConfig } from '@ngxpert/hot-toast';
 import { provideIcons } from '@ng-icons/core';
 import {
+  heroArrowDownRight,
   heroArrowLeftOnRectangle,
+  heroArrowUpRight,
   heroBell,
   heroBuildingOffice2,
   heroCalendarDays,
@@ -40,7 +42,9 @@ export const appConfig: ApplicationConfig = {
     provideAuthInitializer(),
     provideHotToastConfig({ position: 'bottom-right', duration: 5000, dismissible: true }),
     provideIcons({
+      heroArrowDownRight,
       heroArrowLeftOnRectangle,
+      heroArrowUpRight,
       heroBell,
       heroBuildingOffice2,
       heroCalendarDays,
