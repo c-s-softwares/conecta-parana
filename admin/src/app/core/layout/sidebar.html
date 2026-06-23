@@ -1,24 +1,64 @@
-<aside class="flex h-screen w-60 flex-col bg-sidebar px-3 py-4">
-  <nav class="flex flex-1 flex-col gap-2">
-    @for (item of items(); track item.route) {
+<aside class="sidebar">
+  <div class="brand">
+    <img src="logo-conecta.png" alt="Conecta Paraná" class="brand-mark" />
+    <div>
+      <div class="brand-name">Conecta Paraná</div>
+      <div class="brand-sub">Painel admin · v2.4</div>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Gerenciar</div>
+    @for (item of manageItems(); track item.route) {
       <a
         [routerLink]="item.route"
-        routerLinkActive="ring-2 ring-white/50"
-        [routerLinkActiveOptions]="{ exact: false }"
-        class="flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark"
+        routerLinkActive="active"
+        class="nav-item"
       >
-        <ng-icon [name]="item.icon" size="20" class="shrink-0" aria-hidden="true" />
+        <ng-icon class="ic" [name]="item.icon" size="18" aria-hidden="true" />
         <span>{{ item.label }}</span>
       </a>
     }
-  </nav>
+  </div>
 
-  <button
-    type="button"
-    (click)="logout.emit()"
-    class="flex cursor-pointer items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark"
-  >
-    <ng-icon name="heroArrowLeftOnRectangle" size="20" class="shrink-0" aria-hidden="true" />
-    <span>Sair</span>
-  </button>
+  @if (superItems().length) {
+    <div class="nav-section">
+      <div class="nav-section-title">Super admin</div>
+      @for (item of superItems(); track item.route) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          class="nav-item admin-only"
+        >
+          <ng-icon class="ic" [name]="item.icon" size="18" aria-hidden="true" />
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </div>
+  }
+
+  <div class="sidebar-footer">
+    @if (user(); as u) {
+      <div class="user-card">
+        <div class="avatar">{{ u.initials }}</div>
+        <div class="user-meta">
+          <div class="user-name">{{ u.name }}</div>
+          <div class="user-role">{{ u.roleLabel }}</div>
+        </div>
+      </div>
+    } @else {
+      <div class="user-card">
+        <div class="avatar skeleton"></div>
+        <div class="user-meta" style="display: flex; flex-direction: column; gap: 6px">
+          <div class="skeleton" style="height: 12px; width: 80%"></div>
+          <div class="skeleton" style="height: 10px; width: 50%"></div>
+        </div>
+      </div>
+    }
+
+    <button type="button" class="nav-item" (click)="logout.emit()" style="color: var(--text-muted)">
+      <ng-icon class="ic" name="heroArrowLeftOnRectangle" size="18" aria-hidden="true" />
+      <span>Sair</span>
+    </button>
+  </div>
 </aside>
