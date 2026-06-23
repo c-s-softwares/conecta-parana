@@ -10,7 +10,14 @@ const ACCESS_TOKEN_KEY = 'auth.access_token';
 const REFRESH_TOKEN_KEY = 'auth.refresh_token';
 const STORAGE_MODE_KEY = 'auth.storage_mode';
 
-type MeResponse = Omit<AuthUser, 'cityId'>;
+interface MeResponse {
+  id: string;
+  name: string;
+  email: string;
+  role: AuthUser['role'];
+  cityId: string | null;
+  city: string | null;
+}
 
 export type LogoutReason = 'manual' | 'expired' | 'forbidden';
 
@@ -118,9 +125,12 @@ export class AuthService {
   private buildUser(me: MeResponse): AuthUser {
     const claims = decodeJwt(this.getAccessToken());
     return {
-      ...me,
       id: me.id || (claims?.sub ?? ''),
-      cityId: claims?.cityId ?? null,
+      name: me.name,
+      email: me.email,
+      role: me.role,
+      cityId: me.cityId ?? claims?.cityId ?? null,
+      cityName: me.city,
     };
   }
 

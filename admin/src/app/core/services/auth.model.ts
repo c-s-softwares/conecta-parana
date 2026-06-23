@@ -12,6 +12,7 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   cityId: string | null;
+  cityName: string | null;
 }
 
 export interface LoginResponse {
