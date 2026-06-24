@@ -2,6 +2,21 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideHotToastConfig } from '@ngxpert/hot-toast';
+import { provideIcons } from '@ng-icons/core';
+import {
+  heroArrowLeftOnRectangle,
+  heroBell,
+  heroBuildingOffice2,
+  heroCalendarDays,
+  heroMagnifyingGlass,
+  heroMapPin,
+  heroNewspaper,
+  heroPencilSquare,
+  heroPlus,
+  heroShieldCheck,
+  heroTrash,
+  heroUsers,
+} from '@ng-icons/heroicons/outline';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
@@ -15,5 +30,19 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
     provideAuthInitializer(),
     provideHotToastConfig({ position: 'bottom-right', duration: 5000, dismissible: true }),
+    provideIcons({
+      heroArrowLeftOnRectangle,
+      heroBell,
+      heroBuildingOffice2,
+      heroCalendarDays,
+      heroMagnifyingGlass,
+      heroMapPin,
+      heroNewspaper,
+      heroPencilSquare,
+      heroPlus,
+      heroShieldCheck,
+      heroTrash,
+      heroUsers,
+    }),
   ],
 };

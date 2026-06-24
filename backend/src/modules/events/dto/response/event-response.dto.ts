@@ -16,11 +16,11 @@ export class EventResponse {
   })
   description!: string;
 
-  @ApiProperty({ example: 'CULTURAL', description: 'Tipo do evento' })
+  @ApiProperty({ example: 'cultural', description: 'Tipo do evento' })
   type!: string;
 
-  @ApiProperty({ example: 'SCHEDULED', description: 'Status do evento' })
-  status!: string;
+  @ApiProperty({ example: true, description: 'Indica se o evento está ativo' })
+  isActive!: boolean;
 
   @ApiProperty({
     example: '2025-12-01T10:00:00Z',

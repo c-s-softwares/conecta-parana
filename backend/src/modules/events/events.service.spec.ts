@@ -21,7 +21,7 @@ const MOCK_EVENT = {
   title: 'Festa Junina',
   description: 'Evento da cidade',
   type: 'cultural',
-  status: 'publicado',
+  isActive: true,
   eventDate: new Date('2030-06-12T19:00:00Z'),
 
   cityId: MOCK_CITY_ID,
@@ -94,7 +94,7 @@ describe('EventsService', () => {
       expect(result.items).toHaveLength(1);
     });
 
-    it('deve aplicar filtros de cityId, type, status e categoryId', async () => {
+    it('deve aplicar filtros de cityId, type, isActive e categoryId', async () => {
       mockPrisma.client.event.findMany.mockResolvedValue([]);
       mockPrisma.client.event.count.mockResolvedValue(0);
 
@@ -103,7 +103,7 @@ describe('EventsService', () => {
         pageSize: 10,
         cityId: MOCK_CITY_ID,
         type: 'cultural',
-        status: 'publicado',
+        isActive: true,
         categoryId: 'cat_123',
       });
 
@@ -115,7 +115,7 @@ describe('EventsService', () => {
         deletedAt: null,
         cityId: MOCK_CITY_ID,
         type: 'cultural',
-        status: 'publicado',
+        isActive: true,
       });
     });
 
@@ -203,26 +203,6 @@ describe('EventsService', () => {
             title: 'Evento',
             description: 'Teste',
             type: 'abc',
-            status: 'publicado',
-            eventDate: '2030-06-12T19:00:00Z',
-            cityId: MOCK_CITY_ID,
-          },
-          {
-            sub: 'usr_123',
-            role: 'ADMIN',
-          } as never,
-        ),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('deve lançar BadRequestException para status inválido', async () => {
-      await expect(
-        service.create(
-          {
-            title: 'Evento',
-            description: 'Teste',
-            type: 'cultural',
-            status: 'abc',
             eventDate: '2030-06-12T19:00:00Z',
             cityId: MOCK_CITY_ID,
           },
@@ -241,7 +221,6 @@ describe('EventsService', () => {
             title: 'Evento',
             description: 'Teste',
             type: 'cultural',
-            status: 'publicado',
             eventDate: '2020-01-01T00:00:00Z',
             cityId: MOCK_CITY_ID,
           },
@@ -261,7 +240,6 @@ describe('EventsService', () => {
           title: 'Festa Junina',
           description: 'Evento da cidade',
           type: 'cultural',
-          status: 'publicado',
           eventDate: '2030-06-12T19:00:00Z',
           cityId: MOCK_CITY_ID,
         },

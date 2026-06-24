@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { ConflictException, Logger, NotFoundException } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { PrismaService } from '../../config/prisma.service';
 import { MailService } from '../mail/mail.service';
@@ -54,6 +54,10 @@ const mockMail = {
 
 describe('AdminService', () => {
   let service: AdminService;
+
+  beforeAll(() => {
+    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+  });
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({

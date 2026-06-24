@@ -50,7 +50,9 @@ export class NewsService extends BaseCrudService<
     return entity as NewsResponse;
   }
 
-  protected toCreateData(dto: CreateNewsDto): Record<string, unknown> {
+  protected toCreateData(
+    dto: CreateNewsDto & { userId?: string },
+  ): Record<string, unknown> {
     this.validateType(dto.type);
     this.validateLinkType(dto.linkType);
 
@@ -69,6 +71,7 @@ export class NewsService extends BaseCrudService<
       linkUrl: dto.linkType === 'externo' ? (dto.linkUrl ?? null) : null,
       isActive: dto.isActive ?? true,
       cityId: dto.cityId,
+      userId: dto.userId ?? null,
     };
   }
 
@@ -121,7 +124,8 @@ export class NewsService extends BaseCrudService<
     return super.create({
       ...dto,
       cityId,
-    });
+      userId: currentUser.sub,
+    } as CreateNewsDto);
   }
 
   async update(
