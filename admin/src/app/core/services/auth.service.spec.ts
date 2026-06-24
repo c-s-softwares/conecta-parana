@@ -285,6 +285,69 @@ describe('AuthService', () => {
     });
   });
 
+  describe('password reset', () => {
+    const RESET_EMAIL = 'admin@conecta.local';
+    const RESET_CODE = '123456';
+
+    it('forgotPassword faz POST e resolve no caminho feliz', () => {
+      let done = false;
+      service.forgotPassword(RESET_EMAIL).subscribe(() => (done = true));
+      const req = http.expectOne(`${environment.apiUrl}/auth/forgot-password`);
+      expect(req.request.body).toEqual({ email: RESET_EMAIL });
+      req.flush({ message: 'ok' });
+      expect(done).toBe(true);
+    });
+
+    it('forgotPassword mapeia email_not_verified', () => {
+      let error: unknown = null;
+      service.forgotPassword(RESET_EMAIL).subscribe({ error: (e) => (error = e) });
+      http
+        .expectOne(`${environment.apiUrl}/auth/forgot-password`)
+        .flush({ code: 'email_not_verified' }, { status: 400, statusText: 'Bad Request' });
+      expect((error as AuthError).kind).toBe('email_not_verified');
+    });
+
+    it('verifyResetCode faz POST com email e code', () => {
+      let done = false;
+      service.verifyResetCode(RESET_EMAIL, RESET_CODE).subscribe(() => (done = true));
+      const req = http.expectOne(`${environment.apiUrl}/auth/verify-reset-code`);
+      expect(req.request.body).toEqual({ email: RESET_EMAIL, code: RESET_CODE });
+      req.flush({ message: 'Código válido' });
+      expect(done).toBe(true);
+    });
+
+    it('verifyResetCode mapeia invalid_or_expired_code', () => {
+      let error: unknown = null;
+      service.verifyResetCode(RESET_EMAIL, RESET_CODE).subscribe({ error: (e) => (error = e) });
+      http
+        .expectOne(`${environment.apiUrl}/auth/verify-reset-code`)
+        .flush({ code: 'invalid_or_expired_code' }, { status: 400, statusText: 'Bad Request' });
+      expect((error as AuthError).kind).toBe('invalid_or_expired_code');
+    });
+
+    it('resetPassword envia email, code e newPassword', () => {
+      let done = false;
+      service.resetPassword(RESET_EMAIL, RESET_CODE, 'NovaSenha1').subscribe(() => (done = true));
+      const req = http.expectOne(`${environment.apiUrl}/auth/reset-password`);
+      expect(req.request.body).toEqual({
+        email: RESET_EMAIL,
+        code: RESET_CODE,
+        newPassword: 'NovaSenha1',
+      });
+      req.flush({ message: 'Senha alterada' });
+      expect(done).toBe(true);
+    });
+
+    it('resetPassword mapeia weak_password', () => {
+      let error: unknown = null;
+      service.resetPassword(RESET_EMAIL, RESET_CODE, 'fraca').subscribe({ error: (e) => (error = e) });
+      http
+        .expectOne(`${environment.apiUrl}/auth/reset-password`)
+        .flush({ code: 'weak_password' }, { status: 400, statusText: 'Bad Request' });
+      expect((error as AuthError).kind).toBe('weak_password');
+    });
+  });
+
   describe('token getters', () => {
     it('getAccessToken prioriza localStorage, depois sessionStorage', () => {
       sessionStorage.setItem('auth.access_token', 'from-session');
