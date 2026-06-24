@@ -20,7 +20,13 @@ import { AppError } from './app-error';
 import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
 
-const SKIP_PATHS = ['/auth/login', '/auth/refresh'];
+const SKIP_PATHS = [
+  '/auth/login',
+  '/auth/refresh',
+  '/auth/forgot-password',
+  '/auth/verify-reset-code',
+  '/auth/reset-password',
+];
 
 // ---------------------------------------------------------------------------
 // ERROR_CODE_MAP — mapeamento primário por code field.

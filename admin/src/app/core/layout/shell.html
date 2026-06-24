@@ -1,7 +1,7 @@
-<div class="flex h-screen bg-shell-bg">
-  <app-sidebar [items]="visibleNavItems()" (logout)="onLogout()" />
+<div class="app">
+  <app-sidebar [items]="visibleNavItems()" [user]="sidebarUser()" (logout)="onLogout()" />
 
-  <main class="flex-1 overflow-y-auto bg-content-bg p-8">
+  <main class="main">
     <router-outlet />
   </main>
 </div>

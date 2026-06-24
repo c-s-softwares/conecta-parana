@@ -12,6 +12,15 @@ import {
 import { DashboardActivityItemDto } from './dto/response/dashboard-activity-response.dto';
 import { DashboardTopCitiesItemDto } from './dto/response/dashboard-top-cities-response.dto';
 
+const CHART_GRANULARITY: Record<
+  'week' | 'month' | 'year',
+  { unit: 'day' | 'month' | 'year'; buckets: number }
+> = {
+  week: { unit: 'day', buckets: 7 },
+  month: { unit: 'month', buckets: 6 },
+  year: { unit: 'year', buckets: 6 },
+};
+
 @Injectable()
 export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
@@ -112,31 +121,37 @@ export class DashboardService {
   }
 
   async getChart(
-    period: 'month' | 'week' = 'month',
+    period: 'week' | 'month' | 'year' = 'month',
   ): Promise<DashboardChartResponseDto> {
-    const buckets = period === 'week' ? 12 : 6;
+    // Semana = ultimos 7 dias (granularidade diaria); mes/ano = 6 baldes.
+    const { unit, buckets } = CHART_GRANULARITY[period];
 
     type RawRow = { period: Date; count: bigint };
 
-    const cutoff = Prisma.sql`DATE_TRUNC(${period}, NOW()) - INTERVAL '${Prisma.raw(String(buckets - 1))} ${Prisma.raw(period)}s'`;
+    // created_at e TIMESTAMP sem fuso, gravado em UTC pelo Prisma. Converte para o
+    // horario do Brasil antes de truncar, para os baldes respeitarem o calendario local.
+    const localCreatedAt = Prisma.raw(
+      `(created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo'`,
+    );
+    const cutoff = Prisma.sql`DATE_TRUNC(${unit}, NOW() AT TIME ZONE 'America/Sao_Paulo') - INTERVAL '${Prisma.raw(String(buckets - 1))} ${Prisma.raw(unit)}s'`;
 
     const [communicateRows, eventRows, newsRows] = await Promise.all([
       this.prisma.client.$queryRaw<RawRow[]>`
-        SELECT DATE_TRUNC(${period}, created_at) AS period, COUNT(*) AS count
+        SELECT DATE_TRUNC(${unit}, ${localCreatedAt}) AS period, COUNT(*) AS count
         FROM communicates
-        WHERE created_at >= ${cutoff}
+        WHERE ${localCreatedAt} >= ${cutoff}
         GROUP BY 1 ORDER BY 1
       `,
       this.prisma.client.$queryRaw<RawRow[]>`
-        SELECT DATE_TRUNC(${period}, created_at) AS period, COUNT(*) AS count
+        SELECT DATE_TRUNC(${unit}, ${localCreatedAt}) AS period, COUNT(*) AS count
         FROM events
-        WHERE created_at >= ${cutoff} AND deleted_at IS NULL
+        WHERE ${localCreatedAt} >= ${cutoff} AND deleted_at IS NULL
         GROUP BY 1 ORDER BY 1
       `,
       this.prisma.client.$queryRaw<RawRow[]>`
-        SELECT DATE_TRUNC(${period}, created_at) AS period, COUNT(*) AS count
+        SELECT DATE_TRUNC(${unit}, ${localCreatedAt}) AS period, COUNT(*) AS count
         FROM news
-        WHERE created_at >= ${cutoff}
+        WHERE ${localCreatedAt} >= ${cutoff}
         GROUP BY 1 ORDER BY 1
       `,
     ]);

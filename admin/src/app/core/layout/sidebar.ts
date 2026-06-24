@@ -1,14 +1,19 @@
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 
 export interface NavItem {
   label: string;
   route: string;
-  /** Nome do ícone @ng-icons/heroicons (ex.: 'heroCalendarDays'). */
+  /** Nome do icone @ng-icons/heroicons (ex.: 'heroCalendarDays'). */
   icon: string;
-  /** Se true, o item só é renderizado para Super Admins. Padrão: false. */
-  requiresSuperAdmin?: boolean;
+  section: 'manage' | 'super';
+}
+
+export interface SidebarUser {
+  name: string;
+  roleLabel: string;
+  initials: string;
 }
 
 @Component({
@@ -19,5 +24,13 @@ export interface NavItem {
 })
 export class Sidebar {
   items = input.required<NavItem[]>();
+  user = input<SidebarUser | null>(null);
   logout = output<void>();
+
+  protected readonly manageItems = computed(() =>
+    this.items().filter((item) => item.section === 'manage'),
+  );
+  protected readonly superItems = computed(() =>
+    this.items().filter((item) => item.section === 'super'),
+  );
 }

@@ -1,16 +1,17 @@
 import { Component, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { FormField } from '../../shared/components/form-field';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { NgIcon } from '@ng-icons/core';
 import { AuthService } from '../../core/services/auth.service';
 import { AuthError, AuthErrorKind } from '../../core/services/auth.model';
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 @Component({
   selector: 'app-login-page',
   standalone: true,
-  imports: [ReactiveFormsModule, FormField],
+  imports: [ReactiveFormsModule, RouterLink, NgIcon],
   templateUrl: './login.page.html',
-  styleUrl: './login.page.css',
 })
 export class LoginPage {
   private readonly fb = inject(FormBuilder);
@@ -19,13 +20,14 @@ export class LoginPage {
   private readonly route = inject(ActivatedRoute);
 
   protected readonly form = this.fb.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
+    email: ['', [Validators.required, Validators.email, Validators.pattern(EMAIL_PATTERN)]],
     password: ['', [Validators.required, Validators.minLength(8)]],
     rememberMe: [false],
   });
 
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly loading = signal(false);
+  protected readonly showPassword = signal(false);
 
   get emailTouched(): boolean {
     return this.form.controls.email.touched;
@@ -34,7 +36,7 @@ export class LoginPage {
   get emailError(): string {
     const ctrl = this.form.controls.email;
     if (ctrl.hasError('required')) return 'E-mail é obrigatório.';
-    if (ctrl.hasError('email')) return 'E-mail inválido.';
+    if (ctrl.hasError('email') || ctrl.hasError('pattern')) return 'E-mail inválido.';
     return '';
   }
 
@@ -49,6 +51,10 @@ export class LoginPage {
     return '';
   }
 
+  togglePassword(): void {
+    this.showPassword.update((v) => !v);
+  }
+
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -61,7 +67,6 @@ export class LoginPage {
 
     this.auth.login(email, password, rememberMe).subscribe({
       next: () => {
-        this.loading.set(false);
         const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
         this.router.navigateByUrl(returnUrl ?? '/dashboard');
       },
@@ -82,7 +87,7 @@ export class LoginPage {
       case 'server_unreachable':
         return 'Servidor fora do ar. Tente novamente em instantes.';
       case 'forbidden_role':
-        return 'Usuário sem permissão de administrador.';
+        return 'Acesso restrito a administradores.';
       default:
         return 'Não foi possível entrar. Tente novamente.';
     }

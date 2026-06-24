@@ -16,6 +16,7 @@ import { LogoutDto } from './dto/request/logout.dto';
 import { LogoutAllDto } from './dto/request/logout-all.dto';
 import { ForgotPasswordDto } from './dto/request/forgot-password.dto';
 import { ResetPasswordDto } from './dto/request/reset-password.dto';
+import { VerifyResetCodeDto } from './dto/request/verify-reset-code.dto';
 import { VerifyEmailDto } from './dto/request/verify-email.dto';
 import { ResendVerificationDto } from './dto/request/resend-verification.dto';
 import { Public } from '../../common/decorators/public.decorator';
@@ -164,6 +165,20 @@ export class AuthController {
   })
   async resendVerification(@Body() dto: ResendVerificationDto) {
     return this.emailVerificationService.resend(dto);
+  }
+
+  @Post('verify-reset-code')
+  @Public()
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Validar código de redefinição sem consumi-lo' })
+  @ApiResponse({ status: 200, description: 'Código válido' })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Código inválido/expirado (invalid_or_expired_code) OU dados inválidos (validation_failed)',
+  })
+  async verifyResetCode(@Body() dto: VerifyResetCodeDto) {
+    return this.passwordResetService.verifyResetCode(dto);
   }
 
   @Post('reset-password')
