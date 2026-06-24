@@ -191,6 +191,6 @@ export class DashboardPage {
     const date = new Date(iso);
     if (this.period() === 'year') return String(date.getFullYear());
     const unit = this.period() === 'week' ? { weekday: 'short' as const } : { month: 'short' as const };
-    return new Intl.DateTimeFormat('pt-BR', unit).format(date).replace('.', '');
+    return new Intl.DateTimeFormat('pt-BR', { ...unit, timeZone: 'UTC'}).format(date).replace('.', '');
   }
 }
