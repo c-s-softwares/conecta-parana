@@ -138,4 +138,15 @@ describe('DashboardPage', () => {
     const sup = render().componentInstance;
     expect(sup['shortcuts']().map((s) => s.route)).toEqual(['/cidades', '/administradores', '/notificacoes']);
   });
+
+  it('relativeTime conta dias de calendário no fuso do Brasil (GMT-3)', () => {
+    vi.setSystemTime(new Date('2026-06-24T12:00:00-03:00'));
+    const c = render().componentInstance;
+
+    expect(c.relativeTime('2026-06-22T22:00:00-03:00')).toBe('Há 2 dias');
+    expect(c.relativeTime('2026-06-23T06:00:00-03:00')).toBe('Ontem');
+    expect(c.relativeTime('2026-06-24T09:30:00-03:00')).toBe('Há 2 h');
+
+    vi.useRealTimers();
+  });
 });

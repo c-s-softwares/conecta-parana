@@ -107,11 +107,13 @@ export class DashboardPage {
   });
 
   protected readonly chartBars = computed<ChartBar[]>(() => {
-    const buckets = this.chart().data?.buckets ?? [];
+    const chart = this.chart().data;
+    const buckets = chart?.buckets ?? [];
+    const period = chart?.period ?? this.period();
     const totals = buckets.map((b) => b.communicates + b.events + b.news);
     const max = Math.max(...totals, 1);
     return buckets.map((bucket, i) => ({
-      label: this.bucketLabel(bucket.period),
+      label: this.bucketLabel(bucket.period, period),
       total: totals[i],
       height: Math.max((totals[i] / max) * 100, 3),
     }));
@@ -161,18 +163,54 @@ export class DashboardPage {
   }
 
   relativeTime(iso: string): string {
-    const diffMs = Date.now() - new Date(iso).getTime();
-    const minutes = Math.round(diffMs / 60000);
+    const date = new Date(iso);
+    const minutes = Math.floor((Date.now() - date.getTime()) / 60000);
     if (minutes < 1) return 'Agora';
     if (minutes < 60) return `Há ${minutes} min`;
-    const hours = Math.round(minutes / 60);
+    const hours = Math.floor(minutes / 60);
     if (hours < 24) return `Há ${hours} h`;
-    const days = Math.round(hours / 24);
-    return `Há ${days} d`;
+    const days = this.calendarDaysAgo(date);
+    return days === 1 ? 'Ontem' : `Há ${days} dias`;
   }
 
+  private calendarDaysAgo(date: Date): number {
+    const dayIndex = (d: Date): number => {
+      const [year, month, day] = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Sao_Paulo',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      })
+        .format(d)
+        .split('-')
+        .map(Number);
+      return Date.UTC(year, month - 1, day) / 86_400_000;
+    };
+    return Math.max(1, dayIndex(new Date()) - dayIndex(date));
+  }
+
+  private readonly chartCache = new Map<Period, DashboardChart>();
+
   private loadChart(): void {
-    this.loadInto(this.api.getChart(this.period()), this.chart);
+    const period = this.period();
+    const cached = this.chartCache.get(period);
+    if (cached) {
+      this.chart.set({ loading: false, error: false, data: cached });
+      return;
+    }
+    if (!this.chart().data) this.chart.set(loadingSlice());
+    this.api
+      .getChart(period)
+      .pipe(
+        catchError(() => {
+          if (!this.chart().data) this.chart.set({ loading: false, error: true, data: null });
+          return EMPTY;
+        }),
+      )
+      .subscribe((data) => {
+        this.chartCache.set(period, data);
+        this.chart.set({ loading: false, error: false, data });
+      });
   }
 
   private loadInto<T>(source: Observable<T>, target: WritableSignal<Slice<T>>): void {
@@ -187,10 +225,14 @@ export class DashboardPage {
       .subscribe((data) => target.set({ loading: false, error: false, data }));
   }
 
-  private bucketLabel(iso: string): string {
+  private bucketLabel(iso: string, period: Period): string {
     const date = new Date(iso);
-    if (this.period() === 'year') return String(date.getFullYear());
-    const unit = this.period() === 'week' ? { weekday: 'short' as const } : { month: 'short' as const };
-    return new Intl.DateTimeFormat('pt-BR', { ...unit, timeZone: 'UTC'}).format(date).replace('.', '');
+    if (period === 'year') return String(date.getUTCFullYear());
+    // Buckets sao inicios de periodo (DATE_TRUNC, meia-noite UTC) - formatar em UTC.
+    // Semana e agrupada por DATE_TRUNC('week') = sempre segunda; rotular pela data de
+    // inicio da semana (dd/MM), nao pelo nome do dia (que seria "seg" em todas).
+    const opts: Intl.DateTimeFormatOptions =
+      period === 'week' ? { day: '2-digit', month: '2-digit' } : { month: 'short' };
+    return new Intl.DateTimeFormat('pt-BR', { ...opts, timeZone: 'UTC' }).format(date).replace('.', '');
   }
 }
