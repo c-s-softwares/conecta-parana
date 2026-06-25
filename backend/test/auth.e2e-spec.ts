@@ -4,6 +4,8 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/config/prisma.service';
+import { MailService } from '../src/modules/mail/mail.service';
+import { MockMailService } from '../src/modules/mail/mock-mail.service';
 import { generateId } from '../src/common/utils/ulid.util';
 import { TABLE_PREFIX } from '../src/common/types/ulid.types';
 import { buildTestApp } from './helpers/test-app';
@@ -34,7 +36,10 @@ describe('Auth (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(MailService)
+      .useClass(MockMailService)
+      .compile();
 
     app = await buildTestApp(moduleFixture);
 
@@ -78,7 +83,7 @@ describe('Auth (e2e)', () => {
     await app.close();
   });
 
-  it('POST /auth/register — deve criar um usuário', async () => {
+  it('POST /auth/register — retorna mensagem genérica e cria usuário com emailVerifiedAt null', async () => {
     const response = await api()
       .post('/auth/register')
       .send({
@@ -88,15 +93,26 @@ describe('Auth (e2e)', () => {
         confirmPassword: MOCK_TEST_USER.password,
         cityId: testCityId,
       })
-      .expect(201);
+      .expect(200);
 
-    expect(response.body).toHaveProperty('id');
-    expect(response.body).toHaveProperty('email', MOCK_TEST_USER.email);
-    expect(response.body).not.toHaveProperty('password');
-    expect(response.body).not.toHaveProperty('role');
+    const body = response.body as { message: string };
+    expect(body.message).toContain('Cadastro concluído');
+    expect(body).not.toHaveProperty('id');
+    expect(body).not.toHaveProperty('email');
+
+    const created = await prisma.client.user.findUnique({
+      where: { email: MOCK_TEST_USER.email },
+    });
+    expect(created).not.toBeNull();
+    expect(created?.emailVerifiedAt).toBeNull();
+
+    await prisma.client.user.update({
+      where: { id: created!.id },
+      data: { emailVerifiedAt: new Date() },
+    });
   });
 
-  it('POST /auth/register — normaliza email com trim e lowercase no check de duplicidade', async () => {
+  it('POST /auth/register — normaliza email com trim e lowercase e retorna mesma mensagem genérica em duplicado', async () => {
     const response = await api()
       .post('/auth/register')
       .send({
@@ -106,10 +122,10 @@ describe('Auth (e2e)', () => {
         confirmPassword: MOCK_TEST_USER.password,
         cityId: testCityId,
       })
-      .expect(400);
+      .expect(200);
 
-    const body = response.body as { code: string };
-    expect(body.code).toBe('registration_failed');
+    const body = response.body as { message: string };
+    expect(body.message).toContain('Cadastro concluído');
   });
 
   it('POST /auth/register —  retornar 400 sem cityId', async () => {
@@ -189,6 +205,8 @@ describe('Auth (e2e)', () => {
       .expect(200);
 
     expect(response.body).toHaveProperty('email', MOCK_TEST_USER.email);
+    expect(response.body).toHaveProperty('cityId', testCityId);
+    expect(response.body).toHaveProperty('city', 'Cidade E2E');
     expect(response.body).not.toHaveProperty('password');
   });
 
@@ -218,7 +236,7 @@ describe('Auth (e2e)', () => {
     await api().get('/auth/me').expect(401);
   });
 
-  it('POST /auth/register — deve retornar 400 genérico com email já cadastrado (sem revelar existência)', async () => {
+  it('POST /auth/register — retorna 200 genérico com email já cadastrado (sem revelar existência)', async () => {
     const response = await api()
       .post('/auth/register')
       .send({
@@ -228,13 +246,12 @@ describe('Auth (e2e)', () => {
         confirmPassword: MOCK_TEST_USER.password,
         cityId: testCityId,
       })
-      .expect(400);
+      .expect(200);
 
-    const body = response.body as { code: string; message: string };
-    expect(body.code).toBe('registration_failed');
+    const body = response.body as { message: string };
     // Mensagem propositalmente genérica para evitar enumeração de emails.
-    expect(body.message).not.toContain('Email');
-    expect(body.message).not.toContain('cadastrado');
+    expect(body.message).not.toContain('já existe');
+    expect(body.message).not.toContain('cadastrado anteriormente');
   });
 
   it('POST /auth/login — deve retornar 401 com senha errada', async () => {

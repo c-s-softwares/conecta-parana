@@ -1,77 +1,130 @@
-<div class="login-wrapper">
-  <div class="login-card">
-
-    <div class="login-header">
-      <img src="paranalogo.png" alt="Conecta Paraná" class="login-avatar" />
-      <h1 class="login-title">Conecta Paraná</h1>
-      <span class="login-badge">Painel Administrativo</span>
+<div class="login-shell">
+  <div class="login-panel">
+    <div class="login-hero-brand" style="margin-bottom: 48px; color: var(--n-900)">
+      <img src="logo-conecta.png" alt="Conecta Paraná" class="brand-mark" style="width: 40px; height: 40px" />
+      <div>
+        <div class="brand-name" style="font-size: 16px">Conecta Paraná</div>
+        <div class="brand-sub">Painel administrativo</div>
+      </div>
     </div>
 
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
+    <div style="margin-bottom: 28px">
+      <h1 class="h1" style="font-size: 30px">Bem-vindo de volta</h1>
+      <p class="muted" style="margin-top: 8px; font-size: 15px">
+        Entre na sua conta para gerenciar postagens, eventos e notícias.
+      </p>
+    </div>
 
-      <app-form-field
-        label="Email"
-        fieldId="email"
-        [required]="true"
-        [showError]="emailTouched && !!emailError"
-        [errorMessage]="emailError"
-      >
-        <input
-          id="email"
-          formControlName="email"
-          type="email"
-          placeholder="Digite o Email"
-          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-      </app-form-field>
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form">
+      <div class="field">
+        <label class="field-label" for="email">E-mail</label>
+        <div class="input-wrap">
+          <ng-icon class="ic" name="heroEnvelope" size="18" aria-hidden="true" />
+          <input
+            id="email"
+            class="input"
+            type="email"
+            formControlName="email"
+            placeholder="voce@cidade.pr.gov.br"
+            autocomplete="email"
+          />
+        </div>
+        @if (emailTouched && emailError) {
+          <span class="field-error">{{ emailError }}</span>
+        }
+      </div>
 
-      <app-form-field
-        label="Senha"
-        fieldId="password"
-        [required]="true"
-        [showError]="passwordTouched && !!passwordError"
-        [errorMessage]="passwordError"
-      >
-        <input
-          id="password"
-          formControlName="password"
-          type="password"
-          placeholder="Digite a Senha"
-          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-      </app-form-field>
+      <div class="field">
+        <div class="row" style="margin-bottom: 6px">
+          <label class="field-label" for="password" style="margin-bottom: 0">Senha</label>
+          <a class="link" routerLink="/esqueci-senha">Esqueci a senha</a>
+        </div>
+        <div class="input-wrap">
+          <ng-icon class="ic" name="heroLockClosed" size="18" aria-hidden="true" />
+          <input
+            id="password"
+            class="input"
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="Digite sua senha"
+            autocomplete="current-password"
+            style="padding-right: 44px"
+          />
+          <button
+            type="button"
+            class="pass-toggle"
+            (click)="togglePassword()"
+            [attr.aria-label]="showPassword() ? 'Ocultar senha' : 'Mostrar senha'"
+          >
+            <ng-icon [name]="showPassword() ? 'heroEyeSlash' : 'heroEye'" size="16" />
+          </button>
+        </div>
+        @if (passwordTouched && passwordError) {
+          <span class="field-error">{{ passwordError }}</span>
+        }
+      </div>
 
-      <div class="flex items-center gap-2">
-        <input
-          id="rememberMe"
-          formControlName="rememberMe"
-          type="checkbox"
-          class="h-4 w-4 rounded border-gray-400 cursor-pointer"
-        />
-        <label for="rememberMe" class="text-sm font-bold text-gray-800 cursor-pointer">
-          Manter conectado
+      <div class="row">
+        <label class="chk">
+          <input type="checkbox" formControlName="rememberMe" />
+          Manter-me conectado
         </label>
       </div>
 
       @if (errorMessage(); as msg) {
-        <div
-          role="alert"
-          class="rounded-md border border-btn-cancel/40 bg-btn-cancel/10 px-3 py-2 text-sm font-semibold text-btn-cancel"
-        >
-          {{ msg }}
-        </div>
+        <div role="alert" class="form-alert">{{ msg }}</div>
       }
 
-      <div class="flex justify-center pt-1">
-        <button
-          type="submit"
-          [disabled]="loading()"
-          class="rounded-lg bg-sidebar-text px-10 py-2 text-sm font-bold text-white transition-colors hover:bg-sidebar-active cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {{ loading() ? 'Entrando...' : 'Entrar' }}
-        </button>
-      </div>
+      <button type="submit" class="btn btn-primary" [disabled]="loading()">
+        {{ loading() ? 'Entrando...' : 'Entrar no painel' }}
+        @if (!loading()) {
+          <ng-icon name="heroChevronRight" size="16" />
+        }
+      </button>
 
+      <div style="font-size: 12px; color: var(--text-subtle); display: flex; gap: 6px; align-items: center">
+        <ng-icon name="heroShieldCheck" size="14" aria-hidden="true" />
+        Acesso restrito a administradores cadastrados.
+      </div>
     </form>
+
+    <div style="margin-top: 48px; font-size: 12px; color: var(--text-subtle)">
+      © 2026 Conecta Paraná · Todos os direitos reservados
+    </div>
+  </div>
+
+  <div class="login-hero">
+    <div class="login-hero-brand">
+      <img src="logo-conecta.png" alt="Conecta Paraná" class="brand-mark" />
+      <span>Conecta Paraná</span>
+    </div>
+
+    <div class="login-hero-body">
+      <h1>Informação pública, do jeito certo — em cada cidade.</h1>
+      <p>
+        Um único painel para publicar postagens, gerenciar eventos, enviar alertas e aproximar
+        prefeituras dos seus cidadãos.
+      </p>
+
+      <div class="login-hero-stats">
+        <div class="login-hero-stat">
+          <div class="v">47</div>
+          <div class="l">Cidades conectadas</div>
+        </div>
+        <div class="login-hero-stat">
+          <div class="v">184k</div>
+          <div class="l">Usuários ativos</div>
+        </div>
+        <div class="login-hero-stat">
+          <div class="v">99,9%</div>
+          <div class="l">Uptime mensal</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="login-hero-foot">
+      <span>v1.0 · jun/2026</span>
+      <span>Suporte: suporte@conectaparana.com.br</span>
+    </div>
   </div>
 </div>

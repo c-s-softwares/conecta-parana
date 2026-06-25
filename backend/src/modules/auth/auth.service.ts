@@ -2,12 +2,12 @@ import {
   Injectable,
   UnauthorizedException,
   NotFoundException,
-  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { hash, compare } from 'bcryptjs';
 import { PrismaService } from '../../config/prisma.service';
+import { EmailVerificationService } from './email-verification.service';
 import { RegisterDto } from './dto/request/register.dto';
 import { LoginDto } from './dto/request/login.dto';
 import { LogoutAllDto } from './dto/request/logout-all.dto';
@@ -18,23 +18,34 @@ import { AUTH_ERRORS } from './auth.errors';
 import { CITIES_ERRORS } from '../cities/cities.errors';
 import { SHARED_ERRORS } from '../../common/errors/shared-errors';
 
+const REGISTER_GENERIC_MESSAGE =
+  'Cadastro concluído! Verifique seu e-mail para concluir o cadastro.';
+
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
+    private readonly emailVerification: EmailVerificationService,
   ) {}
 
+  // Anti-enumeração: a resposta é sempre a mesma, exista ou não o email.
+  // Email duplicado vira no-op silencioso (sem erro, sem envio). Apenas
+  // city_not_found ainda quebra o fluxo - é informação pública (qualquer um
+  // pode listar cidades via /cities) e revelar não vaza nada de auth.
   async register(dto: RegisterDto) {
     const exists = await this.prisma.client.user.findUnique({
       where: { email: dto.email },
     });
 
-    // Não diferencia "email já existe" de outras falhas de registro para evitar
-    // enumeração de usuários via /auth/register. Ver AUTH_ERRORS.REGISTRATION_FAILED.
     if (exists) {
-      throw new BadRequestException(apiError(AUTH_ERRORS.REGISTRATION_FAILED));
+      // TODO: enviar email ao dono do endereço avisando que alguém tentou
+      // criar conta com o email dele. Útil contra tomada de conta (pessoa
+      // descobre que email vazou) e contra digitação errada de outro usuário.
+      // Precisa de novo método no MailService + template + decisão de rate
+      // limit (não enviar 10 avisos seguidos para o mesmo email).
+      return { message: REGISTER_GENERIC_MESSAGE };
     }
 
     const city = await this.prisma.client.city.findFirst({
@@ -57,7 +68,12 @@ export class AuthService {
       },
     });
 
-    return { id: user.id, name: user.name, email: user.email };
+    await this.emailVerification.sendNewCodeFor({
+      id: user.id,
+      email: user.email,
+    });
+
+    return { message: REGISTER_GENERIC_MESSAGE };
   }
 
   async login(dto: LoginDto) {
@@ -77,6 +93,19 @@ export class AuthService {
       throw new UnauthorizedException(
         apiError(AUTH_ERRORS.INVALID_CREDENTIALS),
       );
+    }
+
+    // Trade-off de enumeração aceito: retornar `email_not_verified` revela
+    // que o email existe E que a senha digitada é a correta. Ainda assim,
+    // mitigamos exigindo a senha correta antes de revelar o estado (atacante
+    // precisa já ter a credencial). UX > privacidade nesse ponto. Reavaliar
+    // se houver requisito de segurança mais estrito no futuro.
+    if (!user.emailVerifiedAt) {
+      await this.emailVerification.sendNewCodeFor({
+        id: user.id,
+        email: user.email,
+      });
+      throw new UnauthorizedException(apiError(AUTH_ERRORS.EMAIL_NOT_VERIFIED));
     }
 
     return this.generateTokens(user.id, user.email, user.role, user.cityId);
@@ -105,6 +134,7 @@ export class AuthService {
   async getMe(userId: string) {
     const user = await this.prisma.client.user.findUniqueOrThrow({
       where: { id: userId },
+      include: { city: true },
     });
 
     return {
@@ -113,6 +143,7 @@ export class AuthService {
       email: user.email,
       role: user.role,
       cityId: user.cityId,
+      city: user.city?.name ?? null,
     };
   }
 

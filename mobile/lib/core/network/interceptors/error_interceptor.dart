@@ -1,19 +1,23 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:conectaparana/core/auth/auth_service.dart';
+import 'package:conectaparana/core/network/connectivity_service.dart';
 
 class ErrorInterceptor extends Interceptor {
   final Dio dio;
   final GlobalKey<NavigatorState>? navigatorKey;
   final void Function(String message)? onShowMessage;
   final AuthService auth;
+  final bool Function() _isOffline;
 
   ErrorInterceptor({
     required this.dio,
     this.navigatorKey,
     this.onShowMessage,
     AuthService? authService,
-  }) : auth = authService ?? AuthService.instance;
+    bool Function()? isOffline,
+  }) : auth = authService ?? AuthService.instance,
+       _isOffline = isOffline ?? (() => ConnectivityService.instance.isOffline);
 
   void _showSnackBar(String message, {SnackBarAction? action}) {
     if (onShowMessage != null) {
@@ -54,8 +58,19 @@ class ErrorInterceptor extends Interceptor {
     final request = err.requestOptions;
 
     if (_isNetworkError(err)) {
+      if (_isOffline()) {
+        return handler.next(err);
+      }
+
+      final isTimeout =
+          err.type == DioExceptionType.connectionTimeout ||
+          err.type == DioExceptionType.receiveTimeout ||
+          err.type == DioExceptionType.sendTimeout;
+
       _showSnackBar(
-        'Sem conexão com o servidor.',
+        isTimeout
+            ? 'O servidor demorou a responder, tente novamente.'
+            : 'Sem conexão com o servidor.',
         action: SnackBarAction(
           label: 'Tentar novamente',
           onPressed: () async {

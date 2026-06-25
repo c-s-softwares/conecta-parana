@@ -21,6 +21,14 @@ import { LikesModule } from './modules/likes/likes.module';
 import { SavesModule } from './modules/saves/saves.module';
 import { HttpCacheInterceptor } from './common/interceptors/http-cache.interceptor';
 import { PinoLoggerModule } from './config/logger.module';
+import { CommunicateModule } from './modules/communicates/communicates.module';
+import { EventsModule } from './modules/events/events.module';
+import { NewsModule } from './modules/news/news.module';
+import { CategoryModule } from './modules/categories/category.module';
+import { FeedModule } from './modules/feed/feed.module';
+import { UsersModule } from './modules/users/users.module';
+import { SearchModule } from './modules/search/search.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -53,6 +61,14 @@ import { PinoLoggerModule } from './config/logger.module';
     LikesModule,
     SavesModule,
     RedisCacheModule,
+    CommunicateModule,
+    EventsModule,
+    NewsModule,
+    CategoryModule,
+    FeedModule,
+    UsersModule,
+    SearchModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [

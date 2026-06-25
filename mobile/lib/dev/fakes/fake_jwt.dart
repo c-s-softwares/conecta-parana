@@ -10,12 +10,14 @@ String generateFakeJwt({bool expired = false}) {
   final payload = {
     'sub': '123',
     'role': 'CIDADAO',
-    'cityId': 10,
+    'cityId': 'cit_01KTMWGF7NERBQQ92JDMF1RFF9',
     'exp': expired
-        ? DateTime.now().subtract(const Duration(hours: 1))
-            .millisecondsSinceEpoch ~/ 1000
-        : DateTime.now().add(const Duration(hours: 1))
-            .millisecondsSinceEpoch ~/ 1000,
+        ? DateTime.now()
+                  .subtract(const Duration(hours: 1))
+                  .millisecondsSinceEpoch ~/
+              1000
+        : DateTime.now().add(const Duration(hours: 1)).millisecondsSinceEpoch ~/
+              1000,
   };
 
   String encode(Map<String, dynamic> json) {

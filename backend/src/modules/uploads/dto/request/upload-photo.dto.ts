@@ -18,7 +18,7 @@ export class UploadPhotoDto {
     required: false,
     example: 'evt_01HZX3Y4Q9F8TAB1C2DKEYH9MN',
     description:
-      'ULID da entidade alvo. Obrigatório para event, local e ticket; ignorado para user_avatar.',
+      'ULID da entidade alvo. Obrigatório para event, local, ticket, news e communicate; ignorado para user_avatar.',
   })
   @IsOptional()
   @IsString()

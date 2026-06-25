@@ -99,7 +99,10 @@ export class LocalsService extends BaseCrudService<
     };
   }
 
-  override async findOne(id: string): Promise<LocalResponseDto> {
+  override async findOne(
+    id: string,
+    userId?: string,
+  ): Promise<LocalResponseDto> {
     const response = await super.findOne(id);
     const coords = await this.prisma.client.$queryRaw<
       { lng: number | null; lat: number | null }[]
@@ -121,6 +124,17 @@ export class LocalsService extends BaseCrudService<
     } else {
       response.coordinates = null;
     }
+
+    if (userId) {
+      const saveExists = await this.prisma.client.save.findFirst({
+        where: { userId, localId: id },
+        select: { id: true },
+      });
+      response.saved = !!saveExists;
+    } else {
+      response.saved = false;
+    }
+
     return response;
   }
 

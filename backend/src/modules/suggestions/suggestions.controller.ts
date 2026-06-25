@@ -40,11 +40,8 @@ export class SuggestionsController {
     description: 'Lista de sugestões retornada com sucesso',
     type: [SuggestionResponseDto],
   })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Acesso negado: requer role CIDADAO',
-  })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied' })
   async findMySuggestions(
     @Request() req: ExpressRequest,
   ): Promise<SuggestionResponseDto[]> {
@@ -60,8 +57,8 @@ export class SuggestionsController {
     description: 'Lista de sugestões da cidade retornada com sucesso',
     type: [SuggestionResponseDto],
   })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({ status: 403, description: 'Acesso negado: requer role ADMIN' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied' })
   async findCitySuggestions(
     @Request() req: ExpressRequest,
   ): Promise<SuggestionResponseDto[]> {
@@ -76,12 +73,9 @@ export class SuggestionsController {
     description: 'Detalhes da sugestão retornados com sucesso',
     type: SuggestionResponseDto,
   })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Acesso negado: não é o dono ou administrador da cidade',
-  })
-  @ApiResponse({ status: 404, description: 'Sugestão não encontrada' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'not_owner_or_admin' })
+  @ApiResponse({ status: 404, description: 'suggestion_not_found' })
   async findOne(
     @Param('id') id: string,
     @Request() req: ExpressRequest,
@@ -101,13 +95,11 @@ export class SuggestionsController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Erro de validação ou cidadão sem cidade',
+    description:
+      'validation_failed | user_without_city | subject_too_long | message_too_long',
   })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Acesso negado: requer role CIDADAO',
-  })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied' })
   async create(
     @Body() dto: CreateSuggestionDto,
     @Request() req: ExpressRequest,
@@ -126,14 +118,11 @@ export class SuggestionsController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Erro de validação ou transição inválida',
+    description: 'validation_failed | invalid_status_transition',
   })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Acesso negado: administrador em outra cidade',
-  })
-  @ApiResponse({ status: 404, description: 'Sugestão não encontrada' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied | city_scope_denied' })
+  @ApiResponse({ status: 404, description: 'suggestion_not_found' })
   async respond(
     @Param('id') id: string,
     @Body() dto: RespondSuggestionDto,
@@ -158,14 +147,11 @@ export class SuggestionsController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Erro de validação ou transição inválida',
+    description: 'validation_failed | invalid_status_transition',
   })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Acesso negado: administrador em outra cidade',
-  })
-  @ApiResponse({ status: 404, description: 'Sugestão não encontrada' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied | city_scope_denied' })
+  @ApiResponse({ status: 404, description: 'suggestion_not_found' })
   async conclude(
     @Param('id') id: string,
     @Body() dto: RespondSuggestionDto,
@@ -190,14 +176,11 @@ export class SuggestionsController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Erro de validação ou transição inválida',
+    description: 'validation_failed | invalid_status_transition',
   })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Acesso negado: administrador em outra cidade',
-  })
-  @ApiResponse({ status: 404, description: 'Sugestão não encontrada' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied | city_scope_denied' })
+  @ApiResponse({ status: 404, description: 'suggestion_not_found' })
   async archive(
     @Param('id') id: string,
     @Body() dto: RespondSuggestionDto,

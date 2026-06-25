@@ -23,16 +23,20 @@ void main() {
     registerFallbackValue(FakeDioException());
   });
 
+  late bool offline;
+
   setUp(() {
     auth = MockAuthService();
     handler = MockHandler();
     dio = MockDio();
     shownMessage = null;
+    offline = false;
 
     interceptor = ErrorInterceptor(
       dio: dio,
       authService: auth,
       onShowMessage: (msg) => shownMessage = msg,
+      isOffline: () => offline,
     );
 
     when(() => handler.next(any())).thenReturn(null);
@@ -63,7 +67,7 @@ void main() {
     );
   }
 
-  test('mostra snackbar quando há erro de rede', () async {
+  test('timeout (online) mostra mensagem de timeout', () async {
     final error = buildError(
       statusCode: 0,
       type: DioExceptionType.connectionTimeout,
@@ -71,7 +75,35 @@ void main() {
 
     await interceptor.onError(error, handler);
 
-    expect(shownMessage, 'Sem conexão com o servidor.');
+    expect(shownMessage, 'O servidor demorou a responder, tente novamente.');
+    verify(() => handler.next(error)).called(1);
+  });
+
+  test(
+    'erro de conexão (online) mostra "sem conexão com o servidor"',
+    () async {
+      final error = buildError(
+        statusCode: 0,
+        type: DioExceptionType.connectionError,
+      );
+
+      await interceptor.onError(error, handler);
+
+      expect(shownMessage, 'Sem conexão com o servidor.');
+      verify(() => handler.next(error)).called(1);
+    },
+  );
+
+  test('offline suprime o toast e falha em silêncio', () async {
+    offline = true;
+    final error = buildError(
+      statusCode: 0,
+      type: DioExceptionType.connectionError,
+    );
+
+    await interceptor.onError(error, handler);
+
+    expect(shownMessage, isNull);
     verify(() => handler.next(error)).called(1);
   });
 

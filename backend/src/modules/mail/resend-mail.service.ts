@@ -8,7 +8,12 @@ import { Resend } from 'resend';
 import * as Sentry from '@sentry/node';
 import { apiError } from '../../common/errors/api-error';
 import { MAIL_ERRORS } from './mail.errors';
-import { MailService, SendCodeParams, SendResult } from './mail.service';
+import {
+  MailService,
+  SendAdminWelcomeParams,
+  SendCodeParams,
+  SendResult,
+} from './mail.service';
 
 /** Forma normalizada de um erro vindo do provedor de email. */
 interface ProviderError extends Error {
@@ -80,6 +85,21 @@ export class ResendMailService extends MailService {
     return this.send({
       to: params.email,
       subject: `${params.code} - Recuperação de senha`,
+      html,
+    });
+  }
+
+  async sendAdminWelcome(params: SendAdminWelcomeParams): Promise<SendResult> {
+    const html = this.renderTemplate('admin-welcome', {
+      name: params.name,
+      email: params.email,
+      password: params.password,
+      cityName: params.cityName,
+    });
+
+    return this.send({
+      to: params.email,
+      subject: `Bem-vindo ao Conecta Paraná — ${params.cityName}`,
       html,
     });
   }

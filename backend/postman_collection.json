@@ -1873,6 +1873,166 @@
                     }
                 }
             ]
+        },
+        {
+            "name": "users",
+            "description": "",
+            "item": [
+                {
+                    "id": "e8d7c4b1-8b2d-4bf7-8e6f-cb5e982ad1f4",
+                    "name": "Atualizar cidade do cidadão",
+                    "request": {
+                        "name": "Atualizar cidade do cidadão",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "users",
+                                "me",
+                                "city"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"cityId\": \"cit_MARI\"\n}",
+                            "options": {
+                                "raw": {
+                                    "headerFamily": "json",
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{bearerToken}}"
+                                }
+                            ]
+                        }
+                    },
+                    "response": [],
+                    "event": [],
+                    "protocolProfileBehavior": {
+                        "disableBodyPruning": true
+                    }
+                }
+            ]
+        },
+        {
+            "name": "search",
+            "description": "",
+            "item": [
+                {
+                    "id": "e4585da8-96bf-4e08-9fd0-cda5a329ef31",
+                    "name": "Busca Global Completa",
+                    "request": {
+                        "name": "Busca Global Completa",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "search"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "feira"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ],
+                            "variable": []
+                        },
+                        "method": "GET",
+                        "body": {},
+                        "auth": null
+                    },
+                    "response": []
+                },
+                {
+                    "id": "f516a2b8-93bc-4281-a6ef-3f2d26d03d32",
+                    "name": "Busca com Filtros (Cidade e Tipos)",
+                    "request": {
+                        "name": "Busca com Filtros (Cidade e Tipos)",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "search"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "evento"
+                                },
+                                {
+                                    "key": "cityId",
+                                    "value": "cit_01HGW5SDRT1234567890ABCDEF"
+                                },
+                                {
+                                    "key": "types",
+                                    "value": "events,locals"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "5"
+                                }
+                            ],
+                            "variable": []
+                        },
+                        "method": "GET",
+                        "body": {},
+                        "auth": null
+                    },
+                    "response": []
+                },
+                {
+                    "id": "a1d3f9b8-d2bc-4672-8efc-1c5c1630d6bf",
+                    "name": "Busca com erro (Query Curta)",
+                    "request": {
+                        "name": "Busca com erro (Query Curta)",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "search"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "ab"
+                                }
+                            ],
+                            "variable": []
+                        },
+                        "method": "GET",
+                        "body": {},
+                        "auth": null
+                    },
+                    "response": []
+                }
+            ]
         }
     ],
     "event": [],

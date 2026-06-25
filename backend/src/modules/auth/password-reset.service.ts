@@ -10,8 +10,10 @@ import { hash } from 'bcryptjs';
 import { randomInt, createHash } from 'crypto';
 import { PrismaService } from '../../config/prisma.service';
 import { MailService } from '../mail/mail.service';
+import { EmailVerificationService } from './email-verification.service';
 import { ForgotPasswordDto } from './dto/request/forgot-password.dto';
 import { ResetPasswordDto } from './dto/request/reset-password.dto';
+import { VerifyResetCodeDto } from './dto/request/verify-reset-code.dto';
 import { generateId } from '../../common/utils/ulid.util';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 import { apiError } from '../../common/errors/api-error';
@@ -28,12 +30,14 @@ const FORGOT_PASSWORD_MAX_ATTEMPTS = 3;
 const CODE_UPPER_BOUND = 10 ** VERIFICATION_CODE_LENGTH;
 const GENERIC_FORGOT_MESSAGE = 'Se o email existir, código enviado';
 const RESET_SUCCESS_MESSAGE = 'Senha alterada';
+const VERIFY_CODE_SUCCESS_MESSAGE = 'Código válido';
 
 @Injectable()
 export class PasswordResetService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
+    private readonly emailVerification: EmailVerificationService,
     @Inject(CACHE_MANAGER) private readonly cache: Cache,
   ) {}
 
@@ -46,6 +50,18 @@ export class PasswordResetService {
 
     if (!user) {
       return { message: GENERIC_FORGOT_MESSAGE };
+    }
+
+    // Trade-off de enumeração aceito: a resposta `email_not_verified` aqui
+    // diferencia "email existe mas não verificado" de "email não existe" (que
+    // retorna 200 genérico). UX > privacidade nesse ponto - sem isso, usuário
+    // legítimo não verificado não saberia o que fazer. Reavaliar no futuro.
+    if (!user.emailVerifiedAt) {
+      await this.emailVerification.sendNewCodeFor({
+        id: user.id,
+        email: user.email,
+      });
+      throw new BadRequestException(apiError(AUTH_ERRORS.EMAIL_NOT_VERIFIED));
     }
 
     const code = this.generateNumericCode();
@@ -75,34 +91,15 @@ export class PasswordResetService {
     return { message: GENERIC_FORGOT_MESSAGE };
   }
 
+  async verifyResetCode(dto: VerifyResetCodeDto): Promise<{ message: string }> {
+    await this.findValidCode(dto.email, dto.code);
+    return { message: VERIFY_CODE_SUCCESS_MESSAGE };
+  }
+
   async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
     this.assertStrongPassword(dto.newPassword);
 
-    const user = await this.prisma.client.user.findUnique({
-      where: { email: dto.email },
-    });
-
-    if (!user) {
-      throw new BadRequestException(
-        apiError(AUTH_ERRORS.INVALID_OR_EXPIRED_CODE),
-      );
-    }
-
-    const codeHash = this.sha256(dto.code);
-    const record = await this.prisma.client.passwordResetCode.findUnique({
-      where: { codeHash },
-    });
-
-    if (
-      !record ||
-      record.userId !== user.id ||
-      record.usedAt !== null ||
-      record.expiresAt <= new Date()
-    ) {
-      throw new BadRequestException(
-        apiError(AUTH_ERRORS.INVALID_OR_EXPIRED_CODE),
-      );
-    }
+    const { user, record } = await this.findValidCode(dto.email, dto.code);
 
     const newPasswordHash = await hash(dto.newPassword, 10);
 
@@ -121,6 +118,36 @@ export class PasswordResetService {
     ]);
 
     return { message: RESET_SUCCESS_MESSAGE };
+  }
+
+  // Valida o código de reset - [IMPORTANTE]: sem consumi-lo.
+  private async findValidCode(email: string, code: string) {
+    const user = await this.prisma.client.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      throw new BadRequestException(
+        apiError(AUTH_ERRORS.INVALID_OR_EXPIRED_CODE),
+      );
+    }
+
+    const record = await this.prisma.client.passwordResetCode.findUnique({
+      where: { codeHash: this.sha256(code) },
+    });
+
+    if (
+      !record ||
+      record.userId !== user.id ||
+      record.usedAt !== null ||
+      record.expiresAt <= new Date()
+    ) {
+      throw new BadRequestException(
+        apiError(AUTH_ERRORS.INVALID_OR_EXPIRED_CODE),
+      );
+    }
+
+    return { user, record };
   }
 
   // Race condition aceita: duas requisições concorrentes podem ler o mesmo `current` e
