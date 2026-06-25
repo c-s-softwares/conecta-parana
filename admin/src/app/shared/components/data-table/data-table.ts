@@ -1,8 +1,7 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { Component, computed, input, output, signal } from '@angular/core';
+import { NgIcon } from '@ng-icons/core';
 import { LoadingSkeleton } from '../loading-skeleton/loading-skeleton'; 
 import { EmptyState } from '../empty-state/empty-state'; 
-import { HERO_ICONS } from '../../icons/hero-icons';
 
 export interface DataTableColumn {
   key: string;
@@ -29,11 +28,10 @@ export interface DataTablePageEvent {
 @Component({
   selector: 'app-data-table',
   standalone: true,
-  imports: [LoadingSkeleton, EmptyState],
+  imports: [NgIcon, LoadingSkeleton, EmptyState],
   templateUrl: './data-table.html',
 })
 export class DataTable {
-  private readonly sanitizer = inject(DomSanitizer);
 
   columns = input.required<DataTableColumn[]>();
   items = input.required<Record<string, unknown>[]>();
@@ -97,25 +95,6 @@ export class DataTable {
     return range;
   });
 
-  protected getChevronUpIcon(): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(HERO_ICONS['chevronUp']);
-  }
-
-  protected getChevronDownIcon(): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(HERO_ICONS['chevronDown']);
-  }
-
-  protected getChevronLeftIcon(): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(HERO_ICONS['chevronLeft']);
-  }
-
-  protected getChevronRightIcon(): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(HERO_ICONS['chevronRight']);
-  }
-
-  protected getArrowUpDownIcon(): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(HERO_ICONS['arrowUpDown']);
-  }
 
   protected onSort(col: DataTableColumn): void {
     if (!col.sortable) return;

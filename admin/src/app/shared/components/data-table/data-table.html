@@ -30,12 +30,12 @@
                   <span class="inline-flex text-gray-400" aria-hidden="true">
                     @if (sortColumn() === col.key) {
                       @if (sortDirection() === 'asc') {
-                        <span [innerHTML]="getChevronUpIcon()"></span>
+                        <ng-icon name="heroChevronUp" size="14"></ng-icon>
                       } @else if (sortDirection() === 'desc') {
-                        <span [innerHTML]="getChevronDownIcon()"></span>
+                        <ng-icon name="heroChevronDown" size="14"></ng-icon>
                       }
                     } @else {
-                      <span [innerHTML]="getArrowUpDownIcon()"></span>
+                      <ng-icon name="heroArrowsUpDown" size="14"></ng-icon>
                     }
                   </span>
                 }
@@ -94,7 +94,7 @@
         aria-label="Página anterior"
         class="inline-flex items-center justify-center p-2 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
       >
-        <span aria-hidden="true" [innerHTML]="getChevronLeftIcon()"></span>
+        <ng-icon name="heroChevronLeft" size="16" aria-hidden="true"></ng-icon>
       </button>
 
       <!-- Páginas numeradas -->
@@ -128,7 +128,7 @@
         aria-label="Próxima página"
         class="inline-flex items-center justify-center p-2 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
       >
-        <span aria-hidden="true" [innerHTML]="getChevronRightIcon()"></span>
+        <ng-icon name="heroChevronRight" size="16" aria-hidden="true"></ng-icon>
       </button>
     </nav>
   </div>
