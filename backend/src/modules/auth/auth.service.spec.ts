@@ -3,6 +3,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
+import { EmailVerificationService } from './email-verification.service';
 import { PrismaService } from '../../config/prisma.service';
 import { hash } from 'bcryptjs';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
@@ -50,6 +51,10 @@ const mockConfig = {
   get: jest.fn().mockReturnValue('mock_secret'),
 };
 
+const mockEmailVerification = {
+  sendNewCodeFor: jest.fn().mockResolvedValue(undefined),
+};
+
 describe('AuthService', () => {
   let service: AuthService;
 
@@ -60,6 +65,10 @@ describe('AuthService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: JwtService, useValue: mockJwt },
         { provide: ConfigService, useValue: mockConfig },
+        {
+          provide: EmailVerificationService,
+          useValue: mockEmailVerification,
+        },
       ],
     }).compile();
 
@@ -68,64 +77,97 @@ describe('AuthService', () => {
   });
 
   describe('register', () => {
-    it('deve criar um usuário com senha hasheada e cityId', async () => {
+    const REGISTER_DTO = {
+      name: MOCK_USER.name,
+      email: MOCK_USER.email,
+      password: MOCK_USER.password,
+      confirmPassword: MOCK_USER.password,
+      cityId: MOCK_CITY_ID,
+    };
+    const GENERIC_MESSAGE =
+      'Cadastro concluído! Verifique seu e-mail para concluir o cadastro.';
+
+    it('cria usuário e dispara código de verificação quando email é novo', async () => {
       mockPrisma.client.user.findUnique.mockResolvedValue(null);
       mockPrisma.client.city.findFirst.mockResolvedValue({ id: MOCK_CITY_ID });
       mockPrisma.client.user.create.mockResolvedValue({
         id: MOCK_USER.id,
         name: MOCK_USER.name,
         email: MOCK_USER.email,
-        role: MOCK_USER.role,
       });
 
-      const result = await service.register({
-        name: MOCK_USER.name,
-        email: MOCK_USER.email,
-        password: 'Senha123',
-        cityId: MOCK_CITY_ID,
-      });
+      const result = await service.register(REGISTER_DTO);
 
-      expect(result).toEqual({
-        id: MOCK_USER.id,
-        name: MOCK_USER.name,
-        email: MOCK_USER.email,
-      });
-      expect(result).not.toHaveProperty('role');
+      expect(result).toEqual({ message: GENERIC_MESSAGE });
       expect(mockPrisma.client.user.create).toHaveBeenCalledTimes(1);
-
       expect(mockPrisma.client.user.create).toHaveBeenCalledWith({
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        data: expect.objectContaining({
-          cityId: MOCK_CITY_ID,
-        }),
+        data: expect.objectContaining({ cityId: MOCK_CITY_ID }),
       });
+      expect(mockEmailVerification.sendNewCodeFor).toHaveBeenCalledWith({
+        id: MOCK_USER.id,
+        email: MOCK_USER.email,
+      });
+    });
+
+    it('retorna mesma mensagem genérica e não cria nem envia código quando email já existe', async () => {
+      mockPrisma.client.user.findUnique.mockResolvedValue(MOCK_USER);
+
+      const result = await service.register(REGISTER_DTO);
+
+      expect(result).toEqual({ message: GENERIC_MESSAGE });
+      expect(mockPrisma.client.city.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.client.user.create).not.toHaveBeenCalled();
+      expect(mockEmailVerification.sendNewCodeFor).not.toHaveBeenCalled();
     });
   });
 
   describe('login', () => {
-    it('deve retornar tokens quando credenciais são válidas', async () => {
+    const LOGIN_DTO = {
+      email: MOCK_USER.email,
+      password: MOCK_PASSWORD,
+    };
+
+    it('deve retornar tokens quando credenciais são válidas e email verificado', async () => {
       const hashed = await hash(MOCK_PASSWORD, 10);
       mockPrisma.client.user.findUnique.mockResolvedValue({
         ...MOCK_USER,
         password: hashed,
+        emailVerifiedAt: new Date(),
       });
       mockPrisma.client.refreshToken.create.mockResolvedValue({});
 
-      const result = await service.login({
-        email: MOCK_USER.email,
-        password: MOCK_PASSWORD,
-      });
+      const result = await service.login(LOGIN_DTO);
 
       expect(result).toHaveProperty('access_token');
       expect(result).toHaveProperty('refresh_token');
+      expect(mockEmailVerification.sendNewCodeFor).not.toHaveBeenCalled();
+    });
+
+    it('dispara código de verificação e lança 401 quando email não verificado', async () => {
+      const hashed = await hash(MOCK_PASSWORD, 10);
+      mockPrisma.client.user.findUnique.mockResolvedValue({
+        ...MOCK_USER,
+        password: hashed,
+        emailVerifiedAt: null,
+      });
+
+      await expect(service.login(LOGIN_DTO)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      expect(mockEmailVerification.sendNewCodeFor).toHaveBeenCalledWith({
+        id: MOCK_USER.id,
+        email: MOCK_USER.email,
+      });
     });
 
     it('deve lançar UnauthorizedException se usuário não existir', async () => {
       mockPrisma.client.user.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.login({ email: MOCK_USER.email, password: MOCK_PASSWORD }),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(LOGIN_DTO)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      expect(mockEmailVerification.sendNewCodeFor).not.toHaveBeenCalled();
     });
 
     it('deve lançar UnauthorizedException se senha for incorreta', async () => {
@@ -133,11 +175,13 @@ describe('AuthService', () => {
       mockPrisma.client.user.findUnique.mockResolvedValue({
         ...MOCK_USER,
         password: hashed,
+        emailVerifiedAt: null,
       });
 
-      await expect(
-        service.login({ email: MOCK_USER.email, password: MOCK_PASSWORD }),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(LOGIN_DTO)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      expect(mockEmailVerification.sendNewCodeFor).not.toHaveBeenCalled();
     });
   });
 
@@ -185,12 +229,16 @@ describe('AuthService', () => {
   });
 
   describe('getMe', () => {
-    it('deve retornar dados do usuário sem a senha', async () => {
+    const MOCK_CITY_NAME = 'Maringá';
+
+    it('retorna dados do usuário com cidade e sem a senha', async () => {
       mockPrisma.client.user.findUniqueOrThrow.mockResolvedValue({
         id: MOCK_USER.id,
         name: MOCK_USER.name,
         email: MOCK_USER.email,
         role: MOCK_USER.role,
+        cityId: MOCK_CITY_ID,
+        city: { id: MOCK_CITY_ID, name: MOCK_CITY_NAME },
       });
 
       const result = await service.getMe(MOCK_USER.id);
@@ -200,8 +248,25 @@ describe('AuthService', () => {
         name: MOCK_USER.name,
         email: MOCK_USER.email,
         role: MOCK_USER.role,
+        cityId: MOCK_CITY_ID,
+        city: MOCK_CITY_NAME,
       });
       expect(result).not.toHaveProperty('password');
+    });
+
+    it('retorna city null quando o usuário não tem cidade', async () => {
+      mockPrisma.client.user.findUniqueOrThrow.mockResolvedValue({
+        id: MOCK_USER.id,
+        name: MOCK_USER.name,
+        email: MOCK_USER.email,
+        role: MOCK_USER.role,
+        cityId: null,
+        city: null,
+      });
+
+      const result = await service.getMe(MOCK_USER.id);
+
+      expect(result).toMatchObject({ cityId: null, city: null });
     });
   });
   describe('logout', () => {

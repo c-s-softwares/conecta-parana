@@ -6,7 +6,7 @@ generator client {
 
 datasource db {
   provider   = "postgresql"
-  extensions = [postgis]
+  extensions = [postgis, pg_trgm]
 }
 
 model HealthCheck {
@@ -38,31 +38,35 @@ model City {
 }
 
 model User {
-  id       String  @id
-  name     String
-  email    String  @unique
-  password String
-  role     Role    @default(CIDADAO)
-  cityId   String? @map("city_id")
+  id               String    @id
+  name             String
+  email            String    @unique
+  password         String
+  role             Role      @default(CIDADAO)
+  cityId           String?   @map("city_id")
+  lastCityUpdateAt DateTime? @map("last_city_update_at")
+  emailVerifiedAt  DateTime? @map("email_verified_at")
   // TODO: descomentar quando o upload de avatar do cidadao for ativado no app mobile.
   // avatarUrl String? @map("avatar_url")
   // avatarThumbUrl String? @map("avatar_thumb_url")
 
-  city                 City?               @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  refresh_tokens       RefreshToken[]
-  passwordResetCodes   PasswordResetCode[]
-  events               Event[]
-  photos               Photo[]
-  likes                Like[]
-  saves                Save[]
-  notifications        Notification[]
-  suggestions          Suggestion[]        @relation("UserSuggestions")
-  respondedSuggestions Suggestion[]        @relation("ResponderSuggestions")
-  locals               Local[]
-  communicates         Communicate[]
-  tickets              Ticket[]       @relation("UserTickets")
-  assignedTickets      Ticket[]       @relation("AssignedTickets")
-  comments             TicketComment[]
+  city                  City?                   @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  refresh_tokens        RefreshToken[]
+  emailVerificationCode EmailVerificationCode[]
+  passwordResetCodes    PasswordResetCode[]
+  events                Event[]
+  photos                Photo[]
+  likes                 Like[]
+  saves                 Save[]
+  notifications         Notification[]
+  suggestions           Suggestion[]            @relation("UserSuggestions")
+  respondedSuggestions  Suggestion[]            @relation("ResponderSuggestions")
+  locals                Local[]
+  communicates          Communicate[]
+  news                  News[]
+  tickets               Ticket[]                @relation("UserTickets")
+  assignedTickets       Ticket[]                @relation("AssignedTickets")
+  comments              TicketComment[]
 
   @@map("users")
 }
@@ -96,18 +100,36 @@ model PasswordResetCode {
   @@map("password_reset_codes")
 }
 
+model EmailVerificationCode {
+  id        String    @id
+  userId    String    @map("user_id")
+  codeHash  String    @unique @map("code_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("email_verification_codes")
+}
+
 model Event {
   id          String                                @id
   title       String
   description String
   type        String
-  status      String
+  isActive     Boolean                               @default(true) @map("is_active")
+  priority    Boolean                               @default(false)
   coordinates Unsupported("geometry(Point, 4326)")?
   eventDate   DateTime                              @map("event_date")
 
   cityId  String  @map("city_id")
   userId  String  @map("user_id")
   localId String? @map("local_id")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
   city  City   @relation(fields: [cityId], references: [id], onDelete: Cascade)
   user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -119,6 +141,7 @@ model Event {
   notifications Notification[]
 
   @@index([coordinates], type: Gist)
+  @@index([title(ops: raw("gin_trgm_ops")), description(ops: raw("gin_trgm_ops"))], type: Gin, map: "events_title_description_idx")
   @@map("events")
 }
 
@@ -127,16 +150,22 @@ model Photo {
   url      String  @unique
   thumbUrl String? @map("thumb_url")
 
-  eventId  String? @map("event_id")
-  userId   String  @map("user_id")
-  localId  String? @map("local_id")
-  ticketId String? @map("ticket_id")
+  eventId       String? @map("event_id")
+  userId        String  @map("user_id")
+  localId       String? @map("local_id")
+  ticketId      String? @map("ticket_id")
+  newsId        String? @map("news_id")
+  communicateId String? @map("communicate_id")
 
-  event  Event?  @relation(fields: [eventId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  local  Local?  @relation(fields: [localId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  ticket Ticket? @relation(fields: [ticketId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  event       Event?       @relation(fields: [eventId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  local       Local?       @relation(fields: [localId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  ticket      Ticket?      @relation(fields: [ticketId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  news        News?        @relation(fields: [newsId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  communicate Communicate? @relation(fields: [communicateId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
+  @@index([newsId])
+  @@index([communicateId])
   @@map("photos")
 }
 
@@ -186,7 +215,8 @@ model Notification {
   id          String  @id
   title       String
   description String
-  isRead      Boolean @default(false) @map("is_read")
+  isRead      Boolean  @default(false) @map("is_read")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   userId        String  @map("user_id")
   eventId       String? @map("event_id")
@@ -205,13 +235,21 @@ model News {
   description String
   type        String
   linkType    String  @map("link_type")
-  isActive    Boolean @map("is_active")
+  linkUrl     String? @map("link_url")
+  isActive    Boolean @default(true) @map("is_active")
   cityId      String  @map("city_id")
+  userId      String? @map("user_id")
 
-  city      City   @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  saves     Save[]
-  likes     Like[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
+  city   City  @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  saves  Save[]
+  likes  Like[]
+  photos Photo[]
+
+  @@index([title(ops: raw("gin_trgm_ops")), description(ops: raw("gin_trgm_ops"))], type: Gin, map: "news_title_description_idx")
   @@map("news")
 }
 
@@ -219,9 +257,12 @@ model Communicate {
   id          String  @id
   title       String
   description String
-  isActive    Boolean @map("is_active")
-  cityId      String  @map("city_id")
-  userId      String  @map("user_id")
+  isActive    Boolean  @map("is_active")
+  priority    Boolean  @default(false)
+  cityId      String   @map("city_id")
+  userId      String   @map("user_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   city City @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -229,7 +270,9 @@ model Communicate {
   saves         Save[]
   notifications Notification[]
   likes         Like[]
+  photos        Photo[]
 
+  @@index([title(ops: raw("gin_trgm_ops")), description(ops: raw("gin_trgm_ops"))], type: Gin, map: "communicates_title_description_idx")
   @@map("communicates")
 }
 
@@ -238,8 +281,13 @@ model Category {
   name String
   icon String
 
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
   locals Local[]
 
+  @@unique([name])
   @@map("categories")
 }
 
@@ -267,6 +315,7 @@ model Local {
   saves  Save[]
 
   @@index([coordinates], type: Gist)
+  @@index([name(ops: raw("gin_trgm_ops")), description(ops: raw("gin_trgm_ops")), address(ops: raw("gin_trgm_ops"))], type: Gin, map: "locals_name_description_address_idx")
   @@map("locals")
 }
 
@@ -289,19 +338,19 @@ model Suggestion {
 }
 
 model Ticket {
-  id           String                               @id
-  type         String                               // acidente, sinalização, iluminação, lixo, outros
+  id           String                                @id
+  type         String
   title        String
   description  String
-  status       String                               @default("aberto") // aberto, em_analise, resolvido, fechado, reaberto
+  status       String                                @default("aberto")
   coordinates  Unsupported("geometry(Point, 4326)")?
   address      String?
-  cityId       String                               @map("city_id")
-  userId       String                               @map("user_id")
-  assignedToId String?                              @map("assigned_to_id")
-  createdAt    DateTime                             @default(now()) @map("created_at")
-  updatedAt    DateTime                             @updatedAt @map("updated_at")
-  resolvedAt   DateTime?                            @map("resolved_at")
+  cityId       String                                @map("city_id")
+  userId       String                                @map("user_id")
+  assignedToId String?                               @map("assigned_to_id")
+  createdAt    DateTime                              @default(now()) @map("created_at")
+  updatedAt    DateTime                              @updatedAt @map("updated_at")
+  resolvedAt   DateTime?                             @map("resolved_at")
 
   city       City            @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   user       User            @relation("UserTickets", fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
@@ -314,11 +363,11 @@ model Ticket {
 }
 
 model TicketComment {
-  id         String   @id
-  ticketId   String   @map("ticket_id")
-  authorId   String   @map("author_id")
-  message    String
-  createdAt  DateTime @default(now()) @map("created_at")
+  id        String   @id
+  ticketId  String   @map("ticket_id")
+  authorId  String   @map("author_id")
+  message   String
+  createdAt DateTime @default(now()) @map("created_at")
 
   ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   author User   @relation(fields: [authorId], references: [id], onDelete: Restrict, onUpdate: Cascade)

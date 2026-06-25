@@ -4,6 +4,7 @@ import 'package:conectaparana/core/auth/auth_event.dart';
 import 'package:conectaparana/core/auth/auth_user.dart';
 import 'package:conectaparana/core/auth/jwt_decoder.dart';
 import 'package:conectaparana/core/auth/token_storage.dart';
+import 'package:conectaparana/features/register/data/models/services/city_service.dart';
 import 'package:flutter/material.dart';
 
 class AuthService {
@@ -47,10 +48,13 @@ class AuthService {
         return;
       }
 
+      final cityName = await _resolveCityName(payload.cityId);
+
       currentUser.value = AuthUser(
         id: payload.sub,
         role: payload.role,
         cityId: payload.cityId,
+        cityName: cityName,
       );
     } catch (_) {
       await _storage.clear();
@@ -75,10 +79,13 @@ class AuthService {
       return;
     }
 
+    final cityName = await _resolveCityName(payload.cityId);
+
     currentUser.value = AuthUser(
       id: payload.sub,
       role: payload.role,
       cityId: payload.cityId,
+      cityName: cityName,
     );
   }
 
@@ -116,5 +123,20 @@ class AuthService {
       accessToken: accessToken,
       refreshToken: refreshToken,
     );
+  }
+
+  Future<String> _resolveCityName(String cityId) async {
+    if (cityId.isEmpty) return '';
+    try {
+      final cities = await CityService().getCities();
+      return cities
+          .firstWhere(
+            (c) => c.id == cityId,
+            orElse: () => throw StateError('not found'),
+          )
+          .name;
+    } catch (_) {
+      return '';
+    }
   }
 }

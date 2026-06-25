@@ -16,6 +16,20 @@ const MOCK_CITY = {
   state: 'PR',
   createdAt: new Date('2026-05-12T10:30:00Z'),
   deletedAt: null,
+  _count: { users: 0 },
+};
+
+const ACTIVE_ADMIN_COUNT_INCLUDE_MATCHER = {
+  _count: {
+    select: {
+      users: {
+        where: {
+          role: 'ADMIN',
+          emailVerifiedAt: { not: null },
+        },
+      },
+    },
+  },
 };
 
 const mockPrisma = {
@@ -64,12 +78,18 @@ describe('CitiesService', () => {
             id: MOCK_CITY_ID,
             name: 'Paiçandu',
             state: 'PR',
+            adminCount: 0,
           },
         ],
         total: 1,
         page: 1,
         pageSize: 10,
       });
+      expect(mockPrisma.client.city.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: ACTIVE_ADMIN_COUNT_INCLUDE_MATCHER,
+        }),
+      );
     });
 
     it('deve usar defaults quando page/pageSize não são informados e buscar com search', async () => {
@@ -103,7 +123,19 @@ describe('CitiesService', () => {
       expect(result.name).toBe('Paiçandu');
       expect(mockPrisma.client.city.findFirst).toHaveBeenCalledWith({
         where: { id: MOCK_CITY_ID, deletedAt: null },
+        include: ACTIVE_ADMIN_COUNT_INCLUDE_MATCHER,
       });
+    });
+
+    it('deve incluir adminCount com base em _count.users', async () => {
+      mockPrisma.client.city.findFirst.mockResolvedValue({
+        ...MOCK_CITY,
+        _count: { users: 4 },
+      });
+
+      const result = await service.findOne(MOCK_CITY_ID);
+
+      expect(result.adminCount).toBe(4);
     });
 
     it('deve lançar NotFoundException se cidade não existir', async () => {

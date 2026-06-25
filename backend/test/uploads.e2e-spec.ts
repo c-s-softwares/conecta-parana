@@ -155,7 +155,7 @@ describe('Uploads (e2e)', () => {
         title: 'Evento Uploads E2E',
         description: 'Descrição',
         type: 'cultural',
-        status: 'agendado',
+        isActive: true,
         eventDate: new Date('2026-12-01T00:00:00Z'),
         cityId: CITY_ID,
         userId: admin.id,

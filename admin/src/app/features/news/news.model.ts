@@ -7,5 +7,5 @@ export interface NewsForm {
 }
 
 export interface NewsItem extends NewsForm {
-  id: number;
+  id: string;
 }

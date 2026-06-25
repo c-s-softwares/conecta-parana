@@ -110,4 +110,11 @@ Cada termo deve seguir esta estrutura:
 - **Definição:** Cidadão que não esteja cadastrado no aplicativo.
 - **Contexto de Uso:** Usuários anônimos terão acesso limitado a plataforma sendo apenas algumas funcionalidades da home-page
 
+### Cidade do Cidadão
+
+- **Definição:** A cidade ativa associada ao perfil do cidadão. O cidadão pode alterar sua cidade a qualquer momento no aplicativo.
+- **Regras de Negócio e Atualização:**
+  - **Debounce no Mobile (5 minutos):** Para evitar requisições excessivas enquanto o cidadão está transitando geograficamente entre cidades, o aplicativo mobile deve aplicar um debounce de 5 minutos, disparando a chamada HTTP apenas quando o usuário permanecer por 5 minutos ou mais em uma nova cidade.
+  - **Throttle no Backend (60 segundos):** Como medida de segurança e proteção do servidor, o backend limita as atualizações. Se um usuário tentar atualizar sua cidade em um intervalo menor que 60 segundos desde a última atualização (`lastCityUpdateAt`), a requisição será rejeitada com código `update_too_frequent` (HTTP 429).
+
 <!-- Adicione mais termos conforme necessário -->

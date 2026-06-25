@@ -3,6 +3,7 @@ import { BadRequestException, HttpException } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { createHash } from 'crypto';
 import { PasswordResetService } from './password-reset.service';
+import { EmailVerificationService } from './email-verification.service';
 import { PrismaService } from '../../config/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
@@ -18,6 +19,7 @@ const MOCK_USER = {
   id: MOCK_USER_ID,
   email: MOCK_EMAIL,
   password: 'old_hash',
+  emailVerifiedAt: new Date(),
 };
 const MOCK_RATE_LIMIT_KEY = `forgot-password:${MOCK_EMAIL}`;
 
@@ -49,6 +51,10 @@ const mockCache = {
   set: jest.fn(),
 };
 
+const mockEmailVerification = {
+  sendNewCodeFor: jest.fn().mockResolvedValue(undefined),
+};
+
 describe('PasswordResetService', () => {
   let service: PasswordResetService;
 
@@ -58,6 +64,10 @@ describe('PasswordResetService', () => {
         PasswordResetService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: MailService, useValue: mockMail },
+        {
+          provide: EmailVerificationService,
+          useValue: mockEmailVerification,
+        },
         { provide: CACHE_MANAGER, useValue: mockCache },
       ],
     }).compile();
@@ -129,6 +139,23 @@ describe('PasswordResetService', () => {
       ).rejects.toThrow(HttpException);
       expect(mockPrisma.client.user.findUnique).not.toHaveBeenCalled();
       expect(mockMail.sendPasswordResetCode).not.toHaveBeenCalled();
+    });
+
+    it('dispara código de verificação ao invés de reset quando user não verificado', async () => {
+      mockPrisma.client.user.findUnique.mockResolvedValue({
+        ...MOCK_USER,
+        emailVerifiedAt: null,
+      });
+
+      await expect(
+        service.forgotPassword({ email: MOCK_EMAIL }),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockEmailVerification.sendNewCodeFor).toHaveBeenCalledWith({
+        id: MOCK_USER.id,
+        email: MOCK_USER.email,
+      });
+      expect(mockMail.sendPasswordResetCode).not.toHaveBeenCalled();
+      expect(mockPrisma.client.passwordResetCode.create).not.toHaveBeenCalled();
     });
   });
 
@@ -220,6 +247,36 @@ describe('PasswordResetService', () => {
       });
 
       await expect(service.resetPassword(baseDto)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+  });
+
+  describe('verifyResetCode', () => {
+    const baseDto = { email: MOCK_EMAIL, code: MOCK_CODE };
+
+    it('retorna válido sem consumir o código quando ele é válido', async () => {
+      mockPrisma.client.user.findUnique.mockResolvedValue(MOCK_USER);
+      mockPrisma.client.passwordResetCode.findUnique.mockResolvedValue({
+        id: MOCK_RECORD_ID,
+        userId: MOCK_USER_ID,
+        codeHash: MOCK_CODE_HASH,
+        expiresAt: new Date(Date.now() + 60_000),
+        usedAt: null,
+      });
+
+      const result = await service.verifyResetCode(baseDto);
+
+      expect(result).toEqual({ message: 'Código válido' });
+      expect(mockPrisma.client.passwordResetCode.update).not.toHaveBeenCalled();
+      expect(mockPrisma.client.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('lança invalid_or_expired_code quando o código não casa', async () => {
+      mockPrisma.client.user.findUnique.mockResolvedValue(MOCK_USER);
+      mockPrisma.client.passwordResetCode.findUnique.mockResolvedValue(null);
+
+      await expect(service.verifyResetCode(baseDto)).rejects.toThrow(
         BadRequestException,
       );
     });

@@ -2,6 +2,7 @@ import 'package:conectaparana/core/shell/shell_tab.dart';
 import 'package:conectaparana/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:conectaparana/shared/widgets/feedback/offline_banner.dart';
 
 class MainShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -21,7 +22,12 @@ class MainShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: navigationShell,
+      body: Column(
+        children: [
+          const OfflineBanner(),
+          Expanded(child: navigationShell),
+        ],
+      ),
       bottomNavigationBar: _ShellBottomNav(
         currentIndex: navigationShell.currentIndex,
         onTap: _onTabTap,
@@ -102,7 +108,7 @@ class _BadgeSlot extends StatelessWidget {
   final Widget child;
 
   final int? badgeCount;
-
+  
   // ignore: unused_element_parameter
   const _BadgeSlot({required this.tab, required this.child, this.badgeCount});
 

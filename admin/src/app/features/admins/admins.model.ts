@@ -6,5 +6,5 @@ export interface AdminForm {
 }
 
 export interface AdministratorItem extends AdminForm {
-  id: number;
+  id: string;
 }

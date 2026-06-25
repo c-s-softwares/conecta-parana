@@ -1,0 +1,61 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.create-wrap {
+  position: relative;
+}
+
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+
+.create-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 300px;
+  z-index: 50;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-xl);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.create-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: background 150ms ease;
+}
+
+.create-item:hover {
+  background: var(--n-75);
+}
+
+.create-item .ic-bubble {
+  width: 36px;
+  height: 36px;
+  margin-bottom: 0;
+  border-radius: 10px;
+}
+
+.empty-note {
+  padding: 28px 20px;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
