@@ -1,17 +1,16 @@
 import { Component, effect, ElementRef, inject, input, output, viewChild, DestroyRef } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { HERO_ICONS } from '../../icons/hero-icons';
+import { NgIcon } from '@ng-icons/core';
 
 @Component({
   selector: 'app-modal-dialog',
   standalone: true,
+  imports: [NgIcon],
   templateUrl: './modal-dialog.html',
   host: {
     '(document:keydown.escape)': 'onEsc()'
   }
 })
 export class ModalDialog {
-  private readonly sanitizer = inject(DomSanitizer);
   private readonly destroyRef = inject(DestroyRef);
 
   visible = input.required<boolean>();
@@ -83,7 +82,4 @@ export class ModalDialog {
     }
   }
 
-  protected getCloseIcon(): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(HERO_ICONS['xMark']);
-  }
 }
