@@ -35,7 +35,7 @@ class EngagementService {
   }) async {
     try {
       await _dio.post(
-        '/favorites/toggle',
+        '/saves/toggle',
         data: {'entityType': entityType, 'entityId': entityId},
       );
     } on DioException catch (e) {

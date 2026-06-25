@@ -7,6 +7,10 @@ import 'package:flutter_test/flutter_test.dart';
 class FakeEngagementService extends EngagementService {
   FakeEngagementService() : super(Dio());
 
+  bool shouldFailLikeNotFound = false;
+
+  Duration saveDelay = Duration.zero;
+
   int likeCalls = 0;
   int saveCalls = 0;
 
@@ -25,6 +29,10 @@ class FakeEngagementService extends EngagementService {
       await Future.delayed(delay);
     }
 
+    if (shouldFailLikeNotFound) {
+      throw EngagementException('Conteúdo não encontrado.');
+    }
+
     if (shouldFailLike) {
       throw Exception('network');
     }
@@ -36,6 +44,10 @@ class FakeEngagementService extends EngagementService {
     required String entityId,
   }) async {
     saveCalls++;
+
+    if (saveDelay != Duration.zero) {
+      await Future.delayed(saveDelay);
+    }
 
     if (shouldFailSave) {
       throw Exception('network');
@@ -155,5 +167,56 @@ void main() {
       sharedText,
       'Confira no Conecta Paraná: https://conectaparana.app/share/news/news_1',
     );
+  });
+
+  testWidgets('shows not found message when like returns 404', (tester) async {
+    final service = FakeEngagementService()..shouldFailLikeNotFound = true;
+
+    await tester.pumpWidget(createWidget(service: service));
+
+    await tester.tap(find.byIcon(Icons.favorite_border));
+    await tester.pump();
+
+    expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+    expect(find.text('12'), findsOneWidget);
+    expect(find.text('Conteúdo não encontrado.'), findsOneWidget);
+  });
+
+  testWidgets('ignores double tap while save request is in flight', (
+    tester,
+  ) async {
+    final service = FakeEngagementService()
+      ..saveDelay = const Duration(milliseconds: 300);
+
+    await tester.pumpWidget(createWidget(service: service));
+
+    await tester.tap(find.byIcon(Icons.bookmark_border));
+    await tester.pump();
+
+    await tester.tap(find.byIcon(Icons.bookmark));
+    await tester.pump();
+
+    expect(service.saveCalls, 1);
+
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump();
+  });
+
+  testWidgets('shows snackbar when share fails', (tester) async {
+    final service = FakeEngagementService();
+
+    await tester.pumpWidget(
+      createWidget(
+        service: service,
+        onShare: (_) async {
+          throw Exception('share unavailable');
+        },
+      ),
+    );
+
+    await tester.tap(find.byIcon(Icons.share_outlined));
+    await tester.pump();
+
+    expect(find.text('Compartilhamento não disponível.'), findsOneWidget);
   });
 }
