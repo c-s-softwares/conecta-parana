@@ -9,7 +9,7 @@ class FavoritesService {
   final ApiClient _apiClient;
 
   Future<List<FavoriteItemModel>> getMyFavorites() async {
-    final response = await _apiClient.dio.get('/favorites/me');
+    final response = await _apiClient.dio.get('/saves/me');
 
     final data = response.data;
 
