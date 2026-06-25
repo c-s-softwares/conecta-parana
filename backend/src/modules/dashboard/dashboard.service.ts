@@ -123,33 +123,36 @@ export class DashboardService {
   async getChart(
     period: 'week' | 'month' | 'year' = 'month',
   ): Promise<DashboardChartResponseDto> {
-    // Semana = ultimos 7 dias (granularidade diaria); mes/ano = 6 baldes.
+    // Semana = ultimos 7 dias (granularidade diária); mês/ano = 6 buckets.
     const { unit, buckets } = CHART_GRANULARITY[period];
 
-    type RawRow = { period: Date; count: bigint };
+    type RawRow = { period: string; count: bigint };
 
     // created_at e TIMESTAMP sem fuso, gravado em UTC pelo Prisma. Converte para o
-    // horario do Brasil antes de truncar, para os baldes respeitarem o calendario local.
+    // horário do Brasil antes de truncar, para os buckets respeitarem o calendário local.
     const localCreatedAt = Prisma.raw(
       `(created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo'`,
     );
+    // Devolve o bucket ja como string 'YYYY-MM-DD'. Retornar timestamp faz com que o
+    // node-pg o interprete na timezone do processo, variando entre local e staging/produção.
+    const bucket = Prisma.sql`to_char(DATE_TRUNC(${unit}, ${localCreatedAt}), 'YYYY-MM-DD')`;
     const cutoff = Prisma.sql`DATE_TRUNC(${unit}, NOW() AT TIME ZONE 'America/Sao_Paulo') - INTERVAL '${Prisma.raw(String(buckets - 1))} ${Prisma.raw(unit)}s'`;
 
     const [communicateRows, eventRows, newsRows] = await Promise.all([
       this.prisma.client.$queryRaw<RawRow[]>`
-        SELECT DATE_TRUNC(${unit}, ${localCreatedAt}) AS period, COUNT(*) AS count
+        SELECT ${bucket} AS period, COUNT(*) AS count
         FROM communicates
         WHERE ${localCreatedAt} >= ${cutoff}
         GROUP BY 1 ORDER BY 1
       `,
       this.prisma.client.$queryRaw<RawRow[]>`
-        SELECT DATE_TRUNC(${unit}, ${localCreatedAt}) AS period, COUNT(*) AS count
+        SELECT ${bucket} AS period, COUNT(*) AS count
         FROM events
         WHERE ${localCreatedAt} >= ${cutoff} AND deleted_at IS NULL
         GROUP BY 1 ORDER BY 1
       `,
       this.prisma.client.$queryRaw<RawRow[]>`
-        SELECT DATE_TRUNC(${unit}, ${localCreatedAt}) AS period, COUNT(*) AS count
+        SELECT ${bucket} AS period, COUNT(*) AS count
         FROM news
         WHERE ${localCreatedAt} >= ${cutoff}
         GROUP BY 1 ORDER BY 1
@@ -157,7 +160,7 @@ export class DashboardService {
     ]);
 
     const toMap = (rows: RawRow[]) =>
-      new Map(rows.map((r) => [r.period.toISOString(), Number(r.count)]));
+      new Map(rows.map((r) => [r.period, Number(r.count)]));
 
     const communicateMap = toMap(communicateRows);
     const eventMap = toMap(eventRows);
