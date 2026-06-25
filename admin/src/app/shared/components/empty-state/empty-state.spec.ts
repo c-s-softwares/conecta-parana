@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { NgIcon } from '@ng-icons/core';
 import { EmptyState } from './empty-state';
 
 describe('EmptyState', () => {
@@ -34,9 +36,11 @@ describe('EmptyState', () => {
 
   it('deve renderizar o svg padrao (inbox) se nenhum icon for fornecido', () => {
     fixture.detectChanges();
-    const iconContainer = el.querySelector('div.mb-4');
-    expect(iconContainer?.innerHTML).toContain('svg');
-    expect(iconContainer?.innerHTML).toContain('m20.25 7.5');
+    const ngIconEl = fixture.debugElement.query(By.directive(NgIcon));
+    expect(ngIconEl).toBeTruthy();
+    const nameProp = ngIconEl.componentInstance.name;
+    const nameVal = typeof nameProp === 'function' ? nameProp() : nameProp;
+    expect(nameVal).toBe('heroInbox');
   });
 
   it('deve renderizar o svg especificado se fornecido', async () => {
@@ -44,8 +48,10 @@ describe('EmptyState', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const iconContainer = el.querySelector('div.mb-4');
-    expect(iconContainer?.innerHTML).toContain('svg');
-    expect(iconContainer?.innerHTML).toContain('m14.74 9-.346 9');
+    const ngIconEl = fixture.debugElement.query(By.directive(NgIcon));
+    expect(ngIconEl).toBeTruthy();
+    const nameProp = ngIconEl.componentInstance.name;
+    const nameVal = typeof nameProp === 'function' ? nameProp() : nameProp;
+    expect(nameVal).toBe('heroTrash');
   });
 });
