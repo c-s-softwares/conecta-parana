@@ -1,16 +1,15 @@
 import { Component, inject, input, output, signal } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { NgIcon } from '@ng-icons/core';
 import { ToastService } from '../../../core/services/toast.service';
-import { HERO_ICONS } from '../../icons/hero-icons';
 
 @Component({
   selector: 'app-form-field',
   standalone: true,
+  imports: [NgIcon],
   templateUrl: './form-field.html',
 })
 export class FormField {
   private readonly toast = inject(ToastService);
-  private readonly sanitizer = inject(DomSanitizer);
 
   label = input.required<string>();
   fieldId = input.required<string>();
@@ -27,10 +26,6 @@ export class FormField {
   fileChange = output<File[]>();
 
   protected selectedFiles = signal<File[]>([]);
-
-  protected getUploadIcon(): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(HERO_ICONS['cloudArrowUp']);
-  }
 
   protected onFilesSelected(event: Event): void {
     const inputEl = event.target as HTMLInputElement;
