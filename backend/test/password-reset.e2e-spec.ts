@@ -126,8 +126,9 @@ describe('PasswordReset (e2e)', () => {
     });
     expect(mail.sentEmails).toHaveLength(1);
     expect(mail.sentEmails[0].method).toBe('sendPasswordResetCode');
-    expect(mail.sentEmails[0].params.email).toBe(MOCK_USER.email);
-    expect(mail.sentEmails[0].params.code).toMatch(/^\d{6}$/);
+    const params = mail.sentEmails[0].params;
+    expect(params.email).toBe(MOCK_USER.email);
+    expect('code' in params && params.code).toMatch(/^\d{6}$/);
   });
 
   it('POST /auth/forgot-password - mesma resposta quando email não existe, sem enviar email', async () => {

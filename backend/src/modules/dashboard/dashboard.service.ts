@@ -1,0 +1,270 @@
+import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../../config/prisma.service';
+import {
+  DashboardMetricsResponseDto,
+  DeltaStatDto,
+} from './dto/response/dashboard-metrics-response.dto';
+import {
+  ChartBucketDto,
+  DashboardChartResponseDto,
+} from './dto/response/dashboard-chart-response.dto';
+import { DashboardActivityItemDto } from './dto/response/dashboard-activity-response.dto';
+import { DashboardTopCitiesItemDto } from './dto/response/dashboard-top-cities-response.dto';
+
+const CHART_GRANULARITY: Record<
+  'week' | 'month' | 'year',
+  { unit: 'day' | 'month' | 'year'; buckets: number }
+> = {
+  week: { unit: 'day', buckets: 7 },
+  month: { unit: 'month', buckets: 6 },
+  year: { unit: 'year', buckets: 6 },
+};
+
+@Injectable()
+export class DashboardService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async getMetrics(): Promise<DashboardMetricsResponseDto> {
+    const now = new Date();
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    const [
+      communicatesTotal,
+      communicatesThisMonth,
+      communicatesLastMonth,
+      eventsTotal,
+      eventsThisMonth,
+      eventsLastMonth,
+      localsTotal,
+      localsThisMonth,
+      localsLastMonth,
+      notificationsTotal,
+      notificationsThisMonth,
+      notificationsLastMonth,
+    ] = await Promise.all([
+      this.prisma.client.communicate.count(),
+      this.prisma.client.communicate.count({
+        where: { createdAt: { gte: thisMonthStart } },
+      }),
+      this.prisma.client.communicate.count({
+        where: { createdAt: { gte: lastMonthStart, lt: thisMonthStart } },
+      }),
+      this.prisma.client.event.count({
+        where: { deletedAt: null, isActive: true },
+      }),
+      this.prisma.client.event.count({
+        where: {
+          deletedAt: null,
+          isActive: true,
+          createdAt: { gte: thisMonthStart },
+        },
+      }),
+      this.prisma.client.event.count({
+        where: {
+          deletedAt: null,
+          isActive: true,
+          createdAt: { gte: lastMonthStart, lt: thisMonthStart },
+        },
+      }),
+      this.prisma.client.local.count({ where: { deletedAt: null } }),
+      this.prisma.client.local.count({
+        where: { deletedAt: null, createdAt: { gte: thisMonthStart } },
+      }),
+      this.prisma.client.local.count({
+        where: {
+          deletedAt: null,
+          createdAt: { gte: lastMonthStart, lt: thisMonthStart },
+        },
+      }),
+      this.prisma.client.notification.count(),
+      this.prisma.client.notification.count({
+        where: { createdAt: { gte: thisMonthStart } },
+      }),
+      this.prisma.client.notification.count({
+        where: { createdAt: { gte: lastMonthStart, lt: thisMonthStart } },
+      }),
+    ]);
+
+    return {
+      communicates: this.buildDelta(
+        communicatesTotal,
+        communicatesThisMonth,
+        communicatesLastMonth,
+      ),
+      events: this.buildDelta(eventsTotal, eventsThisMonth, eventsLastMonth),
+      locals: this.buildDelta(localsTotal, localsThisMonth, localsLastMonth),
+      notifications: this.buildDelta(
+        notificationsTotal,
+        notificationsThisMonth,
+        notificationsLastMonth,
+      ),
+    };
+  }
+
+  private buildDelta(
+    total: number,
+    thisMonth: number,
+    lastMonth: number,
+  ): DeltaStatDto {
+    const delta = thisMonth - lastMonth;
+    let deltaPercent: number | null;
+
+    if (lastMonth === 0) {
+      deltaPercent = thisMonth > 0 ? null : 0;
+    } else {
+      deltaPercent = Math.round((delta / lastMonth) * 1000) / 10;
+    }
+
+    return { total, thisMonth, lastMonth, delta, deltaPercent };
+  }
+
+  async getChart(
+    period: 'week' | 'month' | 'year' = 'month',
+  ): Promise<DashboardChartResponseDto> {
+    // Semana = ultimos 7 dias (granularidade diária); mês/ano = 6 buckets.
+    const { unit, buckets } = CHART_GRANULARITY[period];
+
+    type RawRow = { period: string; count: bigint };
+
+    // created_at e TIMESTAMP sem fuso, gravado em UTC pelo Prisma. Converte para o
+    // horário do Brasil antes de truncar, para os buckets respeitarem o calendário local.
+    const localCreatedAt = Prisma.raw(
+      `(created_at AT TIME ZONE 'UTC') AT TIME ZONE 'America/Sao_Paulo'`,
+    );
+    // Devolve o bucket ja como string 'YYYY-MM-DD'. Retornar timestamp faz com que o
+    // node-pg o interprete na timezone do processo, variando entre local e staging/produção.
+    const bucket = Prisma.sql`to_char(DATE_TRUNC(${unit}, ${localCreatedAt}), 'YYYY-MM-DD')`;
+    const cutoff = Prisma.sql`DATE_TRUNC(${unit}, NOW() AT TIME ZONE 'America/Sao_Paulo') - INTERVAL '${Prisma.raw(String(buckets - 1))} ${Prisma.raw(unit)}s'`;
+
+    const [communicateRows, eventRows, newsRows] = await Promise.all([
+      this.prisma.client.$queryRaw<RawRow[]>`
+        SELECT ${bucket} AS period, COUNT(*) AS count
+        FROM communicates
+        WHERE ${localCreatedAt} >= ${cutoff}
+        GROUP BY 1 ORDER BY 1
+      `,
+      this.prisma.client.$queryRaw<RawRow[]>`
+        SELECT ${bucket} AS period, COUNT(*) AS count
+        FROM events
+        WHERE ${localCreatedAt} >= ${cutoff} AND deleted_at IS NULL
+        GROUP BY 1 ORDER BY 1
+      `,
+      this.prisma.client.$queryRaw<RawRow[]>`
+        SELECT ${bucket} AS period, COUNT(*) AS count
+        FROM news
+        WHERE ${localCreatedAt} >= ${cutoff}
+        GROUP BY 1 ORDER BY 1
+      `,
+    ]);
+
+    const toMap = (rows: RawRow[]) =>
+      new Map(rows.map((r) => [r.period, Number(r.count)]));
+
+    const communicateMap = toMap(communicateRows);
+    const eventMap = toMap(eventRows);
+    const newsMap = toMap(newsRows);
+
+    const allPeriods = [
+      ...new Set([
+        ...communicateMap.keys(),
+        ...eventMap.keys(),
+        ...newsMap.keys(),
+      ]),
+    ].sort();
+
+    const result: ChartBucketDto[] = allPeriods.map((p) => ({
+      period: p,
+      communicates: communicateMap.get(p) ?? 0,
+      events: eventMap.get(p) ?? 0,
+      news: newsMap.get(p) ?? 0,
+    }));
+
+    return { period, buckets: result };
+  }
+
+  async getRecentActivity(limit = 10): Promise<DashboardActivityItemDto[]> {
+    const take = limit * 2;
+    const nestedSelect = {
+      id: true,
+      title: true,
+      city: { select: { name: true } },
+      user: { select: { name: true } },
+      createdAt: true,
+      updatedAt: true,
+    } as const;
+
+    const [communicates, events, news] = await Promise.all([
+      this.prisma.client.communicate.findMany({
+        select: nestedSelect,
+        orderBy: { updatedAt: 'desc' },
+        take,
+      }),
+      this.prisma.client.event.findMany({
+        where: { deletedAt: null },
+        select: nestedSelect,
+        orderBy: { updatedAt: 'desc' },
+        take,
+      }),
+      this.prisma.client.news.findMany({
+        select: nestedSelect,
+        orderBy: { updatedAt: 'desc' },
+        take,
+      }),
+    ]);
+
+    const toItem = (
+      type: DashboardActivityItemDto['type'],
+      r: {
+        id: string;
+        title: string;
+        city: { name: string };
+        user: { name: string } | null;
+        createdAt: Date;
+        updatedAt: Date;
+      },
+    ): DashboardActivityItemDto => ({
+      id: r.id,
+      type,
+      title: r.title,
+      cityName: r.city.name,
+      createdBy: r.user?.name ?? null,
+      createdAt: r.createdAt.toISOString(),
+      updatedAt: r.updatedAt.toISOString(),
+    });
+
+    return [
+      ...communicates.map((r) => toItem('communicate', r)),
+      ...events.map((r) => toItem('event', r)),
+      ...news.map((r) => toItem('news', r)),
+    ]
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+      .slice(0, limit);
+  }
+
+  async getTopCities(limit = 10): Promise<DashboardTopCitiesItemDto[]> {
+    type RawRow = { cityId: string; cityName: string; total: bigint };
+
+    const rows = await this.prisma.client.$queryRaw<RawRow[]>`
+      SELECT c.id AS "cityId", c.name AS "cityName", COUNT(*) AS total
+      FROM (
+        SELECT city_id FROM communicates
+        UNION ALL
+        SELECT city_id FROM events WHERE deleted_at IS NULL
+        UNION ALL
+        SELECT city_id FROM news
+      ) AS combined
+      JOIN cities c ON c.id = combined.city_id
+      GROUP BY c.id, c.name
+      ORDER BY total DESC
+      LIMIT ${limit}
+    `;
+
+    return rows.map((r) => ({
+      cityId: r.cityId,
+      cityName: r.cityName,
+      total: Number(r.total),
+    }));
+  }
+}

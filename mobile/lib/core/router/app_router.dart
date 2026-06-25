@@ -8,6 +8,7 @@ import 'package:conectaparana/core/router/deep_link_route.dart';
 import 'package:conectaparana/core/router/navigator_key.dart';
 import 'package:conectaparana/core/shell/main_shell.dart';
 import 'package:conectaparana/dev/fakes/fake_event_repository.dart';
+import 'package:conectaparana/dev/fakes/fake_ticket_repository.dart';
 import 'package:conectaparana/features/events/presentation/pages/events_page.dart';
 import 'package:conectaparana/features/onboarding/presentation/pages/city_selector_screen.dart';
 import 'package:conectaparana/features/events/presentation/pages/event_detail_page.dart';
@@ -22,6 +23,9 @@ import 'package:conectaparana/shared/widgets/styleguide_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:conectaparana/features/suggestions/presentation/pages/suggestions_page.dart';
+import 'package:conectaparana/dev/fakes/fake_suggestion_repository.dart';
+import 'package:conectaparana/features/suggestions/presentation/pages/new_suggestion_page.dart';
 
 abstract class AppRoutes {
   static const splash = '/';
@@ -43,10 +47,14 @@ abstract class AppRoutes {
   static const ticket = '/tickets/:id';
   static const notification = '/home/notification/:id';
 
+  static const suggestions = '/profile/suggestions';
+  static const newSuggestion = '/profile/suggestions/new';
+
   static const styleguide = '/styleguide';
 
   // DEV ONLY — rotas com dados mockados, sem precisar de backend
   static const devEventDetail = '/dev/event/:id';
+  static const devTickets = '/dev/tickets';
 }
 
 class AppRouter {
@@ -160,6 +168,13 @@ class AppRouter {
           ),
         ),
 
+        // DEV ONLY — abre TicketsPage com dados mockados, sem backend
+        GoRoute(
+          path: AppRoutes.devTickets,
+          builder: (context, state) =>
+              TicketsPage(repository: FakeTicketRepository()),
+        ),
+
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {
             return MainShell(navigationShell: navigationShell);
@@ -240,7 +255,9 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: AppRoutes.tickets,
-                  builder: (context, state) => const TicketsPage(),
+                  builder: (context, state) => TicketsPage(
+                    repository: FakeTicketRepository(),
+                  ), // const TicketsPage()
                   routes: [
                     GoRoute(
                       path: ':id',
@@ -258,6 +275,21 @@ class AppRouter {
                 GoRoute(
                   path: AppRoutes.profile,
                   builder: (context, state) => const ProfilePage(),
+                  routes: [
+                    GoRoute(
+                      path: 'suggestions',
+                      builder: (context, state) => const SuggestionsPage(),
+                      routes: [
+                        GoRoute(
+                          parentNavigatorKey: navigatorKey,
+                          path: 'new',
+                          builder: (context, state) => const NewSuggestionPage(
+                            repository: FakeSuggestionRepository(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -271,7 +303,11 @@ class AppRouter {
     final isLoggedIn = AuthService.instance.currentUser.value != null;
     final location = state.matchedLocation;
 
-    const publicRoutes = {AppRoutes.splash, AppRoutes.login, AppRoutes.register};
+    const publicRoutes = {
+      AppRoutes.splash,
+      AppRoutes.login,
+      AppRoutes.register,
+    };
     final isPublic = publicRoutes.contains(location);
 
     if (isLoggedIn && isPublic) {

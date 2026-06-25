@@ -31,6 +31,11 @@ export const envValidationSchema = Joi.object({
   THROTTLE_TTL: Joi.number().default(60000),
   THROTTLE_LIMIT: Joi.number().default(100),
   CORS_ORIGIN: Joi.string().required(),
+
+  // Driver do cache. Em dev local sem Redis disponivel, usar `memory` para
+  // cache em memoria (sem persistencia entre instancias). Em qualquer
+  // ambiente com Redis acessivel, usar `redis` (padrao).
+  CACHE_DRIVER: Joi.string().valid('redis', 'memory').default('redis'),
   REDIS_URL: Joi.string().uri().default('redis://localhost:6379'),
   GLITCHTIP_DSN: Joi.string().uri().allow('').default(''),
   JWT_SECRET: Joi.string().required(),

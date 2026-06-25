@@ -21,6 +21,7 @@ import {
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { CitiesService } from './cities.service';
 import { CityResponse } from './dto/response/city-response.dto';
+import { CityStatsResponse } from './dto/response/city-stats-response.dto';
 import { CreateCityDto } from './dto/request/create-city.dto';
 import { UpdateCityDto } from './dto/request/update-city.dto';
 import { CACHE_TTL_1_HOUR } from '../../common/constants/cache.constants';
@@ -50,11 +51,31 @@ export class CitiesController extends BaseCrudController<
     return super.findAll(query);
   }
 
+  @Get('stats')
+  @Public()
+  @ApiOperation({
+    summary: 'Estatísticas agregadas de cidades',
+    description:
+      'Retorna total, quantas têm admin ativo (role ADMIN com email verificado) e quantas aguardam admin.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Estatísticas calculadas com sucesso',
+    type: CityStatsResponse,
+  })
+  getStats(): Promise<CityStatsResponse> {
+    return this.citiesService.getStats();
+  }
+
   @Get(':id')
   @Public()
   @ApiOperation({ summary: 'Buscar cidade por ID' })
-  @ApiResponse({ status: 200, description: 'Cidade encontrada' })
-  @ApiResponse({ status: 404, description: 'Cidade não encontrada' })
+  @ApiResponse({
+    status: 200,
+    description: 'Cidade encontrada',
+    type: CityResponse,
+  })
+  @ApiResponse({ status: 404, description: 'city_not_found' })
   override findOne(@Param('id') id: string) {
     return super.findOne(id);
   }
@@ -62,9 +83,19 @@ export class CitiesController extends BaseCrudController<
   @Post()
   @UseGuards(SuperAdminGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Criar cidade' })
-  @ApiResponse({ status: 201, description: 'Cidade criada com sucesso' })
-  @ApiResponse({ status: 409, description: 'Cidade já existe' })
+  @ApiOperation({ summary: 'Criar cidade (Super Admin)' })
+  @ApiResponse({
+    status: 201,
+    description: 'Cidade criada com sucesso',
+    type: CityResponse,
+  })
+  @ApiResponse({ status: 400, description: 'validation_failed' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({
+    status: 403,
+    description: 'role_denied | super_admin_required',
+  })
+  @ApiResponse({ status: 409, description: 'city_duplicate' })
   override create(@Body() dto: CreateCityDto) {
     return super.create(dto);
   }
@@ -72,9 +103,19 @@ export class CitiesController extends BaseCrudController<
   @Patch(':id')
   @UseGuards(SuperAdminGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Atualizar cidade' })
-  @ApiResponse({ status: 200, description: 'Cidade atualizada com sucesso' })
-  @ApiResponse({ status: 404, description: 'Cidade não encontrada' })
+  @ApiOperation({ summary: 'Atualizar cidade (Super Admin)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Cidade atualizada com sucesso',
+    type: CityResponse,
+  })
+  @ApiResponse({ status: 400, description: 'validation_failed' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({
+    status: 403,
+    description: 'role_denied | super_admin_required',
+  })
+  @ApiResponse({ status: 404, description: 'city_not_found' })
   override update(@Param('id') id: string, @Body() dto: UpdateCityDto) {
     return super.update(id, dto);
   }
@@ -83,9 +124,15 @@ export class CitiesController extends BaseCrudController<
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(SuperAdminGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Deletar cidade' })
+  @ApiOperation({ summary: 'Deletar cidade (soft delete, Super Admin)' })
   @ApiResponse({ status: 204, description: 'Cidade deletada com sucesso' })
-  @ApiResponse({ status: 409, description: 'Cidade possui conteúdo associado' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({
+    status: 403,
+    description: 'role_denied | super_admin_required',
+  })
+  @ApiResponse({ status: 404, description: 'city_not_found' })
+  @ApiResponse({ status: 409, description: 'city_has_content' })
   override remove(@Param('id') id: string) {
     return super.remove(id);
   }

@@ -43,14 +43,11 @@ export class LikesController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Target inválido, nulo ou múltiplos targets informados',
+    description: 'validation_failed | no_target | multiple_targets',
   })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Acesso negado: requer papel CIDADAO',
-  })
-  @ApiResponse({ status: 404, description: 'Recurso alvo não encontrado' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied' })
+  @ApiResponse({ status: 404, description: 'target_not_found' })
   async toggleLike(
     @Body() dto: CreateLikeToggleDto,
     @Request() req: ExpressRequest,

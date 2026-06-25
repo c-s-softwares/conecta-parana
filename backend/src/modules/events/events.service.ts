@@ -1,7 +1,4 @@
-import {
-  VALID_EVENT_STATUS,
-  VALID_EVENT_TYPES,
-} from './constants/events.constants';
+import { VALID_EVENT_TYPES } from './constants/events.constants';
 
 import {
   BadRequestException,
@@ -27,14 +24,17 @@ import { UpdateEventDto } from './dto/request/update-event.dto';
 import { QueryEventsDto } from './dto/request/query-events.dto';
 
 import { BaseCrudService } from '../../common/services/base-crud.service';
-import { EventResponse } from './dto/response/event-response.dto';
+import {
+  EventDetailResponse,
+  EventResponse,
+} from './dto/response/event-response.dto';
 
 type EventEntity = {
   id: string;
   title: string;
   description: string;
   type: string;
-  status: string;
+  isActive: boolean;
   eventDate: Date;
 
   cityId: string;
@@ -73,7 +73,7 @@ export class EventsService extends BaseCrudService<
       title: event.title,
       description: event.description,
       type: event.type,
-      status: event.status,
+      isActive: event.isActive,
       eventDate: event.eventDate,
       cityId: event.cityId,
       userId: event.userId,
@@ -84,13 +84,10 @@ export class EventsService extends BaseCrudService<
   }
 
   protected toCreateData(dto: CreateEventDto): Record<string, unknown> {
-    // This is handled in the create override because it needs context.
-    // Returning dummy to satisfy abstract signature.
     return { ...dto };
   }
 
   protected toUpdateData(dto: UpdateEventDto): Record<string, unknown> {
-    // Handled in override
     return { ...dto };
   }
 
@@ -98,7 +95,7 @@ export class EventsService extends BaseCrudService<
     const where: Record<string, unknown> = {
       ...(query.cityId && { cityId: query.cityId }),
       ...(query.type && { type: query.type }),
-      ...(query.status && { status: query.status }),
+      ...(query.isActive !== undefined && { isActive: query.isActive }),
     };
 
     if (query.from || query.to) {
@@ -122,7 +119,6 @@ export class EventsService extends BaseCrudService<
     const pageSize = query.pageSize ?? 10;
 
     this.validateOptionalType(query.type);
-    this.validateOptionalStatus(query.status);
 
     const where = {
       ...this.buildBaseWhere(),
@@ -152,12 +148,10 @@ export class EventsService extends BaseCrudService<
     };
   }
 
-  // Override to include user context
   async create(dto: CreateEventDto, user?: JwtPayload): Promise<EventResponse> {
     if (!user) throw new ForbiddenException();
 
     this.validateType(dto.type);
-    this.validateStatus(dto.status);
     this.validateEventDate(dto.eventDate);
 
     const cityId = this.resolveCityId(dto.cityId, user);
@@ -172,7 +166,7 @@ export class EventsService extends BaseCrudService<
         title: dto.title,
         description: dto.description,
         type: dto.type,
-        status: dto.status,
+        isActive: dto.isActive ?? true,
         eventDate: new Date(dto.eventDate),
         cityId,
         userId: user.sub,
@@ -184,7 +178,6 @@ export class EventsService extends BaseCrudService<
     return this.toResponse(entity);
   }
 
-  // Override for user context and optimistic lock
   async update(
     id: string,
     dto: UpdateEventDto,
@@ -206,7 +199,6 @@ export class EventsService extends BaseCrudService<
     this.validateAdminCityScope(current.cityId, user);
 
     if (dto.type) this.validateType(dto.type);
-    if (dto.status) this.validateStatus(dto.status);
 
     const cityId = dto.cityId ?? current.cityId;
 
@@ -229,7 +221,7 @@ export class EventsService extends BaseCrudService<
             description: dto.description,
           }),
           ...(dto.type !== undefined && { type: dto.type }),
-          ...(dto.status !== undefined && { status: dto.status }),
+          ...(dto.isActive !== undefined && { isActive: dto.isActive }),
           ...(dto.eventDate !== undefined && {
             eventDate: new Date(dto.eventDate),
           }),
@@ -273,6 +265,46 @@ export class EventsService extends BaseCrudService<
     });
 
     await this.afterDelete(id);
+  }
+
+  async findOneDetail(
+    id: string,
+    userId?: string,
+  ): Promise<EventDetailResponse> {
+    const event = await this.prisma.client.event.findFirst({
+      where: { id, deletedAt: null },
+      include: {
+        _count: { select: { likes: true } },
+      },
+    });
+
+    if (!event) {
+      throw new NotFoundException(apiError(EVENT_ERRORS.EVENT_NOT_FOUND));
+    }
+
+    let liked = false;
+    let saved = false;
+    if (userId) {
+      const [likeExists, saveExists] = await Promise.all([
+        this.prisma.client.like.findFirst({
+          where: { userId, eventId: id },
+          select: { id: true },
+        }),
+        this.prisma.client.save.findFirst({
+          where: { userId, eventId: id },
+          select: { id: true },
+        }),
+      ]);
+      liked = !!likeExists;
+      saved = !!saveExists;
+    }
+
+    return {
+      ...this.toResponse(event),
+      likesCount: event._count.likes,
+      liked,
+      saved,
+    };
   }
 
   private resolveCityId(cityId: string | undefined, user: JwtPayload): string {
@@ -331,17 +363,7 @@ export class EventsService extends BaseCrudService<
     }
   }
 
-  private validateStatus(status: string): void {
-    if (!VALID_EVENT_STATUS.includes(status)) {
-      throw new BadRequestException(apiError(EVENT_ERRORS.INVALID_STATUS));
-    }
-  }
-
   private validateOptionalType(type?: string): void {
     if (type) this.validateType(type);
-  }
-
-  private validateOptionalStatus(status?: string): void {
-    if (status) this.validateStatus(status);
   }
 }

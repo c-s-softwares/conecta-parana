@@ -1,4 +1,10 @@
-import { IsArray, IsDateString, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsDateString,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateEventDto {
@@ -18,18 +24,18 @@ export class UpdateEventDto {
   @IsString()
   description?: string;
 
-  @ApiPropertyOptional({ example: 'CULTURAL', description: 'Tipo do evento' })
+  @ApiPropertyOptional({ example: 'cultural', description: 'Tipo do evento' })
   @IsOptional()
   @IsString()
   type?: string;
 
   @ApiPropertyOptional({
-    example: 'SCHEDULED',
-    description: 'Status do evento',
+    example: true,
+    description: 'Indica se o evento está ativo',
   })
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsBoolean()
+  isActive?: boolean;
 
   @ApiPropertyOptional({
     example: '2025-12-01T10:00:00Z',
@@ -40,7 +46,7 @@ export class UpdateEventDto {
   eventDate?: string;
 
   @ApiPropertyOptional({
-    example: 'city_01HZX...',
+    example: 'cit_01HZX...',
     description: 'ID da cidade associada',
   })
   @IsOptional()
@@ -48,7 +54,7 @@ export class UpdateEventDto {
   cityId?: string;
 
   @ApiPropertyOptional({
-    example: 'local_01HZX...',
+    example: 'loc_01HZX...',
     description: 'ID do local físico do evento',
   })
   @IsOptional()

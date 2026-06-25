@@ -61,8 +61,12 @@ export class CategoryController extends BaseCrudController<
   @Get(':id')
   @Public()
   @ApiOperation({ summary: 'Buscar categoria por ID' })
-  @ApiResponse({ status: 200, description: 'Categoria encontrada' })
-  @ApiResponse({ status: 404, description: 'Categoria não encontrada' })
+  @ApiResponse({
+    status: 200,
+    description: 'Categoria encontrada',
+    type: CategoryResponse,
+  })
+  @ApiResponse({ status: 404, description: 'category_not_found' })
   override findOne(@Param('id') id: string) {
     return super.findOne(id);
   }
@@ -70,9 +74,19 @@ export class CategoryController extends BaseCrudController<
   @Post()
   @UseGuards(SuperAdminGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Criar categoria' })
-  @ApiResponse({ status: 201, description: 'Categoria criada com sucesso' })
-  @ApiResponse({ status: 409, description: 'Categoria já existe' })
+  @ApiOperation({ summary: 'Criar categoria (Super Admin)' })
+  @ApiResponse({
+    status: 201,
+    description: 'Categoria criada com sucesso',
+    type: CategoryResponse,
+  })
+  @ApiResponse({ status: 400, description: 'validation_failed | invalid_icon' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({
+    status: 403,
+    description: 'role_denied | super_admin_required',
+  })
+  @ApiResponse({ status: 409, description: 'category_duplicate' })
   override create(@Body() dto: CreateCategoryDto) {
     return super.create(dto);
   }
@@ -80,9 +94,19 @@ export class CategoryController extends BaseCrudController<
   @Patch(':id')
   @UseGuards(SuperAdminGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Atualizar categoria' })
-  @ApiResponse({ status: 200, description: 'Categoria atualizada com sucesso' })
-  @ApiResponse({ status: 404, description: 'Categoria não encontrada' })
+  @ApiOperation({ summary: 'Atualizar categoria (Super Admin)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Categoria atualizada com sucesso',
+    type: CategoryResponse,
+  })
+  @ApiResponse({ status: 400, description: 'validation_failed | invalid_icon' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({
+    status: 403,
+    description: 'role_denied | super_admin_required',
+  })
+  @ApiResponse({ status: 404, description: 'category_not_found' })
   override update(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
     return super.update(id, dto);
   }
@@ -91,12 +115,15 @@ export class CategoryController extends BaseCrudController<
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(SuperAdminGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Deletar categoria' })
+  @ApiOperation({ summary: 'Deletar categoria (soft delete, Super Admin)' })
   @ApiResponse({ status: 204, description: 'Categoria deletada com sucesso' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
   @ApiResponse({
-    status: 409,
-    description: 'Categoria possui locais associados',
+    status: 403,
+    description: 'role_denied | super_admin_required',
   })
+  @ApiResponse({ status: 404, description: 'category_not_found' })
+  @ApiResponse({ status: 409, description: 'category_has_locals' })
   override remove(@Param('id') id: string) {
     return super.remove(id);
   }

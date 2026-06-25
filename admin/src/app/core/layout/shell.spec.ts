@@ -1,62 +1,113 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
+
 import { Shell } from './shell';
 import { AuthService } from '../services/auth.service';
+import { AuthUser } from '../services/auth.model';
+
+const municipalUser: AuthUser = {
+  id: 'usr_1',
+  name: 'Ana Lima',
+  email: 'ana@conecta.local',
+  role: 'ADMIN',
+  cityId: 'cit_maringa',
+  cityName: 'Maringá',
+};
+
+const superUser: AuthUser = {
+  id: 'usr_2',
+  name: 'Bia Souza',
+  email: 'bia@conecta.local',
+  role: 'ADMIN',
+  cityId: null,
+  cityName: null,
+};
 
 describe('Shell', () => {
-  let fixture: ComponentFixture<Shell>;
+  const isSuper = signal(false);
+  const currentUser = signal<AuthUser | null>(null);
+  const logout = vi.fn();
+
   let component: Shell;
-  let el: HTMLElement;
 
   beforeEach(async () => {
-    vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    isSuper.set(false);
+    currentUser.set(null);
+    logout.mockClear();
+
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
     await TestBed.configureTestingModule({
       imports: [Shell, RouterModule.forRoot([])],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        { provide: AuthService, useValue: { isSuperAdmin: isSuper, currentUser, logout } },
+      ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Shell);
-    component = fixture.componentInstance;
-    el = fixture.nativeElement;
-    fixture.detectChanges();
+    component = TestBed.createComponent(Shell).componentInstance;
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
+  afterEach(() => vi.restoreAllMocks());
+
+  it('mostra os 5 itens do ADMIN municipal', () => {
+    currentUser.set(municipalUser);
+    expect(component['visibleNavItems']().map((i) => i.route)).toEqual([
+      '/dashboard',
+      '/eventos',
+      '/comunicados',
+      '/noticias',
+      '/sugestoes',
+    ]);
   });
 
-  it('deve criar o componente e renderizar sidebar + router-outlet', () => {
-    expect(component).toBeTruthy();
-    expect(el.querySelector('app-sidebar')).toBeTruthy();
-    expect(el.querySelector('router-outlet')).toBeTruthy();
+  it('mostra os 3 itens do Super Admin', () => {
+    isSuper.set(true);
+    currentUser.set(superUser);
+    expect(component['visibleNavItems']().map((i) => i.route)).toEqual([
+      '/dashboard',
+      '/cidades',
+      '/administradores',
+    ]);
   });
 
-  it('deve ter 6 navItems com labels, rotas e ícones corretos', () => {
-    const items = component['navItems'];
-    expect(items).toHaveLength(6);
+  it('sidebarUser é nulo sem usuário e traz cidade + iniciais para municipal', () => {
+    expect(component['sidebarUser']()).toBeNull();
 
-    const expectedLabels = ['Postagens', 'Eventos', 'Notícias', 'Locais', 'Notificações', 'Administradores'];
-    expect(items.map((i) => i.label)).toEqual(expectedLabels);
-
-    for (const item of items) {
-      expect(item.route).toMatch(/^\//);
-      expect(item.icon).toBeTruthy();
-    }
+    currentUser.set(municipalUser);
+    expect(component['sidebarUser']()).toEqual({
+      name: 'Ana Lima',
+      roleLabel: 'Admin · Maringá',
+      initials: 'AL',
+    });
   });
 
-  it('deve renderizar 6 links na sidebar', () => {
-    expect(el.querySelectorAll('app-sidebar a').length).toBe(6);
+  it('roleLabel do Super Admin é "Super Admin"', () => {
+    isSuper.set(true);
+    currentUser.set(superUser);
+    expect(component['sidebarUser']()?.roleLabel).toBe('Super Admin');
   });
 
-  it('onLogout deve chamar AuthService.logout com motivo manual', () => {
-    const auth = TestBed.inject(AuthService);
-    const spy = vi.spyOn(auth, 'logout').mockImplementation(() => undefined);
-
+  it('onLogout chama auth.logout("manual")', () => {
     component.onLogout();
+    expect(logout).toHaveBeenCalledWith('manual');
+  });
 
-    expect(spy).toHaveBeenCalledWith('manual');
+  it('renderiza a sidebar: skeleton sem usuário, depois nome + cidade e botão Sair', () => {
+    const fixture = TestBed.createComponent(Shell);
+    const el: HTMLElement = fixture.nativeElement;
+
+    fixture.detectChanges();
+    expect(el.querySelector('app-sidebar .skeleton')).toBeTruthy();
+    expect(el.querySelector('router-outlet')).toBeTruthy();
+
+    currentUser.set(municipalUser);
+    fixture.detectChanges();
+    expect(el.querySelector('.user-name')?.textContent?.trim()).toBe('Ana Lima');
+    expect(el.querySelector('.user-role')?.textContent?.trim()).toBe('Admin · Maringá');
+    expect(el.querySelectorAll('app-sidebar .nav-item').length).toBeGreaterThan(0);
+
+    el.querySelector<HTMLButtonElement>('.sidebar-footer button')?.click();
+    expect(logout).toHaveBeenCalledWith('manual');
   });
 });

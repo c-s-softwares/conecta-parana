@@ -163,7 +163,7 @@ export class SavesService {
           title: save.event.title,
           description: save.event.description,
           type: save.event.type,
-          status: save.event.status,
+          isActive: save.event.isActive,
           eventDate: save.event.eventDate,
           cityId: save.event.cityId,
           userId: save.event.userId,

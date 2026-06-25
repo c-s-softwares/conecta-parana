@@ -43,7 +43,7 @@ export class UploadsService {
    * Upload de foto associada a uma entidade. Fluxo:
    * 1) Validações de arquivo (tipo, tamanho) e entityType (whitelist).
    * 2) Resolve entityId efetivo (user.sub para user_avatar).
-   * 3) Verifica existência da entidade alvo (exceto ticket, ainda não modelado).
+   * 3) Verifica existência da entidade alvo.
    * 4) Verifica autorização (papel + escopo de cidade).
    * 5) user_avatar: remove avatar anterior do mesmo usuário (1 ativo por user).
    * 6) Demais tipos: enforce limite de 10 fotos por entidade.
@@ -102,6 +102,9 @@ export class UploadsService {
           eventId: dto.entityType === ENTITY_TYPES.EVENT ? entityId : null,
           localId: dto.entityType === ENTITY_TYPES.LOCAL ? entityId : null,
           ticketId: dto.entityType === ENTITY_TYPES.TICKET ? entityId : null,
+          newsId: dto.entityType === ENTITY_TYPES.NEWS ? entityId : null,
+          communicateId:
+            dto.entityType === ENTITY_TYPES.COMMUNICATE ? entityId : null,
         },
       });
 
@@ -117,9 +120,8 @@ export class UploadsService {
   /**
    * Remove foto por id. Autorização:
    * - user_avatar: apenas o dono da foto.
-   * - event/local: qualquer ADMIN da mesma cidade do recurso.
-   * - ticket: apenas ADMIN (city scope será adicionado em CPR-27, quando o
-   *   modelo Ticket existir e expuser cityId).
+   * - event/local/news/communicate: ADMIN da mesma cidade do recurso.
+   * - ticket: ADMIN da mesma cidade do ticket (cidadão dono não pode deletar).
    */
   async remove(id: string, user: JwtPayload): Promise<void> {
     const photo = await this.prisma.client.photo.findUnique({ where: { id } });
@@ -182,43 +184,48 @@ export class UploadsService {
     entityType: EntityType,
     entityId: string,
   ): Promise<void> {
-    if (entityType === ENTITY_TYPES.EVENT) {
-      const exists = await this.prisma.client.event.findUnique({
-        where: { id: entityId },
-        select: { id: true },
-      });
-      if (!exists) {
-        throw new BadRequestException(
-          apiError(UPLOADS_ERRORS.ENTITY_NOT_FOUND),
-        );
-      }
-      return;
+    const exists = await this.findEntityById(entityType, entityId);
+    if (!exists) {
+      throw new BadRequestException(apiError(UPLOADS_ERRORS.ENTITY_NOT_FOUND));
     }
-    if (entityType === ENTITY_TYPES.LOCAL) {
-      const exists = await this.prisma.client.local.findFirst({
-        where: { id: entityId, deletedAt: null },
-        select: { id: true },
-      });
-      if (!exists) {
-        throw new BadRequestException(
-          apiError(UPLOADS_ERRORS.ENTITY_NOT_FOUND),
-        );
-      }
-      return;
+  }
+
+  private async findEntityById(
+    entityType: EntityType,
+    entityId: string,
+  ): Promise<{ id: string } | null> {
+    switch (entityType) {
+      case ENTITY_TYPES.EVENT:
+        return this.prisma.client.event.findUnique({
+          where: { id: entityId },
+          select: { id: true },
+        });
+      case ENTITY_TYPES.LOCAL:
+        return this.prisma.client.local.findFirst({
+          where: { id: entityId, deletedAt: null },
+          select: { id: true },
+        });
+      case ENTITY_TYPES.USER_AVATAR:
+        return this.prisma.client.user.findUnique({
+          where: { id: entityId },
+          select: { id: true },
+        });
+      case ENTITY_TYPES.NEWS:
+        return this.prisma.client.news.findUnique({
+          where: { id: entityId },
+          select: { id: true },
+        });
+      case ENTITY_TYPES.COMMUNICATE:
+        return this.prisma.client.communicate.findUnique({
+          where: { id: entityId },
+          select: { id: true },
+        });
+      case ENTITY_TYPES.TICKET:
+        return this.prisma.client.ticket.findUnique({
+          where: { id: entityId },
+          select: { id: true },
+        });
     }
-    if (entityType === ENTITY_TYPES.USER_AVATAR) {
-      const exists = await this.prisma.client.user.findUnique({
-        where: { id: entityId },
-        select: { id: true },
-      });
-      if (!exists) {
-        throw new BadRequestException(
-          apiError(UPLOADS_ERRORS.ENTITY_NOT_FOUND),
-        );
-      }
-      return;
-    }
-    // ticket: modelo ainda não existe. Aceita o id sem verificar.
   }
 
   private async assertAuthorized(
@@ -239,15 +246,23 @@ export class UploadsService {
 
     if (entityType === ENTITY_TYPES.TICKET) {
       // Regra do produto:
-      //   - Upload: qualquer autenticado (o cidadão envia fotos do próprio
-      //     ticket; ADMIN também pode anexar do lado do suporte).
+      //   - Upload: cidadão dono do ticket OU ADMIN da cidade do ticket.
       //   - Delete: apenas ADMIN da cidade do ticket.
-      //
-      // TODO: quando o modelo Ticket existir, validar city scope no
-      //   delete via `getEntityCityId('ticket', entityId)` (ticket vai ter
-      //   cityId). Hoje validamos apenas o papel ADMIN no delete; a checagem
-      //   de cidade fica indisponível porque o ticket não está no schema.
-      if (opts.isDelete && user.role !== Role.ADMIN) {
+      const ticket = await this.prisma.client.ticket.findUnique({
+        where: { id: entityId },
+        select: { userId: true, cityId: true },
+      });
+      if (!ticket) {
+        throw new BadRequestException(
+          apiError(UPLOADS_ERRORS.ENTITY_NOT_FOUND),
+        );
+      }
+      const isAdminOfCity =
+        user.role === Role.ADMIN &&
+        (!user.cityId || user.cityId === ticket.cityId);
+      const isOwner = user.sub === ticket.userId;
+      const allowed = opts.isDelete ? isAdminOfCity : isAdminOfCity || isOwner;
+      if (!allowed) {
         throw new ForbiddenException(
           apiError(SHARED_ERRORS.NOT_OWNER_OR_ADMIN),
         );
@@ -264,55 +279,95 @@ export class UploadsService {
     if (user.cityId && user.cityId !== targetCityId) {
       throw new ForbiddenException(apiError(SHARED_ERRORS.CITY_SCOPE_DENIED));
     }
-
-    // opts.isDelete consumido apenas no branch de ticket (acima); para
-    // event/local a regra é a mesma para upload e delete.
-    void opts;
-    void opts;
   }
 
   private async getEntityCityId(
     entityType: EntityType,
     entityId: string,
   ): Promise<string> {
-    if (entityType === ENTITY_TYPES.EVENT) {
-      const event = await this.prisma.client.event.findUnique({
-        where: { id: entityId },
-        select: { cityId: true },
-      });
-      if (!event) {
-        throw new BadRequestException(
-          apiError(UPLOADS_ERRORS.ENTITY_NOT_FOUND),
-        );
-      }
-      return event.cityId;
-    }
-    const local = await this.prisma.client.local.findFirst({
-      where: { id: entityId, deletedAt: null },
-      select: { cityId: true },
-    });
-    if (!local) {
+    const cityId = await this.findEntityCityId(entityType, entityId);
+    if (cityId === null) {
       throw new BadRequestException(apiError(UPLOADS_ERRORS.ENTITY_NOT_FOUND));
     }
-    return local.cityId;
+    return cityId;
+  }
+
+  private async findEntityCityId(
+    entityType: EntityType,
+    entityId: string,
+  ): Promise<string | null> {
+    switch (entityType) {
+      case ENTITY_TYPES.EVENT: {
+        const event = await this.prisma.client.event.findUnique({
+          where: { id: entityId },
+          select: { cityId: true },
+        });
+        return event?.cityId ?? null;
+      }
+      case ENTITY_TYPES.LOCAL: {
+        const local = await this.prisma.client.local.findFirst({
+          where: { id: entityId, deletedAt: null },
+          select: { cityId: true },
+        });
+        return local?.cityId ?? null;
+      }
+      case ENTITY_TYPES.NEWS: {
+        const news = await this.prisma.client.news.findUnique({
+          where: { id: entityId },
+          select: { cityId: true },
+        });
+        return news?.cityId ?? null;
+      }
+      case ENTITY_TYPES.COMMUNICATE: {
+        const communicate = await this.prisma.client.communicate.findUnique({
+          where: { id: entityId },
+          select: { cityId: true },
+        });
+        return communicate?.cityId ?? null;
+      }
+      case ENTITY_TYPES.TICKET: {
+        const ticket = await this.prisma.client.ticket.findUnique({
+          where: { id: entityId },
+          select: { cityId: true },
+        });
+        return ticket?.cityId ?? null;
+      }
+      case ENTITY_TYPES.USER_AVATAR:
+        // Não chamado para user_avatar; assertAuthorized trata antes.
+        return null;
+    }
   }
 
   private async assertPhotoLimit(
     entityType: EntityType,
     entityId: string,
   ): Promise<void> {
-    const where =
-      entityType === ENTITY_TYPES.EVENT
-        ? { eventId: entityId }
-        : entityType === ENTITY_TYPES.LOCAL
-          ? { localId: entityId }
-          : { ticketId: entityId };
-
+    const where = this.buildPhotoFkWhere(entityType, entityId);
     const count = await this.prisma.client.photo.count({ where });
     if (count >= ENTITY_PHOTO_LIMIT) {
       throw new BadRequestException(
         apiError(UPLOADS_ERRORS.PHOTO_LIMIT_REACHED),
       );
+    }
+  }
+
+  private buildPhotoFkWhere(
+    entityType: EntityType,
+    entityId: string,
+  ): Record<string, string> {
+    switch (entityType) {
+      case ENTITY_TYPES.EVENT:
+        return { eventId: entityId };
+      case ENTITY_TYPES.LOCAL:
+        return { localId: entityId };
+      case ENTITY_TYPES.TICKET:
+        return { ticketId: entityId };
+      case ENTITY_TYPES.NEWS:
+        return { newsId: entityId };
+      case ENTITY_TYPES.COMMUNICATE:
+        return { communicateId: entityId };
+      case ENTITY_TYPES.USER_AVATAR:
+        return { userId: entityId };
     }
   }
 
@@ -323,6 +378,8 @@ export class UploadsService {
         eventId: null,
         localId: null,
         ticketId: null,
+        newsId: null,
+        communicateId: null,
       },
     });
 
@@ -390,10 +447,14 @@ export class UploadsService {
     eventId: string | null;
     localId: string | null;
     ticketId: string | null;
+    newsId: string | null;
+    communicateId: string | null;
   }): EntityType {
     if (photo.eventId) return ENTITY_TYPES.EVENT;
     if (photo.localId) return ENTITY_TYPES.LOCAL;
     if (photo.ticketId) return ENTITY_TYPES.TICKET;
+    if (photo.newsId) return ENTITY_TYPES.NEWS;
+    if (photo.communicateId) return ENTITY_TYPES.COMMUNICATE;
     return ENTITY_TYPES.USER_AVATAR;
   }
 
@@ -402,6 +463,8 @@ export class UploadsService {
       eventId: string | null;
       localId: string | null;
       ticketId: string | null;
+      newsId: string | null;
+      communicateId: string | null;
       userId: string;
     },
     entityType: EntityType,
@@ -413,6 +476,10 @@ export class UploadsService {
         return photo.localId!;
       case ENTITY_TYPES.TICKET:
         return photo.ticketId!;
+      case ENTITY_TYPES.NEWS:
+        return photo.newsId!;
+      case ENTITY_TYPES.COMMUNICATE:
+        return photo.communicateId!;
       case ENTITY_TYPES.USER_AVATAR:
         return photo.userId;
     }

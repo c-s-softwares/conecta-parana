@@ -1,15 +1,37 @@
-import { Injectable, ConflictException, Inject, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  Inject,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
+import { Role } from '@prisma/client';
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 import { BaseCrudService } from '../../common/services/base-crud.service';
+import { PaginatedResponseDto } from '../../common/dto/response/paginated-response.dto';
 import { CreateCityDto } from './dto/request/create-city.dto';
 import { UpdateCityDto } from './dto/request/update-city.dto';
 import { CityResponse } from './dto/response/city-response.dto';
+import { CityStatsResponse } from './dto/response/city-stats-response.dto';
 import { PaginationQueryDto } from '../../common/dto/request/pagination-query.dto';
 import { apiError } from '../../common/errors/api-error';
 import { CITIES_ERRORS } from './cities.errors';
+
+const ACTIVE_ADMIN_COUNT_INCLUDE = {
+  _count: {
+    select: {
+      users: {
+        where: {
+          role: Role.ADMIN,
+          emailVerifiedAt: { not: null },
+        },
+      },
+    },
+  },
+} as const;
 
 interface RedisCacheClient {
   keys(pattern: string): Promise<string[]>;
@@ -53,12 +75,81 @@ export class CitiesService extends BaseCrudService<
       id: string;
       name: string;
       state: string;
+      _count?: { users: number };
     };
     return {
       id: city.id,
       name: city.name,
       state: city.state,
+      adminCount: city._count?.users ?? 0,
     };
+  }
+
+  override async findAll(
+    query: PaginationQueryDto,
+  ): Promise<PaginatedResponseDto<CityResponse>> {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 10;
+    const where = {
+      ...this.buildBaseWhere(),
+      ...this.buildSearchWhere(query),
+    };
+
+    const [items, total] = await Promise.all([
+      this.prisma.client.city.findMany({
+        where,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: { createdAt: 'desc' },
+        include: ACTIVE_ADMIN_COUNT_INCLUDE,
+      }),
+      this.prisma.client.city.count({ where }),
+    ]);
+
+    return {
+      items: items.map((item) => this.toResponse(item)),
+      total,
+      page,
+      pageSize,
+    };
+  }
+
+  async getStats(): Promise<CityStatsResponse> {
+    const baseWhere = this.buildBaseWhere();
+
+    const [total, withActiveAdmin] = await Promise.all([
+      this.prisma.client.city.count({ where: baseWhere }),
+      this.prisma.client.city.count({
+        where: {
+          ...baseWhere,
+          users: {
+            some: {
+              role: Role.ADMIN,
+              emailVerifiedAt: { not: null },
+            },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      total,
+      withActiveAdmin,
+      awaitingAdmin: total - withActiveAdmin,
+    };
+  }
+
+  override async findOne(id: string): Promise<CityResponse> {
+    const entity = await this.prisma.client.city.findFirst({
+      where: { id, ...this.buildBaseWhere() },
+      include: ACTIVE_ADMIN_COUNT_INCLUDE,
+    });
+
+    if (!entity) {
+      throw new NotFoundException(apiError(CITIES_ERRORS.CITY_NOT_FOUND));
+    }
+
+    return this.toResponse(entity);
   }
 
   protected toCreateData(dto: CreateCityDto): Record<string, unknown> {

@@ -1,10 +1,18 @@
-export interface EventsForm {
+export interface EventItem {
+  id: string;
   title: string;
   type: string;
   description: string;
   event_date: string;
-  category_id: string;
   latitude: number | null;
   longitude: number | null;
-  local_id: string;
+}
+
+export interface EventsFormValues {
+  title: string;
+  type: string;
+  description: string;
+  event_date: string;
+  latitude: number | null;
+  longitude: number | null;
 }
