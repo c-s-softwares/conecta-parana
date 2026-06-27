@@ -7,7 +7,7 @@ export interface EventPhoto {
   url?: string;
 }
 
-export interface EventItem {
+export interface EventItem extends Record<string, unknown> {
   id: string;
   title: string;
   description: string;
