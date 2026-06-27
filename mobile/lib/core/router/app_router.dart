@@ -26,6 +26,7 @@ import 'package:go_router/go_router.dart';
 import 'package:conectaparana/features/suggestions/presentation/pages/suggestions_page.dart';
 import 'package:conectaparana/dev/fakes/fake_suggestion_repository.dart';
 import 'package:conectaparana/features/suggestions/presentation/pages/new_suggestion_page.dart';
+import 'package:conectaparana/features/favorites/pages/favorites_page.dart';
 
 abstract class AppRoutes {
   static const splash = '/';
@@ -289,6 +290,10 @@ class AppRouter {
                           ),
                         ),
                       ],
+                    ),
+                    GoRoute(
+                      path: 'favorites',
+                      builder: (context, state) => const FavoritesPage(),
                     ),
                   ],
                 ),
