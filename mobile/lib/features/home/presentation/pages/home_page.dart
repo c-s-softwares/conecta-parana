@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:conectaparana/core/auth/auth_service.dart';
-import 'package:conectaparana/core/auth/auth_user.dart';
 import 'package:conectaparana/core/router/app_router.dart';
 import 'package:conectaparana/features/register/data/models/services/city_model.dart';
 import 'package:conectaparana/shared/widgets/feedback/app_toast.dart';
@@ -23,6 +22,8 @@ import '../widgets/featured_banner_card.dart';
 import '../widgets/home_greeting_header.dart';
 import '../widgets/services_grid.dart';
 import 'package:conectaparana/shared/widgets/misc/delayed_display.dart';
+import 'package:conectaparana/features/city_switcher/presentation/controllers/active_city_provider.dart';
+import 'package:conectaparana/features/city_switcher/presentation/widgets/city_selector_bottom_sheet.dart';
 
 class HomePage extends StatefulWidget {
   final FeedNotifier? mockNotifier;
@@ -34,7 +35,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late final FeedNotifier _notifier;
+  late FeedNotifier _notifier;
+  double? _lastLat;
+  double? _lastLng;
   final ScrollController _scrollController = ScrollController();
   bool _ready = false;
 
@@ -62,7 +65,14 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _init() async {
     final user = AuthService.instance.currentUser.value;
-    final cityId = user?.cityId;
+
+    await activeCityController.loadFromStorage();
+    await activeCityController.syncFromProfileIfEmpty(
+      cityId: user?.cityId,
+      cityName: user?.cityName,
+    );
+
+    final cityId = activeCityController.value?.id ?? user?.cityId;
 
     if (cityId == null || cityId.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -87,6 +97,8 @@ class _HomePageState extends State<HomePage> {
         lng = position.longitude;
       } catch (_) {}
     }
+    _lastLat = lat;
+    _lastLng = lng;
 
     _notifier = FeedNotifier(
       repository: _feedRepository(),
@@ -97,17 +109,28 @@ class _HomePageState extends State<HomePage> {
 
     _scrollController.addListener(_onScroll);
     _notifier.addListener(_onStateChange);
+    activeCityController.addListener(_onActiveCityChanged);
     if (mounted) setState(() => _ready = true);
     _notifier.load();
   }
 
-  @override
-  void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
+  void _onActiveCityChanged() {
+    if (!mounted) return;
+    final city = activeCityController.value;
+    if (city == null || city.id == _notifier.cityId) return;
+
     _notifier.removeListener(_onStateChange);
-    if (widget.mockNotifier == null) _notifier.dispose();
-    super.dispose();
+    _notifier.dispose();
+
+    _notifier = FeedNotifier(
+      repository: _feedRepository(),
+      cityId: city.id,
+      lat: _lastLat,
+      lng: _lastLng,
+    );
+    _notifier.addListener(_onStateChange);
+    setState(() {});
+    _notifier.load();
   }
 
   void _onScroll() {
@@ -143,23 +166,18 @@ class _HomePageState extends State<HomePage> {
       body: SafeArea(
         child: Column(
           children: [
-            ValueListenableBuilder<AuthUser?>(
-              valueListenable: AuthService.instance.currentUser,
-              builder: (context, user, _) => AppHeader(
-                cityName: user?.cityName ?? '',
+            ValueListenableBuilder<City?>(
+              valueListenable: activeCityController,
+              builder: (context, city, _) => AppHeader(
+                cityName: city?.name ?? '',
                 hasAlert: _notificationBadge > 0,
                 onCityTap: () async {
-                  final city = await context.push<City>(AppRoutes.onboarding);
-                  if (city != null && mounted) {
-                    final current = AuthService.instance.currentUser.value;
-                    if (current != null) {
-                      AuthService.instance.currentUser.value = AuthUser(
-                        id: current.id,
-                        role: current.role,
-                        cityId: city.id,
-                        cityName: city.name,
-                      );
-                    }
+                  final selected = await showCitySelectorBottomSheet(
+                    context,
+                    selectedCityId: activeCityController.value?.id,
+                  );
+                  if (selected != null) {
+                    await activeCityController.setActiveCity(selected);
                   }
                 },
                 onNotificationTap: () {},
