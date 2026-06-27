@@ -110,15 +110,15 @@ describe('superAdminGuard', () => {
       superAdminGuard(ROUTE, stateOf('/admins')),
     );
     expect(toast.show).toHaveBeenCalledWith('error', 'Acesso restrito ao Super Admin.');
-    expect(asPath(router, result)).toBe('/dashboard');
+    expect(asPath(router, result)).toBe('/403');
   });
 
-  it('ADMIN municipal: bloqueia e redireciona para /dashboard', () => {
+  it('ADMIN municipal: bloqueia e redireciona para /403', () => {
     const { router } = setup(ADMIN_MUNICIPAL);
     const result = TestBed.runInInjectionContext(() =>
       superAdminGuard(ROUTE, stateOf('/admins')),
     );
-    expect(asPath(router, result)).toBe('/dashboard');
+    expect(asPath(router, result)).toBe('/403');
   });
 
   it('Super Admin: libera', () => {
