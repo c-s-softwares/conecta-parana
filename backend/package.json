@@ -9,12 +9,14 @@
     "postinstall": "prisma generate",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
-    "start:dev": "nest start --watch",
+    
+    "dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -22,12 +24,18 @@
     "test:e2e": "jest --config ./test/jest-e2e.json --runInBand",
     "test:all": "npm run lint && npm run test && npm run test:e2e",
     "test:mutation": "npx stryker run",
+
     "prisma:generate": "npx prisma generate",
     "prisma:migrate:dev": "npx prisma migrate dev",
     "prisma:migrate:deploy": "npx prisma migrate deploy",
     "prisma:studio": "npx prisma studio",
+
     "dev:seed:admin": "ts-node -r tsconfig-paths/register src/seeders/seed-admin.ts",
-    "seed:admin": "node dist/seeders/seed-admin.js"
+    "seed:admin": "node dist/seeders/seed-admin.js",
+
+    "dev:seed": "ts-node -r tsconfig-paths/register src/seeders/seed-initial.ts",
+    "seed:initial": "node dist/seeders/seed-initial.js"
+
   },
   "dependencies": {
     "@keyv/redis": "^5.1.6",
@@ -107,7 +115,19 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.(t|j)s",
+      "!main.(t|j)s",
+      "!**/*.module.(t|j)s",
+      "!**/*.controller.(t|j)s",
+      "!**/*.dto.(t|j)s",
+      "!**/*.decorator.(t|j)s",
+      "!**/*.filter.(t|j)s",
+      "!**/*.guard.(t|j)s",
+      "!**/*.interceptor.(t|j)s",
+      "!**/*.constants.(t|j)s",
+      "!**/*.types.(t|j)s",
+      "!config/**",
+      "!seeders/**"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"

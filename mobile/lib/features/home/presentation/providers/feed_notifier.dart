@@ -118,6 +118,8 @@ class FeedNotifier extends ValueNotifier<FeedState> {
     } on FeedNetworkException {
       if (cursor != null) {
         value = value.copyWith(status: FeedStatus.errorMore);
+      } else if (isRefresh && value.items.isNotEmpty) {
+        value = value.copyWith(status: FeedStatus.success);
       } else {
         value = value.copyWith(status: FeedStatus.errorFirst);
       }

@@ -62,8 +62,7 @@ export class LocalsController {
   })
   @ApiResponse({
     status: 400,
-    description:
-      'Erro de validação, coordenadas fora de faixa ou raio muito grande (> 50km)',
+    description: 'validation_failed | invalid_coordinates | radius_too_large',
   })
   findNearby(
     @Query() query: NearbyQueryDto,
@@ -73,31 +72,40 @@ export class LocalsController {
 
   @Get(':id')
   @Public()
-  @ApiOperation({ summary: 'Buscar local por ID' })
-  @ApiResponse({ status: 200, description: 'Local encontrado com sucesso' })
-  @ApiResponse({
-    status: 404,
-    description: 'Local não encontrado (local_not_found)',
+  @ApiOperation({
+    summary: 'Buscar local por ID com coordenadas e flag de salvo',
+    description:
+      'Endpoint público com auth opcional. Quando o token JWT é enviado, o campo saved reflete o estado do usuário; sem token, retorna false.',
   })
-  findOne(@Param('id') id: string): Promise<LocalResponseDto> {
-    return this.localsService.findOne(id);
+  @ApiResponse({
+    status: 200,
+    description: 'Local encontrado com sucesso',
+    type: LocalResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'local_not_found' })
+  findOne(
+    @Param('id') id: string,
+    @Request() req?: ExpressRequest & { user?: JwtPayload },
+  ): Promise<LocalResponseDto> {
+    return this.localsService.findOne(id, req?.user?.sub);
   }
 
   @Post()
   @RequireCityScope()
   @AdminRoute()
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Criar novo local (Administradores)' })
-  @ApiResponse({ status: 201, description: 'Local criado com sucesso' })
+  @ApiOperation({ summary: 'Criar novo local (ADMIN)' })
+  @ApiResponse({
+    status: 201,
+    description: 'Local criado com sucesso',
+    type: LocalResponseDto,
+  })
   @ApiResponse({
     status: 400,
-    description: 'Campos obrigatórios ausentes ou inválidos',
+    description: 'validation_failed | invalid_coordinates',
   })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Escopo de cidade violado (city_scope_denied)',
-  })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied | city_scope_denied' })
   create(
     @Body() dto: CreateLocalDto,
     @Request() req: ExpressRequest,
@@ -112,15 +120,19 @@ export class LocalsController {
   @Put(':id')
   @AdminRoute()
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Atualizar local existente (Administradores)' })
-  @ApiResponse({ status: 200, description: 'Local atualizado com sucesso' })
-  @ApiResponse({ status: 400, description: 'Dados de entrada inválidos' })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
+  @ApiOperation({ summary: 'Atualizar local existente (ADMIN da cidade)' })
   @ApiResponse({
-    status: 403,
-    description: 'Escopo de cidade violado (city_scope_denied)',
+    status: 200,
+    description: 'Local atualizado com sucesso',
+    type: LocalResponseDto,
   })
-  @ApiResponse({ status: 404, description: 'Local não encontrado' })
+  @ApiResponse({
+    status: 400,
+    description: 'validation_failed | invalid_coordinates',
+  })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied | city_scope_denied' })
+  @ApiResponse({ status: 404, description: 'local_not_found' })
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateLocalDto,
@@ -136,14 +148,11 @@ export class LocalsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @AdminRoute()
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Remover local existente (Soft-delete)' })
+  @ApiOperation({ summary: 'Remover local (soft delete, ADMIN da cidade)' })
   @ApiResponse({ status: 204, description: 'Local removido com sucesso' })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Escopo de cidade violado (city_scope_denied)',
-  })
-  @ApiResponse({ status: 404, description: 'Local não encontrado' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied | city_scope_denied' })
+  @ApiResponse({ status: 404, description: 'local_not_found' })
   async remove(
     @Param('id') id: string,
     @Request() req: ExpressRequest,

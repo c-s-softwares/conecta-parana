@@ -28,6 +28,7 @@ import { CategoryModule } from './modules/categories/category.module';
 import { FeedModule } from './modules/feed/feed.module';
 import { UsersModule } from './modules/users/users.module';
 import { SearchModule } from './modules/search/search.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { SearchModule } from './modules/search/search.module';
     FeedModule,
     UsersModule,
     SearchModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [

@@ -98,7 +98,7 @@ describe('Events (e2e)', () => {
         title: 'Evento E2E Lock Otimista',
         description: 'Teste',
         type: 'CULTURAL',
-        status: 'SCHEDULED',
+        isActive: true,
         eventDate: new Date('2026-12-31T20:00:00Z'),
         cityId,
         userId: `${TABLE_PREFIX.USER}e2esuper`,

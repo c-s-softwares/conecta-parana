@@ -79,7 +79,7 @@ describe('Feed (e2e)', () => {
           title: 'Evento Prioritário',
           description: 'Salta para o topo do feed',
           type: 'cultural',
-          status: 'publicado',
+          isActive: true,
           priority: true,
           // Fora da janela [-1d, +7d] para provar que priority salta independente de eventDate.
           eventDate: new Date(now + 30 * DAY_MS),
@@ -91,7 +91,7 @@ describe('Feed (e2e)', () => {
           title: 'Evento da Janela',
           description: 'Dentro de [-1d, +7d]',
           type: 'cultural',
-          status: 'publicado',
+          isActive: true,
           priority: false,
           eventDate: new Date(now + 2 * DAY_MS),
           cityId: FEED_CITY_ID,

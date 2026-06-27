@@ -1,0 +1,32 @@
+<div class="mt-6 space-y-3">
+  @for (item of items(); track $index) {
+    <div class="flex items-center justify-between rounded-lg bg-gray-200 px-5 py-4">
+      <div class="min-w-0 flex-1">
+        <ng-container
+          [ngTemplateOutlet]="rowTemplate()"
+          [ngTemplateOutletContext]="{ $implicit: item }"
+        />
+      </div>
+      <div class="ml-4 flex shrink-0 items-center gap-2">
+        <button
+          type="button"
+          (click)="edit.emit(item)"
+          aria-label="Editar"
+          class="cursor-pointer rounded-md p-1.5 text-gray-700 hover:bg-gray-300"
+        >
+          <ng-icon name="heroPencilSquare" size="20" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          (click)="delete.emit(item)"
+          aria-label="Excluir"
+          class="cursor-pointer rounded-md p-1.5 text-red-600 hover:bg-red-100"
+        >
+          <ng-icon name="heroTrash" size="20" aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+  } @empty {
+    <p class="py-8 text-center text-sm text-white/70">Nenhum item encontrado.</p>
+  }
+</div>

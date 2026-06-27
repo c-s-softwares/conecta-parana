@@ -15,6 +15,7 @@ import { generateId } from '../../common/utils/ulid.util';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 import { CreateAdminUserDto } from './dto/create-admin-user.dto';
 import { CreateAdminUserResponseDto } from './dto/create-admin-user-response.dto';
+import { AdminUserResponseDto } from './dto/admin-user-response.dto';
 import { Role } from '@prisma/client';
 
 @Injectable()
@@ -29,7 +30,6 @@ export class AdminService {
   async createAdminUser(
     dto: CreateAdminUserDto,
   ): Promise<CreateAdminUserResponseDto> {
-    // 1. Verificar unicidade do email
     const existing = await this.prisma.client.user.findUnique({
       where: { email: dto.email },
       select: { id: true },
@@ -39,7 +39,6 @@ export class AdminService {
       throw new ConflictException(apiError(ADMIN_ERRORS.EMAIL_EXISTS));
     }
 
-    // 2. Verificar que a cidade existe e não está deletada
     const city = await this.prisma.client.city.findFirst({
       where: { id: dto.cityId, deletedAt: null },
       select: { id: true, name: true },
@@ -49,11 +48,9 @@ export class AdminService {
       throw new NotFoundException(apiError(CITIES_ERRORS.CITY_NOT_FOUND));
     }
 
-    // 3. Gerar senha provisória (16 chars URL-safe via base64url)
     const provisionalPassword = randomBytes(12).toString('base64url');
     const hashedPassword = await hash(provisionalPassword, 10);
 
-    // 4. Persistir o novo usuário ADMIN
     const user = await this.prisma.client.user.create({
       data: {
         id: generateId(TABLE_PREFIX.USER),
@@ -65,8 +62,6 @@ export class AdminService {
       },
     });
 
-    // 5. Tentar envio do email de boas-vindas
-    //    Falha de email é efeito colateral externo — não desfaz a criação.
     let emailSent = false;
     try {
       await this.mail.sendAdminWelcome({
@@ -91,5 +86,22 @@ export class AdminService {
       role: user.role,
       emailSent,
     };
+  }
+
+  async listAdmins(): Promise<AdminUserResponseDto[]> {
+    const admins = await this.prisma.client.user.findMany({
+      where: { role: Role.ADMIN },
+      include: { city: { select: { name: true } } },
+      orderBy: [{ cityId: 'asc' }, { name: 'asc' }],
+    });
+
+    return admins.map((u) => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      cityId: u.cityId,
+      cityName: u.city?.name ?? null,
+      role: u.role,
+    }));
   }
 }

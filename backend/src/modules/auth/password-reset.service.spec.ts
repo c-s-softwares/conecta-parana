@@ -251,4 +251,34 @@ describe('PasswordResetService', () => {
       );
     });
   });
+
+  describe('verifyResetCode', () => {
+    const baseDto = { email: MOCK_EMAIL, code: MOCK_CODE };
+
+    it('retorna válido sem consumir o código quando ele é válido', async () => {
+      mockPrisma.client.user.findUnique.mockResolvedValue(MOCK_USER);
+      mockPrisma.client.passwordResetCode.findUnique.mockResolvedValue({
+        id: MOCK_RECORD_ID,
+        userId: MOCK_USER_ID,
+        codeHash: MOCK_CODE_HASH,
+        expiresAt: new Date(Date.now() + 60_000),
+        usedAt: null,
+      });
+
+      const result = await service.verifyResetCode(baseDto);
+
+      expect(result).toEqual({ message: 'Código válido' });
+      expect(mockPrisma.client.passwordResetCode.update).not.toHaveBeenCalled();
+      expect(mockPrisma.client.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('lança invalid_or_expired_code quando o código não casa', async () => {
+      mockPrisma.client.user.findUnique.mockResolvedValue(MOCK_USER);
+      mockPrisma.client.passwordResetCode.findUnique.mockResolvedValue(null);
+
+      await expect(service.verifyResetCode(baseDto)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+  });
 });

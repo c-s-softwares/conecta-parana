@@ -1,0 +1,229 @@
+<header class="page-header">
+  <div>
+    <h1 class="h1">{{ greeting() }}</h1>
+    <p class="lead">{{ subtitle() }}</p>
+  </div>
+
+  <div class="toolbar">
+    <div class="create-wrap">
+      <button type="button" class="btn btn-primary" (click)="createMenuOpen.set(!createMenuOpen())">
+        <ng-icon name="heroPlus" size="16" aria-hidden="true" />
+        Criar novo
+        <ng-icon name="heroChevronDown" size="14" aria-hidden="true" />
+      </button>
+
+      @if (createMenuOpen()) {
+        <button
+          type="button"
+          class="menu-backdrop"
+          (click)="createMenuOpen.set(false)"
+          aria-label="Fechar menu"
+        ></button>
+        <div class="create-menu">
+          @for (item of shortcuts(); track item.route) {
+            <a class="create-item" [routerLink]="item.route" (click)="createMenuOpen.set(false)">
+              <div class="ic-bubble" [class]="item.bubble">
+                <ng-icon [name]="item.icon" size="16" aria-hidden="true" />
+              </div>
+              <div>
+                <div class="qa-title">{{ item.title }}</div>
+                <div class="qa-sub">{{ item.sub }}</div>
+              </div>
+            </a>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</header>
+
+<div class="stats-grid">
+  @if (metrics().loading) {
+    @for (s of skeletons; track $index) {
+      <div class="stat-card">
+        <div class="ic-bubble skeleton"></div>
+        <div class="skeleton" style="height: 13px; width: 60%"></div>
+        <div class="skeleton" style="height: 28px; width: 40%; margin-top: 10px"></div>
+      </div>
+    }
+  } @else if (stats(); as cards) {
+    @for (card of cards; track card.label) {
+      <div class="stat-card">
+        <div class="ic-bubble" [class]="card.bubble">
+          <ng-icon [name]="card.icon" size="18" aria-hidden="true" />
+        </div>
+        <div class="stat-label">{{ card.label }}</div>
+        <div class="stat-value">{{ fmt(card.value) }}</div>
+        @if (card.deltaPercent !== null) {
+          <div class="stat-trend" [class.trend-up]="card.deltaPercent >= 0" [class.trend-down]="card.deltaPercent < 0">
+            <ng-icon [name]="card.deltaPercent >= 0 ? 'heroArrowUpRight' : 'heroArrowDownRight'" size="12" aria-hidden="true" />
+            {{ trendText(card.deltaPercent) }}
+            <span class="muted">este mês</span>
+          </div>
+        }
+      </div>
+    }
+  } @else {
+    @for (s of skeletons; track $index) {
+      <div class="stat-card">
+        <div class="ic-bubble"></div>
+        <div class="stat-label">Indisponível</div>
+        <div class="stat-value" title="Não foi possível carregar.">--</div>
+      </div>
+    }
+  }
+</div>
+
+<div class="content-grid-2">
+  <div class="col">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="h3">Publicações no período</div>
+          <div class="muted" style="font-size: 13px; margin-top: 4px">
+            Comunicados, notícias e eventos somados · total
+            <b style="color: var(--n-900)">{{ fmt(chartTotal()) }}</b>
+          </div>
+        </div>
+        <div class="tabs">
+          <button type="button" class="tab" [class.active]="period() === 'week'" (click)="setPeriod('week')">
+            Semana
+          </button>
+          <button type="button" class="tab" [class.active]="period() === 'month'" (click)="setPeriod('month')">
+            Mês
+          </button>
+          <button type="button" class="tab" [class.active]="period() === 'year'" (click)="setPeriod('year')">
+            Ano
+          </button>
+        </div>
+      </div>
+
+      @if (chart().loading) {
+        <div class="chart">
+          @for (s of skeletons; track $index) {
+            <div class="chart-col"><div class="skeleton" style="width: 100%; height: 60%"></div></div>
+          }
+        </div>
+      } @else if (chart().error) {
+        <div class="empty-note">Não foi possível carregar o gráfico.</div>
+      } @else if (chartBars().length) {
+        <div class="chart">
+          @for (bar of chartBars(); track bar.label) {
+            <div class="chart-col">
+              <div class="chart-val">{{ bar.total }}</div>
+              <div class="bar" [style.height.%]="bar.height" [title]="bar.label + ': ' + bar.total"></div>
+            </div>
+          }
+        </div>
+        <div class="chart-labels">
+          @for (bar of chartBars(); track bar.label) {
+            <span>{{ bar.label }}</span>
+          }
+        </div>
+      } @else {
+        <div class="empty-note">Sem publicações no período.</div>
+      }
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="h3">Atalhos</div>
+        <div class="muted" style="font-size: 13px">Ações frequentes</div>
+      </div>
+      <div class="card-body" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
+        @for (item of shortcuts(); track item.route) {
+          <a class="quick-action" [routerLink]="item.route">
+            <div class="ic-bubble" [class]="item.bubble">
+              <ng-icon [name]="item.icon" size="18" aria-hidden="true" />
+            </div>
+            <div style="min-width: 0">
+              <div class="qa-title">{{ item.title }}</div>
+              <div class="qa-sub">{{ item.sub }}</div>
+            </div>
+            <ng-icon class="qa-arrow" name="heroChevronRight" size="16" aria-hidden="true" />
+          </a>
+        }
+      </div>
+    </div>
+
+    @if (isSuper()) {
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="h3">Cidades mais ativas</div>
+            <div class="muted" style="font-size: 13px; margin-top: 4px">
+              Total de comunicados + eventos + notícias publicados nos últimos 30 dias
+            </div>
+          </div>
+        </div>
+
+        @if (topCities().loading) {
+          <div style="padding: 12px 0">
+            @for (s of skeletons; track $index) {
+              <div class="city-row"><span class="skeleton" style="height: 12px; width: 100%"></span></div>
+            }
+          </div>
+        } @else if (topCities().error) {
+          <div class="empty-note">Não foi possível carregar.</div>
+        } @else if (topCities().data; as cities) {
+          @if (cities.length) {
+            <div style="padding: 12px 0">
+              @for (city of cities; track city.cityId; let i = $index) {
+                <div class="city-row">
+                  <span class="city-name">{{ i + 1 }}. {{ city.cityName }}</span>
+                  <span class="city-bar">
+                    <span class="city-bar-fill" [style.width.%]="(city.total / topCitiesMax()) * 100"></span>
+                  </span>
+                  <span class="city-val">{{ city.total }}</span>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-note">Sem dados no período.</div>
+          }
+        }
+      </div>
+    }
+  </div>
+
+  <div class="col">
+    <div class="card">
+      <div class="card-header"><div class="h3">Atividade recente</div></div>
+
+      @if (activity().loading) {
+        <div>
+          @for (s of skeletons; track $index) {
+            <div class="activity-item">
+              <span class="dot"></span>
+              <div style="flex: 1">
+                <div class="skeleton" style="height: 12px; width: 90%"></div>
+                <div class="skeleton" style="height: 10px; width: 40%; margin-top: 6px"></div>
+              </div>
+            </div>
+          }
+        </div>
+      } @else if (activity().error) {
+        <div class="empty-note">Não foi possível carregar.</div>
+      } @else if (activity().data; as items) {
+        @if (items.length) {
+          <div>
+            @for (item of items; track item.id) {
+              <div class="activity-item">
+                <span class="dot"></span>
+                <div style="flex: 1">
+                  <div class="a-text">
+                    <b>{{ item.createdBy ?? 'Sistema' }}</b> {{ activityAction(item.type) }}
+                    <b>{{ item.title }}</b>
+                  </div>
+                  <div class="a-time">{{ item.cityName }} · {{ relativeTime(item.updatedAt) }}</div>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="empty-note">Nenhuma atividade recente.</div>
+        }
+      }
+    </div>
+  </div>
+</div>

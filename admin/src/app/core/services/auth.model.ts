@@ -12,6 +12,7 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   cityId: string | null;
+  cityName: string | null;
 }
 
 export interface LoginResponse {
@@ -32,6 +33,9 @@ export type AuthErrorKind =
   | 'too_many_attempts'
   | 'server_unreachable'
   | 'forbidden_role'
+  | 'invalid_or_expired_code'
+  | 'weak_password'
+  | 'email_not_verified'
   | 'unknown';
 
 export class AuthError extends Error {

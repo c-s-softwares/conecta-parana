@@ -16,11 +16,11 @@ export class EventResponse {
   })
   description!: string;
 
-  @ApiProperty({ example: 'CULTURAL', description: 'Tipo do evento' })
+  @ApiProperty({ example: 'cultural', description: 'Tipo do evento' })
   type!: string;
 
-  @ApiProperty({ example: 'SCHEDULED', description: 'Status do evento' })
-  status!: string;
+  @ApiProperty({ example: true, description: 'Indica se o evento está ativo' })
+  isActive!: boolean;
 
   @ApiProperty({
     example: '2025-12-01T10:00:00Z',
@@ -57,4 +57,26 @@ export class EventResponse {
     description: 'Data da última alteração',
   })
   updatedAt!: Date;
+}
+
+export class EventDetailResponse extends EventResponse {
+  @ApiProperty({
+    example: 12,
+    description: 'Total de likes no evento.',
+  })
+  likesCount!: number;
+
+  @ApiProperty({
+    example: false,
+    description:
+      'Indica se o usuário autenticado deu like no evento. Sempre false para anônimos.',
+  })
+  liked!: boolean;
+
+  @ApiProperty({
+    example: false,
+    description:
+      'Indica se o usuário autenticado salvou o evento. Sempre false para anônimos.',
+  })
+  saved!: boolean;
 }

@@ -1,5 +1,12 @@
-export interface CategoryResponse {
-  id: string;
-  name: string;
-  icon: string;
+import { ApiProperty } from '@nestjs/swagger';
+
+export class CategoryResponse {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty()
+  name!: string;
+
+  @ApiProperty()
+  icon!: string;
 }

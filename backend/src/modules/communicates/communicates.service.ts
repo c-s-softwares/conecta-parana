@@ -15,8 +15,12 @@ import { COMUNICADOS_ERRORS } from './communicates.errors';
 import { CreateCommunicateDto } from './dto/request/create-communicate.dto';
 import { UpdateCommunicateDto } from './dto/request/update-communicate.dto';
 import { QueryComunicadoDto } from './dto/request/query-communicate.dto';
-import { CommunicateResponse } from './dto/response/communicate-response.dto';
+import {
+  CommunicateDetailResponse,
+  CommunicateResponse,
+} from './dto/response/communicate-response.dto';
 import { Role } from '@prisma/client';
+import { ENTITY_TYPES } from '../uploads/constants/entity-type';
 
 type AuthUser = {
   id: string;
@@ -171,6 +175,69 @@ export class CommunicateService extends BaseCrudService<
       total,
       page,
       pageSize,
+    };
+  }
+
+  /**
+   * Detalhe do comunicado para GET /communicates/:id. Inclui photos, authorName,
+   * likesCount e flags de engajamento por usuário logado. Quando userId não é
+   * informado (anônimo), liked/saved são false. Quando informado, dispara 2
+   * queries adicionais (like + save) em paralelo.
+   */
+  async findOneDetail(
+    id: string,
+    userId?: string,
+  ): Promise<CommunicateDetailResponse> {
+    const communicate = await this.prisma.client.communicate.findFirst({
+      where: { id, isActive: true },
+      include: {
+        photos: true,
+        user: { select: { name: true } },
+        _count: { select: { likes: true } },
+      },
+    });
+
+    if (!communicate) {
+      throw new NotFoundException(
+        apiError(COMUNICADOS_ERRORS.COMUNICADO_NOT_FOUND),
+      );
+    }
+
+    let liked = false;
+    let saved = false;
+    if (userId) {
+      const [likeExists, saveExists] = await Promise.all([
+        this.prisma.client.like.findFirst({
+          where: { userId, communicateId: id },
+          select: { id: true },
+        }),
+        this.prisma.client.save.findFirst({
+          where: { userId, communicateId: id },
+          select: { id: true },
+        }),
+      ]);
+      liked = !!likeExists;
+      saved = !!saveExists;
+    }
+
+    return {
+      id: communicate.id,
+      title: communicate.title,
+      description: communicate.description,
+      isActive: communicate.isActive,
+      cityId: communicate.cityId,
+      userId: communicate.userId,
+      authorName: communicate.user.name,
+      photos: communicate.photos.map((p) => ({
+        id: p.id,
+        url: p.url,
+        thumbUrl: p.thumbUrl,
+        entityType: ENTITY_TYPES.COMMUNICATE,
+        entityId: communicate.id,
+      })),
+      likesCount: communicate._count.likes,
+      liked,
+      saved,
     };
   }
 

@@ -305,7 +305,6 @@ describe('FeedService', () => {
       expect(mockPrisma.client.news.findFirst).toHaveBeenCalledWith({
         where: { cityId: MOCK_CITY_ID, isActive: true },
         orderBy: { id: 'desc' },
-        take: 1,
       });
     });
   });

@@ -1,0 +1,60 @@
+@if (loading()) {
+  <div class="card" style="padding: 16px 20px">
+    <app-loading-skeleton [rows]="3" height="3rem" />
+  </div>
+} @else if (items().length === 0) {
+  <div class="card">
+    <app-empty-state [title]="emptyTitle()" [description]="emptyDescription()" [icon]="emptyIcon()" />
+  </div>
+} @else {
+  <div class="card" style="padding: 0">
+    @for (item of items(); track item[trackBy()]; let i = $index) {
+      <ng-container [ngTemplateOutlet]="rowTemplate()" [ngTemplateOutletContext]="{ $implicit: item, index: i }" />
+    }
+
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <div role="status" aria-live="polite">
+          Mostrando <b>{{ startItem() }}</b>–<b>{{ endItem() }}</b> de <b>{{ total() }}</b>
+        </div>
+        <nav class="pages" aria-label="Paginação">
+          <button
+            type="button"
+            class="page-btn"
+            (click)="changePage(page() - 1)"
+            [disabled]="page() === 1"
+            aria-label="Página anterior"
+          >
+            <ng-icon name="heroChevronLeft" size="16" aria-hidden="true" />
+          </button>
+
+          @for (p of pages(); track $index) {
+            @if (p < 0) {
+              <span class="px-1 text-[var(--text-subtle)] select-none">…</span>
+            } @else {
+              <button
+                type="button"
+                class="page-btn"
+                [class.active]="page() === p"
+                [attr.aria-current]="page() === p ? 'page' : null"
+                (click)="changePage(p)"
+              >
+                {{ p }}
+              </button>
+            }
+          }
+
+          <button
+            type="button"
+            class="page-btn"
+            (click)="changePage(page() + 1)"
+            [disabled]="page() === totalPages()"
+            aria-label="Próxima página"
+          >
+            <ng-icon name="heroChevronRight" size="16" aria-hidden="true" />
+          </button>
+        </nav>
+      </div>
+    }
+  </div>
+}

@@ -43,11 +43,8 @@ export class TicketsController {
     description: 'Lista de chamados retornada com sucesso',
     type: [TicketResponseDto],
   })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Acesso negado: requer role CIDADAO',
-  })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied' })
   async findMyTickets(
     @Request() req: ExpressRequest,
   ): Promise<TicketResponseDto[]> {
@@ -63,8 +60,8 @@ export class TicketsController {
     description: 'Lista de chamados da cidade retornada com sucesso',
     type: [TicketResponseDto],
   })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({ status: 403, description: 'Acesso negado: requer role ADMIN' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied' })
   async findCityTickets(
     @Request() req: ExpressRequest,
   ): Promise<TicketResponseDto[]> {
@@ -79,12 +76,9 @@ export class TicketsController {
     description: 'Detalhes do chamado retornados com sucesso',
     type: TicketDetailResponseDto,
   })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Acesso negado: não é o dono ou administrador da cidade',
-  })
-  @ApiResponse({ status: 404, description: 'Chamado não encontrado' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'not_owner_or_admin' })
+  @ApiResponse({ status: 404, description: 'ticket_not_found' })
   async findOne(
     @Param('id') id: string,
     @Request() req: ExpressRequest,
@@ -104,13 +98,11 @@ export class TicketsController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Erro de validação ou cidadão sem cidade',
+    description:
+      'validation_failed | ticket_user_without_city | ticket_invalid_type | ticket_photo_not_found',
   })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Acesso negado: requer role CIDADAO',
-  })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied' })
   async create(
     @Body() dto: CreateTicketDto,
     @Request() req: ExpressRequest,
@@ -129,14 +121,11 @@ export class TicketsController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Erro de validação ou transição de status inválida',
+    description: 'validation_failed | ticket_invalid_status_transition',
   })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Acesso negado: administrador em outra cidade',
-  })
-  @ApiResponse({ status: 404, description: 'Chamado não encontrado' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'role_denied | not_owner_or_admin' })
+  @ApiResponse({ status: 404, description: 'ticket_not_found' })
   async updateStatus(
     @Param('id') id: string,
     @Body() dto: UpdateTicketStatusDto,
@@ -158,16 +147,10 @@ export class TicketsController {
     description: 'Comentário adicionado com sucesso',
     type: TicketCommentResponseDto,
   })
-  @ApiResponse({
-    status: 400,
-    description: 'Erro de validação',
-  })
-  @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({
-    status: 403,
-    description: 'Acesso negado: não é o dono ou administrador da cidade',
-  })
-  @ApiResponse({ status: 404, description: 'Chamado não encontrado' })
+  @ApiResponse({ status: 400, description: 'validation_failed' })
+  @ApiResponse({ status: 401, description: 'unauthenticated' })
+  @ApiResponse({ status: 403, description: 'not_owner_or_admin' })
+  @ApiResponse({ status: 404, description: 'ticket_not_found' })
   async addComment(
     @Param('id') id: string,
     @Body() dto: CreateTicketCommentDto,

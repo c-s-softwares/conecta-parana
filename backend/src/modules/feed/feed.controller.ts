@@ -1,5 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { FeedService } from './feed.service';
 import { QueryFeedDto } from './dto/request/query-feed.dto';
@@ -18,7 +18,13 @@ export class FeedController {
     description:
       'Devolve a notícia ativa mais recente, até 4 eventos relevantes e até 4 comunicados ativos da cidade. Resposta em payload sectioned (sem paginação).',
   })
-  @ApiOkResponse({ type: FeedResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Feed retornado com sucesso',
+    type: FeedResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'validation_failed' })
+  @ApiResponse({ status: 404, description: 'city_not_found' })
   getFeed(@Query() query: QueryFeedDto): Promise<FeedResponseDto> {
     return this.feedService.getFeed(query);
   }
