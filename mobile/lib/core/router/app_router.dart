@@ -25,6 +25,7 @@ import 'package:conectaparana/shared/widgets/styleguide_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/news/presentation/pages/news_detail_page.dart';
 import 'package:conectaparana/features/communicates/presentation/pages/communicate_detail_page.dart';
 import 'package:conectaparana/features/suggestions/presentation/pages/suggestions_page.dart';
 import 'package:conectaparana/dev/fakes/fake_suggestion_repository.dart';
@@ -213,8 +214,11 @@ class AppRouter {
                     ),
                     GoRoute(
                       path: 'news/:id',
-                      builder: (context, state) =>
-                          _detailPlaceholder('news', state),
+                      builder: (context, state) {
+                        final id = state.pathParameters['id']!;
+
+                        return NewsDetailPage(id: id);
+                      },
                     ),
                     GoRoute(
                       path: 'notification/:id',
