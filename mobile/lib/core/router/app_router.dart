@@ -1,5 +1,6 @@
 import 'package:app_links/app_links.dart';
 import 'package:conectaparana/core/auth/auth_service.dart';
+import 'package:conectaparana/core/auth/presentation/forgot_password/forgot_password_page.dart';
 import 'package:conectaparana/core/auth/presentation/pages/login_screen.dart';
 import 'package:conectaparana/core/auth/presentation/register_screen.dart';
 import 'package:conectaparana/core/config/environment.dart';
@@ -31,6 +32,7 @@ import 'package:conectaparana/features/suggestions/presentation/pages/new_sugges
 abstract class AppRoutes {
   static const splash = '/';
   static const login = '/login';
+  static const forgotPassword = '/forgot-password';
   static const register = '/register';
   static const onboarding = '/onboarding';
 
@@ -146,6 +148,10 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.login,
           builder: (context, state) => const LoginScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.forgotPassword,
+          builder: (context, state) => const ForgotPasswordPage(),
         ),
         GoRoute(
           path: AppRoutes.register,
@@ -312,6 +318,7 @@ class AppRouter {
       AppRoutes.splash,
       AppRoutes.login,
       AppRoutes.register,
+      AppRoutes.forgotPassword,
     };
     final isPublic = publicRoutes.contains(location);
 
