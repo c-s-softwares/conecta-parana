@@ -1,0 +1,135 @@
+@if (loading()) {
+  <div class="mt-6">
+    <app-loading-skeleton [rows]="3" height="2.5rem" />
+  </div>
+} @else if (items().length === 0) {
+  <div class="mt-6 border border-gray-200 rounded-lg bg-white">
+    <app-empty-state [title]="emptyTitle()" [description]="emptyDescription()" />
+  </div>
+} @else {
+  <div class="mt-6 overflow-x-auto rounded-lg border border-gray-200 bg-white">
+    <table class="w-full text-sm text-left border-collapse" role="table">
+      <thead class="bg-table-header text-gray-600 uppercase text-xs border-b border-table-border">
+        <tr>
+          @for (col of columns(); track col.key) {
+            <th
+              scope="col"
+              [style.width]="col.width || 'auto'"
+              [class.cursor-pointer]="col.sortable"
+              [class.select-none]="col.sortable"
+              [attr.tabindex]="col.sortable ? 0 : null"
+              (click)="onSort(col)"
+              (keydown.enter)="onSort(col)"
+              (keydown.space)="$event.preventDefault(); onSort(col)"
+              [attr.aria-sort]="sortColumn() === col.key && sortDirection() ? (sortDirection() === 'asc' ? 'ascending' : 'descending') : null"
+              class="px-4 py-3 font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
+            >
+              <div class="flex items-center gap-1.5">
+                <span>{{ col.label }}</span>
+                @if (col.sortable) {
+                  <span class="inline-flex text-gray-400" aria-hidden="true">
+                    @if (sortColumn() === col.key) {
+                      @if (sortDirection() === 'asc') {
+                        <ng-icon name="heroChevronUp" size="14"></ng-icon>
+                      } @else if (sortDirection() === 'desc') {
+                        <ng-icon name="heroChevronDown" size="14"></ng-icon>
+                      }
+                    } @else {
+                      <ng-icon name="heroArrowsUpDown" size="14"></ng-icon>
+                    }
+                  </span>
+                }
+              </div>
+            </th>
+          }
+          @if (actions().length > 0) {
+            <th scope="col" class="px-4 py-3 text-right font-semibold text-gray-700 w-[150px]">
+              Ações
+            </th>
+          }
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-table-border">
+        @for (item of items(); track item[trackBy()]) {
+          <tr class="hover:bg-table-hover transition-colors">
+            @for (col of columns(); track col.key) {
+              <td class="px-4 py-3.5 text-gray-900 font-medium">
+                {{ item[col.key] }}
+              </td>
+            }
+            @if (actions().length > 0) {
+              <td class="px-4 py-3.5 text-right whitespace-nowrap">
+                <div class="flex justify-end gap-2">
+                  @for (act of actions(); track act) {
+                    <button
+                      type="button"
+                      [class]="getActionClass(act)"
+                      (click)="onActionClick(act, item)"
+                    >
+                      {{ getActionLabel(act) }}
+                    </button>
+                  }
+                </div>
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Barra de Paginação -->
+  <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 px-1 text-sm text-gray-600">
+    <div role="status" aria-live="polite">
+      Mostrando <span class="font-semibold text-gray-800">{{ startItem() }}</span> a
+      <span class="font-semibold text-gray-800">{{ endItem() }}</span> de
+      <span class="font-semibold text-gray-800">{{ total() }}</span> registros
+    </div>
+    <nav class="flex items-center gap-1" aria-label="Paginação">
+      <!-- Botão Anterior -->
+      <button
+        type="button"
+        (click)="changePage(page() - 1)"
+        [disabled]="page() === 1"
+        aria-label="Página anterior"
+        class="inline-flex items-center justify-center p-2 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+      >
+        <ng-icon name="heroChevronLeft" size="16" aria-hidden="true"></ng-icon>
+      </button>
+
+      <!-- Páginas numeradas -->
+      @for (p of pages(); track $index) {
+        @if (p < 0) {
+          <span class="px-3 py-1.5 text-gray-400 select-none">...</span>
+        } @else {
+          <button
+            type="button"
+            (click)="changePage(p)"
+            [attr.aria-current]="page() === p ? 'page' : null"
+            [class.bg-primary]="page() === p"
+            [class.text-white]="page() === p"
+            [class.border-primary]="page() === p"
+            [class.bg-white]="page() !== p"
+            [class.text-gray-700]="page() !== p"
+            [class.border-gray-300]="page() !== p"
+            [class.hover:bg-gray-50]="page() !== p"
+            class="inline-flex items-center justify-center px-3.5 py-1.5 rounded-md border text-sm font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            {{ p }}
+          </button>
+        }
+      }
+
+      <!-- Botão Próximo -->
+      <button
+        type="button"
+        (click)="changePage(page() + 1)"
+        [disabled]="page() === totalPages()"
+        aria-label="Próxima página"
+        class="inline-flex items-center justify-center p-2 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+      >
+        <ng-icon name="heroChevronRight" size="16" aria-hidden="true"></ng-icon>
+      </button>
+    </nav>
+  </div>
+}

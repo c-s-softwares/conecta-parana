@@ -1,0 +1,55 @@
+<div>
+  <label [for]="fieldId()" class="mb-1 block text-sm font-bold text-gray-800">
+    {{ label() }}
+    @if (required()) {
+      <span class="text-red-600">*</span>
+    }
+  </label>
+
+  @if (type() === 'file') {
+    <button
+      type="button"
+      (click)="fileInput.click()"
+      (dragover)="onDragOver($event)"
+      (drop)="onDrop($event)"
+      [attr.aria-describedby]="showError() && errorMessage() ? fieldId() + '-error' : null"
+      class="w-full rounded-md border-2 border-dashed border-gray-300 bg-input-bg px-3 py-6 text-sm text-gray-500 text-center cursor-pointer hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary flex flex-col items-center justify-center gap-2"
+    >
+      <ng-icon name="heroCloudArrowUp" size="32" class="text-gray-400" aria-hidden="true"></ng-icon>
+      <span>Arraste ou clique para adicionar arquivos</span>
+      <input
+        #fileInput
+        [id]="fieldId()"
+        type="file"
+        [accept]="accept()"
+        [multiple]="multiple()"
+        class="hidden"
+        (change)="onFilesSelected($event)"
+      />
+    </button>
+
+    @if (selectedFiles().length > 0) {
+      <ul class="mt-2 space-y-1" aria-label="Arquivos selecionados">
+        @for (file of selectedFiles(); track file.name + $index) {
+          <li class="flex items-center justify-between rounded bg-gray-100 px-3 py-1.5 text-xs text-gray-700">
+            <span class="truncate">{{ file.name }}</span>
+            <button
+              type="button"
+              (click)="removeFile($index)"
+              class="ml-2 text-red-500 hover:text-red-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-red-400 rounded-full p-0.5"
+              aria-label="Remover arquivo"
+            >
+              ✕
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  } @else {
+    <ng-content />
+  }
+
+  @if (showError()) {
+    <p class="mt-1 text-xs text-red-600" [id]="fieldId() + '-error'">{{ errorMessage() }}</p>
+  }
+</div>
