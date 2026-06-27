@@ -57,8 +57,14 @@ export const routes: Routes = [
         loadComponent: loadPlaceholder,
         data: { title: 'Administradores' },
       },
-      ...ERROR_ROUTES,
     ],
+  },
+  {
+    // Paginas de erro fora do Shell (sem sidebar). Exigem autenticacao -
+    // deslogado cai no /login via authenticatedGuard.
+    path: '',
+    canActivate: [authenticatedGuard],
+    children: [...ERROR_ROUTES],
   },
   { path: '**', redirectTo: '404' },
 ];

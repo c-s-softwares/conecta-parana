@@ -14,17 +14,9 @@ import { ErrorPage } from './error-page';
       description="Tivemos um problema ao processar sua solicitação. Já estamos cientes — tente novamente em instantes ou volte ao início do painel."
       iconName="heroExclamationTriangle"
       theme="coral"
-      pill="HTTP 500 · sem correlation-id (pós-MVP)"
     >
-      <a routerLink="/dashboard" class="btn btn-primary">
-        <span>›</span> Voltar ao início
-      </a>
-      <button type="button" class="btn btn-ghost" (click)="reload()">Tentar novamente</button>
+      <a routerLink="/dashboard" class="btn btn-primary">Voltar ao dashboard</a>
     </app-error-page>
   `,
 })
-export class ServerErrorPage {
-  reload(): void {
-    window.location.reload();
-  }
-}
+export class ServerErrorPage {}
