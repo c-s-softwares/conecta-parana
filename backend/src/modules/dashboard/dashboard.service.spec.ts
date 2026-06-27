@@ -17,7 +17,7 @@ const mockPrisma = {
 const MOCK_CITY_NAME = 'Maringá';
 const MOCK_CITY_CURITIBA = 'Curitiba';
 const MOCK_USER_NAME = 'Admin Maringá';
-const MOCK_BUCKET_PERIOD = '2026-05-01T00:00:00.000Z';
+const MOCK_BUCKET_PERIOD = '2026-05-01';
 
 const mockAllZero = () => {
   mockPrisma.client.communicate.count.mockResolvedValue(0);
@@ -131,8 +131,8 @@ describe('DashboardService', () => {
   });
 
   describe('getChart', () => {
-    const makeChartRow = (isoDate: string, count: number) => ({
-      period: new Date(isoDate),
+    const makeChartRow = (date: string, count: number) => ({
+      period: date,
       count: BigInt(count),
     });
 
@@ -156,9 +156,9 @@ describe('DashboardService', () => {
 
     it('deve preencher com zero entidades sem registros num período', async () => {
       mockPrisma.client.$queryRaw
-        .mockResolvedValueOnce([makeChartRow('2026-04-01T00:00:00.000Z', 5)]) // communicates
+        .mockResolvedValueOnce([makeChartRow('2026-04-01', 5)]) // communicates
         .mockResolvedValueOnce([]) // events - sem dados em abril
-        .mockResolvedValueOnce([makeChartRow('2026-04-01T00:00:00.000Z', 2)]); // news
+        .mockResolvedValueOnce([makeChartRow('2026-04-01', 2)]); // news
 
       const result = await service.getChart('month');
 

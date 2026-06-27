@@ -1,5 +1,6 @@
 import 'package:app_links/app_links.dart';
 import 'package:conectaparana/core/auth/auth_service.dart';
+import 'package:conectaparana/core/auth/presentation/forgot_password/forgot_password_page.dart';
 import 'package:conectaparana/core/auth/presentation/pages/login_screen.dart';
 import 'package:conectaparana/core/auth/presentation/register_screen.dart';
 import 'package:conectaparana/core/config/environment.dart';
@@ -15,6 +16,7 @@ import 'package:conectaparana/features/events/presentation/pages/event_detail_pa
 import 'package:conectaparana/features/home/presentation/pages/home_page.dart';
 import 'package:conectaparana/features/map/presentation/pages/map_page.dart';
 import 'package:conectaparana/features/profile/presentation/pages/profile_page.dart';
+import 'package:conectaparana/features/tickets/presentation/pages/ticket_detail_page.dart';
 import 'package:conectaparana/features/tickets/presentation/pages/tickets_page.dart';
 import 'package:conectaparana/shared/widgets/feedback/app_toast.dart';
 import 'package:conectaparana/shared/widgets/not_found_screen.dart';
@@ -32,6 +34,7 @@ abstract class AppRoutes {
   static const splash = '/';
   static const login = '/login';
 
+  static const forgotPassword = '/forgot-password';
   static const register = '/register';
   static const onboarding = '/onboarding';
 
@@ -147,6 +150,10 @@ class AppRouter {
         GoRoute(
           path: AppRoutes.login,
           builder: (context, state) => const LoginScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.forgotPassword,
+          builder: (context, state) => const ForgotPasswordPage(),
         ),
         GoRoute(
           path: AppRoutes.register,
@@ -266,8 +273,12 @@ class AppRouter {
                   routes: [
                     GoRoute(
                       path: ':id',
-                      builder: (context, state) =>
-                          _detailPlaceholder('ticket', state),
+                      builder: (context, state) => TicketDetailPage(
+                        ticketId: state.pathParameters['id']!,
+                        repository: kDebugMode
+                            ? FakeTicketRepository()
+                            : null,
+                      ),
                     ),
                   ],
                 ),
@@ -312,6 +323,7 @@ class AppRouter {
       AppRoutes.splash,
       AppRoutes.login,
       AppRoutes.register,
+      AppRoutes.forgotPassword,
     };
     final isPublic = publicRoutes.contains(location);
 

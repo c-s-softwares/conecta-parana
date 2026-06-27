@@ -1,0 +1,45 @@
+<!-- eslint-disable @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+@if (visible()) {
+  <div class="modal-backdrop" (click)="onBackdropClick()">
+    <div
+      #dialogPanel
+      tabindex="-1"
+      class="modal"
+      [class.modal-s]="size() === 's'"
+      [class.modal-l]="size() === 'l'"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="title() ? 'modal-title' : null"
+      [attr.aria-label]="title() ? null : 'Diálogo'"
+      (click)="$event.stopPropagation()"
+      (keydown)="onKeyDown($event)"
+    >
+      <div class="modal-header">
+        <div class="min-w-0">
+          @if (eyebrow()) {
+            <div class="modal-eyebrow">{{ eyebrow() }}</div>
+          }
+          @if (title()) {
+            <h2 id="modal-title" class="text-lg font-bold text-[var(--n-900)] tracking-tight">{{ title() }}</h2>
+          }
+          @if (subtitle()) {
+            <p class="modal-subtitle">{{ subtitle() }}</p>
+          }
+        </div>
+        <button type="button" class="btn-icon" (click)="cancelled.emit()" aria-label="Fechar modal">
+          <ng-icon name="heroXMark" size="18" aria-hidden="true" />
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <ng-content />
+      </div>
+
+      @if (footer()) {
+        <div class="modal-footer">
+          <ng-content select="[modal-footer]" />
+        </div>
+      }
+    </div>
+  </div>
+}

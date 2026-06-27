@@ -2,8 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class ChartBucketDto {
   @ApiProperty({
-    example: '2026-05-01T00:00:00.000Z',
-    description: 'Início do período (truncado)',
+    example: '2026-05-01',
+    description: 'Início do período no fuso do Brasil (YYYY-MM-DD)',
   })
   period!: string;
 

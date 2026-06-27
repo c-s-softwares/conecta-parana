@@ -1,0 +1,9 @@
+<div class="empty" role="region" aria-label="Estado vazio">
+  <div class="empty-icon" aria-hidden="true">
+    <ng-icon [name]="iconName()" size="26" />
+  </div>
+  <h3 class="empty-title">{{ title() }}</h3>
+  @if (description()) {
+    <p class="empty-desc">{{ description() }}</p>
+  }
+</div>
