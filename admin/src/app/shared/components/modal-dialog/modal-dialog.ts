@@ -15,8 +15,11 @@ export class ModalDialog {
 
   visible = input.required<boolean>();
   title = input<string>('');
+  eyebrow = input<string>('');
+  subtitle = input<string>('');
   size = input<'s' | 'm' | 'l'>('m');
   dismissOnBackdrop = input<boolean>(true);
+  footer = input<boolean>(false);
 
   cancelled = output<void>();
 

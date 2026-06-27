@@ -1,45 +1,51 @@
 <div>
-  <label [for]="fieldId()" class="mb-1 block text-sm font-bold text-gray-800">
+  <label [for]="fieldId()" class="field-label">
     {{ label() }}
     @if (required()) {
-      <span class="text-red-600">*</span>
+      <span class="text-[var(--danger)]">*</span>
     }
   </label>
 
   @if (type() === 'file') {
     <button
       type="button"
+      class="dropzone"
       (click)="fileInput.click()"
       (dragover)="onDragOver($event)"
       (drop)="onDrop($event)"
       [attr.aria-describedby]="showError() && errorMessage() ? fieldId() + '-error' : null"
-      class="w-full rounded-md border-2 border-dashed border-gray-300 bg-input-bg px-3 py-6 text-sm text-gray-500 text-center cursor-pointer hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary flex flex-col items-center justify-center gap-2"
     >
-      <ng-icon name="heroCloudArrowUp" size="32" class="text-gray-400" aria-hidden="true"></ng-icon>
-      <span>Arraste ou clique para adicionar arquivos</span>
-      <input
-        #fileInput
-        [id]="fieldId()"
-        type="file"
-        [accept]="accept()"
-        [multiple]="multiple()"
-        class="hidden"
-        (change)="onFilesSelected($event)"
-      />
+      <span class="ic-bubble bubble-brand" style="width: 44px; height: 44px; margin-bottom: 0">
+        <ng-icon name="heroCloudArrowUp" size="20" aria-hidden="true" />
+      </span>
+      <span class="dropzone-title">Arraste ou clique para adicionar arquivos</span>
+      @if (hint()) {
+        <span class="dropzone-hint">{{ hint() }}</span>
+      }
     </button>
+    <input
+      #fileInput
+      [id]="fieldId()"
+      type="file"
+      [accept]="accept()"
+      [multiple]="multiple()"
+      class="hidden"
+      (change)="onFilesSelected($event)"
+    />
 
     @if (selectedFiles().length > 0) {
-      <ul class="mt-2 space-y-1" aria-label="Arquivos selecionados">
+      <ul class="mt-2 flex flex-col gap-1.5" aria-label="Arquivos selecionados">
         @for (file of selectedFiles(); track file.name + $index) {
-          <li class="flex items-center justify-between rounded bg-gray-100 px-3 py-1.5 text-xs text-gray-700">
+          <li class="file-chip">
             <span class="truncate">{{ file.name }}</span>
             <button
               type="button"
+              class="btn-icon danger"
+              style="width: 28px; height: 28px"
               (click)="removeFile($index)"
-              class="ml-2 text-red-500 hover:text-red-700 cursor-pointer focus:outline-none focus:ring-1 focus:ring-red-400 rounded-full p-0.5"
               aria-label="Remover arquivo"
             >
-              ✕
+              <ng-icon name="heroXMark" size="14" aria-hidden="true" />
             </button>
           </li>
         }
@@ -50,6 +56,6 @@
   }
 
   @if (showError()) {
-    <p class="mt-1 text-xs text-red-600" [id]="fieldId() + '-error'">{{ errorMessage() }}</p>
+    <p class="field-error" [id]="fieldId() + '-error'">{{ errorMessage() }}</p>
   }
 </div>

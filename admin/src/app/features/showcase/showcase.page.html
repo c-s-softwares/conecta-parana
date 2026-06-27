@@ -1,0 +1,165 @@
+<div class="mx-auto max-w-5xl px-6 py-10 md:px-10 flex flex-col gap-8">
+  <header>
+    <h1 class="h1">Showcase de componentes core</h1>
+    <p class="lead">Página de desenvolvimento para visualizar os componentes compartilhados (CPR-46).</p>
+  </header>
+
+  <!-- DataList -->
+  <section class="flex flex-col gap-3">
+    <div class="flex items-center justify-between gap-4 flex-wrap">
+      <div>
+        <h2 class="text-lg font-bold text-[var(--n-900)]">DataList</h2>
+        <p class="text-xs text-[var(--text-subtle)]">Última ação: <span class="font-mono">{{ lastAction() }}</span></p>
+      </div>
+      <div class="flex gap-2">
+        <button type="button" class="btn btn-brand btn-sm" (click)="toggleLoading()">Simular loading</button>
+        <button type="button" class="btn btn-ghost btn-sm" (click)="forceEmpty.set(!forceEmpty())">
+          {{ forceEmpty() ? 'Mostrar dados' : 'Forçar vazio' }}
+        </button>
+      </div>
+    </div>
+
+    <app-data-list
+      [items]="rows()"
+      [total]="total()"
+      [page]="page()"
+      [pageSize]="pageSize"
+      [loading]="loading()"
+      emptyTitle="Nenhum local cadastrado"
+      emptyDescription="Cadastre o primeiro local para vê-lo aqui."
+      emptyIcon="heroMapPin"
+      (pageChange)="onPage($event)"
+    >
+      <ng-template #row let-local>
+        <div class="list-item">
+          <div class="thumb"><ng-icon name="heroBuildingOffice2" size="24" /></div>
+          <div class="body">
+            <div class="title-row">
+              <span class="title">{{ local.name }}</span>
+              <span class="badge badge-local">{{ local.category }}</span>
+              <span class="badge badge-dot" [class.badge-ativo]="local.active" [class.badge-inativo]="!local.active">
+                {{ local.active ? 'Ativo' : 'Inativo' }}
+              </span>
+            </div>
+            <div class="meta">
+              <span><ng-icon name="heroMapPin" size="13" /> {{ local.city }}</span>
+              <span><ng-icon name="heroCalendarDays" size="13" /> {{ local.createdAt }}</span>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn-icon" (click)="onEdit(local)" aria-label="Editar">
+              <ng-icon name="heroPencilSquare" size="16" />
+            </button>
+            <button type="button" class="btn-icon danger" (click)="askDelete(local)" aria-label="Excluir">
+              <ng-icon name="heroTrash" size="16" />
+            </button>
+          </div>
+        </div>
+      </ng-template>
+    </app-data-list>
+  </section>
+
+  <!-- ModalDialog -->
+  <section class="flex flex-col gap-3">
+    <div>
+      <h2 class="text-lg font-bold text-[var(--n-900)]">ModalDialog</h2>
+      <p class="text-xs text-[var(--text-subtle)]">{{ lastModalResult() }}</p>
+    </div>
+    <div class="flex gap-2">
+      <button type="button" class="btn btn-brand btn-sm" (click)="openModal('s')">Abrir S</button>
+      <button type="button" class="btn btn-brand btn-sm" (click)="openModal('m')">Abrir M</button>
+      <button type="button" class="btn btn-brand btn-sm" (click)="openModal('l')">Abrir L</button>
+    </div>
+  </section>
+
+  <!-- ConfirmDialog -->
+  <section class="flex flex-col gap-3">
+    <div>
+      <h2 class="text-lg font-bold text-[var(--n-900)]">ConfirmDialog</h2>
+      <p class="text-xs text-[var(--text-subtle)]">Resultado: <span class="font-mono">{{ lastConfirm() }}</span></p>
+    </div>
+    <div>
+      <button type="button" class="btn btn-danger btn-sm" (click)="pendingDelete.set(null); confirmOpen.set(true)">
+        Excluir item avulso
+      </button>
+    </div>
+  </section>
+
+  <!-- EmptyState -->
+  <section class="flex flex-col gap-3">
+    <h2 class="text-lg font-bold text-[var(--n-900)]">EmptyState</h2>
+    <div class="card">
+      <app-empty-state title="Sem notificações" description="Você está em dia com tudo." icon="heroBell" />
+    </div>
+  </section>
+
+  <!-- LoadingSkeleton -->
+  <section class="flex flex-col gap-3">
+    <h2 class="text-lg font-bold text-[var(--n-900)]">LoadingSkeleton</h2>
+    <div class="card" style="padding: 20px">
+      <app-loading-skeleton [rows]="4" height="2rem" />
+    </div>
+  </section>
+
+  <!-- FormField -->
+  <section class="flex flex-col gap-3">
+    <h2 class="text-lg font-bold text-[var(--n-900)]">FormField</h2>
+    <div class="card max-w-md" style="padding: 20px">
+      <div class="flex flex-col gap-4">
+        <app-form-field label="Nome" fieldId="demo-name" [required]="true">
+          <input id="demo-name" class="input" placeholder="Digite um nome" />
+        </app-form-field>
+
+        <app-form-field
+          label="Foto de capa"
+          fieldId="demo-file"
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          [maxSizeMb]="5"
+          [multiple]="true"
+          hint="PNG, JPG ou WebP até 5MB"
+          (fileChange)="onFiles($event)"
+        />
+
+        @if (uploadedFiles().length > 0) {
+          <p class="text-xs text-[var(--text-muted)]">Selecionados: <span class="font-mono">{{ uploadedFiles().join(', ') }}</span></p>
+        }
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Overlays -->
+<app-modal-dialog
+  [visible]="modalOpen()"
+  eyebrow="Criar"
+  title="Novo local"
+  subtitle="Preencha os campos abaixo para publicar."
+  [size]="modalSize()"
+  [footer]="true"
+  (cancelled)="modalOpen.set(false)"
+>
+  <form id="modal-form" [formGroup]="form" (ngSubmit)="saveModal()" class="flex flex-col gap-4">
+    <app-form-field
+      label="Nome do local"
+      fieldId="modal-name"
+      [required]="true"
+      [showError]="form.controls.name.invalid && form.controls.name.touched"
+      errorMessage="Campo obrigatório."
+    >
+      <input id="modal-name" formControlName="name" class="input" placeholder="Ex: Parque Barigui" />
+    </app-form-field>
+  </form>
+
+  <div modal-footer class="flex gap-2">
+    <button type="button" class="btn btn-ghost" (click)="modalOpen.set(false)">Cancelar</button>
+    <button type="submit" form="modal-form" class="btn btn-primary">Salvar</button>
+  </div>
+</app-modal-dialog>
+
+<app-confirm-dialog
+  [visible]="confirmOpen()"
+  [message]="pendingDelete() ? 'Excluir ' + pendingDelete()?.name + '?' : 'Tem certeza que deseja excluir este item?'"
+  (confirmed)="confirmDelete()"
+  (cancelled)="confirmOpen.set(false)"
+/>

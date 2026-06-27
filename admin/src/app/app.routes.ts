@@ -12,6 +12,11 @@ const loadPlaceholder = () =>
 
 export const routes: Routes = [
   {
+    // Rota de desenvolvimento para visualizar os componentes core (CPR-46). Sem guard.
+    path: 'showcase',
+    loadComponent: () => import('./features/showcase/showcase.page').then((m) => m.ShowcasePage),
+  },
+  {
     path: '',
     canMatch: [unauthenticatedGuard],
     loadChildren: () => import('./features/login/login.routes').then((m) => m.LOGIN_ROUTES),

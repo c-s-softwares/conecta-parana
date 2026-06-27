@@ -87,7 +87,6 @@ describe('FormField', () => {
     fixture.detectChanges();
     const span = el.querySelector('label span');
     expect(span?.textContent).toContain('*');
-    expect(span?.classList.contains('text-red-600')).toBe(true);
   });
 
   it('não deve mostrar mensagem de erro quando showError é false', () => {

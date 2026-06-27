@@ -1,22 +1,31 @@
+<!-- eslint-disable @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
 @if (visible()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-    <div class="mx-4 w-full max-w-md rounded-lg bg-white p-6">
-      <h2 class="mb-2 text-lg font-bold text-gray-900">{{ title() }}</h2>
-      <p class="mb-6 text-sm text-gray-600">{{ message() }}</p>
-      <div class="flex justify-end gap-3">
-        <button
-          type="button"
-          (click)="cancelled.emit()"
-          class="cursor-pointer rounded-lg bg-btn-create px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-create-hover"
+  <div class="modal-backdrop" (click)="cancelled.emit()">
+    <div
+      class="modal modal-s"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="confirm-title"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="flex flex-col items-start gap-4 p-7 pb-0">
+        <span
+          class="ic-bubble"
+          style="width: 52px; height: 52px; border-radius: 14px; margin-bottom: 0; background: var(--danger-bg); color: var(--danger)"
+          aria-hidden="true"
         >
-          Cancelar
-        </button>
-        <button
-          type="button"
-          (click)="confirmed.emit()"
-          class="cursor-pointer rounded-lg bg-btn-cancel px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-cancel-hover"
-        >
-          Excluir
+          <ng-icon name="heroExclamationTriangle" size="24" />
+        </span>
+        <div>
+          <h2 id="confirm-title" class="text-xl font-bold text-[var(--n-900)]">{{ title() }}</h2>
+          <p class="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">{{ message() }}</p>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2.5 p-7 pt-5">
+        <button type="button" class="btn btn-ghost" (click)="cancelled.emit()">Cancelar</button>
+        <button type="button" class="btn btn-danger-solid" (click)="confirmed.emit()">
+          <ng-icon name="heroTrash" size="16" aria-hidden="true" /> Excluir
         </button>
       </div>
     </div>
