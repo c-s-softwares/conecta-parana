@@ -1,18 +1,23 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { NgIcon } from '@ng-icons/core';
 import { NavItem, Sidebar, SidebarUser } from './sidebar';
 import { AuthService } from '../services/auth.service';
+import { ConnectivityService } from '../services/connectivity.service';
 
 type NavDef = NavItem & { scope: 'all' | 'municipal' | 'super' };
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterOutlet, Sidebar],
+  imports: [RouterOutlet, Sidebar, NgIcon],
   templateUrl: './shell.html',
 })
 export class Shell {
   private readonly auth = inject(AuthService);
+  private readonly connectivity = inject(ConnectivityService);
+
+  protected readonly isOnline = this.connectivity.isOnline;
 
   private readonly navDefs: NavDef[] = [
     { label: 'Dashboard', route: '/dashboard', icon: 'heroSquares2x2', section: 'manage', scope: 'all' },

@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { Shell } from './shell';
 import { AuthService } from '../services/auth.service';
 import { AuthUser } from '../services/auth.model';
+import { ConnectivityService } from '../services/connectivity.service';
 
 const municipalUser: AuthUser = {
   id: 'usr_1',
@@ -28,6 +29,7 @@ describe('Shell', () => {
   const isSuper = signal(false);
   const currentUser = signal<AuthUser | null>(null);
   const logout = vi.fn();
+  const isOnline = signal(true);
 
   let component: Shell;
 
@@ -35,6 +37,7 @@ describe('Shell', () => {
     isSuper.set(false);
     currentUser.set(null);
     logout.mockClear();
+    isOnline.set(true);
 
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
@@ -42,6 +45,7 @@ describe('Shell', () => {
       imports: [Shell, RouterModule.forRoot([])],
       providers: [
         { provide: AuthService, useValue: { isSuperAdmin: isSuper, currentUser, logout } },
+        { provide: ConnectivityService, useValue: { isOnline } },
       ],
     }).compileComponents();
 
@@ -110,4 +114,28 @@ describe('Shell', () => {
     el.querySelector<HTMLButtonElement>('.sidebar-footer button')?.click();
     expect(logout).toHaveBeenCalledWith('manual');
   });
+
+  it('mostra banner offline quando isOnline é false', () => {
+    const fixture = TestBed.createComponent(Shell);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.offline-banner')).toBeNull();
+
+    isOnline.set(false);
+    fixture.detectChanges();
+    const banner = fixture.nativeElement.querySelector('.offline-banner');
+    expect(banner).toBeTruthy();
+    expect(banner.textContent).toContain('Sem conexão com o servidor');
+  });
+
+  it('esconde banner offline quando isOnline volta a true', () => {
+    const fixture = TestBed.createComponent(Shell);
+    isOnline.set(false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.offline-banner')).toBeTruthy();
+
+    isOnline.set(true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.offline-banner')).toBeNull();
+  });
 });
+
