@@ -24,6 +24,7 @@ import '../widgets/services_grid.dart';
 import 'package:conectaparana/shared/widgets/misc/delayed_display.dart';
 import 'package:conectaparana/features/city_switcher/presentation/controllers/active_city_provider.dart';
 import 'package:conectaparana/features/city_switcher/presentation/widgets/city_selector_bottom_sheet.dart';
+import 'package:conectaparana/dev/news_detail_preview_screen.dart';
 
 class HomePage extends StatefulWidget {
   final FeedNotifier? mockNotifier;
@@ -357,25 +358,25 @@ class _ErrorMoreFooter extends StatelessWidget {
             color: const Color(0xFFE53935).withAlpha(20),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.refresh, size: 16, color: Color(0xFFE53935)),
-              SizedBox(width: 8),
-              Flexible(
+              const Icon(Icons.refresh, size: 16, color: Color(0xFFE53935)),
+              const SizedBox(width: 8),
+              const Flexible(
                 child: Text(
                   'Falha ao carregar mais. Toque para tentar novamente.',
                   style: TextStyle(fontSize: 13, color: Color(0xFFE53935)),
                 ),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(width: 12),
 
               OutlinedButton.icon(
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => const NewsDetailPreviewScreen(),
+                      builder: (_) => const NewsDetailPreviewScreen(), 
                     ),
                   );
                 },
