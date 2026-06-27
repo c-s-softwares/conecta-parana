@@ -100,6 +100,7 @@ export class DashboardApi {
 - **Vitest** para testes unitários
 - **Playwright** para testes E2E
 - **Stryker** para testes de mutação
+
 - **ESLint** (`angular-eslint`) + **Prettier** para linting e formatação
 - Environments Angular para staging e produção (`fileReplacements`)
 
@@ -363,3 +364,17 @@ Envolve um campo de formulário com label, marcador de obrigatório e mensagem d
 ```
 
 > Fotos aceitam apenas imagens (PNG, JPG, WebP) - sem PDF. O backend converte para WebP ao subir no bucket.
+
+## Páginas de erro e conectividade
+
+O painel possui 3 páginas de erro dedicadas e um banner de conectividade:
+
+| Rota | Cenário | Comportamento |
+|------|---------|---------------|
+| `/404` | Rota inexistente | Roteador `**` redireciona para esta tela. Exibe texto e botão "Voltar ao início". |
+| `/403` | Guard nega acesso por papel | `superAdminGuard` navega para `/403`. Tela explica a restrição e oferece "Voltar ao dashboard". |
+| `/500` | Erro do servidor (navegação direta) | Tela estática com "Algo deu errado" e botões "Voltar ao início" / "Tentar novamente". |
+| — | Browser offline (`navigator.onLine === false`) | Banner fixo no topo do Shell: "Sem conexão com o servidor". Some automaticamente ao reconectar. |
+
+> **Nota:** O `error.interceptor` continua exibindo toasts para erros HTTP (403, 5xx, offline). As páginas dedicadas cobrem apenas navegação direta (URL colada, acesso restrito, etc.).
+
