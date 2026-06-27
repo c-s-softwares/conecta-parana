@@ -1,8 +1,10 @@
 import { Component, input, output } from '@angular/core';
+import { NgIcon } from '@ng-icons/core';
 
 @Component({
   selector: 'app-confirm-dialog',
   standalone: true,
+  imports: [NgIcon],
   templateUrl: './confirm-dialog.html',
 })
 export class ConfirmDialog {

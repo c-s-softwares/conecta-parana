@@ -87,7 +87,7 @@ describe('ModalDialog', () => {
     await fixture.whenStable();
 
     host.cancelCalled = false;
-    const backdrop = el.querySelector('.fixed.inset-0') as HTMLElement;
+    const backdrop = el.querySelector('.modal-backdrop') as HTMLElement;
     backdrop.click();
     fixture.detectChanges();
 
@@ -102,7 +102,7 @@ describe('ModalDialog', () => {
     await fixture.whenStable();
 
     host.cancelCalled = false;
-    const backdrop = el.querySelector('.fixed.inset-0') as HTMLElement;
+    const backdrop = el.querySelector('.modal-backdrop') as HTMLElement;
     backdrop.click();
     fixture.detectChanges();
 
@@ -145,14 +145,14 @@ describe('ModalDialog', () => {
     await fixture.whenStable();
 
     let dialogPanel = el.querySelector('[role="dialog"]');
-    expect(dialogPanel?.classList.contains('max-w-sm')).toBe(true);
+    expect(dialogPanel?.classList.contains('modal-s')).toBe(true);
 
     host.size = 'l';
     fixture.changeDetectorRef.markForCheck();
     fixture.detectChanges();
     await fixture.whenStable();
     dialogPanel = el.querySelector('[role="dialog"]');
-    expect(dialogPanel?.classList.contains('max-w-3xl')).toBe(true);
+    expect(dialogPanel?.classList.contains('modal-l')).toBe(true);
   });
 
   it('deve ter role="dialog", aria-modal="true" e aria-labelledby corretos', async () => {

@@ -1,16 +1,12 @@
 <!-- eslint-disable @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
 @if (visible()) {
-  <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 transition-opacity duration-300"
-    (click)="onBackdropClick()"
-  >
+  <div class="modal-backdrop" (click)="onBackdropClick()">
     <div
       #dialogPanel
       tabindex="-1"
-      class="relative w-full rounded-lg bg-white p-6 shadow-xl focus:outline-none transition-all"
-      [class.max-w-sm]="size() === 's'"
-      [class.max-w-xl]="size() === 'm'"
-      [class.max-w-3xl]="size() === 'l'"
+      class="modal"
+      [class.modal-s]="size() === 's'"
+      [class.modal-l]="size() === 'l'"
       role="dialog"
       aria-modal="true"
       [attr.aria-labelledby]="title() ? 'modal-title' : null"
@@ -18,27 +14,32 @@
       (click)="$event.stopPropagation()"
       (keydown)="onKeyDown($event)"
     >
-      <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
-        @if (title()) {
-          <h2 id="modal-title" class="text-lg font-bold text-gray-900">
-            {{ title() }}
-          </h2>
-        } @else {
-          <div></div>
-        }
-        <button
-          type="button"
-          (click)="cancelled.emit()"
-          aria-label="Fechar modal"
-          class="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          <ng-icon name="heroXMark" size="18" aria-hidden="true"></ng-icon>
+      <div class="modal-header">
+        <div class="min-w-0">
+          @if (eyebrow()) {
+            <div class="modal-eyebrow">{{ eyebrow() }}</div>
+          }
+          @if (title()) {
+            <h2 id="modal-title" class="text-lg font-bold text-[var(--n-900)] tracking-tight">{{ title() }}</h2>
+          }
+          @if (subtitle()) {
+            <p class="modal-subtitle">{{ subtitle() }}</p>
+          }
+        </div>
+        <button type="button" class="btn-icon" (click)="cancelled.emit()" aria-label="Fechar modal">
+          <ng-icon name="heroXMark" size="18" aria-hidden="true" />
         </button>
       </div>
 
-      <div class="text-sm text-gray-600">
+      <div class="modal-body">
         <ng-content />
       </div>
+
+      @if (footer()) {
+        <div class="modal-footer">
+          <ng-content select="[modal-footer]" />
+        </div>
+      }
     </div>
   </div>
 }

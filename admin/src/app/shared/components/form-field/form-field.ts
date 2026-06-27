@@ -18,10 +18,11 @@ export class FormField {
   showError = input<boolean>(false);
 
 
-  type = input<string>(''); 
+  type = input<string>('');
   accept = input<string>('');
   maxSizeMb = input<number>(0);
   multiple = input<boolean>(false);
+  hint = input<string>('');
 
   fileChange = output<File[]>();
 

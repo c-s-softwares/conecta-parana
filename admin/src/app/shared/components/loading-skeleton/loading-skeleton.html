@@ -1,10 +1,6 @@
-<div class="space-y-3" role="status" aria-label="Carregando...">
+<div class="flex flex-col gap-3" role="status" aria-label="Carregando...">
   @for (i of rowArray(); track i) {
-    <div
-      class="rounded-md bg-skeleton/50 dark:bg-gray-700/50 animate-pulse"
-      [style.height]="height()"
-      [style.width]="widths[i % 3]"
-    ></div>
+    <div class="skeleton" [style.height]="height()" [style.width]="widths[i % 3]"></div>
   }
   <span class="sr-only">Carregando...</span>
 </div>
