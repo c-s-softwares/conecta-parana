@@ -9,7 +9,9 @@ class TicketUiMapper {
   static const Map<String, String> _typeLabels = {
     'acidente': 'Acidente',
     'sinalizacao': 'Sinalização',
+    'sinalização': 'Sinalização',
     'iluminacao': 'Iluminação',
+    'iluminação': 'Iluminação',
     'lixo': 'Lixo',
     'outros': 'Outros',
   };
@@ -17,7 +19,9 @@ class TicketUiMapper {
   static const Map<String, IconData> _typeIcons = {
     'acidente': Icons.car_crash_outlined,
     'sinalizacao': Icons.traffic_outlined,
+    'sinalização': Icons.traffic_outlined,
     'iluminacao': Icons.lightbulb_outline,
+    'iluminação': Icons.lightbulb_outline,
     'lixo': Icons.delete_outline,
     'outros': Icons.report_outlined,
   };
@@ -25,7 +29,9 @@ class TicketUiMapper {
   static const Map<String, Color> _typeColors = {
     'acidente': Color(0xFFE53935),
     'sinalizacao': Color(0xFF1565C0),
+    'sinalização': Color(0xFF1565C0),
     'iluminacao': Color(0xFFD4820A),
+    'iluminação': Color(0xFFD4820A),
     'lixo': Color(0xFF006733),
     'outros': Color(0xFF9E9E9E),
   };
@@ -81,6 +87,50 @@ class TicketUiMapper {
       case TicketStatusGroup.concluido:
         return AppBadgeVariant.teal;
     }
+  }
+
+
+
+  static String statusExactLabel(String status) {
+    switch (status) {
+      case 'aberto':
+        return 'Aberto';
+      case 'em_analise':
+        return 'Em análise';
+      case 'resolvido':
+        return 'Resolvido';
+      case 'fechado':
+        return 'Fechado';
+      case 'reaberto':
+        return 'Reaberto';
+      default:
+        return status;
+    }
+  }
+
+  static AppBadgeVariant statusExactVariant(String status) {
+    switch (status) {
+      case 'aberto':
+        return AppBadgeVariant.purple;
+      case 'em_analise':
+        return AppBadgeVariant.orange;
+      case 'resolvido':
+        return AppBadgeVariant.teal;
+      case 'fechado':
+        return AppBadgeVariant.grey;
+      case 'reaberto':
+        return AppBadgeVariant.blue;
+      default:
+        return AppBadgeVariant.grey;
+    }
+  }
+
+  static String formatDateTime(DateTime date) {
+    final day = date.day.toString().padLeft(2, '0');
+    final month = _months[date.month - 1];
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    return '$day $month · $hour:$minute';
   }
 
   static const _months = [

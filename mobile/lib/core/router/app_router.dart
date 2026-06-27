@@ -1,5 +1,6 @@
 import 'package:app_links/app_links.dart';
 import 'package:conectaparana/core/auth/auth_service.dart';
+import 'package:conectaparana/core/auth/presentation/forgot_password/forgot_password_page.dart';
 import 'package:conectaparana/core/auth/presentation/pages/login_screen.dart';
 import 'package:conectaparana/core/auth/presentation/register_screen.dart';
 import 'package:conectaparana/core/config/environment.dart';
@@ -15,6 +16,7 @@ import 'package:conectaparana/features/events/presentation/pages/event_detail_pa
 import 'package:conectaparana/features/home/presentation/pages/home_page.dart';
 import 'package:conectaparana/features/map/presentation/pages/map_page.dart';
 import 'package:conectaparana/features/profile/presentation/pages/profile_page.dart';
+import 'package:conectaparana/features/tickets/presentation/pages/ticket_detail_page.dart';
 import 'package:conectaparana/features/tickets/presentation/pages/tickets_page.dart';
 import 'package:conectaparana/shared/widgets/feedback/app_toast.dart';
 import 'package:conectaparana/shared/widgets/not_found_screen.dart';
@@ -24,6 +26,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/news/presentation/pages/news_detail_page.dart';
+import 'package:conectaparana/features/communicates/presentation/pages/communicate_detail_page.dart';
 import 'package:conectaparana/features/suggestions/presentation/pages/suggestions_page.dart';
 import 'package:conectaparana/dev/fakes/fake_suggestion_repository.dart';
 import 'package:conectaparana/features/suggestions/presentation/pages/new_suggestion_page.dart';
@@ -31,6 +34,8 @@ import 'package:conectaparana/features/suggestions/presentation/pages/new_sugges
 abstract class AppRoutes {
   static const splash = '/';
   static const login = '/login';
+
+  static const forgotPassword = '/forgot-password';
   static const register = '/register';
   static const onboarding = '/onboarding';
 
@@ -148,6 +153,10 @@ class AppRouter {
           builder: (context, state) => const LoginScreen(),
         ),
         GoRoute(
+          path: AppRoutes.forgotPassword,
+          builder: (context, state) => const ForgotPasswordPage(),
+        ),
+        GoRoute(
           path: AppRoutes.register,
           builder: (context, state) => const RegisterScreen(),
         ),
@@ -195,8 +204,11 @@ class AppRouter {
                     ),
                     GoRoute(
                       path: 'comunicado/:id',
-                      builder: (context, state) =>
-                          _detailPlaceholder('comunicado', state),
+                      builder: (context, state) {
+                        final id = state.pathParameters['id'] ?? '';
+
+                        return CommunicateDetailPage(communicateId: id);
+                      },
                     ),
                     GoRoute(
                       path: 'news/:id',
@@ -265,8 +277,12 @@ class AppRouter {
                   routes: [
                     GoRoute(
                       path: ':id',
-                      builder: (context, state) =>
-                          _detailPlaceholder('ticket', state),
+                      builder: (context, state) => TicketDetailPage(
+                        ticketId: state.pathParameters['id']!,
+                        repository: kDebugMode
+                            ? FakeTicketRepository()
+                            : null,
+                      ),
                     ),
                   ],
                 ),
@@ -311,6 +327,7 @@ class AppRouter {
       AppRoutes.splash,
       AppRoutes.login,
       AppRoutes.register,
+      AppRoutes.forgotPassword,
     };
     final isPublic = publicRoutes.contains(location);
 
