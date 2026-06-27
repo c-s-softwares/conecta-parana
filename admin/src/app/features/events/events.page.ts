@@ -12,6 +12,7 @@ import {
 import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
 import { ToastService } from '../../core/services/toast.service';
 import { EventsApi } from './events.api';
+import { EventFormModal } from './event-form-modal';
 import { EventItem, EventOrder } from './events.model';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
@@ -19,7 +20,14 @@ type StatusFilter = 'all' | 'active' | 'inactive';
 @Component({
   selector: 'app-events-page',
   standalone: true,
-  imports: [PageHeader, DataList, ConfirmDialog, NgIcon, DatePipe],
+  imports: [
+    PageHeader,
+    DataList,
+    ConfirmDialog,
+    EventFormModal,
+    NgIcon,
+    DatePipe,
+  ],
   templateUrl: './events.page.html',
 })
 export class EventsPage {
@@ -88,6 +96,15 @@ export class EventsPage {
   protected onEdit(event: EventItem): void {
     this.editing.set(event);
     this.formOpen.set(true);
+  }
+
+  protected onFormSaved(): void {
+    this.formOpen.set(false);
+    this.load();
+  }
+
+  protected closeForm(): void {
+    this.formOpen.set(false);
   }
 
   protected askDelete(event: EventItem): void {

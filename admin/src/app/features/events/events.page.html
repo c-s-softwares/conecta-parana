@@ -120,6 +120,13 @@
     </ng-template>
   </app-data-list>
 
+  <app-event-form-modal
+    [open]="formOpen()"
+    [event]="editing()"
+    (saved)="onFormSaved()"
+    (closed)="closeForm()"
+  />
+
   <app-confirm-dialog
     [visible]="pendingDelete() !== null"
     [message]="

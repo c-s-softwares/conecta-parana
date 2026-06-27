@@ -1,0 +1,174 @@
+<app-modal-dialog
+  [visible]="open()"
+  [title]="isEditing() ? 'Editar evento' : 'Novo evento'"
+  [eyebrow]="isEditing() ? 'Edição' : 'Cadastro'"
+  [footer]="true"
+  size="m"
+  (cancelled)="onCancel()"
+>
+  <div class="tabs" role="tablist" aria-label="Seções do evento">
+    <button
+      type="button"
+      class="tab"
+      [class.active]="activeTab() === 'dados'"
+      (click)="setTab('dados')"
+    >
+      Dados
+    </button>
+    <button
+      type="button"
+      class="tab"
+      [class.active]="activeTab() === 'fotos'"
+      [disabled]="!isEditing()"
+      [title]="!isEditing() ? 'Salve o evento para adicionar fotos' : ''"
+      (click)="setTab('fotos')"
+    >
+      Fotos
+    </button>
+  </div>
+
+  @if (activeTab() === 'dados') {
+    <form
+      [formGroup]="form"
+      (ngSubmit)="onSubmit()"
+      class="mt-4 flex flex-col gap-4"
+    >
+      <app-form-field
+        label="Título"
+        fieldId="event-title"
+        [required]="true"
+        [showError]="isInvalid('title')"
+        [errorMessage]="errorFor('title')"
+      >
+        <input
+          id="event-title"
+          class="input"
+          type="text"
+          formControlName="title"
+          placeholder="Ex: Festival de Inverno"
+        />
+      </app-form-field>
+
+      <app-form-field
+        label="Descrição"
+        fieldId="event-description"
+        [required]="true"
+        [showError]="isInvalid('description')"
+        [errorMessage]="errorFor('description')"
+      >
+        <textarea
+          id="event-description"
+          class="input"
+          rows="4"
+          formControlName="description"
+          placeholder="Descreva o evento..."
+        ></textarea>
+      </app-form-field>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <app-form-field
+          label="Tipo"
+          fieldId="event-type"
+          [required]="true"
+          [showError]="isInvalid('type')"
+          [errorMessage]="errorFor('type')"
+        >
+          <select id="event-type" class="input" formControlName="type">
+            @for (type of eventTypes; track type) {
+              <option [value]="type">{{ type }}</option>
+            }
+          </select>
+        </app-form-field>
+
+        <app-form-field
+          label="Data e hora"
+          fieldId="event-date"
+          [required]="true"
+          [showError]="isInvalid('eventDate')"
+          [errorMessage]="errorFor('eventDate')"
+        >
+          <input
+            id="event-date"
+            class="input"
+            type="datetime-local"
+            formControlName="eventDate"
+          />
+        </app-form-field>
+      </div>
+
+      <label class="flex items-center gap-2 text-sm text-[var(--n-900)]">
+        <input type="checkbox" formControlName="isActive" />
+        Evento ativo (visível no app)
+      </label>
+    </form>
+  } @else {
+    <div class="mt-4 flex flex-col gap-3">
+      @if (photos().length > 0) {
+        <div class="grid grid-cols-3 gap-3 sm:grid-cols-4">
+          @for (photo of photos(); track photo.id) {
+            <div
+              class="relative aspect-square overflow-hidden rounded-lg border border-[var(--border)]"
+            >
+              @if (photo.thumbUrl) {
+                <img
+                  [src]="photo.thumbUrl"
+                  alt=""
+                  class="h-full w-full object-cover"
+                />
+              }
+              <button
+                type="button"
+                class="btn-icon danger absolute right-1 top-1 bg-white/90"
+                style="width: 28px; height: 28px"
+                (click)="removePhoto(photo.id)"
+                aria-label="Remover foto"
+              >
+                <ng-icon name="heroTrash" size="14" />
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <button
+        type="button"
+        class="dropzone"
+        [disabled]="photos().length >= 10"
+        (click)="fileInput.click()"
+      >
+        <span
+          class="ic-bubble bubble-brand"
+          style="width: 44px; height: 44px; margin-bottom: 0"
+        >
+          <ng-icon name="heroCloudArrowUp" size="20" aria-hidden="true" />
+        </span>
+        <span class="dropzone-title">Clique para adicionar fotos</span>
+        <span class="dropzone-hint">
+          JPEG, PNG ou WebP até 5MB · {{ photos().length }}/10
+        </span>
+      </button>
+      <input
+        #fileInput
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        class="hidden"
+        (change)="onFilesSelected($event)"
+      />
+    </div>
+  }
+
+  <div modal-footer class="flex justify-end gap-2">
+    <button type="button" class="btn btn-ghost" (click)="onCancel()">
+      Cancelar
+    </button>
+    <button
+      type="button"
+      class="btn btn-brand"
+      [disabled]="saving()"
+      (click)="onSubmit()"
+    >
+      {{ isEditing() ? 'Salvar alterações' : 'Criar evento' }}
+    </button>
+  </div>
+</app-modal-dialog>
