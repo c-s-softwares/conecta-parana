@@ -44,6 +44,8 @@ type EventEntity = {
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
+
+  photos?: { id: string; thumbUrl: string | null; url?: string }[];
 };
 
 @Injectable()
@@ -80,6 +82,10 @@ export class EventsService extends BaseCrudService<
       localId: event.localId,
       createdAt: event.createdAt,
       updatedAt: event.updatedAt,
+      photos: (event.photos ?? []).map((photo) => ({
+        id: photo.id,
+        thumbUrl: photo.thumbUrl,
+      })),
     };
   }
 
@@ -136,6 +142,12 @@ export class EventsService extends BaseCrudService<
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy,
+        include: {
+          photos: {
+            select: { id: true, thumbUrl: true },
+            orderBy: { id: 'asc' },
+          },
+        },
       }),
       this.prisma.client.event.count({ where }),
     ]);
@@ -275,6 +287,10 @@ export class EventsService extends BaseCrudService<
       where: { id, deletedAt: null },
       include: {
         _count: { select: { likes: true } },
+        photos: {
+          select: { id: true, url: true, thumbUrl: true },
+          orderBy: { id: 'asc' },
+        },
       },
     });
 
@@ -301,6 +317,11 @@ export class EventsService extends BaseCrudService<
 
     return {
       ...this.toResponse(event),
+      photos: (event.photos ?? []).map((photo) => ({
+        id: photo.id,
+        url: photo.url,
+        thumbUrl: photo.thumbUrl,
+      })),
       likesCount: event._count.likes,
       liked,
       saved,

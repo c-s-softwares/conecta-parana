@@ -1,4 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  PhotoSummaryDto,
+  PhotoThumbDto,
+} from '../../../../common/dto/response/photo.dto';
 
 export class EventResponse {
   @ApiProperty({ example: 'event_01HZX...', description: 'ID do evento' })
@@ -57,9 +61,21 @@ export class EventResponse {
     description: 'Data da última alteração',
   })
   updatedAt!: Date;
+
+  @ApiProperty({
+    type: [PhotoThumbDto],
+    description: 'Fotos do evento em formato leve (apenas miniatura)',
+  })
+  photos!: PhotoThumbDto[];
 }
 
 export class EventDetailResponse extends EventResponse {
+  @ApiProperty({
+    type: [PhotoSummaryDto],
+    description: 'Fotos do evento com imagem cheia (url) e miniatura',
+  })
+  declare photos: PhotoSummaryDto[];
+
   @ApiProperty({
     example: 12,
     description: 'Total de likes no evento.',
