@@ -1,3 +1,10 @@
+@if (!isOnline()) {
+  <div class="offline-banner">
+    <ng-icon name="heroSignal" size="16" />
+    <span>Sem conexão com o servidor</span>
+  </div>
+}
+
 <div class="app">
   <app-sidebar [items]="visibleNavItems()" [user]="sidebarUser()" (logout)="onLogout()" />
 
@@ -5,3 +12,4 @@
     <router-outlet />
   </main>
 </div>
+
