@@ -15,6 +15,7 @@ import 'package:conectaparana/features/events/presentation/pages/event_detail_pa
 import 'package:conectaparana/features/home/presentation/pages/home_page.dart';
 import 'package:conectaparana/features/map/presentation/pages/map_page.dart';
 import 'package:conectaparana/features/profile/presentation/pages/profile_page.dart';
+import 'package:conectaparana/features/tickets/presentation/pages/ticket_detail_page.dart';
 import 'package:conectaparana/features/tickets/presentation/pages/tickets_page.dart';
 import 'package:conectaparana/shared/widgets/feedback/app_toast.dart';
 import 'package:conectaparana/shared/widgets/not_found_screen.dart';
@@ -261,8 +262,12 @@ class AppRouter {
                   routes: [
                     GoRoute(
                       path: ':id',
-                      builder: (context, state) =>
-                          _detailPlaceholder('ticket', state),
+                      builder: (context, state) => TicketDetailPage(
+                        ticketId: state.pathParameters['id']!,
+                        repository: kDebugMode
+                            ? FakeTicketRepository()
+                            : null,
+                      ),
                     ),
                   ],
                 ),
