@@ -81,6 +81,7 @@ describe('FeedService', () => {
       event: { findMany: jest.Mock };
       communicate: { findMany: jest.Mock };
       news: { findFirst: jest.Mock };
+      photo: { findMany: jest.Mock };
       $queryRaw: jest.Mock;
     };
   };
@@ -101,6 +102,7 @@ describe('FeedService', () => {
         event: { findMany: jest.fn() },
         communicate: { findMany: jest.fn() },
         news: { findFirst: jest.fn() },
+        photo: { findMany: jest.fn() },
         $queryRaw: jest.fn(),
       },
     };
@@ -120,6 +122,7 @@ describe('FeedService', () => {
     mockPrisma.client.event.findMany.mockResolvedValue([]);
     mockPrisma.client.communicate.findMany.mockResolvedValue([]);
     mockPrisma.client.news.findFirst.mockResolvedValue(null);
+    mockPrisma.client.photo.findMany.mockResolvedValue([]);
     mockPrisma.client.$queryRaw.mockResolvedValue([]);
     mockCache.get.mockResolvedValue(null);
     mockCache.set.mockResolvedValue(undefined);
