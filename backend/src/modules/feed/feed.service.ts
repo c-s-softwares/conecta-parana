@@ -36,6 +36,7 @@ type EventEntity = {
   localId: string | null;
   createdAt: Date;
   updatedAt: Date;
+  photos?: { id: string; thumbUrl: string | null }[];
 };
 
 /**
@@ -136,6 +137,7 @@ export class FeedService {
     const news = await this.prisma.client.news.findFirst({
       where: { cityId, isActive: true },
       orderBy: { id: 'desc' },
+      include: { photos: { select: { id: true, thumbUrl: true } } },
     });
     if (!news) return null;
     return {
@@ -148,6 +150,10 @@ export class FeedService {
       cityId: news.cityId,
       createdAt: news.createdAt,
       updatedAt: news.updatedAt,
+      photos: news.photos.map((photo) => ({
+        id: photo.id,
+        thumbUrl: photo.thumbUrl,
+      })),
     };
   }
 
@@ -162,7 +168,8 @@ export class FeedService {
       orderBy: { eventDate: 'asc' },
       take: EVENTS_LIMIT,
     });
-    return events.map((event) => this.toEventResponse(event));
+    const withPhotos = await this.attachEventPhotos(events);
+    return withPhotos.map((event) => this.toEventResponse(event));
   }
 
   private async fetchWindowEvents(
@@ -189,7 +196,8 @@ export class FeedService {
       orderBy: { eventDate: 'asc' },
       take: EVENTS_LIMIT,
     });
-    return events.map((event) => this.toEventResponse(event));
+    const withPhotos = await this.attachEventPhotos(events);
+    return withPhotos.map((event) => this.toEventResponse(event));
   }
 
   private async fetchWindowEventsWithProximity(
@@ -227,7 +235,36 @@ export class FeedService {
         ) ASC NULLS LAST
       LIMIT ${EVENTS_LIMIT}
     `;
-    return rows.map((row) => this.toEventResponse(row));
+    const withPhotos = await this.attachEventPhotos(rows);
+    return withPhotos.map((row) => this.toEventResponse(row));
+  }
+
+  private async attachEventPhotos(
+    events: EventEntity[],
+  ): Promise<EventEntity[]> {
+    if (events.length === 0) return events;
+
+    const photos = await this.prisma.client.photo.findMany({
+      where: { eventId: { in: events.map((event) => event.id) } },
+      select: { id: true, thumbUrl: true, eventId: true },
+      orderBy: { id: 'asc' },
+    });
+
+    const byEvent = new Map<
+      string,
+      { id: string; thumbUrl: string | null }[]
+    >();
+    for (const photo of photos) {
+      if (!photo.eventId) continue;
+      const list = byEvent.get(photo.eventId) ?? [];
+      list.push({ id: photo.id, thumbUrl: photo.thumbUrl });
+      byEvent.set(photo.eventId, list);
+    }
+
+    return events.map((event) => ({
+      ...event,
+      photos: byEvent.get(event.id) ?? [],
+    }));
   }
 
   private async fetchCommunicates(
@@ -237,6 +274,7 @@ export class FeedService {
       where: { cityId, isActive: true },
       orderBy: { id: 'desc' },
       take: COMMUNICATES_LIMIT,
+      include: { photos: { select: { id: true, thumbUrl: true } } },
     });
     return items.map((item) => ({
       id: item.id,
@@ -245,6 +283,10 @@ export class FeedService {
       isActive: item.isActive,
       cityId: item.cityId,
       userId: item.userId,
+      photos: item.photos.map((photo) => ({
+        id: photo.id,
+        thumbUrl: photo.thumbUrl,
+      })),
     }));
   }
 
@@ -261,6 +303,10 @@ export class FeedService {
       localId: event.localId,
       createdAt: event.createdAt,
       updatedAt: event.updatedAt,
+      photos: (event.photos ?? []).map((photo) => ({
+        id: photo.id,
+        thumbUrl: photo.thumbUrl,
+      })),
     };
   }
 }

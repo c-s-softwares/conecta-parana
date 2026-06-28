@@ -13,7 +13,6 @@ const loadPlaceholder = () =>
 
 export const routes: Routes = [
   {
-    // Rota de desenvolvimento para visualizar os componentes core (CPR-46). Sem guard.
     path: 'showcase',
     loadComponent: () => import('./features/showcase/showcase.page').then((m) => m.ShowcasePage),
   },
@@ -34,7 +33,12 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/dashboard/dashboard.routes').then((m) => m.DASHBOARD_ROUTES),
       },
-      { path: 'eventos', loadComponent: loadPlaceholder, data: { title: 'Eventos' } },
+      {
+        path: 'eventos',
+        loadComponent: () =>
+          import('./features/events/events.page').then((m) => m.EventsPage),
+        data: { title: 'Eventos' },
+      },
       { path: 'comunicados', loadComponent: loadPlaceholder, data: { title: 'Comunicados' } },
       { path: 'noticias', loadComponent: loadPlaceholder, data: { title: 'Notícias' } },
       { path: 'locais', loadComponent: loadPlaceholder, data: { title: 'Locais' } },
@@ -52,8 +56,12 @@ export const routes: Routes = [
         loadComponent: loadPlaceholder,
         data: { title: 'Administradores' },
       },
-      ...ERROR_ROUTES,
     ],
+  },
+  {
+    path: '',
+    canActivate: [authenticatedGuard],
+    children: [...ERROR_ROUTES],
   },
   { path: '**', redirectTo: '404' },
 ];

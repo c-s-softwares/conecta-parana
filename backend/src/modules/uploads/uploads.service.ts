@@ -146,6 +146,37 @@ export class UploadsService {
     await this.prisma.client.photo.delete({ where: { id } });
   }
 
+  /**
+   * Remove todas as fotos de uma entidade (objetos no storage + linhas). Usado
+   * em cascata quando a entidade dona é excluída; a autorização é
+   * responsabilidade do caller (que já validou o acesso ao recurso pai).
+   */
+  async removeAllForEntity(
+    entityType: EntityType,
+    entityId: string,
+  ): Promise<void> {
+    const where = this.buildPhotoFkWhere(entityType, entityId);
+    const photos = await this.prisma.client.photo.findMany({
+      where,
+      select: { id: true, thumbUrl: true },
+    });
+
+    if (photos.length === 0) return;
+
+    for (const photo of photos) {
+      await this.safeDelete(
+        this.buildKey(entityType, entityId, photo.id, false),
+      );
+      if (photo.thumbUrl) {
+        await this.safeDelete(
+          this.buildKey(entityType, entityId, photo.id, true),
+        );
+      }
+    }
+
+    await this.prisma.client.photo.deleteMany({ where });
+  }
+
   // ---------------- helpers de validação ----------------
 
   private assertFile(file: Express.Multer.File | undefined): asserts file {

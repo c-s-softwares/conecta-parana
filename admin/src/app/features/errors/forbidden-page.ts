@@ -14,7 +14,6 @@ import { ErrorPage } from './error-page';
       description="A página que você tentou acessar é restrita. Seu papel atual não permite acessá-la. Volte ao seu painel para continuar."
       iconName="heroLockClosed"
       theme="amber"
-      pill="auth.guard.ts → navigate('/403')"
     >
       <a routerLink="/dashboard" class="btn btn-primary">Voltar ao dashboard</a>
     </app-error-page>

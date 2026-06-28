@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { PhotoResponseDto } from '../../../uploads/dto/response/photo-response.dto';
+import { PhotoThumbDto } from '../../../../common/dto/response/photo.dto';
 
 export class CommunicateResponse {
   @ApiProperty({
@@ -31,6 +32,12 @@ export class CommunicateResponse {
     example: 'usr_01HZ...',
   })
   userId!: string;
+
+  @ApiProperty({
+    type: [PhotoThumbDto],
+    description: 'Fotos do comunicado em formato leve (apenas miniatura).',
+  })
+  photos!: PhotoThumbDto[];
 }
 
 export class CommunicateDetailResponse extends CommunicateResponse {
@@ -44,7 +51,7 @@ export class CommunicateDetailResponse extends CommunicateResponse {
     type: () => [PhotoResponseDto],
     description: 'Fotos anexadas ao comunicado (max 10).',
   })
-  photos!: PhotoResponseDto[];
+  declare photos: PhotoResponseDto[];
 
   @ApiProperty({
     example: 12,

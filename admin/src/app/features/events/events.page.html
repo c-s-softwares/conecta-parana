@@ -1,0 +1,160 @@
+<div class="flex flex-col gap-5">
+  <header class="page-header">
+    <div>
+      <h1 class="h1">Eventos</h1>
+      <p class="lead">Festivais, corridas, feiras e atividades com data marcada.</p>
+    </div>
+    <div class="toolbar">
+      <div class="input-wrap" style="width: 280px">
+        <ng-icon class="ic" name="heroMagnifyingGlass" size="18" />
+        <input
+          class="input"
+          type="search"
+          placeholder="Buscar em eventos..."
+          [value]="search()"
+          (input)="onSearch($any($event.target).value)"
+        />
+      </div>
+      <button type="button" class="btn btn-primary" (click)="onCreate()">
+        <ng-icon name="heroPlus" size="16" />
+        Novo evento
+      </button>
+    </div>
+  </header>
+
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-2">
+      <div class="tabs" role="tablist" aria-label="Filtrar por status">
+        <button
+          type="button"
+          class="tab"
+          [class.active]="statusFilter() === 'all'"
+          (click)="setStatus('all')"
+        >
+          Todos
+        </button>
+        <button
+          type="button"
+          class="tab"
+          [class.active]="statusFilter() === 'active'"
+          (click)="setStatus('active')"
+        >
+          Ativos
+        </button>
+        <button
+          type="button"
+          class="tab"
+          [class.active]="statusFilter() === 'inactive'"
+          (click)="setStatus('inactive')"
+        >
+          Inativos
+        </button>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-ghost btn-sm"
+        (click)="toggleOrder()"
+        [attr.aria-label]="
+          order() === 'date_asc'
+            ? 'Ordenar por data, crescente'
+            : 'Ordenar por data, decrescente'
+        "
+      >
+        <ng-icon name="heroArrowsUpDown" size="16" />
+        {{ order() === 'date_asc' ? 'Data crescente' : 'Data decrescente' }}
+      </button>
+    </div>
+
+    <span class="text-sm text-[var(--text-subtle)]">
+      {{ total() }} resultado{{ total() === 1 ? '' : 's' }}
+    </span>
+  </div>
+
+  <app-data-list
+    [items]="items()"
+    [total]="total()"
+    [page]="page()"
+    [pageSize]="pageSize()"
+    [loading]="loading()"
+    emptyTitle="Nenhum evento encontrado"
+    emptyDescription="Crie o primeiro evento ou ajuste os filtros."
+    emptyIcon="heroCalendarDays"
+    (pageChange)="onPage($event)"
+  >
+    <ng-template #row let-event>
+      <div class="list-item">
+        <div
+          class="thumb"
+          style="background: oklch(0.95 0.05 300 / 0.55); color: oklch(0.48 0.14 300)"
+        >
+          @if (event.photos.length && event.photos[0].thumbUrl) {
+            <img
+              [src]="event.photos[0].thumbUrl"
+              alt=""
+              class="h-full w-full object-cover"
+            />
+          } @else {
+            <ng-icon name="heroCalendarDays" size="26" />
+          }
+        </div>
+        <div class="body">
+          <div class="title-row">
+            <span class="title">{{ event.title }}</span>
+            <span class="badge badge-evento">{{ event.type }}</span>
+            <span
+              class="badge badge-dot"
+              [class.badge-ativo]="event.isActive"
+              [class.badge-inativo]="!event.isActive"
+            >
+              {{ event.isActive ? 'Ativo' : 'Inativo' }}
+            </span>
+          </div>
+          <p class="desc">{{ event.description }}</p>
+          <div class="meta">
+            <span>
+              <ng-icon name="heroCalendarDays" size="13" />
+              {{ event.eventDate | date: 'dd/MM/yyyy HH:mm' }}
+            </span>
+          </div>
+        </div>
+        <div class="actions">
+          <button
+            type="button"
+            class="btn-icon"
+            (click)="onEdit(event)"
+            aria-label="Editar"
+          >
+            <ng-icon name="heroPencilSquare" size="16" />
+          </button>
+          <button
+            type="button"
+            class="btn-icon danger"
+            (click)="askDelete(event)"
+            aria-label="Excluir"
+          >
+            <ng-icon name="heroTrash" size="16" />
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </app-data-list>
+
+  <app-event-form-modal
+    [open]="formOpen()"
+    [event]="editing()"
+    (saved)="onFormSaved()"
+    (closed)="closeForm()"
+  />
+
+  <app-confirm-dialog
+    [visible]="pendingDelete() !== null"
+    [message]="
+      'Excluir o evento ' +
+      (pendingDelete()?.title ?? '') +
+      '? Esta ação não pode ser desfeita.'
+    "
+    (confirmed)="confirmDelete()"
+    (cancelled)="cancelDelete()"
+  />
+</div>
