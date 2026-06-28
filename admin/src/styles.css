@@ -230,6 +230,10 @@ a {
   background: var(--n-100);
   color: var(--text);
 }
+.btn-icon.danger {
+  background: rgb(255 255 255 / 0.9);
+  color: var(--text-muted);
+}
 .btn-icon.danger:hover {
   background: var(--danger-bg);
   color: var(--danger);

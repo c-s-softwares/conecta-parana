@@ -23,9 +23,8 @@ describe('NotFoundPage', () => {
     );
 
     const buttons = el.querySelectorAll('.error-actions .btn');
-    expect(buttons.length).toBe(2);
-    expect(buttons[0].textContent?.trim()).toContain('Voltar ao início');
-    expect(buttons[1].textContent?.trim()).toContain('Voltar para o painel');
+    expect(buttons.length).toBe(1);
+    expect(buttons[0].textContent?.trim()).toContain('Voltar ao dashboard');
   });
 
   it('usa tema neutro', () => {
@@ -37,11 +36,11 @@ describe('NotFoundPage', () => {
     expect(el.querySelector('.error-icon-badge.theme-neutral')).toBeTruthy();
   });
 
-  it('exibe pill informativa', () => {
+  it('não exibe pill de implementação', () => {
     const fixture = TestBed.createComponent(NotFoundPage);
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
 
-    expect(el.querySelector('.error-pill')?.textContent?.trim()).toContain('Roteador ** → /404');
+    expect(el.querySelector('.error-pill')).toBeNull();
   });
 });

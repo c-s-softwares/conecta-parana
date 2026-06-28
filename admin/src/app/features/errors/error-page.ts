@@ -14,5 +14,4 @@ export class ErrorPage {
   description = input.required<string>();
   iconName = input.required<string>();
   theme = input<'neutral' | 'amber' | 'coral'>('neutral');
-  pill = input<string>();
 }

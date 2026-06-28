@@ -10,7 +10,7 @@ describe('ServerErrorPage', () => {
     }).compileComponents();
   });
 
-  it('renderiza código 500, título e botões', () => {
+  it('renderiza código 500, título e botão de retorno', () => {
     const fixture = TestBed.createComponent(ServerErrorPage);
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
@@ -25,9 +25,8 @@ describe('ServerErrorPage', () => {
     );
 
     const buttons = el.querySelectorAll('.error-actions .btn');
-    expect(buttons.length).toBe(2);
-    expect(buttons[0].textContent?.trim()).toContain('Voltar ao início');
-    expect(buttons[1].textContent?.trim()).toContain('Tentar novamente');
+    expect(buttons.length).toBe(1);
+    expect(buttons[0].textContent?.trim()).toContain('Voltar ao dashboard');
   });
 
   it('usa tema coral', () => {
@@ -39,28 +38,11 @@ describe('ServerErrorPage', () => {
     expect(el.querySelector('.error-icon-badge.theme-coral')).toBeTruthy();
   });
 
-  it('exibe pill informativa', () => {
+  it('não exibe pill de implementação', () => {
     const fixture = TestBed.createComponent(ServerErrorPage);
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
 
-    expect(el.querySelector('.error-pill')?.textContent?.trim()).toContain('HTTP 500');
-  });
-
-  it('botão "Tentar novamente" chama window.location.reload', () => {
-    const fixture = TestBed.createComponent(ServerErrorPage);
-    fixture.detectChanges();
-    const el: HTMLElement = fixture.nativeElement;
-
-    const reloadFn = vi.fn();
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, reload: reloadFn },
-      writable: true,
-      configurable: true,
-    });
-
-    const retryBtn = el.querySelectorAll('.error-actions .btn')[1] as HTMLButtonElement;
-    retryBtn.click();
-    expect(reloadFn).toHaveBeenCalled();
+    expect(el.querySelector('.error-pill')).toBeNull();
   });
 });

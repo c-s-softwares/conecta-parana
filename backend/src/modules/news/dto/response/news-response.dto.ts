@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PhotoResponseDto } from '../../../uploads/dto/response/photo-response.dto';
+import { PhotoThumbDto } from '../../../../common/dto/response/photo.dto';
 
 export class NewsResponse {
   @ApiProperty({
@@ -71,6 +72,12 @@ export class NewsResponse {
     example: '2026-06-08T01:00:00.000Z',
   })
   updatedAt!: Date;
+
+  @ApiProperty({
+    type: [PhotoThumbDto],
+    description: 'Fotos da notícia em formato leve (apenas miniatura).',
+  })
+  photos!: PhotoThumbDto[];
 }
 
 export class NewsDetailResponse extends NewsResponse {
@@ -78,7 +85,7 @@ export class NewsDetailResponse extends NewsResponse {
     type: () => [PhotoResponseDto],
     description: 'Fotos anexadas à notícia (max 10).',
   })
-  photos!: PhotoResponseDto[];
+  declare photos: PhotoResponseDto[];
 
   @ApiProperty({
     example: 12,

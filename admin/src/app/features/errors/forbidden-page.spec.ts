@@ -38,13 +38,11 @@ describe('ForbiddenPage', () => {
     expect(el.querySelector('.error-icon-badge.theme-amber')).toBeTruthy();
   });
 
-  it('exibe pill informativa', () => {
+  it('não exibe pill de implementação', () => {
     const fixture = TestBed.createComponent(ForbiddenPage);
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
 
-    expect(el.querySelector('.error-pill')?.textContent?.trim()).toContain(
-      "auth.guard.ts → navigate('/403')",
-    );
+    expect(el.querySelector('.error-pill')).toBeNull();
   });
 });

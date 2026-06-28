@@ -14,12 +14,8 @@ import { ErrorPage } from './error-page';
       description="O endereço digitado não existe ou foi movido. Verifique o link ou volte ao início do painel para continuar."
       iconName="heroMagnifyingGlass"
       theme="neutral"
-      pill="Roteador ** → /404"
     >
-      <a routerLink="/dashboard" class="btn btn-primary">
-        <span>›</span> Voltar ao início
-      </a>
-      <a routerLink="/dashboard" class="btn btn-ghost">Voltar para o painel</a>
+      <a routerLink="/dashboard" class="btn btn-primary">Voltar ao dashboard</a>
     </app-error-page>
   `,
 })

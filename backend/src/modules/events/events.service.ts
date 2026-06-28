@@ -28,6 +28,8 @@ import {
   EventDetailResponse,
   EventResponse,
 } from './dto/response/event-response.dto';
+import { UploadsService } from '../uploads/uploads.service';
+import { ENTITY_TYPES } from '../uploads/constants/entity-type';
 
 type EventEntity = {
   id: string;
@@ -44,6 +46,8 @@ type EventEntity = {
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
+
+  photos?: { id: string; thumbUrl: string | null; url?: string }[];
 };
 
 @Injectable()
@@ -52,7 +56,10 @@ export class EventsService extends BaseCrudService<
   CreateEventDto,
   UpdateEventDto
 > {
-  constructor(prisma: PrismaService) {
+  constructor(
+    prisma: PrismaService,
+    private readonly uploads: UploadsService,
+  ) {
     super(prisma, {
       tablePrefix: TABLE_PREFIX.EVENT,
       entityName: 'Evento',
@@ -80,6 +87,10 @@ export class EventsService extends BaseCrudService<
       localId: event.localId,
       createdAt: event.createdAt,
       updatedAt: event.updatedAt,
+      photos: (event.photos ?? []).map((photo) => ({
+        id: photo.id,
+        thumbUrl: photo.thumbUrl,
+      })),
     };
   }
 
@@ -136,6 +147,12 @@ export class EventsService extends BaseCrudService<
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy,
+        include: {
+          photos: {
+            select: { id: true, thumbUrl: true },
+            orderBy: { id: 'asc' },
+          },
+        },
       }),
       this.prisma.client.event.count({ where }),
     ]);
@@ -257,6 +274,8 @@ export class EventsService extends BaseCrudService<
 
     await this.checkBeforeDelete(id);
 
+    await this.uploads.removeAllForEntity(ENTITY_TYPES.EVENT, id);
+
     await this.prisma.client.event.update({
       where: { id },
       data: {
@@ -275,6 +294,10 @@ export class EventsService extends BaseCrudService<
       where: { id, deletedAt: null },
       include: {
         _count: { select: { likes: true } },
+        photos: {
+          select: { id: true, url: true, thumbUrl: true },
+          orderBy: { id: 'asc' },
+        },
       },
     });
 
@@ -301,6 +324,11 @@ export class EventsService extends BaseCrudService<
 
     return {
       ...this.toResponse(event),
+      photos: (event.photos ?? []).map((photo) => ({
+        id: photo.id,
+        url: photo.url,
+        thumbUrl: photo.thumbUrl,
+      })),
       likesCount: event._count.likes,
       liked,
       saved,

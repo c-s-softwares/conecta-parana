@@ -59,6 +59,7 @@ const makeCommunicateEntity = (id: string = COMMUNICATE_RECENT_ID) => ({
   priority: false,
   cityId: MOCK_CITY_ID,
   userId: MOCK_USER_ID,
+  photos: [],
 });
 
 const makeNewsEntity = () => ({
@@ -71,7 +72,12 @@ const makeNewsEntity = () => ({
   cityId: MOCK_CITY_ID,
   createdAt: NEWS_TIMESTAMP,
   updatedAt: NEWS_TIMESTAMP,
+  photos: [],
 });
+
+const PHOTOS_THUMB_INCLUDE = {
+  photos: { select: { id: true, thumbUrl: true } },
+};
 
 describe('FeedService', () => {
   let service: FeedService;
@@ -81,6 +87,7 @@ describe('FeedService', () => {
       event: { findMany: jest.Mock };
       communicate: { findMany: jest.Mock };
       news: { findFirst: jest.Mock };
+      photo: { findMany: jest.Mock };
       $queryRaw: jest.Mock;
     };
   };
@@ -101,6 +108,7 @@ describe('FeedService', () => {
         event: { findMany: jest.fn() },
         communicate: { findMany: jest.fn() },
         news: { findFirst: jest.fn() },
+        photo: { findMany: jest.fn() },
         $queryRaw: jest.fn(),
       },
     };
@@ -120,6 +128,7 @@ describe('FeedService', () => {
     mockPrisma.client.event.findMany.mockResolvedValue([]);
     mockPrisma.client.communicate.findMany.mockResolvedValue([]);
     mockPrisma.client.news.findFirst.mockResolvedValue(null);
+    mockPrisma.client.photo.findMany.mockResolvedValue([]);
     mockPrisma.client.$queryRaw.mockResolvedValue([]);
     mockCache.get.mockResolvedValue(null);
     mockCache.set.mockResolvedValue(undefined);
@@ -305,6 +314,7 @@ describe('FeedService', () => {
       expect(mockPrisma.client.news.findFirst).toHaveBeenCalledWith({
         where: { cityId: MOCK_CITY_ID, isActive: true },
         orderBy: { id: 'desc' },
+        include: PHOTOS_THUMB_INCLUDE,
       });
     });
   });
@@ -321,6 +331,7 @@ describe('FeedService', () => {
         where: { cityId: MOCK_CITY_ID, isActive: true },
         orderBy: { id: 'desc' },
         take: 4,
+        include: PHOTOS_THUMB_INCLUDE,
       });
       expect(result.communicates.map((c) => c.id)).toEqual([
         COMMUNICATE_RECENT_ID,

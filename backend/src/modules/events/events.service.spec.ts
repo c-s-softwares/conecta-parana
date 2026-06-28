@@ -9,6 +9,7 @@ import {
 import { PrismaService } from '../../config/prisma.service';
 
 import { EventsService } from './events.service';
+import { UploadsService } from '../uploads/uploads.service';
 
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 
@@ -33,6 +34,10 @@ const MOCK_EVENT = {
   updatedAt: new Date(),
   deletedAt: null,
 };
+
+const MOCK_PHOTO_ID = 'pho_123';
+const MOCK_PHOTO_URL = 'https://cdn.example/pho_123.webp';
+const MOCK_PHOTO_THUMB = 'https://cdn.example/pho_123-thumb.webp';
 
 const mockPrisma = {
   client: {
@@ -59,6 +64,10 @@ const mockPrisma = {
   },
 };
 
+const mockUploads = {
+  removeAllForEntity: jest.fn().mockResolvedValue(undefined),
+};
+
 describe('EventsService', () => {
   let service: EventsService;
 
@@ -69,6 +78,10 @@ describe('EventsService', () => {
         {
           provide: PrismaService,
           useValue: mockPrisma,
+        },
+        {
+          provide: UploadsService,
+          useValue: mockUploads,
         },
       ],
     }).compile();
@@ -92,6 +105,39 @@ describe('EventsService', () => {
       expect(result.total).toBe(1);
 
       expect(result.items).toHaveLength(1);
+    });
+
+    it('inclui apenas a miniatura (thumbUrl) das fotos na listagem', async () => {
+      mockPrisma.client.event.findMany.mockResolvedValue([
+        {
+          ...MOCK_EVENT,
+          photos: [
+            {
+              id: MOCK_PHOTO_ID,
+              thumbUrl: MOCK_PHOTO_THUMB,
+            },
+          ],
+        },
+      ]);
+      mockPrisma.client.event.count.mockResolvedValue(1);
+
+      const result = await service.findAll({ page: 1, pageSize: 10 });
+
+      expect(result.items[0].photos).toEqual([
+        { id: MOCK_PHOTO_ID, thumbUrl: MOCK_PHOTO_THUMB },
+      ]);
+      expect(result.items[0].photos[0]).not.toHaveProperty('url');
+
+      expect(mockPrisma.client.event.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: {
+            photos: {
+              select: { id: true, thumbUrl: true },
+              orderBy: { id: 'asc' },
+            },
+          },
+        }),
+      );
     });
 
     it('deve aplicar filtros de cityId, type, isActive e categoryId', async () => {
@@ -345,6 +391,10 @@ describe('EventsService', () => {
         role: 'ADMIN',
       } as never);
 
+      expect(mockUploads.removeAllForEntity).toHaveBeenCalledWith(
+        'event',
+        MOCK_EVENT_ID,
+      );
       expect(mockPrisma.client.event.update).toHaveBeenCalled();
     });
 
@@ -411,6 +461,38 @@ describe('EventsService', () => {
 
       expect(result.liked).toBe(false);
       expect(result.saved).toBe(false);
+    });
+
+    it('retorna as fotos com imagem cheia (url) no detalhe', async () => {
+      mockPrisma.client.event.findFirst.mockResolvedValue(
+        buildRow({
+          photos: [
+            {
+              id: MOCK_PHOTO_ID,
+              url: MOCK_PHOTO_URL,
+              thumbUrl: MOCK_PHOTO_THUMB,
+            },
+          ],
+        }),
+      );
+
+      const result = await service.findOneDetail(MOCK_EVENT_ID);
+
+      expect(result.photos).toEqual([
+        { id: MOCK_PHOTO_ID, url: MOCK_PHOTO_URL, thumbUrl: MOCK_PHOTO_THUMB },
+      ]);
+
+      expect(mockPrisma.client.event.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: {
+            _count: { select: { likes: true } },
+            photos: {
+              select: { id: true, url: true, thumbUrl: true },
+              orderBy: { id: 'asc' },
+            },
+          },
+        }),
+      );
     });
 
     it('lança NotFoundException quando evento foi soft-deleted ou inexistente', async () => {
