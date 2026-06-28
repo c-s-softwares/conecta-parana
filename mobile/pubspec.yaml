@@ -13,6 +13,8 @@ dependencies:
   jwt_decoder: ^2.0.1
   dio: ^5.0.0
 
+  flutter_launcher_icons: ^0.13.1
+  
   mocktail: ^1.0.3
 
   cupertino_icons: ^1.0.8
@@ -30,6 +32,10 @@ dependencies:
   geolocator: ^14.0.0
   connectivity_plus: ^7.1.1
   share_plus: 10.1.4
+  image_picker: ^1.1.2
+  image: ^4.5.4
+  permission_handler: ^12.0.1
+  http_parser: ^4.1.2
 
 dev_dependencies:
   flutter_test:
@@ -49,3 +55,9 @@ flutter_native_splash:
   android_12:
     color: "#FFFFFF"
     image: "assets/images/paranalogo.png"
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/Logo-4x.png" 
+  min_sdk_android: 21
