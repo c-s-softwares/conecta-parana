@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from 'nestjs-pino';
 import helmet from 'helmet';
+import type { ServerResponse } from 'http';
 import { AppModule } from './app.module';
 import { ForbiddenException, ValidationPipe } from '@nestjs/common';
 import { SentryExceptionFilter } from './common/sentry-exception.filter';
@@ -70,7 +71,14 @@ async function bootstrap(): Promise<void> {
   // Em modo `oci` o diretório não existe (ou fica vazio) e o handler só
   // responde 404 para qualquer URL - sem impacto pratico em prod, pois as
   // URLs geradas lá apontam para o bucket Oracle.
-  app.useStaticAssets(getLocalStorageDir(), { prefix: '/dev-uploads' });
+  app.useStaticAssets(getLocalStorageDir(), {
+    prefix: '/dev-uploads',
+    // helmet aplica CORP same-origin global; libera só aqui para o admin
+    // (origem diferente) conseguir exibir as imagens do driver local.
+    setHeaders: (res: ServerResponse) => {
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    },
+  });
 
   if (configService.get<string>('NODE_ENV') !== 'production') {
     const config = new DocumentBuilder()
