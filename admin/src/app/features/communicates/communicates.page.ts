@@ -167,9 +167,7 @@ export class CommunicatesPage {
     const current = this.editing();
     const dto = this.form();
 
-    const request = current
-      ? this.api.update(current.id, dto)
-      : this.api.create(dto);
+    const request = current ? this.api.update(current.id, dto) : this.api.create(dto);
 
     request
       .pipe(
@@ -190,10 +188,10 @@ export class CommunicatesPage {
   }
 
   protected onPageChange(event: DataListPageEvent): void {
-  this.page.set(event.page);
-  this.pageSize.set(event.pageSize);
-  this.load();
-}
+    this.page.set(event.page);
+    this.pageSize.set(event.pageSize);
+    this.load();
+  }
 
   protected delete(item: ComunicadoItem): void {
     if (!confirm(`Excluir o comunicado "${item.title}"?`)) return;
@@ -246,6 +244,14 @@ export class CommunicatesPage {
 
   private handleWriteError(error: unknown): void {
     const code = this.extractErrorCode(error);
+
+    if (code === 'city_required') {
+      this.toast.show(
+        'error',
+        'Super Admin precisa informar uma cidade. Use um admin municipal para criar comunicados.',
+      );
+      return;
+    }
 
     if (code === 'city_scope_denied') {
       this.toast.show('error', 'Você só pode atuar na sua cidade.');
