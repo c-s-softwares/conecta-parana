@@ -1,12 +1,17 @@
 import 'dart:async';
+import 'package:conectaparana/features/events/domain/entities/event_list_item.dart';
+import 'package:conectaparana/features/events/presentation/widgets/event_week_card.dart';
 import 'package:conectaparana/features/home/domain/entities/feed_item.dart';
 import 'package:conectaparana/features/home/domain/entities/feed_page.dart';
+import 'package:conectaparana/features/home/domain/entities/home_highlights.dart';
 import 'package:conectaparana/features/home/domain/repositories/feed_repository.dart';
 import 'package:conectaparana/features/home/presentation/pages/home_page.dart';
 import 'package:conectaparana/features/home/presentation/providers/feed_notifier.dart';
+import 'package:conectaparana/features/home/presentation/widgets/events_carousel.dart';
 import 'package:conectaparana/shared/widgets/navigation/app_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockFeedRepository extends Mock implements FeedRepository {}
@@ -21,8 +26,107 @@ Widget _wrap(Widget child) {
   return MaterialApp(home: child);
 }
 
+Widget _wrapWithRoutes(FeedNotifier notifier) {
+  final router = GoRouter(
+    initialLocation: '/home',
+    routes: [
+      GoRoute(
+        path: '/home',
+        builder: (context, state) => HomePage(mockNotifier: notifier),
+      ),
+      GoRoute(
+        path: '/services',
+        builder: (context, state) => const Scaffold(body: Text('SERVICES_ALL')),
+      ),
+      GoRoute(
+        path: '/events',
+        builder: (context, state) => Scaffold(
+          body: Text('EVENTS_${state.uri.queryParameters['filter']}'),
+        ),
+      ),
+    ],
+  );
+
+  return MaterialApp.router(routerConfig: router);
+}
+
+Widget _wrapWithShellRoutes(FeedNotifier notifier) {
+  final router = GoRouter(
+    initialLocation: '/home',
+    routes: [
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) => Scaffold(
+          body: navigationShell,
+          bottomNavigationBar: BottomNavigationBar(
+            currentIndex: navigationShell.currentIndex,
+            onTap: navigationShell.goBranch,
+            items: const [
+              BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Início'),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.event),
+                label: 'Eventos',
+              ),
+            ],
+          ),
+        ),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (context, state) => HomePage(mockNotifier: notifier),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/events',
+                builder: (context, state) =>
+                    const Scaffold(body: Text('EVENTS_TAB')),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ],
+  );
+
+  return MaterialApp.router(routerConfig: router);
+}
+
 FeedNotifier _notifier(FeedRepository repo) =>
     FeedNotifier(repository: repo, cityId: 'city_01');
+
+FeedPage _homePageWithHighlights() {
+  return FeedPage(
+    items: [_item('c1', FeedItemType.comunicado)],
+    highlights: HomeHighlights(
+      services: const [
+        HomeService(
+          id: 'cat_1',
+          label: 'Saúde',
+          icon: 'local_hospital_outlined',
+          route: '/map',
+        ),
+      ],
+      events: [
+        EventListItem(
+          id: 'evt_1',
+          title: 'Feira',
+          category: 'evento',
+          date: DateTime(2026, 6, 25),
+          dateLabel: '25 JUN',
+          time: '19:00',
+          location: 'Centro',
+          gradientColors: ['0xFF006733', '0xFF004D26'],
+          detailRoute: '/events/evt_1',
+        ),
+      ],
+    ),
+    hasMore: false,
+  );
+}
 
 Finder _scrollableFeed() => find.byWidgetPredicate(
   (widget) =>
@@ -254,4 +358,99 @@ void main() {
 
     expect(find.byType(AppHeader), findsOneWidget);
   });
+
+  testWidgets('atalho Todos de Serviços abre listagem completa de serviços', (
+    tester,
+  ) async {
+    when(
+      () => repo.getFeed(
+        cityId: any(named: 'cityId'),
+        lat: any(named: 'lat'),
+        lng: any(named: 'lng'),
+        cursor: any(named: 'cursor'),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer((_) async => _homePageWithHighlights());
+
+    final notifier = _notifier(repo);
+    await notifier.load();
+
+    await tester.pumpWidget(_wrapWithRoutes(notifier));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('home_services_all_button')),
+        matching: find.text('Todos'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('SERVICES_ALL'), findsOneWidget);
+  });
+
+  testWidgets('Ver tudo de Eventos próximos ativa a aba Eventos', (
+    tester,
+  ) async {
+    when(
+      () => repo.getFeed(
+        cityId: any(named: 'cityId'),
+        lat: any(named: 'lat'),
+        lng: any(named: 'lng'),
+        cursor: any(named: 'cursor'),
+        limit: any(named: 'limit'),
+      ),
+    ).thenAnswer((_) async => _homePageWithHighlights());
+
+    final notifier = _notifier(repo);
+    await notifier.load();
+
+    await tester.pumpWidget(_wrapWithShellRoutes(notifier));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('home_events_see_all_button')),
+        matching: find.text('Ver tudo'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('EVENTS_TAB'), findsOneWidget);
+    expect(
+      tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar)).currentIndex,
+      1,
+    );
+  });
+
+  testWidgets('carrossel da Home limita eventos a tres itens', (tester) async {
+    final events = List.generate(
+      5,
+      (index) => EventListItem(
+        id: 'evt_$index',
+        title: 'Evento ${index + 1}',
+        category: 'evento',
+        date: DateTime(2026, 6, 25),
+        dateLabel: '25 JUN',
+        time: '19:00',
+        location: 'Centro',
+        gradientColors: const ['0xFF006733', '0xFF004D26'],
+        detailRoute: '/events/evt_$index',
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(home: Scaffold(body: EventsCarousel(events: events))),
+    );
+
+    expect(
+      find.byType(EventWeekCard, skipOffstage: false),
+      findsNWidgets(3),
+    );
+    expect(find.text('Evento 1'), findsOneWidget);
+    expect(find.text('Evento 3'), findsOneWidget);
+    expect(find.text('Evento 4'), findsNothing);
+    expect(find.text('Evento 5'), findsNothing);
+  });
+
 }
