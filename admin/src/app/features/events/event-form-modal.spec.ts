@@ -43,6 +43,9 @@ describe('EventFormModal', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
+    URL.createObjectURL = vi.fn(() => 'blob:mock');
+    URL.revokeObjectURL = vi.fn();
+
     TestBed.configureTestingModule({
       imports: [EventFormModal],
       providers: [
@@ -155,14 +158,17 @@ describe('EventFormModal', () => {
     expect(closed).toBe(false);
   });
 
-  it('upload com file_too_large não adiciona a foto', () => {
-    openEdit();
-    clickButtonWithText('Fotos');
+  it('envia as fotos apenas ao salvar e segue mesmo com erro de upload', () => {
+    openCreate();
+    setValue('#event-title', 'Com foto');
+    setValue('#event-description', 'Uma descrição');
+    setValue('#event-type', 'cultural');
+    setValue('#event-date', FUTURE_LOCAL);
 
     const fileInput = el.querySelector(
       'input[type="file"]',
     ) as HTMLInputElement;
-    const file = new File(['x'], 'grande.jpg', { type: 'image/jpeg' });
+    const file = new File(['x'], 'foto.jpg', { type: 'image/jpeg' });
     Object.defineProperty(fileInput, 'files', {
       value: [file],
       configurable: true,
@@ -170,14 +176,25 @@ describe('EventFormModal', () => {
     fileInput.dispatchEvent(new Event('change'));
     fixture.detectChanges();
 
-    const req = http.expectOne(UPLOADS_URL);
-    expect(req.request.method).toBe('POST');
-    req.flush(
+    // Nada é enviado ao adicionar a foto.
+    http.expectNone(UPLOADS_URL);
+
+    let saved = false;
+    fixture.componentInstance.saved.subscribe(() => (saved = true));
+
+    clickButtonWithText('Criar evento');
+
+    const createReq = http.expectOne(EVENTS_URL);
+    expect(createReq.request.method).toBe('POST');
+    createReq.flush({ ...EXISTING, id: 'event_new' });
+
+    const uploadReq = http.expectOne(UPLOADS_URL);
+    expect(uploadReq.request.method).toBe('POST');
+    uploadReq.flush(
       { code: 'file_too_large', message: 'grande' },
       { status: 400, statusText: 'Bad Request' },
     );
-    fixture.detectChanges();
 
-    expect(el.querySelectorAll('img').length).toBe(0);
+    expect(saved).toBe(true);
   });
 });

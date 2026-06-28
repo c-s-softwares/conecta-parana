@@ -1,4 +1,12 @@
-import { Component, effect, inject, input, output, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import {
   AbstractControl,
   FormBuilder,
@@ -7,6 +15,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { NgIcon } from '@ng-icons/core';
+import { Observable, catchError, forkJoin, of } from 'rxjs';
 
 import { ModalDialog } from '../../shared/components/modal-dialog/modal-dialog';
 import { FormField } from '../../shared/components/form-field/form-field';
@@ -17,14 +26,16 @@ import { EVENT_TYPES, EventItem, EventPhoto } from './events.model';
 
 const MAX_PHOTOS = 10;
 
-/** Data do evento precisa ser futura (alem da validacao do backend). */
+interface PendingFile {
+  file: File;
+  previewUrl: string;
+}
+
 function futureDate(control: AbstractControl): ValidationErrors | null {
   const value = control.value as string;
   if (!value) return null;
   return new Date(value).getTime() > Date.now() ? null : { pastDate: true };
 }
-
-type Tab = 'dados' | 'fotos';
 
 @Component({
   selector: 'app-event-form-modal',
@@ -39,17 +50,28 @@ export class EventFormModal {
   private readonly toast = inject(ToastService);
 
   readonly open = input.required<boolean>();
-  /** Evento a editar; null = criacao. */
   readonly event = input<EventItem | null>(null);
 
   readonly saved = output<void>();
   readonly closed = output<void>();
 
   protected readonly eventTypes = EVENT_TYPES;
-  protected readonly activeTab = signal<Tab>('dados');
+  protected readonly maxPhotos = MAX_PHOTOS;
   protected readonly saving = signal(false);
-  protected readonly photos = signal<EventPhoto[]>([]);
   protected readonly submitted = signal(false);
+
+  // Fotos ja salvas no servidor (edicao), as marcadas para remover e as novas
+  // selecionadas - tudo so e enviado ao salvar.
+  private readonly existingPhotos = signal<EventPhoto[]>([]);
+  private readonly removedIds = signal<string[]>([]);
+  protected readonly newFiles = signal<PendingFile[]>([]);
+
+  protected readonly visiblePhotos = computed(() =>
+    this.existingPhotos().filter((photo) => !this.removedIds().includes(photo.id)),
+  );
+  protected readonly totalPhotos = computed(
+    () => this.visiblePhotos().length + this.newFiles().length,
+  );
 
   private currentId: string | null = null;
   private loadedUpdatedAt: string | null = null;
@@ -75,11 +97,6 @@ export class EventFormModal {
     return this.currentId !== null;
   }
 
-  protected setTab(tab: Tab): void {
-    if (tab === 'fotos' && !this.isEditing()) return;
-    this.activeTab.set(tab);
-  }
-
   protected isInvalid(name: string): boolean {
     const control = this.form.get(name);
     if (!control) return false;
@@ -94,6 +111,34 @@ export class EventFormModal {
       return 'Data do evento deve ser futura.';
     if (errors['serverType']) return 'Tipo de evento inválido.';
     return 'Campo inválido.';
+  }
+
+  protected onFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = input.files ? Array.from(input.files) : [];
+    input.value = '';
+
+    const remaining = MAX_PHOTOS - this.totalPhotos();
+    if (files.length > remaining) {
+      this.toast.show('error', `Limite de ${MAX_PHOTOS} fotos por evento atingido.`);
+    }
+
+    for (const file of files.slice(0, Math.max(0, remaining))) {
+      this.newFiles.update((list) => [
+        ...list,
+        { file, previewUrl: URL.createObjectURL(file) },
+      ]);
+    }
+  }
+
+  protected removeExisting(id: string): void {
+    this.removedIds.update((list) => [...list, id]);
+  }
+
+  protected removeNew(index: number): void {
+    const target = this.newFiles()[index];
+    if (target) URL.revokeObjectURL(target.previewUrl);
+    this.newFiles.update((list) => list.filter((_, i) => i !== index));
   }
 
   protected onSubmit(): void {
@@ -112,24 +157,18 @@ export class EventFormModal {
       eventDate: new Date(value.eventDate!).toISOString(),
     };
 
+    const editingId = this.currentId;
     this.saving.set(true);
 
-    const request$ = this.currentId
-      ? this.api.update(this.currentId, {
+    const request$ = editingId
+      ? this.api.update(editingId, {
           ...payload,
           updatedAt: this.loadedUpdatedAt ?? undefined,
         })
       : this.api.create(payload);
 
     request$.subscribe({
-      next: () => {
-        this.saving.set(false);
-        this.toast.show(
-          'success',
-          this.currentId ? 'Evento atualizado.' : 'Evento criado.',
-        );
-        this.saved.emit();
-      },
+      next: (event) => this.persistPhotos(event.id, editingId !== null),
       error: (err: unknown) => {
         this.saving.set(false);
         this.handleSaveError(err);
@@ -141,50 +180,47 @@ export class EventFormModal {
     this.closed.emit();
   }
 
-  // ---- Fotos ----
+  // Dispara upload das novas e delete das removidas; um erro de foto nao
+  // impede as demais (toast vem do interceptor).
+  private persistPhotos(eventId: string, wasEditing: boolean): void {
+    const ops: Observable<unknown>[] = [
+      ...this.removedIds().map((id) =>
+        this.uploads.remove(id).pipe(catchError(() => of(null))),
+      ),
+      ...this.newFiles().map((item) =>
+        this.uploads
+          .upload(item.file, 'event', eventId)
+          .pipe(catchError(() => of(null))),
+      ),
+    ];
 
-  protected onFilesSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const files = input.files ? Array.from(input.files) : [];
-    input.value = '';
-    if (!this.currentId) return;
+    const finish = () => {
+      this.saving.set(false);
+      this.toast.show(
+        'success',
+        wasEditing ? 'Evento atualizado.' : 'Evento criado.',
+      );
+      this.saved.emit();
+    };
 
-    for (const file of files) {
-      if (this.photos().length >= MAX_PHOTOS) {
-        this.toast.show('error', `Limite de ${MAX_PHOTOS} fotos por evento atingido.`);
-        break;
-      }
-      this.uploads.upload(file, 'event', this.currentId).subscribe({
-        next: (photo) =>
-          this.photos.update((list) => [
-            ...list,
-            { id: photo.id, url: photo.url, thumbUrl: photo.thumbUrl },
-          ]),
-        // Erro (file_too_large, etc.) ja gera toast no interceptor; fila segue.
-        error: () => undefined,
-      });
+    if (ops.length === 0) {
+      finish();
+      return;
     }
+    forkJoin(ops).subscribe(() => finish());
   }
-
-  protected removePhoto(id: string): void {
-    this.uploads.remove(id).subscribe({
-      next: () => this.photos.update((list) => list.filter((p) => p.id !== id)),
-      error: () => undefined,
-    });
-  }
-
-  // ---- internos ----
 
   private initialize(): void {
     this.submitted.set(false);
     this.saving.set(false);
-    this.activeTab.set('dados');
+    this.removedIds.set([]);
+    this.clearNewFiles();
     const target = this.event();
 
     if (!target) {
       this.currentId = null;
       this.loadedUpdatedAt = null;
-      this.photos.set([]);
+      this.existingPhotos.set([]);
       this.form.reset({
         title: '',
         description: '',
@@ -199,7 +235,7 @@ export class EventFormModal {
     this.api.get(target.id).subscribe({
       next: (detail) => {
         this.loadedUpdatedAt = detail.updatedAt;
-        this.photos.set(detail.photos);
+        this.existingPhotos.set(detail.photos);
         this.form.reset({
           title: detail.title,
           description: detail.description,
@@ -210,6 +246,11 @@ export class EventFormModal {
       },
       error: () => this.closed.emit(),
     });
+  }
+
+  private clearNewFiles(): void {
+    for (const item of this.newFiles()) URL.revokeObjectURL(item.previewUrl);
+    this.newFiles.set([]);
   }
 
   private handleSaveError(err: unknown): void {
@@ -223,10 +264,8 @@ export class EventFormModal {
       return;
     }
     if (readStatus(err) === 403) {
-      // city_scope_denied: toast vem do interceptor; fecha o modal.
       this.closed.emit();
     }
-    // event_changed (409) e demais: toast do interceptor, modal permanece aberto.
   }
 }
 
@@ -237,7 +276,6 @@ const REQUIRED_MESSAGES: Record<string, string> = {
   eventDate: 'Informe a data e hora.',
 };
 
-/** ISO 8601 -> valor de `datetime-local` (yyyy-MM-ddTHH:mm) no fuso local. */
 function toLocalInput(iso: string): string {
   const date = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, '0');
