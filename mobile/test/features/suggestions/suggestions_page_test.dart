@@ -55,7 +55,10 @@ void main() {
 
     expect(find.text('Ciclovia na Av. Brasil'), findsOneWidget);
     expect(find.text('Mais arvores na rua'), findsOneWidget);
-    expect(find.text('Respondida'), findsOneWidget); 
+    expect(find.text('Respondida'), findsOneWidget);
+    expect(find.textContaining('#S12'), findsNothing);
+    expect(find.textContaining('#S11'), findsNothing);
+    expect(find.text('Mobilidade'), findsNWidgets(2));
   });
 
   testWidgets('Expande o card e mostra a resposta do admin ao tocar', (
