@@ -40,36 +40,33 @@
       ></textarea>
     </app-form-field>
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <app-form-field
-        label="Tipo"
-        fieldId="event-type"
-        [required]="true"
-        [showError]="isInvalid('type')"
-        [errorMessage]="errorFor('type')"
-      >
-        <select id="event-type" class="input" formControlName="type">
-          @for (type of eventTypes; track type) {
-            <option [value]="type">{{ type }}</option>
-          }
-        </select>
-      </app-form-field>
+    <app-form-field
+      label="Tipo"
+      fieldId="event-type"
+      [required]="true"
+      [showError]="isInvalid('type')"
+      [errorMessage]="errorFor('type')"
+    >
+      <select id="event-type" class="input" formControlName="type">
+        @for (type of eventTypes; track type) {
+          <option [value]="type">{{ type }}</option>
+        }
+      </select>
+    </app-form-field>
 
-      <app-form-field
-        label="Data e hora"
-        fieldId="event-date"
-        [required]="true"
-        [showError]="isInvalid('eventDate')"
-        [errorMessage]="errorFor('eventDate')"
-      >
-        <input
-          id="event-date"
-          class="input"
-          type="datetime-local"
-          formControlName="eventDate"
-        />
-      </app-form-field>
-    </div>
+    <app-form-field
+      label="Data e hora"
+      fieldId="event-date"
+      [required]="true"
+      [showError]="isInvalid('eventDate')"
+      [errorMessage]="errorFor('eventDate')"
+    >
+      <app-date-time-picker
+        inputId="event-date"
+        placeholder="Selecione data e hora"
+        formControlName="eventDate"
+      />
+    </app-form-field>
 
     <label class="flex items-center gap-2 text-sm text-[var(--n-900)]">
       <input type="checkbox" formControlName="isActive" />
@@ -94,7 +91,7 @@
               }
               <button
                 type="button"
-                class="btn-icon danger absolute right-1 top-1 bg-white/90"
+                class="btn-icon danger absolute right-1 top-1"
                 style="width: 28px; height: 28px"
                 (click)="removeExisting(photo.id)"
                 aria-label="Remover foto"

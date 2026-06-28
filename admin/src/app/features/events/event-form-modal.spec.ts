@@ -13,7 +13,6 @@ const EVENTS_URL = `${environment.apiUrl}/events`;
 const UPLOADS_URL = `${environment.apiUrl}/uploads/photos`;
 const EVENT_ID = 'event_01';
 const UPDATED_AT = '2030-01-01T10:00:00.000Z';
-const FUTURE_LOCAL = '2030-07-15T19:00';
 
 const EXISTING: EventItem = {
   id: EVENT_ID,
@@ -43,6 +42,8 @@ describe('EventFormModal', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2030-06-01T08:00:00'));
     URL.createObjectURL = vi.fn(() => 'blob:mock');
     URL.revokeObjectURL = vi.fn();
 
@@ -63,7 +64,10 @@ describe('EventFormModal', () => {
     fixture.detectChanges();
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    http.verify();
+    vi.useRealTimers();
+  });
 
   function openCreate(): void {
     fixture.componentRef.setInput('event', null);
@@ -90,6 +94,30 @@ describe('EventFormModal', () => {
     fixture.detectChanges();
   }
 
+  function pickDate(day: string, time: string): void {
+    const trigger = el.querySelector(
+      'app-date-time-picker button',
+    ) as HTMLButtonElement;
+    trigger.click();
+    fixture.detectChanges();
+
+    const dayButton = Array.from(
+      el.querySelectorAll('app-date-time-picker button'),
+    ).find(
+      (b) =>
+        b.textContent?.trim() === day &&
+        (b as HTMLElement).style.opacity === '',
+    ) as HTMLButtonElement;
+    dayButton.click();
+
+    const timeInput = el.querySelector(
+      'app-date-time-picker input',
+    ) as HTMLInputElement;
+    timeInput.value = time;
+    timeInput.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+  }
+
   function clickButtonWithText(text: string): void {
     const button = Array.from(el.querySelectorAll('button')).find((b) =>
       b.textContent?.includes(text),
@@ -103,7 +131,7 @@ describe('EventFormModal', () => {
     setValue('#event-title', 'Festival de Inverno');
     setValue('#event-description', 'Uma descrição');
     setValue('#event-type', 'cultural');
-    setValue('#event-date', FUTURE_LOCAL);
+    pickDate('20', '19:00');
 
     let saved = false;
     fixture.componentInstance.saved.subscribe(() => (saved = true));
@@ -163,7 +191,7 @@ describe('EventFormModal', () => {
     setValue('#event-title', 'Com foto');
     setValue('#event-description', 'Uma descrição');
     setValue('#event-type', 'cultural');
-    setValue('#event-date', FUTURE_LOCAL);
+    pickDate('20', '19:00');
 
     const fileInput = el.querySelector(
       'input[type="file"]',

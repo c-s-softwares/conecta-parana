@@ -1,0 +1,169 @@
+<div>
+  <button
+    type="button"
+    [id]="inputId() || null"
+    class="input flex w-full items-center justify-between text-left"
+    [disabled]="disabled()"
+    [style.color]="display() ? null : 'var(--text-subtle)'"
+    (click)="toggle()"
+  >
+    <span>{{ display() || placeholder() }}</span>
+    <ng-icon name="heroCalendarDays" size="18" aria-hidden="true" />
+  </button>
+
+  @if (open()) {
+    <div
+      class="mt-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 shadow-lg"
+    >
+      <div class="mb-2 flex items-center justify-between">
+        <button
+          type="button"
+          class="btn-icon"
+          (click)="prevMonth()"
+          aria-label="Mês anterior"
+        >
+          <ng-icon name="heroChevronLeft" size="16" />
+        </button>
+        <span class="text-sm font-semibold capitalize text-[var(--n-900)]">
+          {{ monthLabel() }}
+        </span>
+        <button
+          type="button"
+          class="btn-icon"
+          (click)="nextMonth()"
+          aria-label="Próximo mês"
+        >
+          <ng-icon name="heroChevronRight" size="16" />
+        </button>
+      </div>
+
+      <div class="mb-1 grid grid-cols-7 gap-1">
+        @for (weekday of weekdays; track $index) {
+          <span
+            class="text-center text-xs font-medium text-[var(--text-subtle)]"
+          >
+            {{ weekday }}
+          </span>
+        }
+      </div>
+
+      @for (week of weeks(); track $index) {
+        <div class="grid grid-cols-7 gap-1">
+          @for (cell of week; track cell.date) {
+            <button
+              type="button"
+              class="h-8 rounded-md text-sm transition hover:bg-[var(--n-100)]"
+              [style.opacity]="cell.inMonth ? null : '0.4'"
+              [style.background]="isSelected(cell) ? 'var(--brand-600)' : null"
+              [style.color]="isSelected(cell) ? '#fff' : null"
+              [style.fontWeight]="isToday(cell) ? '700' : null"
+              [style.outline]="
+                isToday(cell) && !isSelected(cell)
+                  ? '1px solid var(--brand-400)'
+                  : null
+              "
+              (click)="selectDay(cell)"
+            >
+              {{ cell.day }}
+            </button>
+          }
+        </div>
+      }
+
+      <div class="mt-3 border-t border-[var(--border)] pt-3">
+        <div class="flex items-center gap-2">
+          <ng-icon name="heroClock" size="16" aria-hidden="true" />
+          <input
+            type="text"
+            inputmode="numeric"
+            maxlength="5"
+            class="input text-center !w-4/6"
+            aria-label="Hora (formato 24h)"
+            [value]="timeDisplay()"
+            (input)="onTimeText($any($event.target).value)"
+          />
+          <button
+            type="button"
+            class="btn btn-ghost btn-sm"
+            aria-label="Alternar AM/PM"
+            (click)="togglePeriod()"
+          >
+            {{ period() }}
+          </button>
+          <div class="ml-auto flex gap-1">
+            <button
+              type="button"
+              class="tab"
+              [class.active]="clockMode() === 'hours'"
+              (click)="setClockMode('hours')"
+            >
+              Hora
+            </button>
+            <button
+              type="button"
+              class="tab"
+              [class.active]="clockMode() === 'minutes'"
+              (click)="setClockMode('minutes')"
+            >
+              Min
+            </button>
+          </div>
+        </div>
+
+        <svg
+          viewBox="0 0 200 200"
+          class="mx-auto mt-3 block w-[200px] max-w-full"
+        >
+          <circle
+            cx="100"
+            cy="100"
+            r="94"
+            fill="var(--n-50)"
+            stroke="var(--border)"
+          />
+          <line
+            x1="100"
+            y1="100"
+            [attr.x2]="hand().x"
+            [attr.y2]="hand().y"
+            stroke="var(--brand-600)"
+            stroke-width="2"
+          />
+          <circle cx="100" cy="100" r="3" fill="var(--brand-600)" />
+          <circle
+            [attr.cx]="hand().x"
+            [attr.cy]="hand().y"
+            r="3"
+            fill="var(--brand-600)"
+          />
+          @for (mark of clockMarks(); track mark.value) {
+            <g class="cursor-pointer" (click)="selectClock(mark.value)">
+              <circle
+                [attr.cx]="mark.x"
+                [attr.cy]="mark.y"
+                r="15"
+                [attr.fill]="mark.selected ? 'var(--brand-600)' : 'transparent'"
+              />
+              <text
+                [attr.x]="mark.x"
+                [attr.y]="mark.y"
+                text-anchor="middle"
+                dominant-baseline="central"
+                font-size="14"
+                [attr.fill]="mark.selected ? '#fff' : 'var(--n-900)'"
+              >
+                {{ mark.label }}
+              </text>
+            </g>
+          }
+        </svg>
+
+        <div class="mt-2 flex justify-end">
+          <button type="button" class="btn btn-brand btn-sm" (click)="close()">
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

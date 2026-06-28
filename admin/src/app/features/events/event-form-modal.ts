@@ -19,6 +19,7 @@ import { Observable, catchError, forkJoin, of } from 'rxjs';
 
 import { ModalDialog } from '../../shared/components/modal-dialog/modal-dialog';
 import { FormField } from '../../shared/components/form-field/form-field';
+import { DateTimePicker } from '../../shared/components/date-time-picker/date-time-picker';
 import { ToastService } from '../../core/services/toast.service';
 import { UploadsApi } from '../../core/services/uploads.api';
 import { EventsApi } from './events.api';
@@ -40,7 +41,13 @@ function futureDate(control: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-event-form-modal',
   standalone: true,
-  imports: [ModalDialog, FormField, NgIcon, ReactiveFormsModule],
+  imports: [
+    ModalDialog,
+    FormField,
+    DateTimePicker,
+    NgIcon,
+    ReactiveFormsModule,
+  ],
   templateUrl: './event-form-modal.html',
 })
 export class EventFormModal {
