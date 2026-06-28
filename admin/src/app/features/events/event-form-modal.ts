@@ -239,19 +239,29 @@ export class EventFormModal {
     }
 
     this.currentId = target.id;
+    // Popula com os dados que já vêm na lista para o form não "piscar" com o
+    // evento anterior; o GET abaixo só refina (updatedAt fresco + fotos).
+    this.loadedUpdatedAt = target.updatedAt;
+    this.existingPhotos.set(target.photos);
+    this.patchFormFrom(target);
+
     this.api.get(target.id).subscribe({
       next: (detail) => {
         this.loadedUpdatedAt = detail.updatedAt;
         this.existingPhotos.set(detail.photos);
-        this.form.reset({
-          title: detail.title,
-          description: detail.description,
-          type: detail.type,
-          isActive: detail.isActive,
-          eventDate: toLocalInput(detail.eventDate),
-        });
+        this.patchFormFrom(detail);
       },
       error: () => this.closed.emit(),
+    });
+  }
+
+  private patchFormFrom(item: EventItem): void {
+    this.form.reset({
+      title: item.title,
+      description: item.description,
+      type: item.type,
+      isActive: item.isActive,
+      eventDate: toLocalInput(item.eventDate),
     });
   }
 
