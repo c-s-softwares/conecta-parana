@@ -58,6 +58,8 @@ class FakeEngagementService extends EngagementService {
 Widget createWidget({
   required EngagementService service,
   String entityType = 'news',
+  bool liked = false,
+  bool saved = false,
   Future<void> Function(String text)? onShare,
 }) {
   return MaterialApp(
@@ -65,8 +67,8 @@ Widget createWidget({
       body: EngagementBar(
         entityType: entityType,
         entityId: 'news_1',
-        liked: false,
-        saved: false,
+        liked: liked,
+        saved: saved,
         likesCount: 12,
         service: service,
         onShare: onShare,
@@ -76,6 +78,19 @@ Widget createWidget({
 }
 
 void main() {
+  testWidgets('inicia com estados ativos recebidos da API', (tester) async {
+    final service = FakeEngagementService();
+
+    await tester.pumpWidget(
+      createWidget(service: service, liked: true, saved: true),
+    );
+
+    expect(find.byIcon(Icons.favorite), findsOneWidget);
+    expect(find.byIcon(Icons.bookmark), findsOneWidget);
+    expect(find.byIcon(Icons.favorite_border), findsNothing);
+    expect(find.byIcon(Icons.bookmark_border), findsNothing);
+  });
+
   testWidgets('toggle like updates UI', (tester) async {
     final service = FakeEngagementService();
 
@@ -138,7 +153,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.favorite_border));
     await tester.pump();
 
-    await tester.tap(find.byIcon(Icons.favorite));
+    await tester.tap(find.byKey(const Key('engagement_like')));
     await tester.pump();
 
     expect(service.likeCalls, 1);
@@ -193,7 +208,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.bookmark_border));
     await tester.pump();
 
-    await tester.tap(find.byIcon(Icons.bookmark));
+    await tester.tap(find.byKey(const Key('engagement_save')));
     await tester.pump();
 
     expect(service.saveCalls, 1);
