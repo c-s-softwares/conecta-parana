@@ -15,6 +15,22 @@ class _FakeRepository implements EventRepository {
   _FakeRepository({this.eventToReturn, this.errorToThrow});
 
   @override
+  Future<EventListPage> getEvents({
+    String? cityId,
+    DateTime? from,
+    DateTime? to,
+    int page = 1,
+    int pageSize = 10,
+  }) async {
+    return EventListPage(
+      items: const [],
+      total: 0,
+      page: page,
+      pageSize: pageSize,
+    );
+  }
+
+  @override
   Future<EventDetail> getEvent(String id) async {
     if (errorToThrow != null) throw errorToThrow!;
     return eventToReturn!;
@@ -242,6 +258,37 @@ void main() {
       expect(_key(const Key('engagement_like')), findsOneWidget);
       expect(_key(const Key('engagement_save')), findsOneWidget);
       expect(_key(const Key('engagement_share')), findsOneWidget);
+    });
+
+    testWidgets('inicia curtir e salvar ativos conforme o evento carregado', (
+      tester,
+    ) async {
+      final repo = _FakeRepository(
+        eventToReturn: _makeEvent(
+          likedByMe: true,
+          savedByMe: true,
+          likesCount: 8,
+        ),
+      );
+
+      await tester.pumpWidget(
+        _buildTestWidget(
+          EventDetailPage(eventId: 'evt_test', repository: repo),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.favorite, skipOffstage: false), findsOneWidget);
+      expect(
+        find.byIcon(Icons.favorite_border, skipOffstage: false),
+        findsNothing,
+      );
+      expect(find.byIcon(Icons.bookmark, skipOffstage: false), findsWidgets);
+      expect(
+        find.byIcon(Icons.bookmark_border, skipOffstage: false),
+        findsNothing,
+      );
+      expect(_text('8'), findsOneWidget);
     });
 
     testWidgets('exibe nome do Local quando evento tem local', (tester) async {
