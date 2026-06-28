@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/network/api_client.dart';
+import '../../../engagement/data/engagement_service.dart';
+import '../../../engagement/widgets/engagement_bar.dart';
 import '../../data/news_detail_model.dart';
 import '../../data/news_repository.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -105,35 +107,6 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                     ),
                   ),
                 ),
-                actions: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: CircleAvatar(
-                      backgroundColor: Colors.black45,
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.bookmark_border,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {},
-                      ),
-                    ),
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: CircleAvatar(
-                      backgroundColor: Colors.black45,
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.share_outlined,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {},
-                      ),
-                    ),
-                  ),
-                ],
                 flexibleSpace: FlexibleSpaceBar(
                   collapseMode: CollapseMode.parallax,
                   background: NewsPhotoCarousel(photos: news.photos),
@@ -289,45 +262,13 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
 
                       const SizedBox(height: 24),
 
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        alignment: WrapAlignment.start,
-                        children: [
-                          OutlinedButton.icon(
-                            onPressed: () {},
-                            icon: const Icon(Icons.favorite_border, size: 16),
-                            label: const Text('142'),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 15,
-                              ),
-                              minimumSize: const Size(0, 36),
-                            ),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: () {},
-                            icon: const Icon(Icons.bookmark_border, size: 16),
-                            label: const Text('Salvar'),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 15,
-                              ),
-                              minimumSize: const Size(0, 36),
-                            ),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: () {},
-                            icon: const Icon(Icons.share_outlined, size: 16),
-                            label: const Text('28'),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 15,
-                              ),
-                              minimumSize: const Size(0, 36),
-                            ),
-                          ),
-                        ],
+                      EngagementBar(
+                        entityType: 'news',
+                        entityId: news.id,
+                        liked: news.liked,
+                        saved: news.saved,
+                        likesCount: news.likesCount,
+                        service: EngagementService(ApiClient.instance.dio),
                       ),
 
                       const SizedBox(height: 32),

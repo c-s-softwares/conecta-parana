@@ -10,7 +10,10 @@ class NewsRepository {
 
   Future<NewsDetailModel> getById(String id) async {
     try {
-      final response = await _apiClient.dio.get('/news/$id');
+      final response = await _apiClient.dio.get(
+        '/news/$id',
+        options: Options(extra: {'auth': true}),
+      );
 
       return NewsDetailModel.fromJson(response.data);
     } on DioException catch (error) {

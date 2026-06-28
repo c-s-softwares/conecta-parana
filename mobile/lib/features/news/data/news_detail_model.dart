@@ -11,6 +11,9 @@ class NewsDetailModel {
   final String? authorName;
   final String? authorSubtitle;
   final String? createdAt;
+  final int likesCount;
+  final bool liked;
+  final bool saved;
 
   NewsDetailModel({
     required this.id,
@@ -25,6 +28,9 @@ class NewsDetailModel {
     this.authorName,
     this.authorSubtitle,
     this.createdAt,
+    this.likesCount = 0,
+    this.liked = false,
+    this.saved = false,
   });
 
   factory NewsDetailModel.fromJson(Map<String, dynamic> json) {
@@ -35,12 +41,26 @@ class NewsDetailModel {
       summary: json['summary'],
       type: json['type'],
       linkType: json['linkType'],
-      externalUrl: json['externalUrl'],
+      externalUrl: json['linkUrl'] ?? json['externalUrl'],
       isActive: json['isActive'] ?? true,
-      photos: List<String>.from(json['photos'] ?? []),
+      photos: (json['photos'] as List<dynamic>? ?? const [])
+          .map((photo) => photo is Map<String, dynamic> ? photo['url'] : photo)
+          .whereType<String>()
+          .toList(),
       authorName: json['authorName'],
       authorSubtitle: json['authorSubtitle'],
       createdAt: json['createdAt'],
+      likesCount: json['likesCount'] as int? ?? 0,
+      liked:
+          json['liked'] as bool? ??
+          json['isLiked'] as bool? ??
+          json['likedByMe'] as bool? ??
+          false,
+      saved:
+          json['saved'] as bool? ??
+          json['isSaved'] as bool? ??
+          json['savedByMe'] as bool? ??
+          false,
     );
   }
 }
