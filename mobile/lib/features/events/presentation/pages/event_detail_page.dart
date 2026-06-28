@@ -8,6 +8,7 @@ import 'package:conectaparana/features/events/data/models/event_detail_model.dar
 import 'package:conectaparana/features/events/presentation/pages/photo_viewer_page.dart';
 import 'package:conectaparana/features/events/presentation/widgets/event_info_cards.dart';
 import 'package:conectaparana/features/events/presentation/widgets/event_static_map.dart';
+import 'package:conectaparana/features/engagement/widgets/engagement_bar.dart';
 import 'package:conectaparana/shared/widgets/misc/empty_state.dart';
 import 'package:conectaparana/shared/widgets/misc/loading_spinner.dart';
 
@@ -48,6 +49,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
           _state = _PageState.loaded;
         });
       }
+    } on EventNotFoundException {
+      if (mounted) setState(() => _state = _PageState.notFound);
     } on DioException catch (e) {
       if (!mounted) return;
       setState(
@@ -500,8 +503,7 @@ class _BottomBar extends StatelessWidget {
             width: double.infinity,
             height: 50,
             child: ElevatedButton.icon(
-              onPressed: () {
-              },
+              onPressed: () {},
               icon: const Icon(Icons.calendar_month_outlined, size: 18),
               label: const Text(
                 'Adicionar à agenda',
@@ -519,90 +521,17 @@ class _BottomBar extends StatelessWidget {
           ),
           const SizedBox(height: 10),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _ActionButton(
-                key: const Key('engagement_like'),
-                icon: event.likedByMe ? Icons.favorite : Icons.favorite_border,
-                label: '${event.likesCount}',
-                color: event.likedByMe
-                    ? const Color(0xFFE53935)
-                    : const Color(0xFF555555),
-                isLoading: likeLoading,
-                onTap: onLike,
-              ),
-              _ActionButton(
-                key: const Key('engagement_save'),
-                icon: event.savedByMe ? Icons.bookmark : Icons.bookmark_border,
-                label: 'Salvar',
-                color: event.savedByMe
-                    ? const Color(0xFF006733)
-                    : const Color(0xFF555555),
-                isLoading: saveLoading,
-                onTap: onSave,
-              ),
-              _ActionButton(
-                key: const Key('engagement_share'),
-                icon: Icons.share_outlined,
-                label: 'Compartilhar',
-                color: const Color(0xFF555555),
-                isLoading: false,
-                onTap: onShare,
-              ),
-            ],
+          EngagementActions(
+            liked: event.likedByMe,
+            saved: event.savedByMe,
+            likesCount: event.likesCount,
+            likeLoading: likeLoading,
+            saveLoading: saveLoading,
+            onLike: onLike,
+            onSave: onSave,
+            onShare: onShare,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final bool isLoading;
-  final VoidCallback onTap;
-
-  const _ActionButton({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.isLoading,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: isLoading ? null : onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isLoading)
-              SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2, color: color),
-              )
-            else
-              Icon(icon, size: 18, color: color),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

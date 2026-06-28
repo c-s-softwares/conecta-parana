@@ -5,8 +5,14 @@ import '../../domain/entities/event_list_item.dart';
 class EventWeekCard extends StatelessWidget {
   final EventListItem event;
   final VoidCallback? onTap;
+  final bool compact;
 
-  const EventWeekCard({super.key, required this.event, this.onTap});
+  const EventWeekCard({
+    super.key,
+    required this.event,
+    this.onTap,
+    this.compact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -49,54 +55,60 @@ class EventWeekCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _dateLabel(),
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFFE8A33D),
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      event.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1A1A1A),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on_outlined,
-                          size: 14,
-                          color: Colors.grey,
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.all(compact ? 10 : 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _dateLabel(),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFFE8A33D),
+                          letterSpacing: 0.5,
                         ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            event.location,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        event.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: compact ? 13 : 15,
+                          height: compact ? 1.08 : null,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      if (compact)
+                        const Spacer()
+                      else
+                        const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on_outlined,
+                            size: compact ? 12 : 14,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              event.location,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: compact ? 10.5 : 12,
+                                color: Colors.grey,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

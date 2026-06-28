@@ -93,11 +93,16 @@ class EventFeaturedBanner extends StatelessWidget {
                     color: Colors.white,
                   ),
                   const SizedBox(width: 4),
-                  Text(
-                    event.location,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.white.withAlpha(220),
+                  Expanded(
+                    child: Text(
+                      event.location,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: false,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.white.withAlpha(220),
+                      ),
                     ),
                   ),
                 ],

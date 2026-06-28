@@ -80,7 +80,9 @@ class EventDetail {
       title: json['title'] as String,
       description: json['description'] as String,
       type: json['type'] as String,
-      status: json['status'] as String,
+      status:
+          json['status'] as String? ??
+          ((json['isActive'] as bool? ?? true) ? 'publicado' : 'cancelado'),
       eventDate: DateTime.parse(json['eventDate'] as String),
       eventEndDate: json['eventEndDate'] != null
           ? DateTime.parse(json['eventEndDate'] as String)
@@ -95,12 +97,20 @@ class EventDetail {
       local: json['local'] != null
           ? EventLocal.fromJson(json['local'] as Map<String, dynamic>)
           : null,
-      photos: (json['photos'] as List<dynamic>)
+      photos: (json['photos'] as List<dynamic>? ?? const [])
           .map((p) => EventPhoto.fromJson(p as Map<String, dynamic>))
           .toList(),
-      likesCount: json['likesCount'] as int,
-      likedByMe: json['likedByMe'] as bool,
-      savedByMe: json['savedByMe'] as bool,
+      likesCount: json['likesCount'] as int? ?? 0,
+      likedByMe:
+          json['liked'] as bool? ??
+          json['isLiked'] as bool? ??
+          json['likedByMe'] as bool? ??
+          false,
+      savedByMe:
+          json['saved'] as bool? ??
+          json['isSaved'] as bool? ??
+          json['savedByMe'] as bool? ??
+          false,
     );
   }
 
