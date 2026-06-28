@@ -69,7 +69,7 @@ void main() {
     ).thenAnswer(
       (_) async => Response(
         requestOptions: RequestOptions(path: '/auth/refresh'),
-        data: {'accessToken': 'new_access', 'refreshToken': 'new_refresh'},
+        data: {'access_token': 'new_access', 'refresh_token': 'new_refresh'},
         statusCode: 200,
       ),
     );
@@ -192,7 +192,7 @@ void main() {
       ).thenAnswer(
         (_) async => Response(
           requestOptions: RequestOptions(path: '/auth/refresh'),
-          data: {'accessToken': 'new_access', 'refreshToken': 'new_refresh'},
+          data: {'access_token': 'new_access', 'refresh_token': 'new_refresh'},
           statusCode: 200,
         ),
       );
