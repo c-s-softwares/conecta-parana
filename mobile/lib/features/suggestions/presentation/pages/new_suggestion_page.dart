@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../data/repositories/remote_suggestion_repository.dart';
 import '../../domain/repositories/suggestion_repository.dart';
 
 class NewSuggestionPage extends StatefulWidget {
-  final SuggestionRepository repository;
+  final SuggestionRepository? repository;
 
-  const NewSuggestionPage({super.key, required this.repository});
+  const NewSuggestionPage({super.key, this.repository});
 
   @override
   State<NewSuggestionPage> createState() => _NewSuggestionPageState();
@@ -30,7 +31,9 @@ class _NewSuggestionPageState extends State<NewSuggestionPage> {
   final _subjectController = TextEditingController();
   final _messageController = TextEditingController();
 
+  late final SuggestionRepository _repository;
   String _selectedCategory = _categories.first;
+  String? _subjectBackendError;
   String? _messageBackendError;
   bool _isSubmitting = false;
   bool _hasTriedSubmit = false;
@@ -58,6 +61,12 @@ class _NewSuggestionPageState extends State<NewSuggestionPage> {
   int get _remainingCharacters => _messageMaxLength - _messageLength;
 
   @override
+  void initState() {
+    super.initState();
+    _repository = widget.repository ?? RemoteSuggestionRepository();
+  }
+
+  @override
   void dispose() {
     _subjectController.dispose();
     _messageController.dispose();
@@ -69,6 +78,7 @@ class _NewSuggestionPageState extends State<NewSuggestionPage> {
 
     setState(() {
       _hasTriedSubmit = true;
+      _subjectBackendError = null;
       _messageBackendError = null;
     });
 
@@ -83,7 +93,7 @@ class _NewSuggestionPageState extends State<NewSuggestionPage> {
     });
 
     try {
-      await widget.repository.createSuggestion(
+      await _repository.createSuggestion(
         subject: _subjectController.text.trim(),
         message: _messageController.text.trim(),
         category: _selectedCategory,
@@ -100,6 +110,15 @@ class _NewSuggestionPageState extends State<NewSuggestionPage> {
           content: Text('Selecione sua cidade na Home antes de enviar.'),
         ),
       );
+    } on SuggestionSubjectTooLongException {
+      if (!mounted) return;
+
+      setState(() {
+        _subjectBackendError =
+            'Assunto muito longo. Reduza para até 200 caracteres.';
+      });
+
+      _formKey.currentState?.validate();
     } on SuggestionMessageTooLongException {
       if (!mounted) return;
 
@@ -235,6 +254,10 @@ class _NewSuggestionPageState extends State<NewSuggestionPage> {
                   validator: (value) {
                     final text = value ?? '';
 
+                    if (_subjectBackendError != null) {
+                      return _subjectBackendError;
+                    }
+
                     if (!_hasTriedSubmit && !_subjectTouched) {
                       return null;
                     }
@@ -252,6 +275,10 @@ class _NewSuggestionPageState extends State<NewSuggestionPage> {
                   onChanged: (_) {
                     setState(() {
                       _subjectTouched = true;
+
+                      if (_subjectBackendError != null) {
+                        _subjectBackendError = null;
+                      }
                     });
 
                     _formKey.currentState?.validate();

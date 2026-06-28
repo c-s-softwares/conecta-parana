@@ -1,4 +1,4 @@
-import 'package:conectaparana/dev/fakes/fake_suggestion_repository.dart';
+import 'package:conectaparana/features/suggestions/data/repositories/remote_suggestion_repository.dart';
 import 'package:conectaparana/shared/widgets/misc/list_state_view.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -33,7 +33,7 @@ class _SuggestionsPageState extends State<SuggestionsPage> {
   }
 
   SuggestionRepository _repository() {
-    return const FakeSuggestionRepository();
+    return RemoteSuggestionRepository();
   }
 
   @override

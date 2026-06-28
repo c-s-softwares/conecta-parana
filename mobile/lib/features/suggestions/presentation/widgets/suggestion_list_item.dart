@@ -3,8 +3,18 @@ import 'package:conectaparana/shared/widgets/misc/badge.dart';
 import '../../domain/entities/suggestion.dart';
 
 const _months = [
-  'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
-  'jul', 'ago', 'set', 'out', 'nov', 'dez',
+  'jan',
+  'fev',
+  'mar',
+  'abr',
+  'mai',
+  'jun',
+  'jul',
+  'ago',
+  'set',
+  'out',
+  'nov',
+  'dez',
 ];
 
 String _dayMonth(DateTime d) => '${d.day} ${_months[d.month - 1]}';
@@ -51,7 +61,7 @@ class _SuggestionListItemState extends State<SuggestionListItem> {
                   children: [
                     Expanded(
                       child: Text(
-                        '#${s.id} · ${s.category}',
+                        s.category,
                         style: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFF9E9E9E),
@@ -138,6 +148,8 @@ class _SuggestionListItemState extends State<SuggestionListItem> {
         return ('Lida', AppBadgeVariant.neutral);
       case SuggestionStatus.arquivada:
         return ('Arquivada', AppBadgeVariant.neutral);
+      case SuggestionStatus.concluida:
+        return ('Concluída', AppBadgeVariant.green);
     }
   }
 }

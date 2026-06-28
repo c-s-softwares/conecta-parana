@@ -1,4 +1,4 @@
-enum SuggestionStatus { enviada, lida, respondida, arquivada }
+enum SuggestionStatus { enviada, lida, respondida, arquivada, concluida }
 
 class SuggestionReply {
   final String authorName; 
