@@ -54,7 +54,11 @@ class _ServiceItem extends StatelessWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F5),
+                color: const Color(0xFFEEEEEE),
+                border: Border.all(
+                  color: const Color(0xFF9E9E9E),
+                  width: 1.0,
+                ),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
@@ -78,14 +82,20 @@ class _ServiceItem extends StatelessWidget {
 
   IconData _iconFor(String name) {
     switch (name) {
+      case 'medical-cross':
       case 'local_hospital_outlined':
         return Icons.local_hospital_outlined;
+      case 'education':
       case 'school_outlined':
         return Icons.school_outlined;
+      case 'tourism':
       case 'park_outlined':
         return Icons.park_outlined;
+      case 'public-service':
       case 'directions_bus_outlined':
         return Icons.directions_bus_outlined;
+      case 'food':
+        return Icons.restaurant_outlined;
       case 'receipt_long_outlined':
         return Icons.receipt_long_outlined;
       case 'lightbulb_outline':

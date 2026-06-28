@@ -16,26 +16,29 @@ class FeedItemCard extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
+          height: 104,
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
             border: item.isPriority
                 ? Border.all(color: const Color(0xFF006733), width: 1.5)
-                : Border.all(color: const Color(0xFFEEEEEE)),
-            boxShadow: [
+                : Border.all(color: const Color(0xFFE1E5E2)),
+            boxShadow: const [
               BoxShadow(
-                color: Colors.black.withAlpha(13),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: Color(0x0D000000),
+                blurRadius: 5,
+                offset: Offset(0, 2),
               ),
             ],
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Expanded(child: _buildContent()),
+              const SizedBox(width: 12),
               _buildThumbnail(),
-              Expanded(child: _buildContent(context)),
             ],
           ),
         ),
@@ -45,13 +48,10 @@ class FeedItemCard extends StatelessWidget {
 
   Widget _buildThumbnail() {
     return ClipRRect(
-      borderRadius: const BorderRadius.only(
-        topLeft: Radius.circular(12),
-        bottomLeft: Radius.circular(12),
-      ),
+      borderRadius: BorderRadius.circular(6),
       child: SizedBox(
-        width: 96,
-        height: 96,
+        width: 80,
+        height: 80,
         child: item.imageUrl != null
             ? Image.network(
                 item.imageUrl!,
@@ -66,59 +66,94 @@ class FeedItemCard extends StatelessWidget {
 
   Widget _placeholderIcon() {
     return Container(
-      color: const Color(0xFFFFF0EE),
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 7),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF07A15), Color(0xFFC84B00)],
+        ),
+      ),
       child: Center(
-        child: Icon(
-          _typeIcon(item.type),
-          color: const Color(0xFF006733),
-          size: 32,
+        child: Text(
+          _thumbnailLabel(item.title),
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 10,
+            height: 1.05,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildContent(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              _TypeChip(type: item.type),
-              if (item.isPriority) ...[
-                const SizedBox(width: 6),
-                _PriorityBadge(),
-              ],
-            ],
+  Widget _buildContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          _categoryLabel,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 10,
+            height: 1.1,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.3,
+            color: Color(0xFF006733),
           ),
-          const SizedBox(height: 6),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          item.title,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontSize: 14,
+            height: 1.08,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF171A18),
+          ),
+        ),
+        if (item.subtitle != null && item.subtitle!.trim().isNotEmpty) ...[
+          const SizedBox(height: 7),
           Text(
-            item.title,
-            maxLines: 2,
+            item.subtitle!,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF1A1A1A),
+              fontSize: 11,
+              height: 1.1,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF777E7A),
             ),
           ),
-          if (item.subtitle != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              item.subtitle!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          ],
-          if (item.date != null) ...[
-            const SizedBox(height: 6),
-            _DateLabel(date: item.date!),
-          ],
         ],
-      ),
+      ],
     );
+  }
+
+  String get _categoryLabel {
+    final type = _typeLabel(item.type).toUpperCase();
+    final category = item.category?.trim();
+    if (category == null || category.isEmpty) return type;
+    return '$type · ${category.toUpperCase()}';
+  }
+
+  static String _thumbnailLabel(String title) {
+    final year = RegExp(r'\b(20\d{2})\b').firstMatch(title)?.group(1);
+    if (title.toLowerCase().contains('orçamento') && year != null) {
+      return 'Orçamento\n$year';
+    }
+
+    final words = title.trim().split(RegExp(r'\s+'));
+    return words.take(3).join('\n');
   }
 
   static String _typeLabel(FeedItemType type) {
@@ -130,108 +165,5 @@ class FeedItemCard extends StatelessWidget {
       case FeedItemType.news:
         return 'Notícia';
     }
-  }
-
-  static IconData _typeIcon(FeedItemType type) {
-    switch (type) {
-      case FeedItemType.event:
-        return Icons.event_outlined;
-      case FeedItemType.comunicado:
-        return Icons.campaign_outlined;
-      case FeedItemType.news:
-        return Icons.article_outlined;
-    }
-  }
-}
-
-class _TypeChip extends StatelessWidget {
-  final FeedItemType type;
-
-  const _TypeChip({required this.type});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: _color.withAlpha(26),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        _label,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color: _color,
-        ),
-      ),
-    );
-  }
-
-  Color get _color {
-    switch (type) {
-      case FeedItemType.event:
-        return const Color(0xFF006733);
-      case FeedItemType.comunicado:
-        return const Color(0xFFE65100);
-      case FeedItemType.news:
-        return const Color(0xFF1565C0);
-    }
-  }
-
-  String get _label {
-    switch (type) {
-      case FeedItemType.event:
-        return 'EVENTO';
-      case FeedItemType.comunicado:
-        return 'COMUNICADO';
-      case FeedItemType.news:
-        return 'NOTÍCIA';
-    }
-  }
-}
-
-class _PriorityBadge extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: const Color(0xFF006733),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: const Text(
-        'DESTAQUE',
-        style: TextStyle(
-          fontSize: 9,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-        ),
-      ),
-    );
-  }
-}
-
-class _DateLabel extends StatelessWidget {
-  final DateTime date;
-
-  const _DateLabel({required this.date});
-
-  @override
-  Widget build(BuildContext context) {
-    final day = date.day.toString().padLeft(2, '0');
-    final month = date.month.toString().padLeft(2, '0');
-    final year = date.year;
-
-    return Row(
-      children: [
-        const Icon(Icons.calendar_today_outlined, size: 11, color: Colors.grey),
-        const SizedBox(width: 4),
-        Text(
-          '$day/$month/$year',
-          style: const TextStyle(fontSize: 11, color: Colors.grey),
-        ),
-      ],
-    );
   }
 }

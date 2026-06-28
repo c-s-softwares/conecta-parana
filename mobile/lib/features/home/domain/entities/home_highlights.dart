@@ -1,3 +1,5 @@
+import '../../../events/domain/entities/event_list_item.dart';
+
 class HomeAlert {
   final String title;
   final String description;
@@ -44,31 +46,11 @@ class HomeService {
   });
 }
 
-class HomeHighlightEvent {
-  final String id;
-  final String title;
-  final String dateLabel;
-  final String location;
-  final List<String> gradientColors;
-  final String? badgeLabel;
-  final String detailRoute;
-
-  const HomeHighlightEvent({
-    required this.id,
-    required this.title,
-    required this.dateLabel,
-    required this.location,
-    required this.gradientColors,
-    this.badgeLabel,
-    required this.detailRoute,
-  });
-}
-
 class HomeHighlights {
   final HomeAlert? alert;
   final HomeFeaturedBanner? featuredBanner;
   final List<HomeService> services;
-  final List<HomeHighlightEvent> events;
+  final List<EventListItem> events;
 
   const HomeHighlights({
     this.alert,
