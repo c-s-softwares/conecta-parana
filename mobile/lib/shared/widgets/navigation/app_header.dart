@@ -6,6 +6,7 @@ class AppHeader extends StatefulWidget {
   final VoidCallback? onCityTap;
   final VoidCallback? onNotificationTap;
   final ValueChanged<String>? onSearch;
+  final VoidCallback? onSearchTap;
 
   const AppHeader({
     super.key,
@@ -14,6 +15,7 @@ class AppHeader extends StatefulWidget {
     this.onCityTap,
     this.onNotificationTap,
     this.onSearch,
+    this.onSearchTap,
   });
 
   @override
@@ -102,7 +104,9 @@ class _AppHeaderState extends State<AppHeader> {
         const Spacer(),
 
         IconButton(
-          onPressed: () => setState(() => _searchExpanded = true),
+          onPressed:
+              widget.onSearchTap ??
+              () => setState(() => _searchExpanded = true),
           icon: const Icon(Icons.search, color: Colors.black87),
         ),
 
