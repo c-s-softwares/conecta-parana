@@ -1,4 +1,5 @@
 import 'package:conectaparana/core/network/api_client.dart';
+import 'package:dio/dio.dart';
 
 import 'favorite_item_model.dart';
 
@@ -9,7 +10,10 @@ class FavoritesService {
   final ApiClient _apiClient;
 
   Future<List<FavoriteItemModel>> getMyFavorites() async {
-    final response = await _apiClient.dio.get('/saves/me');
+    final response = await _apiClient.dio.get(
+      '/saves/me',
+      options: Options(extra: {'auth': true}),
+    );
 
     final data = response.data;
 
@@ -30,6 +34,14 @@ class FavoritesService {
     }
 
     return [];
+  }
+
+  Future<void> remove(FavoriteItemModel item) async {
+    await _apiClient.dio.post(
+      '/saves/toggle',
+      data: {item.type.requestKey: item.id},
+      options: Options(extra: {'auth': true}),
+    );
   }
 
   List<FavoriteItemModel> _parseSection(
