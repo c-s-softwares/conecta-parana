@@ -17,7 +17,12 @@ class ApiClient {
 
   late final Dio refreshDio = Dio(_options);
 
+  bool _initialized = false;
+
   void init() {
+    if (_initialized) return;
+    _initialized = true;
+
     dio.interceptors.addAll([
       AuthInterceptor(),
       RefreshInterceptor(dio, refreshDio),
