@@ -1,0 +1,157 @@
+<header class="page-header communicates-header">
+  <div>
+    <h1 class="h1">Comunicados</h1>
+    <p class="lead">Gerencie os avisos oficiais publicados para a cidade.</p>
+  </div>
+
+  <button type="button" class="btn btn-primary" (click)="openCreate()">
+    <ng-icon name="heroPlus" size="16" aria-hidden="true" />
+    Novo comunicado
+  </button>
+</header>
+
+<div class="card filters-card">
+  <div class="filters-grid">
+    <label class="filter-field">
+      <span class="field-label">Buscar por título</span>
+      <input
+        class="input"
+        type="search"
+        placeholder="Digite o título do comunicado"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+        (keyup.enter)="applyFilters()"
+      />
+    </label>
+
+    <label class="filter-field">
+      <span class="field-label">Status</span>
+      <select class="input" [ngModel]="isActive()" (ngModelChange)="isActive.set($event)">
+        <option value="">Todos</option>
+        <option value="true">Ativos</option>
+        <option value="false">Inativos</option>
+      </select>
+    </label>
+
+    <div class="filter-actions">
+      <button type="button" class="btn btn-secondary" (click)="clearFilters()">Limpar</button>
+      <button type="button" class="btn btn-primary" (click)="applyFilters()">Filtrar</button>
+    </div>
+  </div>
+</div>
+
+<app-data-list
+  [items]="items()"
+  [total]="total()"
+  [page]="page()"
+  [pageSize]="pageSize()"
+  [loading]="loading()"
+  emptyTitle="Nenhum comunicado encontrado"
+  emptyDescription="Ajuste os filtros ou crie um novo comunicado."
+  emptyIcon="heroMegaphone"
+  (pageChange)="onPageChange($event)"
+>
+  <ng-template #row let-item>
+    <div class="communicate-row">
+      <div class="communicate-content">
+        <div class="communicate-icon">
+          <ng-icon name="heroMegaphone" size="18" aria-hidden="true" />
+        </div>
+
+        <div class="communicate-text">
+          <strong>{{ item.title }}</strong>
+          <p>{{ item.description }}</p>
+        </div>
+      </div>
+
+      <div class="communicate-status">
+        <span class="status-badge" [class.inactive]="!item.isActive">
+          {{ item.isActive ? 'Ativo' : 'Inativo' }}
+        </span>
+      </div>
+
+      <div class="row-actions">
+        <button type="button" class="btn btn-secondary" (click)="openEdit(item)">
+          Editar
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-danger"
+          [disabled]="deletingId() === item.id"
+          (click)="delete(item)"
+        >
+          {{ deletingId() === item.id ? 'Excluindo...' : 'Excluir' }}
+        </button>
+      </div>
+    </div>
+  </ng-template>
+</app-data-list>
+
+<app-modal-dialog
+  [visible]="modalOpen()"
+  [title]="modalTitle()"
+  subtitle="Preencha os dados do comunicado."
+  size="l"
+  [footer]="true"
+  (cancelled)="closeModal()"
+>
+  <form class="modal-form" (ngSubmit)="save()">
+    <app-form-field
+      label="Título"
+      fieldId="title"
+      [required]="true"
+      [showError]="submitted() && !!titleError()"
+      [errorMessage]="titleError()"
+    >
+      <input
+        id="title"
+        class="input"
+        type="text"
+        maxlength="200"
+        placeholder="Ex.: Vacinação contra a gripe"
+        [ngModel]="form().title"
+        name="title"
+        (ngModelChange)="updateForm('title', $event)"
+      />
+    </app-form-field>
+
+    <app-form-field
+      label="Descrição"
+      fieldId="description"
+      [required]="true"
+      [showError]="submitted() && !!descriptionError()"
+      [errorMessage]="descriptionError()"
+    >
+      <textarea
+        id="description"
+        class="input textarea"
+        rows="6"
+        placeholder="Descreva o comunicado"
+        [ngModel]="form().description"
+        name="description"
+        (ngModelChange)="updateForm('description', $event)"
+      ></textarea>
+    </app-form-field>
+
+    <label class="checkbox-row">
+      <input
+        type="checkbox"
+        [ngModel]="form().isActive"
+        name="isActive"
+        (ngModelChange)="updateForm('isActive', $event)"
+      />
+      <span>Comunicado ativo</span>
+    </label>
+  </form>
+
+  <div modal-footer>
+    <button type="button" class="btn btn-secondary" [disabled]="saving()" (click)="closeModal()">
+      Cancelar
+    </button>
+
+    <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">
+      {{ saving() ? 'Salvando...' : 'Salvar' }}
+    </button>
+  </div>
+</app-modal-dialog>
