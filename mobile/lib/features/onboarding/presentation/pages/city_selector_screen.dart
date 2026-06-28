@@ -1,5 +1,10 @@
+import 'package:conectaparana/core/auth/auth_service.dart';
+import 'package:conectaparana/core/auth/auth_user.dart';
+import 'package:conectaparana/core/network/api_client.dart';
+import 'package:conectaparana/core/router/app_router.dart';
 import 'package:conectaparana/features/register/data/models/services/city_model.dart';
 import 'package:conectaparana/features/register/data/models/services/city_service.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -14,6 +19,7 @@ class _CitySelectorScreenState extends State<CitySelectorScreen> {
   List<City> _cities = [];
   List<City> _filtered = [];
   bool _loading = true;
+  bool _saving = false;
   String? _error;
   final _searchController = TextEditingController();
 
@@ -61,6 +67,57 @@ class _CitySelectorScreenState extends State<CitySelectorScreen> {
     });
   }
 
+  Future<void> _selectCity(City city) async {
+    if (context.canPop()) {
+      context.pop(city);
+      return;
+    }
+
+    final current = AuthService.instance.currentUser.value;
+    if (current == null) {
+      context.go(AppRoutes.login);
+      return;
+    }
+
+    setState(() => _saving = true);
+
+    try {
+      await ApiClient.instance.dio.put(
+        '/users/me/city',
+        data: {'cityId': city.id},
+        options: Options(extra: {'auth': true}),
+      );
+
+      AuthService.instance.currentUser.value = AuthUser(
+        id: current.id,
+        role: current.role,
+        cityId: city.id,
+        cityName: city.name,
+      );
+
+      if (!mounted) return;
+      context.go(AppRoutes.home);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Não foi possível salvar a cidade. Tente novamente.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  void _close() {
+    if (context.canPop()) {
+      context.pop();
+      return;
+    }
+
+    context.go(AppRoutes.home);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,7 +127,7 @@ class _CitySelectorScreenState extends State<CitySelectorScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => context.pop(),
+          onPressed: _saving ? null : _close,
         ),
         title: const Text(
           'Selecionar cidade',
@@ -109,6 +166,12 @@ class _CitySelectorScreenState extends State<CitySelectorScreen> {
 
   Widget _buildBody() {
     if (_loading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFF006733)),
+      );
+    }
+
+    if (_saving) {
       return const Center(
         child: CircularProgressIndicator(color: Color(0xFF006733)),
       );
@@ -158,7 +221,7 @@ class _CitySelectorScreenState extends State<CitySelectorScreen> {
             city.name,
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
           ),
-          onTap: () => context.pop(city),
+          onTap: () => _selectCity(city),
         );
       },
     );

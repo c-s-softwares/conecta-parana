@@ -2,8 +2,12 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:conectaparana/core/network/api_client.dart';
 import 'package:conectaparana/features/register/data/models/services/city_model.dart';
+import 'package:dio/dio.dart';
 
 class CityService {
+  CityService({Dio? dio}) : _dio = dio ?? ApiClient.instance.dio;
+
+  final Dio _dio;
   static const _kCacheKey = 'cities_cache_v1';
   static const _kCacheTimestampKey = 'cities_cache_ts_v1';
   static const _ttl = Duration(hours: 1);
@@ -11,18 +15,26 @@ class CityService {
   static List<City>? _memCache;
   static DateTime? _memCacheTime;
 
-  static const List<City> _demoCities = [
-    City(id: 'maringa', name: 'Maringá'),
-    City(id: 'sarandi', name: 'Sarandi'),
-    City(id: 'paicandu', name: 'Paiçandu'),
-    City(id: 'curitiba', name: 'Curitiba'),
-  ];
+  static bool _hasBackendIds(List<City> cities) {
+    return cities.isNotEmpty && cities.every((city) => city.hasValidBackendId);
+  }
+
+  static List<City> _parseCitiesResponse(dynamic data) {
+    final raw = switch (data) {
+      final List<dynamic> list => list,
+      final Map<String, dynamic> map =>
+        map['items'] as List<dynamic>? ?? const [],
+      _ => const <dynamic>[],
+    };
+
+    return raw.map((e) => City.fromJson(e as Map<String, dynamic>)).toList();
+  }
 
   Future<List<City>> getCities() async {
     final now = DateTime.now();
 
     if (_memCache != null && _memCacheTime != null) {
-      if (now.difference(_memCacheTime!) < _ttl) {
+      if (now.difference(_memCacheTime!) < _ttl && _hasBackendIds(_memCache!)) {
         return _memCache!;
       }
     }
@@ -40,10 +52,14 @@ class CityService {
               .map((e) => City.fromJson(e as Map<String, dynamic>))
               .toList();
 
-          _memCache = list;
-          _memCacheTime = DateTime.fromMillisecondsSinceEpoch(cachedTs);
+          if (_hasBackendIds(list)) {
+            _memCache = list;
+            _memCacheTime = DateTime.fromMillisecondsSinceEpoch(cachedTs);
+            return list;
+          }
 
-          return list;
+          await prefs.remove(_kCacheKey);
+          await prefs.remove(_kCacheTimestampKey);
         } catch (_) {
           await prefs.remove(_kCacheKey);
           await prefs.remove(_kCacheTimestampKey);
@@ -51,27 +67,27 @@ class CityService {
       }
     }
 
-    try {
-      final response = await ApiClient.instance.dio.get('/cities');
+    final response = await _dio.get('/cities');
 
-      final cities = (response.data as List)
-          .map((e) => City.fromJson(e as Map<String, dynamic>))
-          .toList();
+    final cities = _parseCitiesResponse(response.data);
 
-      _memCache = cities;
-      _memCacheTime = now;
-
-      await prefs.setString(
-        _kCacheKey,
-        jsonEncode(cities.map((c) => c.toJson()).toList()),
-      );
-
-      await prefs.setInt(_kCacheTimestampKey, now.millisecondsSinceEpoch);
-
-      return cities;
-    } catch (_) {
-      return _demoCities;
+    if (!_hasBackendIds(cities)) {
+      await prefs.remove(_kCacheKey);
+      await prefs.remove(_kCacheTimestampKey);
+      throw const InvalidCitiesResponseException();
     }
+
+    _memCache = cities;
+    _memCacheTime = now;
+
+    await prefs.setString(
+      _kCacheKey,
+      jsonEncode(cities.map((c) => c.toJson()).toList()),
+    );
+
+    await prefs.setInt(_kCacheTimestampKey, now.millisecondsSinceEpoch);
+
+    return cities;
   }
 
   static Future<void> clearCache() async {
@@ -83,4 +99,8 @@ class CityService {
     await prefs.remove(_kCacheKey);
     await prefs.remove(_kCacheTimestampKey);
   }
+}
+
+class InvalidCitiesResponseException implements Exception {
+  const InvalidCitiesResponseException();
 }
