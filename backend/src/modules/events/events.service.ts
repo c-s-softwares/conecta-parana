@@ -28,6 +28,8 @@ import {
   EventDetailResponse,
   EventResponse,
 } from './dto/response/event-response.dto';
+import { UploadsService } from '../uploads/uploads.service';
+import { ENTITY_TYPES } from '../uploads/constants/entity-type';
 
 type EventEntity = {
   id: string;
@@ -54,7 +56,10 @@ export class EventsService extends BaseCrudService<
   CreateEventDto,
   UpdateEventDto
 > {
-  constructor(prisma: PrismaService) {
+  constructor(
+    prisma: PrismaService,
+    private readonly uploads: UploadsService,
+  ) {
     super(prisma, {
       tablePrefix: TABLE_PREFIX.EVENT,
       entityName: 'Evento',
@@ -268,6 +273,8 @@ export class EventsService extends BaseCrudService<
     this.validateAdminCityScope(event.cityId, user);
 
     await this.checkBeforeDelete(id);
+
+    await this.uploads.removeAllForEntity(ENTITY_TYPES.EVENT, id);
 
     await this.prisma.client.event.update({
       where: { id },

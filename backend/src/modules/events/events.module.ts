@@ -5,9 +5,10 @@ import { EventsService } from './events.service';
 
 import { PrismaModule } from '../../config/prisma.module';
 import { AuthModule } from '../auth/auth.module';
+import { UploadsModule } from '../uploads/uploads.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, AuthModule, UploadsModule],
   controllers: [EventsController],
   providers: [EventsService],
   exports: [EventsService],

@@ -9,6 +9,7 @@ import {
 import { PrismaService } from '../../config/prisma.service';
 
 import { EventsService } from './events.service';
+import { UploadsService } from '../uploads/uploads.service';
 
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 
@@ -63,6 +64,10 @@ const mockPrisma = {
   },
 };
 
+const mockUploads = {
+  removeAllForEntity: jest.fn().mockResolvedValue(undefined),
+};
+
 describe('EventsService', () => {
   let service: EventsService;
 
@@ -73,6 +78,10 @@ describe('EventsService', () => {
         {
           provide: PrismaService,
           useValue: mockPrisma,
+        },
+        {
+          provide: UploadsService,
+          useValue: mockUploads,
         },
       ],
     }).compile();
@@ -382,6 +391,10 @@ describe('EventsService', () => {
         role: 'ADMIN',
       } as never);
 
+      expect(mockUploads.removeAllForEntity).toHaveBeenCalledWith(
+        'event',
+        MOCK_EVENT_ID,
+      );
       expect(mockPrisma.client.event.update).toHaveBeenCalled();
     });
 
