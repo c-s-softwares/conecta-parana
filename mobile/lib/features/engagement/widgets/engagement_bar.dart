@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../data/engagement_service.dart';
+import '../../favorites/data/favorites_change_notifier.dart';
 
 class EngagementBar extends StatefulWidget {
   const EngagementBar({
@@ -49,6 +50,20 @@ class _EngagementBarState extends State<EngagementBar> {
     _liked = widget.liked;
     _saved = widget.saved;
     _likesCount = widget.likesCount;
+  }
+
+  @override
+  void didUpdateWidget(covariant EngagementBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_isLiking &&
+        (oldWidget.liked != widget.liked ||
+            oldWidget.likesCount != widget.likesCount)) {
+      _liked = widget.liked;
+      _likesCount = widget.likesCount;
+    }
+    if (!_isSaving && oldWidget.saved != widget.saved) {
+      _saved = widget.saved;
+    }
   }
 
   Future<void> _toggleLike() async {
@@ -109,6 +124,7 @@ class _EngagementBarState extends State<EngagementBar> {
         entityType: widget.entityType,
         entityId: widget.entityId,
       );
+      favoritesChangeNotifier.notifyChanged();
     } catch (e) {
       setState(() {
         _saved = previousSaved;
@@ -158,55 +174,127 @@ class _EngagementBarState extends State<EngagementBar> {
 
   @override
   Widget build(BuildContext context) {
+    return EngagementActions(
+      liked: _liked,
+      saved: _saved,
+      likesCount: _likesCount,
+      showLike: _showLike,
+      likeLoading: _isLiking,
+      saveLoading: _isSaving,
+      shareCount: widget.shareCount,
+      onLike: _toggleLike,
+      onSave: _toggleSaved,
+      onShare: _share,
+    );
+  }
+}
+
+class EngagementActions extends StatelessWidget {
+  const EngagementActions({
+    super.key,
+    required this.liked,
+    required this.saved,
+    required this.likesCount,
+    required this.onLike,
+    required this.onSave,
+    required this.onShare,
+    this.showLike = true,
+    this.likeLoading = false,
+    this.saveLoading = false,
+    this.shareCount,
+  });
+
+  final bool liked;
+  final bool saved;
+  final int likesCount;
+  final bool showLike;
+  final bool likeLoading;
+  final bool saveLoading;
+  final int? shareCount;
+  final VoidCallback onLike;
+  final VoidCallback onSave;
+  final VoidCallback onShare;
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        if (_showLike) ...[
-          _EngagementButton(
-            icon: _liked ? Icons.favorite : Icons.favorite_border,
-            label: '$_likesCount',
-            onTap: _toggleLike,
+        if (showLike)
+          _EngagementActionButton(
+            key: const Key('engagement_like'),
+            icon: liked ? Icons.favorite : Icons.favorite_border,
+            label: '$likesCount',
+            color: liked ? const Color(0xFFE53935) : const Color(0xFF555555),
+            isLoading: likeLoading,
+            onTap: onLike,
           ),
-          const SizedBox(width: 8),
-        ],
-        _EngagementButton(
-          icon: _saved ? Icons.bookmark : Icons.bookmark_border,
+        _EngagementActionButton(
+          key: const Key('engagement_save'),
+          icon: saved ? Icons.bookmark : Icons.bookmark_border,
           label: 'Salvar',
-          onTap: _toggleSaved,
+          color: saved ? const Color(0xFF006733) : const Color(0xFF555555),
+          isLoading: saveLoading,
+          onTap: onSave,
         ),
-        const SizedBox(width: 8),
-        _EngagementButton(
+        _EngagementActionButton(
+          key: const Key('engagement_share'),
           icon: Icons.share_outlined,
-          label: widget.shareCount?.toString() ?? '',
-          onTap: _share,
+          label: shareCount == null ? 'Compartilhar' : '$shareCount',
+          color: const Color(0xFF555555),
+          isLoading: false,
+          onTap: onShare,
         ),
       ],
     );
   }
 }
 
-class _EngagementButton extends StatelessWidget {
-  const _EngagementButton({
+class _EngagementActionButton extends StatelessWidget {
+  const _EngagementActionButton({
+    super.key,
     required this.icon,
     required this.label,
+    required this.color,
+    required this.isLoading,
     required this.onTap,
   });
 
   final IconData icon;
   final String label;
+  final Color color;
+  final bool isLoading;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
-
-    return OutlinedButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon, size: 18),
-      label: Text(label),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: color,
-        side: BorderSide(color: color.withValues(alpha: 0.35)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+    return InkWell(
+      onTap: isLoading ? null : onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isLoading)
+              SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2, color: color),
+              )
+            else
+              Icon(icon, size: 18, color: color),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
