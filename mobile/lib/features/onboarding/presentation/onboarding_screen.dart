@@ -5,6 +5,7 @@ import 'package:conectaparana/features/onboarding/data/services/onboarding_repos
 import 'package:conectaparana/features/onboarding/presentation/steps/step_city_screen.dart';
 import 'package:conectaparana/features/onboarding/presentation/steps/step_neighborhood_screen.dart';
 import 'package:conectaparana/features/onboarding/presentation/steps/step_permissions_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final OnboardingRepository? repository;
@@ -58,7 +59,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _conclude() {
     _dismissKeyboard();
 
-    Navigator.pushReplacementNamed(context, '/home');
+    context.go('/home');
   }
 
   @override
