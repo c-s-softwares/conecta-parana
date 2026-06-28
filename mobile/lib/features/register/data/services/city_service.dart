@@ -56,7 +56,7 @@ class CityService {
     try {
       final response = await ApiClient.instance.dio.get(
         '/cities',
-        queryParameters: {'pageSize': _kPageSize},
+        queryParameters: {'page': 1, 'pageSize': _kPageSize},
       );
 
       final items = response.data['items'] as List;

@@ -256,10 +256,11 @@ class _ErrorCityService extends CityService {
 
 class _EmailExistsRepository extends RegisterRepository {
   @override
-  Future<({String accessToken, String refreshToken})> register({
+  Future<({String? accessToken, String? refreshToken})> register({
     required String name,
     required String email,
     required String password,
+    required String confirmPassword,   
     required String cityId,
   }) async {
     throw DioException(
@@ -275,10 +276,11 @@ class _EmailExistsRepository extends RegisterRepository {
 
 class _HappyRepository extends RegisterRepository {
   @override
-  Future<({String accessToken, String refreshToken})> register({
+  Future<({String? accessToken, String? refreshToken})> register({
     required String name,
     required String email,
     required String password,
+    required String confirmPassword, 
     required String cityId,
   }) async {
     return (

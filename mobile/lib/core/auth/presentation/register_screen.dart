@@ -1,17 +1,10 @@
 import 'package:conectaparana/features/register/data/models/city_model.dart';
 import 'package:conectaparana/features/register/data/services/city_service.dart';
 import 'package:conectaparana/features/register/data/services/register_repository.dart';
-<<<<<<< HEAD
 import 'package:conectaparana/shared/widgets/pages/webview_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:go_router/go_router.dart';
-=======
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:conectaparana/shared/widgets/pages/webview_screen.dart';
->>>>>>> 4ce3d4c (refactor: fix models and services folder structure and update imports)
-import 'package:conectaparana/core/auth/auth_service.dart';
+import 'package:conectaparana/features/onboarding/presentation/steps/verify_email_screen.dart';
 import 'package:dio/dio.dart';
 
 class _PasswordRules {
@@ -165,64 +158,57 @@ class RegisterScreenState extends State<RegisterScreen> {
   void validateForTest() => _validate();
 
   Future<void> _register() async {
-    if (!_validate()) return;
+    if (!_validate()) {
+      return;
+    }
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final tokens = await (widget.repository ?? RegisterRepository()).register(
+      await (widget.repository ?? RegisterRepository()).register(
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
+        confirmPassword: _confirmController.text,
         cityId: _selectedCity!.id,
       );
 
-      await AuthService.instance.login(
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-      );
-
       if (!mounted) return;
-
-      setState(() => _isLoading = false);
-      context.go('/onboarding');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VerifyEmailScreen(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          ),
+        ),
+      );
     } on DioException catch (e) {
       if (!mounted) return;
-
-      final data = e.response?.data;
-      final code = data is Map ? data['code']?.toString() : null;
-
+      final code = e.response?.data is Map
+          ? (e.response?.data as Map)['code']
+          : null;
       if (e.response?.statusCode == 409 || code == 'email_exists') {
-        setState(() {
-          _emailExists = true;
-          _emailError = 'Este e-mail já está cadastrado.';
-          _isLoading = false;
-        });
-        return;
+        setState(() => _emailExists = true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Não foi possível criar a conta. Tente novamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
-
-      setState(() => _isLoading = false);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Erro ao criar conta. Verifique sua conexão e tente novamente.',
-          ),
-        ),
-      );
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-
-      setState(() => _isLoading = false);
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Erro ao criar conta. Verifique sua conexão e tente novamente.',
-          ),
+          content: Text('Algo deu errado. Tente novamente.'),
+          backgroundColor: Colors.red,
         ),
       );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
