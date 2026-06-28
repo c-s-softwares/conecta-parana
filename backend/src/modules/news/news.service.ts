@@ -47,7 +47,16 @@ export class NewsService extends BaseCrudService<
   }
 
   protected toResponse(entity: unknown): NewsResponse {
-    return entity as NewsResponse;
+    const news = entity as NewsResponse & {
+      photos?: { id: string; thumbUrl: string | null }[];
+    };
+    return {
+      ...news,
+      photos: (news.photos ?? []).map((photo) => ({
+        id: photo.id,
+        thumbUrl: photo.thumbUrl,
+      })),
+    };
   }
 
   protected toCreateData(
@@ -115,6 +124,33 @@ export class NewsService extends BaseCrudService<
 
   protected override buildBaseWhere(): Record<string, unknown> {
     return { isActive: true };
+  }
+
+  override async findAll(query: QueryNewsDto) {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 10;
+    const where = {
+      ...this.buildBaseWhere(),
+      ...this.buildSearchWhere(query),
+    };
+
+    const [items, total] = await Promise.all([
+      this.prisma.client.news.findMany({
+        where,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: { createdAt: 'desc' },
+        include: { photos: { select: { id: true, thumbUrl: true } } },
+      }),
+      this.prisma.client.news.count({ where }),
+    ]);
+
+    return {
+      items: items.map((item) => this.toResponse(item)),
+      total,
+      page,
+      pageSize,
+    };
   }
 
   async create(dto: CreateNewsDto, user?: JwtPayload): Promise<NewsResponse> {

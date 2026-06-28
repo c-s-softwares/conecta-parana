@@ -137,6 +137,7 @@ export class FeedService {
     const news = await this.prisma.client.news.findFirst({
       where: { cityId, isActive: true },
       orderBy: { id: 'desc' },
+      include: { photos: { select: { id: true, thumbUrl: true } } },
     });
     if (!news) return null;
     return {
@@ -149,6 +150,10 @@ export class FeedService {
       cityId: news.cityId,
       createdAt: news.createdAt,
       updatedAt: news.updatedAt,
+      photos: news.photos.map((photo) => ({
+        id: photo.id,
+        thumbUrl: photo.thumbUrl,
+      })),
     };
   }
 
@@ -269,6 +274,7 @@ export class FeedService {
       where: { cityId, isActive: true },
       orderBy: { id: 'desc' },
       take: COMMUNICATES_LIMIT,
+      include: { photos: { select: { id: true, thumbUrl: true } } },
     });
     return items.map((item) => ({
       id: item.id,
@@ -277,6 +283,10 @@ export class FeedService {
       isActive: item.isActive,
       cityId: item.cityId,
       userId: item.userId,
+      photos: item.photos.map((photo) => ({
+        id: photo.id,
+        thumbUrl: photo.thumbUrl,
+      })),
     }));
   }
 

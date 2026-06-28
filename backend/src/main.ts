@@ -73,8 +73,6 @@ async function bootstrap(): Promise<void> {
   // URLs geradas lá apontam para o bucket Oracle.
   app.useStaticAssets(getLocalStorageDir(), {
     prefix: '/dev-uploads',
-    // helmet aplica CORP same-origin global; libera só aqui para o admin
-    // (origem diferente) conseguir exibir as imagens do driver local.
     setHeaders: (res: ServerResponse) => {
       res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     },

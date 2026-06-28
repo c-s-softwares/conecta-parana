@@ -81,7 +81,7 @@ describe('CommunicateService', () => {
       mockAdminUser,
     );
 
-    expect(result).toEqual(MOCK_COMMUNICATE);
+    expect(result).toEqual({ ...MOCK_COMMUNICATE, photos: [] });
     expect(mockPrisma.client.communicate.create).toHaveBeenCalledWith({
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       data: expect.objectContaining({
@@ -168,7 +168,7 @@ describe('CommunicateService', () => {
       mockSuperAdminUser,
     );
 
-    expect(result).toEqual(MOCK_COMMUNICATE);
+    expect(result).toEqual({ ...MOCK_COMMUNICATE, photos: [] });
     expect(mockPrisma.client.communicate.create).toHaveBeenCalledWith({
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       data: expect.objectContaining({

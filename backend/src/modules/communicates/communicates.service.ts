@@ -56,6 +56,7 @@ export class CommunicateService extends BaseCrudService<
       isActive: boolean;
       cityId: string;
       userId: string;
+      photos?: { id: string; thumbUrl: string | null }[];
     };
 
     return {
@@ -65,6 +66,10 @@ export class CommunicateService extends BaseCrudService<
       isActive: communicate.isActive,
       cityId: communicate.cityId,
       userId: communicate.userId,
+      photos: (communicate.photos ?? []).map((photo) => ({
+        id: photo.id,
+        thumbUrl: photo.thumbUrl,
+      })),
     };
   }
 
@@ -161,11 +166,12 @@ export class CommunicateService extends BaseCrudService<
     const where = { ...this.buildBaseWhere(), ...this.buildSearchWhere(query) };
 
     const [items, total] = await Promise.all([
-      this.getDelegate().findMany({
+      this.prisma.client.communicate.findMany({
         where,
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy: { id: 'desc' },
+        include: { photos: { select: { id: true, thumbUrl: true } } },
       }),
       this.getDelegate().count({ where }),
     ]);

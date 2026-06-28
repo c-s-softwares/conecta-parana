@@ -13,7 +13,6 @@ const loadPlaceholder = () =>
 
 export const routes: Routes = [
   {
-    // Rota de desenvolvimento para visualizar os componentes core (CPR-46). Sem guard.
     path: 'showcase',
     loadComponent: () => import('./features/showcase/showcase.page').then((m) => m.ShowcasePage),
   },
@@ -60,8 +59,6 @@ export const routes: Routes = [
     ],
   },
   {
-    // Paginas de erro fora do Shell (sem sidebar). Exigem autenticacao -
-    // deslogado cai no /login via authenticatedGuard.
     path: '',
     canActivate: [authenticatedGuard],
     children: [...ERROR_ROUTES],

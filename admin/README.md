@@ -92,27 +92,6 @@ export class DashboardApi {
 }
 ```
 
-### Eventos (CRUD) - exceções e padrões
-
-A feature de eventos (`src/app/features/events/`) tem três pontos que fogem do padrão CRUD comum:
-
-**1. `update()` usa `PUT`, não `PATCH`.** O backend de eventos atualiza com `PUT /events/:id` (substituição com lock otimista), então o `EventsApi` sobrescreve `update()`:
-
-```ts
-override update<B>(id: string, body: B): Observable<EventItem> {
-  return this.http.put<EventItem>(`${this.baseUrl}/${id}`, body);
-}
-```
-
-O update envia `updatedAt` (carregado no `get`) no corpo. Se o backend responder `409 event_changed`, o modal **permanece aberto** e o interceptor exibe o toast "Outro usuário editou este evento. Recarregue a página."
-
-**2. Valores válidos (espelhados do backend):**
-
-- `type`: `festa`, `oficial`, `esportivo`, `cultural`, `outros` (constante `EVENT_TYPES`).
-- Status do evento é o booleano `isActive` (Ativo / Inativo) - não há enum de status.
-
-**3. Padrão "criar primeiro, anexar foto depois".** A tab "Fotos" do modal fica **desabilitada na criação** e só habilita após o evento existir (modo edição). Cada foto é um `POST /uploads/photos` independente (`UploadsApi`, multipart com `entityType=event` + `entityId`), com preview do `thumbUrl` retornado. A foto cheia (`url`) só vem no `GET /events/:id`; a listagem traz apenas `thumbUrl`.
-
 ## Decisões técnicas
 
 - **Angular 21** com standalone components
