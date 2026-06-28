@@ -4,7 +4,6 @@ import { NgIcon } from '@ng-icons/core';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { PageHeader } from '../../shared/components/page-header/page-header';
 import {
   DataList,
   DataListPageEvent,
@@ -20,14 +19,7 @@ type StatusFilter = 'all' | 'active' | 'inactive';
 @Component({
   selector: 'app-events-page',
   standalone: true,
-  imports: [
-    PageHeader,
-    DataList,
-    ConfirmDialog,
-    EventFormModal,
-    NgIcon,
-    DatePipe,
-  ],
+  imports: [DataList, ConfirmDialog, EventFormModal, NgIcon, DatePipe],
   templateUrl: './events.page.html',
 })
 export class EventsPage {
@@ -45,8 +37,6 @@ export class EventsPage {
   protected readonly order = signal<EventOrder>('date_asc');
 
   protected readonly pendingDelete = signal<EventItem | null>(null);
-
-  // Estado do modal de form - consumido pelo EventFormModal.
   protected readonly formOpen = signal(false);
   protected readonly editing = signal<EventItem | null>(null);
 
