@@ -41,26 +41,15 @@ export const ERROR_CODE_MAP: Record<string, string | null | false> = {
   'validation_failed': false, // sem toast — componente destaca campos inválidos no form
   'too_many_attempts': null,  // toast com mensagem do backend (já vem clara)
 
-  // Escopo de cidade (guards do backend já ativos)
   'city_scope_denied': 'Você só pode atuar na sua cidade.',
-
-  // Lock otimista de eventos: componente mantém o modal aberto, toast vem daqui
   'event_changed': 'Outro usuário editou este evento. Recarregue a página.',
-
-  // Inline no form (passthrough, sem toast): componente destaca o campo
-  'event_date_in_past': false,
-  'invalid_event_type': false,
-
-  // Upload de fotos
+  'event_date_in_past': false, // inline no campo eventDate
+  'invalid_event_type': false, // inline no select de tipo
   'file_too_large': 'Arquivo muito grande (máx 5MB).',
   'invalid_file_type': 'Use JPEG, PNG ou WebP.',
   'photo_limit_reached': 'Limite de 10 fotos por evento atingido.',
   'storage_unavailable':
     'Serviço de imagens indisponível. Tente novamente em instantes.',
-
-  // ir descomentando quando o backend implementar os guards de escopo
-  // 'unauthenticated':   'Sessão expirada, faça login novamente.',
-  // 'role_denied':       'Acesso negado para este papel.',
 };
 
 // ---------------------------------------------------------------------------

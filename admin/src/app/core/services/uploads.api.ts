@@ -3,7 +3,6 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-/** Resposta de `POST /uploads/photos`. */
 export interface PhotoUploadResult {
   id: string;
   url: string;
@@ -19,10 +18,6 @@ export type UploadEntityType =
   | 'news'
   | 'communicate';
 
-/**
- * Upload de fotos associadas a uma entidade. Generico por `entityType` para
- * reuso (eventos, locais, etc.). Envia multipart/form-data.
- */
 @Injectable({ providedIn: 'root' })
 export class UploadsApi {
   private readonly http = inject(HttpClient);

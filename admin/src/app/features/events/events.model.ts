@@ -1,6 +1,5 @@
 import { FilterValues } from '../../core/services/api.types';
 
-/** Foto de evento. `url` (imagem cheia) so vem no detalhe; a lista traz so `thumbUrl`. */
 export interface EventPhoto {
   id: string;
   thumbUrl: string | null;
@@ -22,7 +21,6 @@ export interface EventItem extends Record<string, unknown> {
   photos: EventPhoto[];
 }
 
-/** Resposta de `GET /events/:id` - inclui imagem cheia e flags de engajamento. */
 export interface EventDetail extends EventItem {
   likesCount: number;
   liked: boolean;
@@ -44,7 +42,6 @@ export interface EventsFilters extends FilterValues {
   order?: EventOrder;
 }
 
-/** Tipos validos de evento (hardcoded no backend, espelhados aqui para o select). */
 export const EVENT_TYPES = [
   'festa',
   'oficial',
