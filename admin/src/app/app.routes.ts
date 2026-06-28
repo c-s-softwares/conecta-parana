@@ -39,7 +39,11 @@ export const routes: Routes = [
       { path: 'noticias', loadComponent: loadPlaceholder, data: { title: 'Notícias' } },
       { path: 'locais', loadComponent: loadPlaceholder, data: { title: 'Locais' } },
       { path: 'notificacoes', loadComponent: loadPlaceholder, data: { title: 'Notificações' } },
-      { path: 'sugestoes', loadComponent: loadPlaceholder, data: { title: 'Sugestões' } },
+      {
+        path: 'sugestoes',
+        loadChildren: () =>
+          import('./features/suggestions/suggestions.routes').then((m) => m.SUGGESTIONS_ROUTES),
+      },
       {
         path: 'cidades',
         canActivate: [superAdminGuard],
