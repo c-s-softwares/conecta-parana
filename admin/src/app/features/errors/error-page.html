@@ -1,0 +1,23 @@
+<div class="error-page">
+  <div class="error-hero">
+    <span class="error-code" [class]="'theme-' + theme()">{{ code() }}</span>
+    <div class="error-icon-badge" [class]="'theme-' + theme()">
+      <ng-icon [name]="iconName()" size="22" />
+    </div>
+  </div>
+
+  <div class="error-subtitle" [class]="'theme-' + theme()">{{ subtitle() }}</div>
+  <h1 class="error-title">{{ errorTitle() }}</h1>
+  <p class="error-description">{{ description() }}</p>
+
+  <div class="error-actions">
+    <ng-content />
+  </div>
+
+  @if (pill(); as pillText) {
+    <div class="error-pill">
+      <ng-icon name="heroInformationCircle" size="14" />
+      {{ pillText }}
+    </div>
+  }
+</div>

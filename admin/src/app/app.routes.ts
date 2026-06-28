@@ -6,6 +6,7 @@ import {
   superAdminGuard,
   unauthenticatedGuard,
 } from './core/guards/auth.guard';
+import { ERROR_ROUTES } from './features/errors/errors.routes';
 
 const loadPlaceholder = () =>
   import('./shared/components/placeholder-page').then((m) => m.PlaceholderPage);
@@ -51,7 +52,9 @@ export const routes: Routes = [
         loadComponent: loadPlaceholder,
         data: { title: 'Administradores' },
       },
+      ...ERROR_ROUTES,
     ],
   },
-  { path: '**', redirectTo: '' },
+  { path: '**', redirectTo: '404' },
 ];
+

@@ -53,7 +53,7 @@ export const superAdminGuard: CanActivateFn = () => {
     return true;
   }
   toast.show('error', 'Acesso restrito ao Super Admin.');
-  return router.createUrlTree(['/dashboard']);
+  return router.createUrlTree(['/403']);
 };
 
 /**
