@@ -6,10 +6,8 @@ import 'package:conectaparana/shared/widgets/feedback/app_toast.dart';
 import 'package:conectaparana/shared/widgets/misc/badge.dart';
 import 'package:conectaparana/shared/widgets/misc/empty_state.dart';
 import 'package:conectaparana/shared/widgets/misc/loading_spinner.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 const _pageBackground = Color(0xFFF5F7F8);
 const _primaryGreen = Color(0xFF007A3D);
@@ -120,30 +118,12 @@ class _TicketDetailPageState extends State<TicketDetailPage> {
     }
   }
 
-  Future<void> _openMaps(TicketDetail ticket) async {
-    final coordinates = ticket.coordinates;
-    final query = coordinates != null
-        ? '${coordinates.lat},${coordinates.lng}'
-        : ticket.address;
-    if (query == null || query.trim().isEmpty) return;
-
-    final encodedQuery = Uri.encodeComponent(query);
-    final candidates = <Uri>[
-      if (defaultTargetPlatform == TargetPlatform.iOS)
-        Uri.parse('maps://?q=$encodedQuery')
-      else if (coordinates != null)
-        Uri.parse('geo:${coordinates.lat},${coordinates.lng}?q=$encodedQuery')
-      else
-        Uri.parse('geo:0,0?q=$encodedQuery'),
-      Uri.parse('https://www.google.com/maps/search/?api=1&query=$encodedQuery'),
-    ];
-
-    for (final uri in candidates) {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-        return;
-      }
-    }
+  void _openMaps(TicketDetail _) {
+    AppToast.show(
+      context,
+      message: 'A função de mapa estará disponível em breve!',
+      variant: AppToastVariant.info,
+    );
   }
 
   @override
@@ -506,7 +486,8 @@ class _TimelineEntry {
           title: comment.author == TicketCommentAuthor.admin
               ? 'Atualização da prefeitura'
               : 'Comentário enviado',
-          author: comment.authorName ??
+          author:
+              comment.authorName ??
               (comment.author == TicketCommentAuthor.admin ? 'Admin' : 'Você'),
           message: comment.message,
           commentAuthor: comment.author,
@@ -518,9 +499,12 @@ class _TimelineEntry {
           kind: _TimelineEntryKind.resolved,
           id: 'resolved',
           createdAt: ticket.resolvedAt!,
-          title: ticket.status == 'fechado' ? 'Ticket fechado' : 'Ticket resolvido',
+          title: ticket.status == 'fechado'
+              ? 'Ticket fechado'
+              : 'Ticket resolvido',
           author: 'Prefeitura',
-          message: 'O chamado foi marcado como ${TicketUiMapper.statusExactLabel(ticket.status).toLowerCase()}.',
+          message:
+              'O chamado foi marcado como ${TicketUiMapper.statusExactLabel(ticket.status).toLowerCase()}.',
         ),
     ]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
     return entries;
@@ -550,7 +534,10 @@ class _TimelineTile extends StatelessWidget {
                 Container(
                   width: 48,
                   height: 48,
-                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
                   child: Icon(_entryIcon(entry), color: Colors.white, size: 22),
                 ),
                 if (!isLast)
@@ -584,7 +571,10 @@ class _TimelineTile extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         TicketUiMapper.formatDateTime(entry.createdAt),
-                        style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
                     ],
                   ),
@@ -605,12 +595,16 @@ class _TimelineTile extends StatelessWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: isAdmin ? const Color(0xFFEFF5F1) : const Color(0xFFF0F3F4),
+                        color: isAdmin
+                            ? const Color(0xFFEFF5F1)
+                            : const Color(0xFFF0F3F4),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: const Color(0xFFDCE3E1)),
                       ),
                       child: Text(
-                        entry.isOptimistic ? '${entry.message!} (enviando...)' : entry.message!,
+                        entry.isOptimistic
+                            ? '${entry.message!} (enviando...)'
+                            : entry.message!,
                         style: TextStyle(
                           fontSize: 16,
                           height: 1.35,
@@ -629,7 +623,9 @@ class _TimelineTile extends StatelessWidget {
   }
 
   Color _entryColor(_TimelineEntry entry) {
-    if (entry.kind == _TimelineEntryKind.created) return const Color(0xFF0EA5D7);
+    if (entry.kind == _TimelineEntryKind.created) {
+      return const Color(0xFF0EA5D7);
+    }
     if (entry.kind == _TimelineEntryKind.resolved) return _primaryGreen;
     if (entry.commentAuthor == TicketCommentAuthor.admin) return _primaryGreen;
     return const Color(0xFFD98B00);
@@ -650,7 +646,9 @@ class _ResolvedBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = ticket.status == 'fechado' ? 'Ticket fechado' : 'Ticket concluído';
+    final label = ticket.status == 'fechado'
+        ? 'Ticket fechado'
+        : 'Ticket concluído';
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -663,7 +661,10 @@ class _ResolvedBanner extends StatelessWidget {
           Container(
             width: 52,
             height: 52,
-            decoration: const BoxDecoration(color: _primaryGreen, shape: BoxShape.circle),
+            decoration: const BoxDecoration(
+              color: _primaryGreen,
+              shape: BoxShape.circle,
+            ),
             child: const Icon(Icons.check, color: Colors.white, size: 30),
           ),
           const SizedBox(width: 16),
