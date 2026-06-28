@@ -14,8 +14,8 @@ class Environment {
     if (_apiBaseUrl.isNotEmpty) return _apiBaseUrl;
 
     const devUrl = 'http://10.0.2.2:3000';
-    const stagingUrl = 'https://api-staging.exemplo.com.br';
-    const prodUrl = 'https://api.exemplo.com.br';
+    const stagingUrl = 'https://api-staging.conectaparana.com.br';
+    const prodUrl = 'https://api.conectaparana.com.br';
 
     switch (flavor) {
       case Flavor.dev:
