@@ -24,8 +24,11 @@
 
       <div class="flex justify-end gap-2.5 p-7 pt-5">
         <button type="button" class="btn btn-ghost" (click)="cancelled.emit()">Cancelar</button>
-        <button type="button" class="btn btn-danger-solid" (click)="confirmed.emit()">
-          <ng-icon name="heroTrash" size="16" aria-hidden="true" /> Excluir
+        <button type="button" [class]="confirmBtnClass()" (click)="confirmed.emit()">
+          @if (confirmIcon()) {
+            <ng-icon [name]="confirmIcon()" size="16" aria-hidden="true" />
+          }
+          {{ confirmText() }}
         </button>
       </div>
     </div>
