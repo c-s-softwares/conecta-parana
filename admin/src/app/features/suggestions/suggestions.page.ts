@@ -103,20 +103,29 @@ export class SuggestionsPage implements OnInit {
   
   getCategory(subject: string, message: string): string {
     const text = `${subject} ${message}`.toLowerCase();
-    if (text.includes('árvore') || text.includes('parque') || text.includes('praça') || text.includes('verde') || text.includes('meio ambiente')) {
-      if (text.includes('parque') || text.includes('lazer') || text.includes('academia')) return 'LAZER';
+    if (text.includes('árvore') || text.includes('parque') || text.includes('praça') || text.includes('verde') || text.includes('meio ambiente') || text.includes('jardim')) {
+      if (text.includes('parque') || text.includes('lazer') || text.includes('academia') || text.includes('quadra') || text.includes('playground')) return 'LAZER';
       return 'MEIO AMBIENTE';
     }
-    if (text.includes('ciclovia') || text.includes('trânsito') || text.includes('rua') || text.includes('avenida') || text.includes('calçada') || text.includes('mobilidade')) {
+    if (text.includes('ciclovia') || text.includes('trânsito') || text.includes('rua') || text.includes('avenida') || text.includes('calçada') || text.includes('mobilidade') || text.includes('sinalização') || text.includes('faixa')) {
       return 'MOBILIDADE';
     }
-    if (text.includes('ônibus') || text.includes('transporte') || text.includes('terminal') || text.includes('cmei') || text.includes('abrigo')) {
+    if (text.includes('ônibus') || text.includes('transporte') || text.includes('terminal') || text.includes('abrigo') || text.includes('linha')) {
       return 'TRANSPORTE';
     }
-    if (text.includes('iluminação') || text.includes('led') || text.includes('poste') || text.includes('asfalto') || text.includes('bueiro') || text.includes('infraestrutura')) {
+    if (text.includes('iluminação') || text.includes('led') || text.includes('poste') || text.includes('asfalto') || text.includes('bueiro') || text.includes('infraestrutura') || text.includes('buraco') || text.includes('saneamento') || text.includes('esgoto')) {
       return 'INFRAESTRUTURA';
     }
-    return 'LAZER';
+    if (text.includes('cmei') || text.includes('escola') || text.includes('creche') || text.includes('colégio') || text.includes('educação') || text.includes('ensino')) {
+      return 'EDUCAÇÃO';
+    }
+    if (text.includes('posto de saúde') || text.includes('upa') || text.includes('hospital') || text.includes('ubs') || text.includes('médico') || text.includes('saúde') || text.includes('consulta')) {
+      return 'SAÚDE';
+    }
+    if (text.includes('guarda') || text.includes('polícia') || text.includes('segurança') || text.includes('câmera') || text.includes('violência') || text.includes('assalto')) {
+      return 'SEGURANÇA';
+    }
+    return 'OUTROS';
   }
 
   getUserName(userId: string): string {
@@ -230,7 +239,7 @@ export class SuggestionsPage implements OnInit {
   }
 
   canConclude(status: string): boolean {
-    return status === 'enviada' || status === 'lida' || status === 'respondida';
+    return status === 'respondida';
   }
 
   canArchive(status: string): boolean {
@@ -273,7 +282,7 @@ export class SuggestionsPage implements OnInit {
   executeArchive(): void {
     if (!this.pendingArchiveId) return;
     const id = this.pendingArchiveId;
-    const responseText = this.responseForm.value.response || undefined;
+    const responseText = this.responseForm.value.response || 'Sugestão arquivada.';
 
     this.api.archive(id, responseText).subscribe({
       next: (updated) => {
@@ -341,7 +350,7 @@ export class SuggestionsPage implements OnInit {
     }
 
     const requests = toArchive.map((item) =>
-      this.api.archive(item.id).pipe(
+      this.api.archive(item.id, 'Sugestão arquivada.').pipe(
         catchError((err) => {
           console.error(`Erro ao arquivar sugestão ${item.id}`, err);
           return of(null);
@@ -377,7 +386,7 @@ export class SuggestionsPage implements OnInit {
     const appError = err as { status: number; message: string; details?: { code?: string; message?: string } } | null;
     const code = appError?.details?.code;
     if (code === 'invalid_status_transition') {
-      this.toast.show('error', 'Esta sugestão não pode mais ser alterada.');
+      this.toast.show('error', 'Não é possível arquivar/concluir uma sugestão sem resposta.');
       this.loadSuggestions();
     } else if (code === 'not_owner_or_admin') {
       this.toast.show('error', 'Você não tem permissão para esta sugestão.');

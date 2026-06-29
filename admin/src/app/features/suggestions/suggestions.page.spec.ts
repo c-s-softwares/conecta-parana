@@ -213,7 +213,7 @@ describe('SuggestionsPage', () => {
 
     component.submitRespond(item);
 
-    expect(toastMock.show).toHaveBeenCalledWith('error', 'Esta sugestão não pode mais ser alterada.');
+    expect(toastMock.show).toHaveBeenCalledWith('error', 'Não é possível arquivar/concluir uma sugestão sem resposta.');
     expect(apiMock.listCitySuggestions).toHaveBeenCalled();
   });
 
@@ -241,7 +241,7 @@ describe('SuggestionsPage', () => {
       expect(component.getCategory('Terminal de ônibus', '')).toBe('TRANSPORTE');
       expect(component.getCategory('Poste com luz LED', '')).toBe('INFRAESTRUTURA');
       expect(component.getCategory('Parque de diversão', '')).toBe('LAZER');
-      expect(component.getCategory('Qualquer coisa', '')).toBe('LAZER');
+      expect(component.getCategory('Qualquer coisa', '')).toBe('OUTROS');
     });
 
     it('should return a deterministic username', () => {
@@ -314,8 +314,8 @@ describe('SuggestionsPage', () => {
 
       component.executeBulkArchive();
 
-      expect(apiMock.archive).toHaveBeenCalledWith('sgt_001');
-      expect(apiMock.archive).toHaveBeenCalledWith('sgt_002');
+      expect(apiMock.archive).toHaveBeenCalledWith('sgt_001', 'Sugestão arquivada.');
+      expect(apiMock.archive).toHaveBeenCalledWith('sgt_002', 'Sugestão arquivada.');
       expect(component.suggestions().find(s => s.id === 'sgt_001')?.status).toBe('arquivada');
       expect(component.suggestions().find(s => s.id === 'sgt_002')?.status).toBe('arquivada');
       expect(component.selectedIds().size).toBe(0);
