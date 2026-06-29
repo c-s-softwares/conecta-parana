@@ -95,6 +95,33 @@ void main() {
     expect(find.text('Prefeitura'), findsOneWidget);
   });
 
+  testWidgets('usa fallback quando resposta nao possui nome do atendente', (
+    tester,
+  ) async {
+    final repo = _MockSuggestionRepository();
+    when(() => repo.getMySuggestions()).thenAnswer(
+      (_) async => [
+        _suggestion(
+          reply: SuggestionReply(
+            date: DateTime(2026, 4, 26),
+            message: 'Resposta sem autor nominal.',
+          ),
+        ),
+      ],
+    );
+
+    final notifier = SuggestionsNotifier(repository: repo);
+    addTearDown(notifier.dispose);
+    await notifier.load();
+
+    await tester.pumpWidget(_wrap(SuggestionsPage(mockNotifier: notifier)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ciclovia na Av. Brasil'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Equipe responsável'), findsOneWidget);
+  });
+
   testWidgets('Mostra o estado vazio quando nao ha sugestoes', (tester) async {
     final repo = _MockSuggestionRepository();
     when(() => repo.getMySuggestions()).thenAnswer((_) async => <Suggestion>[]);

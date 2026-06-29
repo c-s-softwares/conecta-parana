@@ -5,15 +5,15 @@ import '../../domain/entities/suggestion.dart';
 import '../../domain/repositories/suggestion_repository.dart';
 
 class RemoteSuggestionRepository implements SuggestionRepository {
-  final ApiClient _client;
+  final Dio _dio;
 
-  RemoteSuggestionRepository({ApiClient? client})
-    : _client = client ?? ApiClient.instance;
+  RemoteSuggestionRepository({ApiClient? client, Dio? dio})
+    : _dio = dio ?? (client ?? ApiClient.instance).dio;
 
   @override
   Future<List<Suggestion>> getMySuggestions() async {
     try {
-      final response = await _client.dio.get(
+      final response = await _dio.get(
         '/suggestions/me',
         options: Options(extra: {'auth': true}),
       );
@@ -38,12 +38,9 @@ class RemoteSuggestionRepository implements SuggestionRepository {
     required String category,
   }) async {
     try {
-      await _client.dio.post(
+      await _dio.post(
         '/suggestions',
-        data: {
-          'subject': subject,
-          'message': message,
-        },
+        data: {'subject': subject, 'message': message},
         options: Options(extra: {'auth': true}),
       );
     } on DioException catch (e) {
@@ -74,7 +71,9 @@ class RemoteSuggestionRepository implements SuggestionRepository {
       reply: response == null || response.isEmpty
           ? null
           : SuggestionReply(
-              authorName: 'Prefeitura',
+              authorName:
+                  json['respondedByName'] as String? ??
+                  json['authorName'] as String?,
               date: respondedAt ?? DateTime.now(),
               message: response,
             ),

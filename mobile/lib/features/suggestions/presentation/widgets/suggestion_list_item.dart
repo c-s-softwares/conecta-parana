@@ -1,23 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:conectaparana/shared/widgets/misc/badge.dart';
 import '../../domain/entities/suggestion.dart';
-
-const _months = [
-  'jan',
-  'fev',
-  'mar',
-  'abr',
-  'mai',
-  'jun',
-  'jul',
-  'ago',
-  'set',
-  'out',
-  'nov',
-  'dez',
-];
-
-String _dayMonth(DateTime d) => '${d.day} ${_months[d.month - 1]}';
+import 'package:conectaparana/core/formatters/app_date_formatter.dart';
 
 class SuggestionListItem extends StatefulWidget {
   const SuggestionListItem({super.key, required this.suggestion});
@@ -86,7 +70,7 @@ class _SuggestionListItemState extends State<SuggestionListItem> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Enviada ${_dayMonth(s.createdAt)}',
+                        'Enviada ${AppDateFormatter.dayMonth(s.createdAt)}',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFF9E9E9E),
@@ -161,6 +145,10 @@ class _ReplyBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authorName = reply.authorName?.trim();
+    final displayName = authorName == null || authorName.isEmpty
+        ? 'Equipe responsável'
+        : authorName;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -173,12 +161,12 @@ class _ReplyBlock extends StatelessWidget {
         children: [
           Row(
             children: [
-              const CircleAvatar(
+              CircleAvatar(
                 radius: 15,
                 backgroundColor: Color(0xFF006733),
                 child: Text(
-                  'P',
-                  style: TextStyle(
+                  displayName[0].toUpperCase(),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -191,14 +179,14 @@ class _ReplyBlock extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      reply.authorName,
+                      displayName,
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     Text(
-                      _dayMonth(reply.date),
+                      AppDateFormatter.shortDateTime(reply.date),
                       style: const TextStyle(
                         fontSize: 11,
                         color: Color(0xFF9E9E9E),
