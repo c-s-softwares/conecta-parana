@@ -1,12 +1,12 @@
+import 'package:conectaparana/features/register/data/models/city_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:conectaparana/features/city_switcher/presentation/widgets/city_selector_bottom_sheet.dart';
-import 'package:conectaparana/features/register/data/models/services/city_model.dart';
+
 
 void main() {
-  const cityA = City(id: 'maringa', name: 'Maringa');
-  const cityB = City(id: 'curitiba', name: 'Curitiba');
+  const cityA = City(id: 'maringa', name: 'Maringa', state: '');
+  const cityB = City(id: 'curitiba', name: 'Curitiba', state: '');
 
   testWidgets('renderiza a lista de cidades carregadas', (tester) async {
     await tester.pumpWidget(MaterialApp(

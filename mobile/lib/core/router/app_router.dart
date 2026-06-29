@@ -11,7 +11,6 @@ import 'package:conectaparana/core/shell/main_shell.dart';
 import 'package:conectaparana/dev/fakes/fake_event_repository.dart';
 import 'package:conectaparana/dev/fakes/fake_ticket_repository.dart';
 import 'package:conectaparana/features/events/presentation/pages/events_page.dart';
-import 'package:conectaparana/features/onboarding/presentation/pages/city_selector_screen.dart';
 import 'package:conectaparana/features/events/presentation/pages/event_detail_page.dart';
 import 'package:conectaparana/features/home/presentation/pages/home_page.dart';
 import 'package:conectaparana/features/map/presentation/pages/map_page.dart';

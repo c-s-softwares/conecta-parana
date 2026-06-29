@@ -1,5 +1,5 @@
 import 'package:conectaparana/core/network/api_client.dart';
-import 'package:conectaparana/features/register/data/models/services/city_model.dart';
+import 'package:conectaparana/features/register/data/models/city_model.dart';
 import 'package:flutter/material.dart';
 
 typedef CityLoader = Future<List<City>> Function();
@@ -35,7 +35,7 @@ Future<List<City>> _loadCitiesFromApi() async {
       .map(
         (item) => City(
           id: (item as Map<String, dynamic>)['id'] as String,
-          name: item['name'] as String,
+          name: item['name'] as String, state: '',
         ),
       )
       .toList();
