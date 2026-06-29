@@ -640,26 +640,37 @@ class _InfoBox extends StatelessWidget {
         border: Border.all(color: const Color(0xFF9FE7C3)),
       ),
       child: RichText(
-        text: const TextSpan(
-          style: TextStyle(
+        text: TextSpan(
+          style: const TextStyle(
             color: Color(0xFF111A15),
             fontSize: 16,
             height: 1.35,
           ),
           children: [
-            TextSpan(
+            const TextSpan(
               text: 'Ticket',
               style: TextStyle(fontWeight: FontWeight.w800),
             ),
-            TextSpan(
+            const TextSpan(
               text:
                   ' = problema urbano a ser resolvido pela prefeitura. Para ideias, use ',
             ),
-            TextSpan(
-              text: 'Sugestões.',
-              style: TextStyle(
-                color: Color(0xFF007A3D),
-                fontWeight: FontWeight.w800,
+            WidgetSpan(
+              alignment: PlaceholderAlignment.baseline,
+              baseline: TextBaseline.alphabetic,
+              child: GestureDetector(
+                onTap: () {
+                  context.go('/profile/suggestions');
+                },
+                child: const Text(
+                  'Sugestões.',
+                  style: TextStyle(
+                    color: Color(0xFF007A3D),
+                    fontSize: 15,
+                    height: 1.35,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ),
             ),
           ],
