@@ -130,7 +130,7 @@ describe('CommunicatesPage', () => {
     component['openEdit'](items[0]);
     component['updateForm']('isActive', false);
 
-    component['save']();
+    component['saveAs'](false);
 
     expect(api.update).toHaveBeenCalledWith('com_1', {
       title: 'Comunicado ativo',

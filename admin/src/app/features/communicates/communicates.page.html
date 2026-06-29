@@ -1,199 +1,205 @@
-<header class="communicates-top">
-  <div>
-    <h1>Comunicados</h1>
-    <p>Avisos oficiais da prefeitura: mudanças de horário, campanhas, prazos e orientações.</p>
-  </div>
-
-  <div class="top-actions">
-    <div class="search-box">
-      <ng-icon name="heroMagnifyingGlass" size="16" aria-hidden="true"> </ng-icon>
-      <input
-        type="search"
-        placeholder="Buscar em comunicados..."
-        [ngModel]="search()"
-        (ngModelChange)="search.set($event)"
-        (keyup.enter)="applyFilters()"
-      />
+<div class="flex flex-col gap-5">
+  <header class="page-header">
+    <div>
+      <h1 class="h1">Comunicados</h1>
+      <p class="lead">
+        Avisos oficiais da prefeitura: mudanças de horário, campanhas, prazos e orientações.
+      </p>
     </div>
 
-    <button type="button" class="btn-filter" (click)="applyFilters()">
-      <ng-icon name="heroFunnel" size="16" aria-hidden="true" />
-      Filtros
-    </button>
-
-    <button type="button" class="btn-new" (click)="openCreate()">
-      <ng-icon name="heroPlus" size="16" aria-hidden="true" />
-      Novo comunicado
-    </button>
-  </div>
-</header>
-
-<section class="tabs-row">
-  <div class="tabs">
-    <button type="button" class="tab" [class.active]="isActive() === ''" (click)="clearFilters()">
-      Todos <span>{{ total() }}</span>
-    </button>
-
-    <button
-      type="button"
-      class="tab"
-      [class.active]="isActive() === 'true'"
-      (click)="isActive.set('true'); applyFilters()"
-    >
-      Publicados
-    </button>
-
-    <button
-      type="button"
-      class="tab"
-      [class.active]="isActive() === 'false'"
-      (click)="isActive.set('false'); applyFilters()"
-    >
-      Rascunhos
-    </button>
-  </div>
-
-  <span class="results-count">{{ total() }} resultados</span>
-</section>
-
-<app-data-list
-  [items]="items()"
-  [total]="total()"
-  [page]="page()"
-  [pageSize]="pageSize()"
-  [loading]="loading()"
-  emptyTitle="Nenhum comunicado encontrado"
-  emptyDescription="Ajuste os filtros ou crie um novo comunicado."
-  emptyIcon="heroMegaphone"
-  (pageChange)="onPageChange($event)"
->
-  <ng-template #row let-item let-index="index">
-    <article class="communicate-row">
-      <div class="communicate-icon" [class.alt]="index % 2 === 1">
-        <ng-icon name="heroDocumentText" size="20" aria-hidden="true" />
+    <div class="toolbar">
+      <div class="input-wrap" style="width: 280px">
+        <ng-icon class="ic" name="heroMagnifyingGlass" size="18" />
+        <input
+          class="input"
+          type="search"
+          placeholder="Buscar em comunicados..."
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+          (keyup.enter)="applyFilters()"
+        />
       </div>
 
-      <div class="communicate-content">
-        <div class="communicate-title-line">
-          <h2>{{ item.title }}</h2>
+      <button type="button" class="btn btn-primary" (click)="openCreate()">
+        <ng-icon name="heroPlus" size="16" />
+        Novo comunicado
+      </button>
+    </div>
+  </header>
 
-          <span class="priority-badge"> MÉDIA </span>
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="tabs" role="tablist" aria-label="Filtrar por status">
+      <button type="button" class="tab" [class.active]="isActive() === ''" (click)="clearFilters()">
+        Todos
+      </button>
 
-          <span class="status-badge" [class.inactive]="!item.isActive">
-            {{ item.isActive ? 'PUBLICADO' : 'RASCUNHO' }}
-          </span>
+      <button
+        type="button"
+        class="tab"
+        [class.active]="isActive() === 'true'"
+        (click)="isActive.set('true'); applyFilters()"
+      >
+        Publicados
+      </button>
+
+      <button
+        type="button"
+        class="tab"
+        [class.active]="isActive() === 'false'"
+        (click)="isActive.set('false'); applyFilters()"
+      >
+        Rascunhos
+      </button>
+    </div>
+
+    <span class="text-sm text-[var(--text-subtle)]">
+      {{ total() }} resultado{{ total() === 1 ? '' : 's' }}
+    </span>
+  </div>
+
+  <app-data-list
+    [items]="items()"
+    [total]="total()"
+    [page]="page()"
+    [pageSize]="pageSize()"
+    [loading]="loading()"
+    emptyTitle="Nenhum comunicado encontrado"
+    emptyDescription="Crie o primeiro comunicado ou ajuste os filtros."
+    emptyIcon="heroMegaphone"
+    (pageChange)="onPageChange($event)"
+  >
+    <ng-template #row let-item>
+      <div class="list-item">
+        <div
+          class="thumb"
+          style="background: oklch(0.95 0.05 195 / 0.55); color: oklch(0.45 0.13 195)"
+        >
+          <ng-icon name="heroMegaphone" size="26" />
         </div>
 
-        <p>{{ item.description }}</p>
+        <div class="body">
+          <div class="title-row">
+            <span class="title">{{ item.title }}</span>
+            <span
+              class="badge badge-dot"
+              [class.badge-ativo]="item.isActive"
+              [class.badge-inativo]="!item.isActive"
+            >
+              {{ item.isActive ? 'Publicado' : 'Rascunho' }}
+            </span>
+          </div>
 
-        <div class="meta-row">
-          <span>
-            <ng-icon name="heroMapPin" size="13" aria-hidden="true" />
-            Cidade
-          </span>
+          <p class="desc">{{ item.description }}</p>
+        </div>
 
-          <span>
-            <ng-icon name="heroCalendarDays" size="13" aria-hidden="true" />
-            Hoje
-          </span>
+        <div class="actions">
+          <button type="button" class="btn-icon" (click)="openEdit(item)" aria-label="Editar">
+            <ng-icon name="heroPencilSquare" size="16" />
+          </button>
 
-          <span>
-            <ng-icon name="heroEye" size="13" aria-hidden="true" />
-            0 visualizações
-          </span>
+          <button
+            type="button"
+            class="btn-icon danger"
+            [disabled]="deletingId() === item.id"
+            (click)="delete(item)"
+            aria-label="Excluir"
+          >
+            <ng-icon name="heroTrash" size="16" />
+          </button>
         </div>
       </div>
+    </ng-template>
+  </app-data-list>
 
-      <div class="row-actions">
-        <button
-          type="button"
-          class="icon-action"
-          title="Editar"
-          aria-label="Editar"
-          (click)="openEdit(item)"
-        >
-          <ng-icon name="heroPencilSquare" size="17" aria-hidden="true" />
-        </button>
+  <app-modal-dialog
+    [visible]="modalOpen()"
+    [title]="modalTitle()"
+    subtitle="Preencha os campos abaixo para publicar."
+    size="l"
+    [footer]="true"
+    (cancelled)="closeModal()"
+  >
+    <form class="modal-form" (ngSubmit)="saveAs(true)">
+      <app-form-field
+        label="Título"
+        fieldId="title"
+        [required]="true"
+        [showError]="submitted() && !!titleError()"
+        [errorMessage]="titleError()"
+      >
+        <input
+          id="title"
+          class="input"
+          type="text"
+          maxlength="200"
+          placeholder="Título do comunicado"
+          [ngModel]="form().title"
+          name="title"
+          (ngModelChange)="updateForm('title', $event)"
+        />
+      </app-form-field>
 
-        <button
-          type="button"
-          class="icon-action danger"
-          title="Excluir"
-          aria-label="Excluir"
-          [disabled]="deletingId() === item.id"
-          (click)="delete(item)"
-        >
-          <ng-icon name="heroTrash" size="17" aria-hidden="true" />
-        </button>
+      <app-form-field
+        label="Conteúdo"
+        fieldId="description"
+        [required]="true"
+        [showError]="submitted() && !!descriptionError()"
+        [errorMessage]="descriptionError()"
+      >
+        <textarea
+          id="description"
+          class="input textarea"
+          rows="5"
+          placeholder="Escreva aqui..."
+          [ngModel]="form().description"
+          name="description"
+          (ngModelChange)="updateForm('description', $event)"
+        ></textarea>
+      </app-form-field>
+      <div class="cover-upload">
+        <span class="cover-label">Imagem de capa</span>
+
+        <label class="cover-box">
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            class="sr-only"
+            (change)="onFileSelected($event)"
+          />
+
+          @if (previewUrl()) {
+            <img [src]="previewUrl()" alt="" class="cover-preview" />
+          } @else {
+            <span class="cover-icon">
+              <ng-icon name="heroPhoto" size="20"></ng-icon>
+            </span>
+
+            <strong>Arraste uma imagem ou clique para enviar</strong>
+            <small>PNG, JPG até 5MB · Recomendado 1600x900</small>
+          }
+        </label>
+
+        @if (previewUrl()) {
+          <button type="button" class="btn btn-ghost btn-sm" (click)="removeSelectedFile()">
+            Remover imagem
+          </button>
+        }
       </div>
-    </article>
-  </ng-template>
-</app-data-list>
+    </form>
 
-<app-modal-dialog
-  [visible]="modalOpen()"
-  [title]="modalTitle()"
-  subtitle="Preencha os dados do comunicado."
-  size="l"
-  [footer]="true"
-  (cancelled)="closeModal()"
->
-  <form class="modal-form" (ngSubmit)="save()">
-    <app-form-field
-      label="Título"
-      fieldId="title"
-      [required]="true"
-      [showError]="submitted() && !!titleError()"
-      [errorMessage]="titleError()"
-    >
-      <input
-        id="title"
-        class="input"
-        type="text"
-        maxlength="200"
-        placeholder="Digite o título do comunicado"
-        [ngModel]="form().title"
-        name="title"
-        (ngModelChange)="updateForm('title', $event)"
-      />
-    </app-form-field>
+    <div modal-footer>
+      <button type="button" class="btn btn-secondary" [disabled]="saving()" (click)="closeModal()">
+        Cancelar
+      </button>
 
-    <app-form-field
-      label="Descrição"
-      fieldId="description"
-      [required]="true"
-      [showError]="submitted() && !!descriptionError()"
-      [errorMessage]="descriptionError()"
-    >
-      <textarea
-        id="description"
-        class="input textarea"
-        rows="6"
-        placeholder="Descreva o comunicado..."
-        [ngModel]="form().description"
-        name="description"
-        (ngModelChange)="updateForm('description', $event)"
-      ></textarea>
-    </app-form-field>
+      <button type="button" class="btn btn-secondary" [disabled]="saving()" (click)="saveAs(false)">
+        Salvar rascunho
+      </button>
 
-    <label class="checkbox-row">
-      <input
-        type="checkbox"
-        [ngModel]="form().isActive"
-        name="isActive"
-        (ngModelChange)="updateForm('isActive', $event)"
-      />
-      <span>Publicado</span>
-    </label>
-  </form>
-
-  <div modal-footer>
-    <button type="button" class="btn btn-secondary" [disabled]="saving()" (click)="closeModal()">
-      Cancelar
-    </button>
-
-    <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="save()">
-      {{ saving() ? 'Salvando...' : 'Salvar' }}
-    </button>
-  </div>
-</app-modal-dialog>
+      <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="saveAs(true)">
+        <ng-icon name="heroCheck" size="16" />
+        Publicar
+      </button>
+    </div>
+  </app-modal-dialog>
+</div>

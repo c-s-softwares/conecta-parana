@@ -3,7 +3,6 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
-import { catchError, EMPTY, finalize } from 'rxjs';
 
 import { ToastService } from '../../core/services/toast.service';
 import { FormField } from '../../shared/components/form-field/form-field';
@@ -11,6 +10,8 @@ import { ModalDialog } from '../../shared/components/modal-dialog/modal-dialog';
 import { ComunicadosApi } from './communicates.api';
 import { ComunicadoItem, CreateCommunicateDto } from './communicates.model';
 import { DataList, DataListPageEvent } from '../../shared/components/data-list/data-list';
+import { catchError, EMPTY, finalize, of } from 'rxjs';
+import { UploadsApi } from '../../core/services/uploads.api';
 
 @Component({
   selector: 'app-communicates-page',
@@ -24,6 +25,10 @@ export class CommunicatesPage {
   private readonly toast = inject(ToastService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly uploads = inject(UploadsApi);
+
+  protected readonly selectedFile = signal<File | null>(null);
+  protected readonly previewUrl = signal<string | null>(null);
 
   protected readonly items = signal<ComunicadoItem[]>([]);
   protected readonly loading = signal(false);
@@ -124,6 +129,7 @@ export class CommunicatesPage {
   }
 
   protected openCreate(): void {
+    this.removeSelectedFile();
     this.submitted.set(false);
     this.editing.set(null);
     this.form.set({
@@ -136,6 +142,7 @@ export class CommunicatesPage {
 
   protected openEdit(item: ComunicadoItem): void {
     this.submitted.set(false);
+    this.removeSelectedFile();
     this.editing.set(item);
     this.form.set({
       title: item.title,
@@ -157,7 +164,7 @@ export class CommunicatesPage {
     this.form.update((current) => ({ ...current, [key]: value }));
   }
 
-  protected save(): void {
+  protected saveAs(isActive: boolean): void {
     this.submitted.set(true);
 
     if (!this.isFormValid()) return;
@@ -165,7 +172,10 @@ export class CommunicatesPage {
     this.saving.set(true);
 
     const current = this.editing();
-    const dto = this.form();
+    const dto: CreateCommunicateDto = {
+      ...this.form(),
+      isActive,
+    };
 
     const request = current ? this.api.update(current.id, dto) : this.api.create(dto);
 
@@ -175,22 +185,47 @@ export class CommunicatesPage {
           this.handleWriteError(error);
           return EMPTY;
         }),
-        finalize(() => this.saving.set(false)),
       )
-      .subscribe(() => {
-        this.toast.show(
-          'success',
-          current ? 'Comunicado atualizado com sucesso.' : 'Comunicado criado com sucesso.',
-        );
-        this.modalOpen.set(false);
-        this.load();
+      .subscribe((communicate) => {
+        this.persistPhoto(communicate.id, current !== null);
       });
+  }
+
+  protected save(): void {
+    this.saveAs(true);
   }
 
   protected onPageChange(event: DataListPageEvent): void {
     this.page.set(event.page);
     this.pageSize.set(event.pageSize);
     this.load();
+  }
+
+  protected onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    input.value = '';
+
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      this.toast.show('error', 'Selecione uma imagem válida.');
+      return;
+    }
+
+    const currentPreview = this.previewUrl();
+    if (currentPreview) URL.revokeObjectURL(currentPreview);
+
+    this.selectedFile.set(file);
+    this.previewUrl.set(URL.createObjectURL(file));
+  }
+
+  protected removeSelectedFile(): void {
+    const currentPreview = this.previewUrl();
+    if (currentPreview) URL.revokeObjectURL(currentPreview);
+
+    this.selectedFile.set(null);
+    this.previewUrl.set(null);
   }
 
   protected delete(item: ComunicadoItem): void {
@@ -240,6 +275,31 @@ export class CommunicatesPage {
       },
       queryParamsHandling: 'merge',
     });
+  }
+
+  private persistPhoto(communicateId: string, wasEditing: boolean): void {
+    const file = this.selectedFile();
+
+    const finish = () => {
+      this.saving.set(false);
+      this.toast.show(
+        'success',
+        wasEditing ? 'Comunicado atualizado com sucesso.' : 'Comunicado criado com sucesso.',
+      );
+      this.modalOpen.set(false);
+      this.removeSelectedFile();
+      this.load();
+    };
+
+    if (!file) {
+      finish();
+      return;
+    }
+
+    this.uploads
+      .upload(file, 'communicate', communicateId)
+      .pipe(catchError(() => of(null)))
+      .subscribe(() => finish());
   }
 
   private handleWriteError(error: unknown): void {
