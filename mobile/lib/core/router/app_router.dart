@@ -18,6 +18,7 @@ import 'package:conectaparana/features/home/presentation/pages/content_list_page
 import 'package:conectaparana/features/home/data/repositories/content_list_repository.dart';
 import 'package:conectaparana/features/home/presentation/pages/services_list_page.dart';
 import 'package:conectaparana/features/map/presentation/pages/map_page.dart';
+import 'package:conectaparana/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:conectaparana/features/profile/presentation/pages/profile_page.dart';
 import 'package:conectaparana/features/search/presentation/pages/search_page.dart';
 import 'package:conectaparana/features/tickets/presentation/pages/new_ticket_page.dart';
@@ -55,6 +56,7 @@ abstract class AppRoutes {
   static const newTicket = '/tickets/new';
   static const profile = '/profile';
   static const favorites = '/profile/favorites';
+  static const notifications = '/notifications';
 
   static const event = '/events/:id';
   static const homeEvent = '/home/event/:id';
@@ -187,8 +189,7 @@ class AppRouter {
           path: AppRoutes.search,
           builder: (context, state) => SearchPage(
             initialQuery: state.uri.queryParameters['q'] ?? '',
-            initialCategory:
-                state.uri.queryParameters['category'] == 'events'
+            initialCategory: state.uri.queryParameters['category'] == 'events'
                 ? SearchInitialCategory.events
                 : null,
           ),
@@ -219,6 +220,10 @@ class AppRouter {
           ],
         ),
         // DEV ONLY — abre EventDetailPage com dados mockados, sem backend
+        GoRoute(
+          path: AppRoutes.notifications,
+          builder: (context, state) => const NotificationsPage(),
+        ),
         GoRoute(
           path: AppRoutes.devEventDetail,
           builder: (context, state) => EventDetailPage(

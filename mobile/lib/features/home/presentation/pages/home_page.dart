@@ -43,7 +43,7 @@ class _HomePageState extends State<HomePage> {
   bool _notifierHasListener = false;
   bool _listensToActiveCity = false;
 
-  static const int _notificationBadge = 3;
+  static const int _notificationBadge = 0;
 
   @override
   void initState() {
@@ -198,7 +198,7 @@ class _HomePageState extends State<HomePage> {
                     await activeCityController.setActiveCity(selected);
                   }
                 },
-                onNotificationTap: () {},
+                onNotificationTap: () => context.push(AppRoutes.notifications),
                 onSearchTap: () => context.push(AppRoutes.search),
               ),
             ),
