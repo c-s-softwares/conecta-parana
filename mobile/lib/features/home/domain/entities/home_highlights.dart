@@ -1,4 +1,5 @@
 import '../../../events/domain/entities/event_list_item.dart';
+import 'package:conectaparana/core/media/media_photo.dart';
 
 class HomeAlert {
   final String title;
@@ -20,6 +21,7 @@ class HomeFeaturedBanner {
   final String authorName;
   final String timeLabel;
   final String detailRoute;
+  final List<MediaPhoto> photos;
 
   const HomeFeaturedBanner({
     required this.id,
@@ -29,6 +31,7 @@ class HomeFeaturedBanner {
     required this.authorName,
     required this.timeLabel,
     required this.detailRoute,
+    this.photos = const [],
   });
 }
 

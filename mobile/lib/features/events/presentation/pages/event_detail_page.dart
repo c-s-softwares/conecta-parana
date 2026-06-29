@@ -1,6 +1,7 @@
 import 'package:conectaparana/features/events/data/repository/event_repository.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:conectaparana/shared/widgets/media/app_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -396,11 +397,10 @@ class _PhotosBackground extends StatelessWidget {
                   PhotoViewerPage(photos: photos, initialIndex: index),
             ),
           ),
-          child: Image.network(
-            photo.thumbUrl ?? photo.url,
+          child: AppNetworkImage(
+            imageUrl: photo.fullSizeUrl!,
             fit: BoxFit.cover,
-            // ignore: unnecessary_underscores
-            errorBuilder: (_, __, ___) => Container(
+            fallback: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topRight,
@@ -499,26 +499,26 @@ class _BottomBar extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.calendar_month_outlined, size: 18),
-              label: const Text(
-                'Adicionar à agenda',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF006733),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
-          ),
+          // SizedBox(
+          //   width: double.infinity,
+          //   height: 50,
+          //   child: ElevatedButton.icon(
+          //     onPressed: () {},
+          //     icon: const Icon(Icons.calendar_month_outlined, size: 18),
+          //     label: const Text(
+          //       'Adicionar à agenda',
+          //       style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          //     ),
+          //     style: ElevatedButton.styleFrom(
+          //       backgroundColor: const Color(0xFF006733),
+          //       foregroundColor: Colors.white,
+          //       elevation: 0,
+          //       shape: RoundedRectangleBorder(
+          //         borderRadius: BorderRadius.circular(10),
+          //       ),
+          //     ),
+          //   ),
+          // ),
           const SizedBox(height: 10),
 
           EngagementActions(

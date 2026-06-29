@@ -43,7 +43,7 @@ class _EventPhotoCarouselState extends State<EventPhotoCarousel> {
                   ),
                 ),
                 child: Image.network(
-                  photo.thumbUrl ?? photo.url,
+                  photo.displayUrl!,
                   fit: BoxFit.cover,
                   width: double.infinity,
                   errorBuilder: (context, error, stackTrace) => Container(

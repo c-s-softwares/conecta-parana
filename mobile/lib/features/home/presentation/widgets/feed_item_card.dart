@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:conectaparana/shared/widgets/media/app_network_image.dart';
 
 import '../../domain/entities/feed_item.dart';
 
@@ -47,17 +48,17 @@ class FeedItemCard extends StatelessWidget {
   }
 
   Widget _buildThumbnail() {
+    final photoUrl = item.photos.firstOrNull?.displayUrl ?? item.imageUrl;
     return ClipRRect(
       borderRadius: BorderRadius.circular(6),
       child: SizedBox(
         width: 80,
         height: 80,
-        child: item.imageUrl != null
-            ? Image.network(
-                item.imageUrl!,
+        child: photoUrl != null && photoUrl.isNotEmpty
+            ? AppNetworkImage(
+                imageUrl: photoUrl,
                 fit: BoxFit.cover,
-                // ignore: unnecessary_underscores
-                errorBuilder: (_, __, _) => _placeholderIcon(),
+                fallback: _placeholderIcon(),
               )
             : _placeholderIcon(),
       ),

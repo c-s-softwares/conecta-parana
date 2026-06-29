@@ -1,4 +1,5 @@
 import 'package:conectaparana/features/communicates/data/communicate_detail_model.dart';
+import 'package:conectaparana/core/formatters/app_date_formatter.dart';
 import 'package:flutter/material.dart';
 
 const communicateGreen = Color(0xFF006B39);
@@ -74,7 +75,9 @@ class CommunicateHeroCard extends StatelessWidget {
             cityName,
             if (_nonEmpty(item.stateCode) != null) item.stateCode!,
           ].join(', ');
-    final date = item.createdAt == null ? null : _formatDate(item.createdAt!);
+    final date = item.createdAt == null
+        ? null
+        : AppDateFormatter.publication(item.createdAt!);
 
     return Container(
       width: double.infinity,
@@ -137,25 +140,6 @@ class CommunicateHeroCard extends StatelessWidget {
     final normalized = value?.trim();
     return normalized == null || normalized.isEmpty ? null : normalized;
   }
-
-  static String _formatDate(DateTime date) {
-    const months = [
-      'jan',
-      'fev',
-      'mar',
-      'abr',
-      'mai',
-      'jun',
-      'jul',
-      'ago',
-      'set',
-      'out',
-      'nov',
-      'dez',
-    ];
-    final local = date.toLocal();
-    return '${local.day.toString().padLeft(2, '0')} ${months[local.month - 1]} ${local.year}';
-  }
 }
 
 class CommunicateAuthorRow extends StatelessWidget {
@@ -211,33 +195,30 @@ class CommunicateAuthorRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
-        OutlinedButton(
-          key: const Key('communicate_follow_button'),
-          onPressed: onFollow,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF17201E),
-            minimumSize: const Size(70, 34),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            side: const BorderSide(color: Color(0xFFD7DEDB)),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
-          child: const Text(
-            'Seguir',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-          ),
-        ),
+        // OutlinedButton(
+        //   key: const Key('communicate_follow_button'),
+        //   onPressed: onFollow,
+        //   style: OutlinedButton.styleFrom(
+        //     foregroundColor: const Color(0xFF17201E),
+        //     minimumSize: const Size(70, 34),
+        //     padding: const EdgeInsets.symmetric(horizontal: 16),
+        //     side: const BorderSide(color: Color(0xFFD7DEDB)),
+        //     shape: RoundedRectangleBorder(
+        //       borderRadius: BorderRadius.circular(20),
+        //     ),
+        //   ),
+        //   child: const Text(
+        //     'Seguir',
+        //     style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+        //   ),
+        // ),
       ],
     );
   }
 
   static String _publishedLabel(DateTime? date) {
     if (date == null) return 'Publicação oficial';
-    final local = date.toLocal();
-    final hour = local.hour.toString().padLeft(2, '0');
-    final minute = local.minute.toString().padLeft(2, '0');
-    return 'Publicado às $hour:$minute';
+    return 'Publicado em ${AppDateFormatter.publication(date)}';
   }
 }
 
@@ -280,32 +261,32 @@ class CommunicateHighlightsCard extends StatelessWidget {
   }
 }
 
-class CommunicateAlertButton extends StatelessWidget {
-  const CommunicateAlertButton({super.key, this.onPressed});
+// class CommunicateAlertButton extends StatelessWidget {
+//   const CommunicateAlertButton({super.key, this.onPressed});
 
-  final VoidCallback? onPressed;
+//   final VoidCallback? onPressed;
 
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 48,
-      child: ElevatedButton.icon(
-        key: const Key('communicate_alert_button'),
-        onPressed: onPressed,
-        icon: const Icon(Icons.notifications_none, size: 18),
-        label: const Text('Ativar alerta desta secretaria'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: communicateGreen,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return SizedBox(
+//       width: double.infinity,
+//       height: 48,
+//       child: ElevatedButton.icon(
+//         key: const Key('communicate_alert_button'),
+//         onPressed: onPressed,
+//         icon: const Icon(Icons.notifications_none, size: 18),
+//         label: const Text('Ativar alerta desta secretaria'),
+//         style: ElevatedButton.styleFrom(
+//           backgroundColor: communicateGreen,
+//           foregroundColor: Colors.white,
+//           elevation: 0,
+//           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+//           textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 class _CircleAction extends StatelessWidget {
   const _CircleAction({

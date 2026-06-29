@@ -91,9 +91,12 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Curitiba, PR'), findsOneWidget);
-    expect(find.text('08 mai 2026'), findsOneWidget);
+    expect(find.text('8 de Maio de 2026 às 09:14'), findsOneWidget);
     expect(find.text('Prefeitura de Curitiba'), findsOneWidget);
-    expect(find.text('Publicado às 09:14'), findsOneWidget);
+    expect(
+      find.text('Publicado em 8 de Maio de 2026 às 09:14'),
+      findsOneWidget,
+    );
     expect(find.text('O QUE MUDA'), findsOneWidget);
     expect(
       find.text('Novo cronograma entra em vigor na segunda-feira'),

@@ -15,6 +15,12 @@ void main() {
       'highlights': ['Primeiro ponto', 'Segundo ponto'],
       'liked': true,
       'saved': true,
+      'photos': [
+        {
+          'url': 'https://cdn.test/communicate.webp',
+          'thumbUrl': 'https://cdn.test/communicate-thumb.webp',
+        },
+      ],
     });
 
     expect(item.cityName, 'Curitiba');
@@ -23,6 +29,14 @@ void main() {
     expect(item.highlights, ['Primeiro ponto', 'Segundo ponto']);
     expect(item.liked, isTrue);
     expect(item.saved, isTrue);
+    expect(
+      item.photoItems.single.fullSizeUrl,
+      'https://cdn.test/communicate.webp',
+    );
+    expect(
+      item.photoItems.single.displayUrl,
+      'https://cdn.test/communicate-thumb.webp',
+    );
   });
 
   test('extrai bullets do texto sem repeti-los no corpo', () {

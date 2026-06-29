@@ -1,3 +1,6 @@
+import 'package:conectaparana/core/media/media_photo.dart';
+import 'package:conectaparana/core/media/media_url_resolver.dart';
+
 enum FavoriteItemType {
   event,
   communicate,
@@ -117,7 +120,11 @@ class FavoriteItemModel {
           _pickString(json, ['title', 'name']) ??
           'Sem título',
       description: _pickString(content, ['description', 'summary']),
-      imageUrl: _pickString(content, ['imageUrl', 'photoUrl', 'coverUrl']),
+      imageUrl:
+          MediaPhoto.listFromJson(content['photos']).firstOrNull?.displayUrl ??
+          MediaUrlResolver.resolve(
+            _pickString(content, ['imageUrl', 'photoUrl', 'coverUrl']),
+          ),
       category: _pickString(content, ['categoryName', 'category', 'type']),
       date: contentDate ?? savedAt,
       type: type,

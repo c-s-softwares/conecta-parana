@@ -1,15 +1,16 @@
-class EventPhoto {
-  final String id;
-  final String url;
-  final String? thumbUrl;
+import 'package:conectaparana/core/media/media_photo.dart';
 
-  const EventPhoto({required this.id, required this.url, this.thumbUrl});
+class EventPhoto extends MediaPhoto {
+  final String id;
+
+  const EventPhoto({required this.id, super.url, super.thumbUrl});
 
   factory EventPhoto.fromJson(Map<String, dynamic> json) {
+    final photo = MediaPhoto.fromJson(json);
     return EventPhoto(
-      id: json['id'] as String,
-      url: json['url'] as String,
-      thumbUrl: json['thumbUrl'] as String?,
+      id: json['id']?.toString() ?? '',
+      url: photo.url,
+      thumbUrl: photo.thumbUrl,
     );
   }
 }
@@ -99,6 +100,7 @@ class EventDetail {
           : null,
       photos: (json['photos'] as List<dynamic>? ?? const [])
           .map((p) => EventPhoto.fromJson(p as Map<String, dynamic>))
+          .where((photo) => photo.hasImage)
           .toList(),
       likesCount: json['likesCount'] as int? ?? 0,
       likedByMe:

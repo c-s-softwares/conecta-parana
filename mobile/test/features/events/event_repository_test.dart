@@ -14,6 +14,9 @@ Map<String, dynamic> _responseBody() => {
       'isActive': true,
       'eventDate': '2026-07-05T02:53:39.554Z',
       'cityId': _cityId,
+      'photos': [
+        {'id': 'pho_1', 'thumbUrl': 'https://cdn.test/event-thumb.webp'},
+      ],
       'address': 'Praça Central',
     },
   ],
@@ -45,6 +48,10 @@ void main() {
     expect(capturedQuery?['isActive'], isTrue);
     expect(capturedQuery?['status'], isNull);
     expect(capturedQuery?['order'], 'date_asc');
+    expect(
+      page.items.single.photos.single.displayUrl,
+      'https://cdn.test/event-thumb.webp',
+    );
     expect(page.items.single.title, 'Feira de Saúde Preventiva');
     expect(page.items.single.location, 'Praça Central');
   });

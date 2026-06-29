@@ -14,18 +14,33 @@ void main() {
         'address': 'Av. Brasil, 1000',
         'cityId': 'cit_1',
         'userId': 'usr_1',
-        'assignedToId': null,
+        'assignedToId': 'usr_admin',
+        'assignedToName': 'Carlos Lima',
         'createdAt': '2026-06-10T13:00:00.000Z',
         'updatedAt': '2026-06-10T14:00:00.000Z',
         'resolvedAt': null,
-        'photoIds': ['pho_1'],
+        'photos': [
+          {
+            'id': 'pho_1',
+            'url': 'https://cdn.test/ticket.webp',
+            'thumbUrl': 'https://cdn.test/ticket-thumb.webp',
+          },
+        ],
         'comments': [
           {
             'id': 'tkc_1',
             'ticketId': 'tkt_123456',
             'authorId': 'usr_admin',
+            'authorName': 'Ana Souza',
             'message': 'Equipe acionada.',
             'createdAt': '2026-06-10T14:05:00.000Z',
+            'photos': [
+              {
+                'id': 'pho_2',
+                'url': 'https://cdn.test/update.webp',
+                'thumbUrl': 'https://cdn.test/update-thumb.webp',
+              },
+            ],
           },
         ],
       });
@@ -34,7 +49,17 @@ void main() {
       expect(ticket.type, 'sinalização');
       expect(ticket.coordinates?.lat, -23.42);
       expect(ticket.photos.single.id, 'pho_1');
+      expect(
+        ticket.photos.single.displayUrl,
+        'https://cdn.test/ticket-thumb.webp',
+      );
       expect(ticket.comments.single.message, 'Equipe acionada.');
+      expect(ticket.comments.single.authorName, 'Ana Souza');
+      expect(ticket.assignedToName, 'Carlos Lima');
+      expect(
+        ticket.comments.single.photos.single.fullSizeUrl,
+        'https://cdn.test/update.webp',
+      );
     });
   });
 }

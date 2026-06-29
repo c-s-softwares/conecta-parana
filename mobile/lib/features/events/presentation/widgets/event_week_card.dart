@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:conectaparana/shared/widgets/media/app_network_image.dart';
 
 import '../../domain/entities/event_list_item.dart';
 
@@ -19,6 +20,7 @@ class EventWeekCard extends StatelessWidget {
     final colors = event.gradientColors
         .map((c) => Color(int.parse(c)))
         .toList();
+    final photoUrl = event.photos.firstOrNull?.displayUrl;
 
     return Semantics(
       label: event.title,
@@ -47,12 +49,29 @@ class EventWeekCard extends StatelessWidget {
                     colors: colors,
                   ),
                 ),
-                child: Align(
-                  alignment: Alignment.topRight,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: _Tag(label: event.isFree ? 'GRÁTIS' : event.category),
-                  ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (photoUrl != null)
+                      ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(16),
+                        ),
+                        child: AppNetworkImage(
+                          imageUrl: photoUrl,
+                          fallback: const SizedBox.shrink(),
+                        ),
+                      ),
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: _Tag(
+                          label: event.isFree ? 'GRÁTIS' : event.category,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Expanded(

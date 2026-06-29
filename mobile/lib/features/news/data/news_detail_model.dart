@@ -1,3 +1,5 @@
+import 'package:conectaparana/core/media/media_photo.dart';
+
 class NewsDetailModel {
   final String id;
   final String title;
@@ -8,12 +10,15 @@ class NewsDetailModel {
   final String? externalUrl;
   final bool isActive;
   final List<String> photos;
+  final List<MediaPhoto> photoItems;
   final String? authorName;
   final String? authorSubtitle;
   final String? createdAt;
   final int likesCount;
   final bool liked;
   final bool saved;
+
+  DateTime? get createdDate => DateTime.tryParse(createdAt ?? '');
 
   NewsDetailModel({
     required this.id,
@@ -25,6 +30,7 @@ class NewsDetailModel {
     this.externalUrl,
     required this.isActive,
     required this.photos,
+    this.photoItems = const [],
     this.authorName,
     this.authorSubtitle,
     this.createdAt,
@@ -34,6 +40,7 @@ class NewsDetailModel {
   });
 
   factory NewsDetailModel.fromJson(Map<String, dynamic> json) {
+    final photoItems = MediaPhoto.listFromJson(json['photos']);
     return NewsDetailModel(
       id: json['id'] ?? '',
       title: json['title'] ?? '',
@@ -43,13 +50,14 @@ class NewsDetailModel {
       linkType: json['linkType'],
       externalUrl: json['linkUrl'] ?? json['externalUrl'],
       isActive: json['isActive'] ?? true,
-      photos: (json['photos'] as List<dynamic>? ?? const [])
-          .map((photo) => photo is Map<String, dynamic> ? photo['url'] : photo)
+      photos: photoItems
+          .map((photo) => photo.fullSizeUrl)
           .whereType<String>()
-          .toList(),
+          .toList(growable: false),
+      photoItems: photoItems,
       authorName: json['authorName'],
       authorSubtitle: json['authorSubtitle'],
-      createdAt: json['createdAt'],
+      createdAt: (json['publishedAt'] ?? json['createdAt'])?.toString(),
       likesCount: json['likesCount'] as int? ?? 0,
       liked:
           json['liked'] as bool? ??

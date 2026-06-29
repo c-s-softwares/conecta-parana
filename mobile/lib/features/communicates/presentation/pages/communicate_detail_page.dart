@@ -235,11 +235,10 @@ class _CommunicateDetailPageState extends State<CommunicateDetailPage> {
       key: const Key('communicate_detail_scroll'),
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
       children: [
-        CommunicateHeroCard(item: item, fallbackCityName: fallbackCity),
-        if (item.photos.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          CommunicatePhotoCarousel(photos: item.photos),
-        ],
+        if (item.photos.isNotEmpty)
+          CommunicatePhotoCarousel(photos: item.photos)
+        else
+          CommunicateHeroCard(item: item, fallbackCityName: fallbackCity),
         const SizedBox(height: 16),
         CommunicateAuthorRow(item: item, onFollow: _showComingSoon),
         const SizedBox(height: 14),
@@ -261,7 +260,7 @@ class _CommunicateDetailPageState extends State<CommunicateDetailPage> {
           const SizedBox(height: 12),
         ],
         const SizedBox(height: 4),
-        CommunicateAlertButton(onPressed: _showComingSoon),
+        // CommunicateAlertButton(onPressed: _showComingSoon),
       ],
     );
   }

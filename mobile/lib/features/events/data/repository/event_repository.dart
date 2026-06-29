@@ -1,4 +1,5 @@
 import 'package:conectaparana/core/network/api_client.dart';
+import 'package:conectaparana/core/media/media_photo.dart';
 import 'package:conectaparana/features/events/data/models/event_detail_model.dart';
 import 'package:conectaparana/features/events/data/services/event_address_resolver.dart';
 import 'package:conectaparana/features/events/domain/entities/event_list_item.dart';
@@ -196,6 +197,7 @@ class RemoteEventRepository implements EventRepository {
           json['isSaved'] as bool? ??
           json['savedByMe'] as bool? ??
           false,
+      photos: MediaPhoto.listFromJson(json['photos']),
       detailRoute: '/events/$id',
     );
   }

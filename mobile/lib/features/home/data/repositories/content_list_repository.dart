@@ -1,4 +1,5 @@
 import 'package:conectaparana/core/network/api_client.dart';
+import 'package:conectaparana/core/media/media_photo.dart';
 import 'package:conectaparana/features/home/domain/entities/feed_item.dart';
 import 'package:dio/dio.dart';
 
@@ -35,14 +36,12 @@ class ContentListRepository {
         .toList();
     final items = raw.map((json) => _mapItem(kind, json)).toList();
     final total = data['total'] as int? ?? items.length;
-    return ContentListResult(
-      items: items,
-      hasMore: page * pageSize < total,
-    );
+    return ContentListResult(items: items, hasMore: page * pageSize < total);
   }
 
   FeedItem _mapItem(ContentListKind kind, Map<String, dynamic> json) {
     final createdAt = DateTime.tryParse(json['createdAt']?.toString() ?? '');
+    final photos = MediaPhoto.listFromJson(json['photos']);
     return FeedItem(
       id: json['id'] as String,
       type: kind == ContentListKind.communicates
@@ -54,6 +53,8 @@ class ContentListRepository {
           : json['description'] as String?,
       category: json['type'] as String?,
       date: createdAt,
+      photos: photos,
+      imageUrl: photos.firstOrNull?.displayUrl,
     );
   }
 }

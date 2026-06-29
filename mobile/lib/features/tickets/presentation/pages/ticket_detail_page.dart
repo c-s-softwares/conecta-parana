@@ -391,19 +391,19 @@ class _TicketHeaderCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    key: const Key('open-maps-button'),
-                    onPressed: () => onOpenMaps(ticket),
-                    icon: const Icon(Icons.map_outlined, size: 18),
-                    label: const Text('Abrir no app de mapas'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: _primaryGreen,
-                      side: const BorderSide(color: _primaryGreen),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
+                  // OutlinedButton.icon(
+                  //   key: const Key('open-maps-button'),
+                  //   onPressed: () => onOpenMaps(ticket),
+                  //   icon: const Icon(Icons.map_outlined, size: 18),
+                  //   label: const Text('Abrir no app de mapas'),
+                  //   style: OutlinedButton.styleFrom(
+                  //     foregroundColor: _primaryGreen,
+                  //     side: const BorderSide(color: _primaryGreen),
+                  //     shape: RoundedRectangleBorder(
+                  //       borderRadius: BorderRadius.circular(10),
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ],
             ),
@@ -457,6 +457,7 @@ class _TimelineEntry {
   final String id;
   final TicketCommentAuthor? commentAuthor;
   final bool isOptimistic;
+  final List<TicketPhoto> photos;
 
   const _TimelineEntry({
     required this.kind,
@@ -467,6 +468,7 @@ class _TimelineEntry {
     this.message,
     this.commentAuthor,
     this.isOptimistic = false,
+    this.photos = const [],
   });
 
   static List<_TimelineEntry> fromTicket(TicketDetail ticket) {
@@ -476,6 +478,7 @@ class _TimelineEntry {
         id: 'created',
         createdAt: ticket.createdAt,
         title: 'Ticket criado',
+        photos: ticket.photos.where((photo) => photo.hasImage).toList(),
         author: 'Você',
       ),
       ...ticket.comments.map(
@@ -484,14 +487,17 @@ class _TimelineEntry {
           id: comment.id,
           createdAt: comment.createdAt,
           title: comment.author == TicketCommentAuthor.admin
-              ? 'Atualização da prefeitura'
+              ? 'Atualização do atendimento'
               : 'Comentário enviado',
           author:
               comment.authorName ??
-              (comment.author == TicketCommentAuthor.admin ? 'Admin' : 'Você'),
+              (comment.author == TicketCommentAuthor.admin
+                  ? 'Equipe responsável'
+                  : 'Você'),
           message: comment.message,
           commentAuthor: comment.author,
           isOptimistic: comment.isOptimistic,
+          photos: comment.photos,
         ),
       ),
       if (ticket.resolvedAt != null)
@@ -502,7 +508,7 @@ class _TimelineEntry {
           title: ticket.status == 'fechado'
               ? 'Ticket fechado'
               : 'Ticket resolvido',
-          author: 'Prefeitura',
+          author: ticket.assignedToName ?? 'Equipe responsável',
           message:
               'O chamado foi marcado como ${TicketUiMapper.statusExactLabel(ticket.status).toLowerCase()}.',
         ),
@@ -612,6 +618,10 @@ class _TimelineTile extends StatelessWidget {
                         ),
                       ),
                     ),
+                  ],
+                  if (entry.photos.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    TicketPhotoCarousel(photos: entry.photos),
                   ],
                 ],
               ),

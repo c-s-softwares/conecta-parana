@@ -1,3 +1,5 @@
+import 'package:conectaparana/core/media/media_photo.dart';
+
 class CommunicateDetailModel {
   const CommunicateDetailModel({
     required this.id,
@@ -6,6 +8,7 @@ class CommunicateDetailModel {
     required this.authorName,
     required this.isActive,
     required this.photos,
+    this.photoItems = const [],
     required this.likesCount,
     required this.liked,
     required this.saved,
@@ -23,6 +26,7 @@ class CommunicateDetailModel {
   final String authorName;
   final bool isActive;
   final List<String> photos;
+  final List<MediaPhoto> photoItems;
   final int likesCount;
   final bool liked;
   final bool saved;
@@ -53,16 +57,18 @@ class CommunicateDetailModel {
   factory CommunicateDetailModel.fromJson(Map<String, dynamic> json) {
     final description = json['description'] as String? ?? '';
     final city = json['city'];
+    final photoItems = MediaPhoto.listFromJson(json['photos']);
     return CommunicateDetailModel(
       id: json['id'] as String? ?? '',
       title: json['title'] as String? ?? '',
       description: description,
       authorName: json['authorName'] as String? ?? 'Prefeitura Municipal',
       isActive: json['isActive'] as bool? ?? true,
-      photos: (json['photos'] as List<dynamic>? ?? const [])
-          .map((photo) => photo is Map<String, dynamic> ? photo['url'] : photo)
+      photos: photoItems
+          .map((photo) => photo.fullSizeUrl)
           .whereType<String>()
-          .toList(),
+          .toList(growable: false),
+      photoItems: photoItems,
       likesCount: json['likesCount'] as int? ?? 0,
       liked:
           json['liked'] as bool? ??

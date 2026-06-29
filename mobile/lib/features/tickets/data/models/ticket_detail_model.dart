@@ -1,4 +1,5 @@
 import 'package:conectaparana/core/auth/auth_service.dart';
+import 'package:conectaparana/core/media/media_photo.dart';
 
 class TicketCoordinates {
   final double lat;
@@ -14,18 +15,17 @@ class TicketCoordinates {
   }
 }
 
-class TicketPhoto {
+class TicketPhoto extends MediaPhoto {
   final String id;
-  final String? url;
-  final String? thumbUrl;
 
-  const TicketPhoto({required this.id, this.url, this.thumbUrl});
+  const TicketPhoto({required this.id, super.url, super.thumbUrl});
 
   factory TicketPhoto.fromJson(Map<String, dynamic> json) {
+    final photo = MediaPhoto.fromJson(json);
     return TicketPhoto(
-      id: json['id'] as String,
-      url: json['url'] as String?,
-      thumbUrl: json['thumbUrl'] as String?,
+      id: json['id']?.toString() ?? '',
+      url: photo.url,
+      thumbUrl: photo.thumbUrl,
     );
   }
 
@@ -43,6 +43,7 @@ class TicketComment {
   final String message;
   final DateTime createdAt;
   final bool isOptimistic;
+  final List<TicketPhoto> photos;
 
   const TicketComment({
     required this.id,
@@ -53,6 +54,7 @@ class TicketComment {
     required this.createdAt,
     this.authorName,
     this.isOptimistic = false,
+    this.photos = const [],
   });
 
   factory TicketComment.fromJson(
@@ -75,6 +77,7 @@ class TicketComment {
           : TicketCommentAuthor.citizen,
       message: json['message'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
+      photos: _parseTicketPhotos(json['photos']),
     );
   }
 
@@ -88,6 +91,7 @@ class TicketComment {
       message: message,
       createdAt: createdAt,
       isOptimistic: isOptimistic ?? this.isOptimistic,
+      photos: photos,
     );
   }
 }
@@ -103,6 +107,7 @@ class TicketDetail {
   final String cityId;
   final String userId;
   final String? assignedToId;
+  final String? assignedToName;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? resolvedAt;
@@ -120,6 +125,7 @@ class TicketDetail {
     required this.cityId,
     required this.userId,
     this.assignedToId,
+    this.assignedToName,
     required this.createdAt,
     required this.updatedAt,
     this.resolvedAt,
@@ -136,12 +142,15 @@ class TicketDetail {
       description: json['description'] as String,
       status: json['status'] as String,
       coordinates: json['coordinates'] != null
-          ? TicketCoordinates.fromJson(json['coordinates'] as Map<String, dynamic>)
+          ? TicketCoordinates.fromJson(
+              json['coordinates'] as Map<String, dynamic>,
+            )
           : null,
       address: json['address'] as String?,
       cityId: json['cityId'] as String,
       userId: userId,
       assignedToId: json['assignedToId'] as String?,
+      assignedToName: json['assignedToName'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
       resolvedAt: json['resolvedAt'] != null
@@ -162,9 +171,8 @@ class TicketDetail {
   static List<TicketPhoto> _parsePhotos(Map<String, dynamic> json) {
     final photos = json['photos'];
     if (photos is List) {
-      return photos
-          .map((item) => TicketPhoto.fromJson(item as Map<String, dynamic>))
-          .toList();
+      final parsed = _parseTicketPhotos(photos);
+      if (parsed.isNotEmpty) return parsed;
     }
 
     final photoIds = json['photoIds'];
@@ -197,6 +205,7 @@ class TicketDetail {
       cityId: cityId,
       userId: userId,
       assignedToId: assignedToId,
+      assignedToName: assignedToName,
       createdAt: createdAt,
       updatedAt: updatedAt,
       resolvedAt: resolvedAt,
@@ -219,4 +228,13 @@ class TicketDetail {
       isOptimistic: true,
     );
   }
+}
+
+List<TicketPhoto> _parseTicketPhotos(dynamic value) {
+  if (value is! List) return const [];
+  return value
+      .whereType<Map<String, dynamic>>()
+      .map(TicketPhoto.fromJson)
+      .where((photo) => photo.hasImage)
+      .toList(growable: false);
 }

@@ -2,6 +2,8 @@ import '../../domain/entities/feed_item.dart';
 import '../../domain/entities/feed_page.dart';
 import '../../domain/entities/home_highlights.dart';
 import '../../../events/domain/entities/event_list_item.dart';
+import 'package:conectaparana/core/media/media_photo.dart';
+import 'package:conectaparana/core/media/media_url_resolver.dart';
 
 class FeedResponseModel {
   final Map<String, dynamic>? mainNews;
@@ -56,12 +58,17 @@ class FeedResponseModel {
         'Prefeitura Municipal';
     final timeLabel = _relativeTimeLabel(createdAt);
 
+    final photos = MediaPhoto.listFromJson(data['photos']);
     return FeedItem(
       id: data['id'] as String,
       type: FeedItemType.comunicado,
       title: data['title'] as String? ?? '',
       subtitle: timeLabel.isEmpty ? author : '$author · $timeLabel',
-      imageUrl: data['thumbUrl'] as String? ?? data['imageUrl'] as String?,
+      imageUrl:
+          photos.firstOrNull?.displayUrl ??
+          MediaUrlResolver.resolve(data['thumbUrl']) ??
+          MediaUrlResolver.resolve(data['imageUrl']),
+      photos: photos,
       category: data['category'] as String?,
       date: createdAt,
     );
@@ -81,6 +88,7 @@ class FeedResponseModel {
       authorName: 'Prefeitura',
       timeLabel: _relativeTimeLabel(updatedAt),
       detailRoute: '/home/news/$id',
+      photos: MediaPhoto.listFromJson(data['photos']),
     );
   }
 
@@ -110,6 +118,7 @@ class FeedResponseModel {
           data['isSaved'] as bool? ??
           data['savedByMe'] as bool? ??
           false,
+      photos: MediaPhoto.listFromJson(data['photos']),
       detailRoute: '/events/$id',
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:conectaparana/shared/widgets/media/app_network_image.dart';
 
 import '../../domain/entities/event_list_item.dart';
 
@@ -16,6 +17,7 @@ class EventFeaturedBanner extends StatelessWidget {
 
     final day = event.date.day.toString().padLeft(2, '0');
     final month = _monthAbbrev(event.date.month);
+    final photoUrl = event.photos.firstOrNull?.displayUrl;
 
     return Semantics(
       label: event.title,
@@ -24,7 +26,6 @@ class EventFeaturedBanner extends StatelessWidget {
         onTap: onTap,
         child: Container(
           height: 220,
-          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             gradient: LinearGradient(
@@ -33,79 +34,100 @@ class EventFeaturedBanner extends StatelessWidget {
               colors: colors,
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              Row(
-                children: [
-                  const _Tag(label: 'EM DESTAQUE'),
-                  if (event.isFree) ...[
-                    const SizedBox(width: 8),
-                    const _Tag(label: 'Grátis'),
-                  ],
-                ],
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
+              if (photoUrl != null)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: AppNetworkImage(
+                    imageUrl: photoUrl,
+                    fallback: const SizedBox.shrink(),
+                  ),
                 ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8A33D),
-                  borderRadius: BorderRadius.circular(20),
+              if (photoUrl != null)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: const ColoredBox(color: Color(0x52000000)),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
-                      Icons.calendar_today,
-                      size: 14,
-                      color: Colors.white,
+                    Row(
+                      children: [
+                        const _Tag(label: 'EM DESTAQUE'),
+                        if (event.isFree) ...[
+                          const SizedBox(width: 8),
+                          const _Tag(label: 'Grátis'),
+                        ],
+                      ],
                     ),
-                    const SizedBox(width: 6),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8A33D),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.calendar_today,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '$day $month · ${event.time}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     Text(
-                      '$day $month · ${event.time}',
+                      event.title,
                       style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
                         color: Colors.white,
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on_outlined,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            event.location,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            softWrap: false,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.white.withAlpha(220),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                event.title,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.location_on_outlined,
-                    size: 16,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      event.location,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      softWrap: false,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white.withAlpha(220),
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ],
           ),

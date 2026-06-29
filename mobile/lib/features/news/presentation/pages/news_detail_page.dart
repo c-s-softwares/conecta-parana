@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:conectaparana/core/formatters/app_date_formatter.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../engagement/data/engagement_service.dart';
@@ -146,7 +147,11 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                           const Spacer(),
                           if (news.createdAt != null)
                             Text(
-                              news.createdAt!,
+                              news.createdDate == null
+                                  ? news.createdAt!
+                                  : AppDateFormatter.publication(
+                                      news.createdDate!,
+                                    ),
                               style: TextStyle(
                                 color: Colors.grey.shade600,
                                 fontSize: 12,
@@ -194,10 +199,10 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                               ],
                             ),
                           ),
-                          OutlinedButton(
-                            onPressed: () {},
-                            child: const Text('Seguir'),
-                          ),
+                          // OutlinedButton(
+                          //   onPressed: () {},
+                          //   child: const Text('Seguir'),
+                          // ),
                         ],
                       ),
 
