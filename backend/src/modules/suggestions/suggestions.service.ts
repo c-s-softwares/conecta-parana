@@ -16,6 +16,11 @@ import { RespondSuggestionDto } from './dto/request/respond-suggestion.dto';
 import { SuggestionResponseDto } from './dto/response/suggestion-response.dto';
 import { NotificationService } from '../notifications/notifications.service';
 
+const SUGGESTION_INCLUDE = {
+  user: { select: { id: true, name: true } },
+  respondedBy: { select: { id: true, name: true } },
+} as const;
+
 @Injectable()
 export class SuggestionsService {
   constructor(
@@ -33,6 +38,8 @@ export class SuggestionsService {
     response: string | null;
     respondedAt: Date | null;
     respondedById: string | null;
+    user?: { id: string; name: string } | null;
+    respondedBy?: { id: string; name: string } | null;
   }): SuggestionResponseDto {
     return {
       id: e.id,
@@ -41,9 +48,11 @@ export class SuggestionsService {
       status: e.status,
       userId: e.userId,
       cityId: e.cityId,
+      user: e.user ?? null,
       response: e.response,
       respondedAt: e.respondedAt,
       respondedById: e.respondedById,
+      respondedBy: e.respondedBy ?? null,
     };
   }
 
@@ -82,6 +91,7 @@ export class SuggestionsService {
         userId: user.id,
         cityId: user.cityId,
       },
+      include: SUGGESTION_INCLUDE,
     });
 
     return this.toResponse(suggestion);
@@ -91,6 +101,7 @@ export class SuggestionsService {
     const items = await this.prisma.client.suggestion.findMany({
       where: { userId },
       orderBy: { id: 'desc' },
+      include: SUGGESTION_INCLUDE,
     });
     return items.map((item) => this.toResponse(item));
   }
@@ -101,6 +112,7 @@ export class SuggestionsService {
     const items = await this.prisma.client.suggestion.findMany({
       where: adminCityId ? { cityId: adminCityId } : {},
       orderBy: { id: 'desc' },
+      include: SUGGESTION_INCLUDE,
     });
     return items.map((item) => this.toResponse(item));
   }
@@ -111,6 +123,7 @@ export class SuggestionsService {
   ): Promise<SuggestionResponseDto> {
     const suggestion = await this.prisma.client.suggestion.findUnique({
       where: { id },
+      include: SUGGESTION_INCLUDE,
     });
 
     if (!suggestion) {
@@ -132,6 +145,7 @@ export class SuggestionsService {
         const updated = await this.prisma.client.suggestion.update({
           where: { id },
           data: { status: 'lida' },
+          include: SUGGESTION_INCLUDE,
         });
         return this.toResponse(updated);
       }
@@ -182,6 +196,7 @@ export class SuggestionsService {
         respondedById: adminId,
         status: 'respondida',
       },
+      include: SUGGESTION_INCLUDE,
     });
 
     // Envia notificação automática ao cidadão
@@ -229,6 +244,7 @@ export class SuggestionsService {
         respondedById: adminId,
         status: 'concluída',
       },
+      include: SUGGESTION_INCLUDE,
     });
 
     // Envia notificação automática ao cidadão
@@ -281,6 +297,7 @@ export class SuggestionsService {
         respondedById: adminId,
         status: 'arquivada',
       },
+      include: SUGGESTION_INCLUDE,
     });
 
     // Envia notificação automática ao cidadão

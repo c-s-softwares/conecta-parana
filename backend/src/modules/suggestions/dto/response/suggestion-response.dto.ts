@@ -1,4 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { UserSummaryDto } from '../../../../common/dto/response/user-summary.dto';
 
 export class SuggestionResponseDto {
   @ApiProperty({ example: 'sgt_01HZX3Y4Q9F8TAB1C2DKEYH9MN' })
@@ -22,6 +23,9 @@ export class SuggestionResponseDto {
   @ApiProperty({ example: 'cit_PAIC' })
   cityId!: string;
 
+  @ApiPropertyOptional({ type: () => UserSummaryDto, nullable: true })
+  user?: UserSummaryDto | null;
+
   @ApiProperty({
     example: 'Obrigado, vamos avaliar.',
     required: false,
@@ -38,4 +42,7 @@ export class SuggestionResponseDto {
 
   @ApiProperty({ example: 'usr_admin123', required: false, nullable: true })
   respondedById?: string | null;
+
+  @ApiPropertyOptional({ type: () => UserSummaryDto, nullable: true })
+  respondedBy?: UserSummaryDto | null;
 }
