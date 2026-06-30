@@ -10,6 +10,7 @@ import { EntityList } from '../../shared/components/entity-list/entity-list';
 import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
 import { NewsApi } from './news.api';
 import { ToastService } from '../../core/services/toast.service';
+import { AppError } from '../../core/interceptors/app-error';
 import { NewsForm, NewsItem } from './news.model';
 import { UpperCasePipe } from '@angular/common';
 
@@ -133,7 +134,7 @@ export class NewsPage extends CrudPage<NewsForm> implements OnInit {
         this.loadNews();
         this.deletingItem.set(null);
       },
-      error: (err: any) => {
+      error: (err: AppError) => {
         this.deletingItem.set(null);
         if (err.status === 404) {
           this.toast.show('error', 'Notícia não encontrada. Pode ter sido excluída por outro admin.');
@@ -186,7 +187,13 @@ export class NewsPage extends CrudPage<NewsForm> implements OnInit {
     this.linkTypeError = '';
 
     const raw = this.form.getRawValue();
-    const { externalUrl, ...dto } = raw;
+    const dto = {
+      title: raw.title,
+      description: raw.description,
+      type: raw.type,
+      linkType: raw.linkType,
+      isActive: raw.isActive,
+    };
 
     const id = this.editingId() as string;
     const request$ = id
@@ -199,9 +206,9 @@ export class NewsPage extends CrudPage<NewsForm> implements OnInit {
         this.loadNews();
         this.closeForm();
       },
-      error: (err: any) => {
+      error: (err: AppError) => {
         if (err.status === 400) {
-          const details = err.details as any;
+          const details = err.details as { code?: string; message?: string[] } | null | undefined;
           const code = details?.code;
           if (code === 'invalid_type') {
             this.typeError = 'Tipo de notícia inválido.';

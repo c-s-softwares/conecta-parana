@@ -7,6 +7,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { AppError } from '../../core/interceptors/app-error';
+import { NewsItem } from './news.model';
 
 describe('NewsPage', () => {
   let component: NewsPage;
@@ -47,7 +48,7 @@ describe('NewsPage', () => {
   });
 
   it('should create news with linkType = interno', () => {
-    newsApiMock.create.mockReturnValue(of({ id: 'nws_1' } as any));
+    newsApiMock.create.mockReturnValue(of({ id: 'nws_1' } as unknown as NewsItem));
 
     component.openForm();
     component['form'].patchValue({
@@ -71,7 +72,7 @@ describe('NewsPage', () => {
   });
 
   it('should create news with linkType = externo and verify externalUrl is NOT sent in payload', () => {
-    newsApiMock.create.mockReturnValue(of({ id: 'nws_2' } as any));
+    newsApiMock.create.mockReturnValue(of({ id: 'nws_2' } as unknown as NewsItem));
 
     component.openForm();
     component['form'].patchValue({
