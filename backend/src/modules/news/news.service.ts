@@ -15,6 +15,8 @@ import { apiError } from '../../common/errors/api-error';
 import { SHARED_ERRORS } from '../../common/errors/shared-errors';
 
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
+
+import { UploadsService } from '../uploads/uploads.service';
 import { ENTITY_TYPES } from '../uploads/constants/entity-type';
 
 import { NEWS_ERRORS } from './news.errors';
@@ -33,11 +35,14 @@ export class NewsService extends BaseCrudService<
   CreateNewsDto,
   UpdateNewsDto
 > {
-  constructor(prisma: PrismaService) {
+  constructor(
+    prisma: PrismaService,
+    private readonly uploads: UploadsService,
+  ) {
     super(prisma, {
       tablePrefix: TABLE_PREFIX.NEWS,
       entityName: 'Notícia',
-      softDelete: false,
+      softDelete: true,
       notFoundErrorKey: NEWS_ERRORS.NEWS_NOT_FOUND,
     });
   }
@@ -118,12 +123,11 @@ export class NewsService extends BaseCrudService<
     return {
       ...(query.cityId !== undefined && { cityId: query.cityId }),
       ...(query.type !== undefined && { type: query.type }),
-      isActive: query.isActive !== undefined ? query.isActive === 'true' : true,
+      ...(query.linkType !== undefined && { linkType: query.linkType }),
+      ...(query.isActive !== undefined && {
+        isActive: query.isActive === 'true',
+      }),
     };
-  }
-
-  protected override buildBaseWhere(): Record<string, unknown> {
-    return { isActive: true };
   }
 
   override async findAll(query: QueryNewsDto) {
@@ -185,10 +189,14 @@ export class NewsService extends BaseCrudService<
 
     this.validateAdminCityScope(current.cityId, currentUser);
 
+    await this.uploads.removeAllForEntity(ENTITY_TYPES.NEWS, id);
+
     await this.prisma.client.news.update({
       where: { id },
-      data: { isActive: false },
+      data: { deletedAt: new Date() },
     });
+
+    await this.afterDelete(id);
   }
 
   /**
@@ -196,13 +204,16 @@ export class NewsService extends BaseCrudService<
    * de engajamento por usuário logado. Quando userId não é informado (anônimo),
    * liked/saved são false e não há query extra. Quando informado, dispara 2
    * queries adicionais (like + save) em paralelo.
+   *
+   * Filtra por deletedAt: null (não por isActive) para que o admin consiga
+   * carregar o detalhe de notícias inativas ao editar.
    */
   async findOneDetail(
     id: string,
     userId?: string,
   ): Promise<NewsDetailResponse> {
     const news = await this.prisma.client.news.findFirst({
-      where: { id, isActive: true },
+      where: { id, deletedAt: null },
       include: {
         photos: true,
         _count: { select: { likes: true } },

@@ -1,0 +1,188 @@
+<app-modal-dialog
+  [visible]="open()"
+  [title]="isEditing() ? 'Editar notícia' : 'Nova notícia'"
+  [eyebrow]="isEditing() ? 'Edição' : 'Cadastro'"
+  [footer]="true"
+  size="m"
+  (cancelled)="onCancel()"
+>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+    <app-form-field
+      label="Título"
+      fieldId="news-title"
+      [required]="true"
+      [showError]="isInvalid('title')"
+      [errorMessage]="errorFor('title')"
+    >
+      <input
+        id="news-title"
+        class="input"
+        type="text"
+        formControlName="title"
+        placeholder="Ex: Vacinação contra gripe"
+      />
+    </app-form-field>
+
+    <app-form-field
+      label="Descrição"
+      fieldId="news-description"
+      [required]="true"
+      [showError]="isInvalid('description')"
+      [errorMessage]="errorFor('description')"
+    >
+      <textarea
+        id="news-description"
+        class="input"
+        rows="4"
+        style="height: 104px; resize: none"
+        formControlName="description"
+        placeholder="Descreva a notícia..."
+      ></textarea>
+    </app-form-field>
+
+    <div class="grid grid-cols-2 gap-4">
+      <app-form-field
+        label="Tipo"
+        fieldId="news-type"
+        [required]="true"
+        [showError]="isInvalid('type')"
+        [errorMessage]="errorFor('type')"
+      >
+        <select id="news-type" class="input" formControlName="type">
+          <option value="saude">Saúde</option>
+          <option value="educacao">Educação</option>
+          <option value="infra">Infraestrutura</option>
+          <option value="geral">Geral</option>
+          <option value="outros">Outros</option>
+        </select>
+      </app-form-field>
+
+      <app-form-field
+        label="Tipo de link"
+        fieldId="news-link-type"
+        [required]="true"
+        [showError]="isInvalid('linkType')"
+        [errorMessage]="errorFor('linkType')"
+      >
+        <select id="news-link-type" class="input" formControlName="linkType">
+          <option value="interno">Interno</option>
+          <option value="externo">Externo</option>
+        </select>
+      </app-form-field>
+    </div>
+
+    @if (form.get('linkType')?.value === 'externo') {
+      <app-form-field
+        label="URL Externa"
+        fieldId="news-link-url"
+        [required]="true"
+        [showError]="isInvalid('linkUrl')"
+        [errorMessage]="errorFor('linkUrl')"
+      >
+        <input
+          id="news-link-url"
+          class="input"
+          type="url"
+          formControlName="linkUrl"
+          placeholder="https://exemplo.com/noticia"
+        />
+      </app-form-field>
+    }
+
+    <label class="flex items-center gap-2 text-sm text-[var(--n-900)]">
+      <input type="checkbox" formControlName="isActive" />
+      Notícia ativa (visível no app)
+    </label>
+
+    <div class="flex flex-col gap-2">
+      <span class="field-label">Fotos</span>
+
+      @if (totalPhotos() > 0) {
+        <div class="grid grid-cols-3 gap-3 sm:grid-cols-4">
+          @for (photo of visiblePhotos(); track photo.id) {
+            <div
+              class="relative aspect-square overflow-hidden rounded-lg border border-[var(--border)]"
+            >
+              @if (photo.thumbUrl) {
+                <img
+                  [src]="photo.thumbUrl"
+                  alt=""
+                  class="h-full w-full object-cover"
+                />
+              }
+              <button
+                type="button"
+                class="btn-icon danger absolute right-1 top-1"
+                style="width: 28px; height: 28px"
+                (click)="removeExisting(photo.id)"
+                aria-label="Remover foto"
+              >
+                <ng-icon name="heroTrash" size="14" />
+              </button>
+            </div>
+          }
+          @for (item of newFiles(); track item.previewUrl; let i = $index) {
+            <div
+              class="relative aspect-square overflow-hidden rounded-lg border border-[var(--border)]"
+            >
+              <img
+                [src]="item.previewUrl"
+                alt=""
+                class="h-full w-full object-cover"
+              />
+              <button
+                type="button"
+                class="btn-icon danger absolute right-1 top-1 bg-white/90"
+                style="width: 28px; height: 28px"
+                (click)="removeNew(i)"
+                aria-label="Remover foto"
+              >
+                <ng-icon name="heroTrash" size="14" />
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <button
+        type="button"
+        class="dropzone"
+        [disabled]="totalPhotos() >= maxPhotos"
+        (click)="fileInput.click()"
+      >
+        <span
+          class="ic-bubble bubble-brand"
+          style="width: 44px; height: 44px; margin-bottom: 0"
+        >
+          <ng-icon name="heroCloudArrowUp" size="20" aria-hidden="true" />
+        </span>
+        <span class="dropzone-title">Clique para adicionar fotos</span>
+        <span class="dropzone-hint">
+          JPEG, PNG ou WebP até 5MB · {{ totalPhotos() }}/{{ maxPhotos }}
+        </span>
+      </button>
+      <input
+        #fileInput
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        class="hidden"
+        (change)="onFilesSelected($event)"
+      />
+    </div>
+  </form>
+
+  <div modal-footer class="flex justify-end gap-2">
+    <button type="button" class="btn btn-ghost" (click)="onCancel()">
+      Cancelar
+    </button>
+    <button
+      type="button"
+      class="btn btn-primary"
+      [disabled]="saving()"
+      (click)="onSubmit()"
+    >
+      {{ isEditing() ? 'Salvar alterações' : 'Criar notícia' }}
+    </button>
+  </div>
+</app-modal-dialog>

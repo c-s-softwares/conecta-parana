@@ -240,8 +240,9 @@ model News {
   cityId      String  @map("city_id")
   userId      String? @map("user_id")
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
 
   city   City  @relation(fields: [cityId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   user   User? @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)

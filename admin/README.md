@@ -398,11 +398,3 @@ O painel possui 3 páginas de erro dedicadas e um banner de conectividade:
 | — | Browser offline (`navigator.onLine === false`) | Banner fixo no topo do Shell: "Sem conexão com o servidor". Some automaticamente ao reconectar. |
 
 > **Nota:** O `error.interceptor` continua exibindo toasts para erros HTTP (403, 5xx, offline). As páginas dedicadas cobrem apenas navegação direta (URL colada, acesso restrito, etc.).
-
-## Comunicados
-
-O CRUD de Comunicados está disponível na rota `/comunicados` e consome o endpoint `/communicates`.
-
-No MVP, o formulário de comunicados não possui upload de fotos.
-
-O backend não possui lock otimista para comunicados. Em edições concorrentes, vale o comportamento last-write-wins: a última alteração salva sobrescreve as anteriores, sem aviso de conflito.

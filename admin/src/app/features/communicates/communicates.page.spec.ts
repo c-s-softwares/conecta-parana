@@ -181,4 +181,117 @@ describe('CommunicatesPage', () => {
       filters: { isActive: false },
     });
   });
+
+  it('deve exibir toast de erro quando o carregamento falha', () => {
+    api.list.mockReturnValue(throwError(() => new Error('network')));
+    component['load']();
+    expect(toast.show).toHaveBeenCalledWith('error', 'Não foi possível carregar os comunicados.');
+  });
+
+  it('deve limpar filtros e recarregar via clearFilters', () => {
+    component['isActive'].set('true');
+    component['search'].set('texto de busca');
+
+    component['clearFilters']();
+
+    expect(component['isActive']()).toBe('');
+    expect(component['search']()).toBe('');
+    expect(router.navigate).toHaveBeenCalledWith([], {
+      relativeTo: activatedRoute,
+      queryParams: { isActive: null },
+      queryParamsHandling: 'merge',
+    });
+    expect(api.list).toHaveBeenCalledTimes(2);
+  });
+
+  it('não avança página quando não há próxima (total <= pageSize)', () => {
+    const callsBefore = api.list.mock.calls.length;
+    component['nextPage']();
+    expect(api.list.mock.calls.length).toBe(callsBefore);
+  });
+
+  it('avança para a próxima página quando disponível', () => {
+    component['total'].set(25);
+    component['nextPage']();
+    expect(api.list).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }));
+  });
+
+  it('não retrocede página quando já está na primeira', () => {
+    const callsBefore = api.list.mock.calls.length;
+    component['prevPage']();
+    expect(api.list.mock.calls.length).toBe(callsBefore);
+  });
+
+  it('deve excluir comunicado quando usuário confirma', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    component['delete'](items[0]);
+    expect(api.delete).toHaveBeenCalledWith('com_1');
+    expect(toast.show).toHaveBeenCalledWith('success', 'Comunicado excluído com sucesso.');
+  });
+
+  it('não exclui comunicado quando usuário cancela na confirmação', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+    component['delete'](items[0]);
+    expect(api.delete).not.toHaveBeenCalled();
+  });
+
+  it('não fecha o modal enquanto está salvando', () => {
+    component['openCreate']();
+    component['saving'].set(true);
+    component['closeModal']();
+    expect(component['modalOpen']()).toBe(true);
+  });
+
+  it('exibe toast específico para city_required', () => {
+    api.create.mockReturnValue(
+      throwError(() => ({ error: { code: 'city_required' } })),
+    );
+    component['openCreate']();
+    component['updateForm']('title', 'Título válido');
+    component['updateForm']('description', 'Descrição válida do comunicado');
+    component['save']();
+    expect(toast.show).toHaveBeenCalledWith(
+      'error',
+      'Super Admin precisa informar uma cidade. Use um admin municipal para criar comunicados.',
+    );
+  });
+
+  it('exibe toast e fecha modal para city_scope_denied', () => {
+    api.create.mockReturnValue(
+      throwError(() => ({ error: { code: 'city_scope_denied' } })),
+    );
+    component['openCreate']();
+    component['updateForm']('title', 'Título válido');
+    component['updateForm']('description', 'Descrição válida do comunicado');
+    component['save']();
+    expect(toast.show).toHaveBeenCalledWith('error', 'Você só pode atuar na sua cidade.');
+    expect(component['modalOpen']()).toBe(false);
+  });
+
+  it('exibe toast genérico para código de erro desconhecido', () => {
+    api.create.mockReturnValue(
+      throwError(() => ({ error: { code: 'unknown_error' } })),
+    );
+    component['openCreate']();
+    component['updateForm']('title', 'Título válido');
+    component['updateForm']('description', 'Descrição válida do comunicado');
+    component['save']();
+    expect(toast.show).toHaveBeenCalledWith('error', 'Não foi possível salvar o comunicado.');
+  });
+
+  it('não cria comunicado se o título estiver vazio', () => {
+    component['openCreate']();
+    component['save']();
+    expect(api.create).not.toHaveBeenCalled();
+  });
+
+  it('titleError retorna mensagem quando título tem menos de 5 caracteres', () => {
+    component['updateForm']('title', 'ab');
+    expect(component['titleError']()).toBe('O título deve ter pelo menos 5 caracteres.');
+  });
+
+  it('descriptionError retorna mensagem quando descrição tem menos de 10 caracteres', () => {
+    component['updateForm']('description', 'curto');
+    expect(component['descriptionError']()).toBe('A descrição deve ter pelo menos 10 caracteres.');
+  });
 });
