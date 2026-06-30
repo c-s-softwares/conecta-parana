@@ -104,6 +104,27 @@ export class DashboardApi {
 - **ESLint** (`angular-eslint`) + **Prettier** para linting e formatação
 - Environments Angular para staging e produção (`fileReplacements`)
 
+## Funcionalidades Especializadas
+
+### Sugestões (`/sugestoes`)
+Módulo para gerenciamento de ideias e propostas enviadas pelos cidadãos da cidade do administrador logado.
+
+- **Endpoint API**: `GET /suggestions` (retorna array simples não paginado `SuggestionResponseDto[]`).
+- **Transição de Leitura Automática**: Quando o administrador visualiza os detalhes de uma sugestão no status `enviada` (`GET /suggestions/:id`), o status muda automaticamente para `lida` no backend.
+- **Transições de Status válidas**:
+  - `enviada` ou `lida` $\rightarrow$ pode ser respondida (`PUT /suggestions/:id/respond`), concluída (`PUT /suggestions/:id/conclude`) ou arquivada (`PUT /suggestions/:id/archive`).
+  - `respondida` $\rightarrow$ pode ser concluída (`PUT /suggestions/:id/conclude`) ou arquivada (`PUT /suggestions/:id/archive`).
+  - `concluída` $\rightarrow$ pode ser arquivada (`PUT /suggestions/:id/archive`).
+  - `arquivada` $\rightarrow$ terminal, nenhuma ação disponível.
+- **Validações**:
+  - O campo de resposta (`response`) é obrigatório para as ações de **responder** e **concluir** (o botão ficará desabilitado caso esteja vazio).
+  - O campo de resposta é opcional para a ação de **arquivar**.
+- **Erros Tratados**:
+  - `400 invalid_status_transition`: Toast "Esta sugestão não pode mais ser alterada." e recarrega a lista.
+  - `403 not_owner_or_admin`: Toast "Você não tem permissão para esta sugestão." e redireciona para a lista.
+  - `404 suggestion_not_found`: Toast "Sugestão não encontrada." e recarrega a lista.
+
+
 ## Componentes Compartilhados (Core)
 
 Os componentes reutilizáveis ficam em `src/app/shared/components/`, um por pasta (`*.ts` + `*.html`). Todos são standalone e usam signals - para usar, basta importar a classe no `imports` do componente consumidor.
@@ -377,13 +398,3 @@ O painel possui 3 páginas de erro dedicadas e um banner de conectividade:
 | — | Browser offline (`navigator.onLine === false`) | Banner fixo no topo do Shell: "Sem conexão com o servidor". Some automaticamente ao reconectar. |
 
 > **Nota:** O `error.interceptor` continua exibindo toasts para erros HTTP (403, 5xx, offline). As páginas dedicadas cobrem apenas navegação direta (URL colada, acesso restrito, etc.).
-
-## Feature: Notícias (MVP)
-
-No MVP da feature de notícias, temos o seguinte alinhamento com o backend:
-
-- **Valores válidos para `type`**: `saude`, `educacao`, `infra`, `geral`, `outros`.
-- **Valores válidos para `linkType`**: `interno`, `externo`.
-- **Campo `externalUrl` (UI-only)**: Quando `linkType` for `externo`, a interface exibe o campo `externalUrl` acompanhado de um aviso (*"Em breve - este link ainda não será publicado."*). Como a persistência de links externos (`linkUrl`) ainda não está implementada no schema Prisma do backend, este valor **não é enviado no payload** das requisições de criação e edição da API.
-
-

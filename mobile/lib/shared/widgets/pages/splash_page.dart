@@ -2,16 +2,13 @@ import 'dart:async';
 import 'package:conectaparana/core/router/navigator_key.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:conectaparana/core/auth/auth_service.dart';
 
 class SplashPage extends StatefulWidget {
   final Future<Map<String, bool>> Function()? mockAuthCheck;
   final void Function(String)? onNavigate;
 
-  const SplashPage({
-    super.key,
-    this.mockAuthCheck,
-    this.onNavigate,
-  });
+  const SplashPage({super.key, this.mockAuthCheck, this.onNavigate});
 
   @override
   State<SplashPage> createState() => _SplashPageState();
@@ -68,9 +65,15 @@ class _SplashPageState extends State<SplashPage> {
 
       if (widget.mockAuthCheck != null) {
         authData = await widget.mockAuthCheck!();
-      }
+      } else {
+        final user = AuthService.instance.currentUser.value;
+        final cityId = user?.cityId.trim();
 
-      if (!mounted) return;
+        authData = {
+          'isLogged': user != null,
+          'hasCity': cityId != null && cityId.isNotEmpty && cityId != 'null',
+        };
+      }
 
       _timerCarregando?.cancel();
       _timerTimeout?.cancel();
@@ -118,17 +121,29 @@ class _SplashPageState extends State<SplashPage> {
               'assets/images/paranalogo.png',
               width: 150,
               errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.image_not_supported, size: 50, color: Colors.grey);
+                return const Icon(
+                  Icons.image_not_supported,
+                  size: 50,
+                  color: Colors.grey,
+                );
               },
             ),
             if (_erroFatal) ...[
               const SizedBox(height: 24),
-              const Icon(Icons.bug_report_rounded, color: Colors.orange, size: 48),
+              const Icon(
+                Icons.bug_report_rounded,
+                color: Colors.orange,
+                size: 48,
+              ),
               const SizedBox(height: 16),
               const Text(
                 'Ocorreu um erro inesperado ao inicializar o aplicativo.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -143,7 +158,11 @@ class _SplashPageState extends State<SplashPage> {
               const Text(
                 'Não foi possível conectar ao servidor.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -159,7 +178,10 @@ class _SplashPageState extends State<SplashPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF006733),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                 ),
               ),
             ] else if (_mostrarCarregando) ...[
@@ -169,9 +191,7 @@ class _SplashPageState extends State<SplashPage> {
                 style: TextStyle(color: Colors.grey, fontSize: 16),
               ),
               const SizedBox(height: 16),
-              const CircularProgressIndicator(
-                color: Color(0xFF006733),
-              ),
+              const CircularProgressIndicator(color: Color(0xFF006733)),
             ],
           ],
         ),

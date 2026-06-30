@@ -23,7 +23,8 @@ import { Role } from '@prisma/client';
 import { ENTITY_TYPES } from '../uploads/constants/entity-type';
 
 type AuthUser = {
-  id: string;
+  sub?: string;
+  id?: string;
   cityId?: string | null;
   role: Role;
 };
@@ -121,7 +122,7 @@ export class CommunicateService extends BaseCrudService<
         description: dto.description,
         isActive: dto.isActive ?? true,
         cityId,
-        userId: currentUser.id,
+        userId: this.resolveUserId(currentUser),
       },
     });
 
@@ -297,5 +298,15 @@ export class CommunicateService extends BaseCrudService<
     }
 
     return user;
+  }
+
+  private resolveUserId(user: AuthUser): string {
+    const userId = user.id ?? user.sub;
+
+    if (!userId) {
+      throw new UnauthorizedException(apiError(SHARED_ERRORS.UNAUTHENTICATED));
+    }
+
+    return userId;
   }
 }

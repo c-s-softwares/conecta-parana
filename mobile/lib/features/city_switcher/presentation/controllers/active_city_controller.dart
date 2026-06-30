@@ -1,7 +1,6 @@
 import 'dart:async';
-
 import 'package:conectaparana/core/network/api_client.dart';
-import 'package:conectaparana/features/register/data/models/services/city_model.dart';
+import 'package:conectaparana/features/register/data/models/city_model.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -37,7 +36,7 @@ class ActiveCityController extends ValueNotifier<City?> {
       return;
     }
 
-    value = City(id: id, name: name);
+    value = City(id: id, name: name, state: '');
   }
 
   Future<void> setActiveCity(City city) async {
@@ -63,7 +62,7 @@ class ActiveCityController extends ValueNotifier<City?> {
 
     if (!hasCity) return;
 
-    final city = City(id: cityId, name: cityName);
+    final city = City(id: cityId, name: cityName, state: '');
     value = city;
 
     await _storage.write(key: _cityIdKey, value: city.id);

@@ -1,10 +1,10 @@
+import 'package:conectaparana/features/register/data/models/city_model.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:conectaparana/features/city_switcher/presentation/controllers/active_city_controller.dart';
-import 'package:conectaparana/features/register/data/models/services/city_model.dart';
 
 class _MockDio extends Mock implements Dio {}
 
@@ -14,9 +14,9 @@ void main() {
   late _MockDio dio;
   late _MockStorage storage;
 
-  const cityA = City(id: 'maringa', name: 'Maringa');
-  const cityB = City(id: 'curitiba', name: 'Curitiba');
-  const cityC = City(id: 'sarandi', name: 'Sarandi');
+  const cityA = City(id: 'maringa', name: 'Maringa', state: '');
+  const cityB = City(id: 'curitiba', name: 'Curitiba', state: '');
+  const cityC = City(id: 'sarandi', name: 'Sarandi', state: '');
 
   setUpAll(() => registerFallbackValue(Options()));
 

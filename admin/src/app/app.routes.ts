@@ -34,20 +34,27 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.routes').then((m) => m.DASHBOARD_ROUTES),
       },
       {
+        path: 'eventos',
+        loadComponent: () => import('./features/events/events.page').then((m) => m.EventsPage),
+        data: { title: 'Eventos' },
+      },
+      {
+        path: 'comunicados',
+        loadChildren: () =>
+          import('./features/communicates/communicates.routes').then((m) => m.COMMUNICATES_ROUTES),
+      },
+      {
         path: 'noticias',
         loadChildren: () =>
           import('./features/news/news.routes').then((m) => m.NEWS_ROUTES),
       },
-      {
-        path: 'eventos',
-        loadComponent: () =>
-          import('./features/events/events.page').then((m) => m.EventsPage),
-        data: { title: 'Eventos' },
-      },
-      { path: 'comunicados', loadComponent: loadPlaceholder, data: { title: 'Comunicados' } },
       { path: 'locais', loadComponent: loadPlaceholder, data: { title: 'Locais' } },
       { path: 'notificacoes', loadComponent: loadPlaceholder, data: { title: 'Notificações' } },
-      { path: 'sugestoes', loadComponent: loadPlaceholder, data: { title: 'Sugestões' } },
+      {
+        path: 'sugestoes',
+        loadChildren: () =>
+          import('./features/suggestions/suggestions.routes').then((m) => m.SUGGESTIONS_ROUTES),
+      },
       {
         path: 'cidades',
         canActivate: [superAdminGuard],
@@ -69,4 +76,3 @@ export const routes: Routes = [
   },
   { path: '**', redirectTo: '404' },
 ];
-

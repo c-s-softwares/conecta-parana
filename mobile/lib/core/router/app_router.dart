@@ -11,10 +11,10 @@ import 'package:conectaparana/core/shell/main_shell.dart';
 import 'package:conectaparana/dev/fakes/fake_event_repository.dart';
 import 'package:conectaparana/dev/fakes/fake_ticket_repository.dart';
 import 'package:conectaparana/features/events/presentation/pages/events_page.dart';
-import 'package:conectaparana/features/onboarding/presentation/pages/city_selector_screen.dart';
 import 'package:conectaparana/features/events/presentation/pages/event_detail_page.dart';
 import 'package:conectaparana/features/home/presentation/pages/home_page.dart';
 import 'package:conectaparana/features/map/presentation/pages/map_page.dart';
+import 'package:conectaparana/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:conectaparana/features/profile/presentation/pages/profile_page.dart';
 import 'package:conectaparana/features/tickets/presentation/pages/ticket_detail_page.dart';
 import 'package:conectaparana/features/tickets/presentation/pages/tickets_page.dart';
@@ -164,7 +164,8 @@ class AppRouter {
         ),
         GoRoute(
           path: AppRoutes.onboarding,
-          builder: (context, state) => const CitySelectorScreen(),
+
+          builder: (context, state) => const OnboardingScreen(),
         ),
         GoRoute(
           path: AppRoutes.styleguide,
@@ -326,7 +327,10 @@ class AppRouter {
   }
 
   String? _redirect(BuildContext context, GoRouterState state) {
-    final isLoggedIn = AuthService.instance.currentUser.value != null;
+    final user = AuthService.instance.currentUser.value;
+    final isLoggedIn = user != null;
+    final cityId = user?.cityId.trim();
+    final hasCity = cityId != null && cityId.isNotEmpty && cityId != 'null';
     final location = state.matchedLocation;
 
     const publicRoutes = {
@@ -334,12 +338,20 @@ class AppRouter {
       AppRoutes.login,
       AppRoutes.register,
       AppRoutes.forgotPassword,
+      AppRoutes.styleguide,
     };
+    
     final isPublic = publicRoutes.contains(location);
 
     if (isLoggedIn && isPublic) {
       final pending = consumePendingDeepLink();
-      return pending ?? AppRoutes.home;
+      if (pending != null) return pending;
+
+      if (location == AppRoutes.register) {
+        return AppRoutes.onboarding;
+      }
+
+      return hasCity ? AppRoutes.home : AppRoutes.onboarding;
     }
 
     if (!isLoggedIn && !isPublic) {
