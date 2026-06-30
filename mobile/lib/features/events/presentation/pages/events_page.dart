@@ -3,7 +3,7 @@ import 'package:conectaparana/core/router/app_router.dart';
 import 'package:conectaparana/features/city_switcher/presentation/controllers/active_city_provider.dart';
 import 'package:conectaparana/features/events/data/repository/event_repository.dart';
 import 'package:conectaparana/features/events/domain/entities/event_list_item.dart';
-import 'package:conectaparana/features/register/data/models/services/city_model.dart';
+import 'package:conectaparana/features/register/data/models/city_model.dart';
 import 'package:conectaparana/features/events/presentation/widgets/event_featured_banner.dart';
 import 'package:conectaparana/features/events/presentation/widgets/event_list_card.dart';
 import 'package:conectaparana/features/events/presentation/widgets/event_week_card.dart';
@@ -62,8 +62,7 @@ class _EventsPageState extends State<EventsPage> {
   void initState() {
     super.initState();
     _repository = widget.repository ?? RemoteEventRepository();
-    _activeCityListenable =
-        widget.activeCityListenable ?? activeCityController;
+    _activeCityListenable = widget.activeCityListenable ?? activeCityController;
     _activeCityListenable.addListener(_onActiveCityChanged);
     _scrollController.addListener(_onScroll);
     _loadEvents();
@@ -414,7 +413,8 @@ class _EventsPageState extends State<EventsPage> {
           ),
           IconButton(
             key: const Key('events_search_button'),
-            onPressed: () => context.push('${AppRoutes.search}?category=events'),
+            onPressed: () =>
+                context.push('${AppRoutes.search}?category=events'),
             icon: const Icon(Icons.search, color: Colors.black87),
           ),
           IconButton(

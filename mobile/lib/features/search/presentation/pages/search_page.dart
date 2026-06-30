@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:conectaparana/core/auth/auth_service.dart';
 import 'package:conectaparana/features/city_switcher/presentation/controllers/active_city_provider.dart';
-import 'package:conectaparana/features/register/data/models/services/city_model.dart';
+import 'package:conectaparana/features/register/data/models/city_model.dart';
 import 'package:conectaparana/features/search/data/search_repository.dart';
 import 'package:conectaparana/features/search/presentation/widgets/search_filter_panel.dart';
 import 'package:conectaparana/features/search/presentation/widgets/search_result_card.dart';
@@ -197,10 +197,7 @@ class _SearchPageState extends State<SearchPage> {
             Expanded(
               child: _showFilterPanel
                   ? SearchFilterPanel(
-                      value: SearchFilterValue(
-                        city: _city,
-                        type: _type,
-                      ),
+                      value: SearchFilterValue(city: _city, type: _type),
                       cityLoader: widget.cityLoader ?? loadAllSearchCities,
                       onApply: _applyFilters,
                       onCancel: () => setState(() => _showFilterPanel = false),

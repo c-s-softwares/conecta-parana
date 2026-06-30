@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:conectaparana/shared/widgets/pages/webview_screen.dart';
-import 'package:conectaparana/features/register/data/models/services/register_repository.dart';
-import 'package:conectaparana/features/register/data/models/services/city_service.dart';
-import 'package:conectaparana/features/register/data/models/services/city_model.dart';
-import 'package:conectaparana/core/auth/auth_service.dart';
+import 'package:conectaparana/features/register/data/services/register_repository.dart';
+import 'package:conectaparana/features/register/data/services/city_service.dart';
+import 'package:conectaparana/features/register/data/models/city_model.dart';
+import 'package:conectaparana/features/onboarding/presentation/steps/verify_email_screen.dart';
 import 'package:conectaparana/core/router/app_router.dart';
 import 'package:conectaparana/shared/widgets/feedback/app_toast.dart';
 import 'package:dio/dio.dart';
@@ -181,7 +181,7 @@ class RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final result = await _repository.register(
+      await _repository.register(
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
@@ -189,20 +189,15 @@ class RegisterScreenState extends State<RegisterScreen> {
         cityId: _selectedCity!.id,
       );
 
-      if (result.hasTokens) {
-        await AuthService.instance.login(
-          accessToken: result.accessToken!,
-          refreshToken: result.refreshToken!,
-        );
-
-        if (!mounted) return;
-        context.go(AppRoutes.home);
-        return;
-      }
-
       if (!mounted) return;
-      _showFeedback(result.message, AppToastVariant.success);
-      _goToLogin();
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => VerifyEmailScreen(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          ),
+        ),
+      );
     } on InvalidRegistrationCityException {
       await CityService.clearCache();
       await _loadCities();

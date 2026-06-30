@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:dio/dio.dart';
-import 'package:conectaparana/features/register/data/models/services/register_repository.dart';
+import 'package:conectaparana/features/register/data/services/register_repository.dart';
 import 'package:conectaparana/core/auth/auth_service.dart';
 import 'package:conectaparana/core/auth/auth_user.dart';
 import 'package:conectaparana/core/auth/auth_event.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:conectaparana/core/auth/presentation/register_screen.dart';
-import 'package:conectaparana/features/register/data/models/services/city_service.dart';
-import 'package:conectaparana/features/register/data/models/services/city_model.dart';
+import 'package:conectaparana/features/register/data/services/city_service.dart';
+import 'package:conectaparana/features/register/data/models/city_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FakeCityService extends CityService {
@@ -342,7 +342,7 @@ class _ErrorCityService extends CityService {
 
 class _EmailExistsRepository extends RegisterRepository {
   @override
-  Future<RegisterResult> register({
+  Future<({String? accessToken, String? refreshToken})> register({
     required String name,
     required String email,
     required String password,
@@ -366,7 +366,7 @@ class _ValidationErrorRepository extends RegisterRepository {
   final List<String> messages;
 
   @override
-  Future<RegisterResult> register({
+  Future<({String? accessToken, String? refreshToken})> register({
     required String name,
     required String email,
     required String password,
@@ -387,15 +387,14 @@ class _ValidationErrorRepository extends RegisterRepository {
 
 class _HappyRepository extends RegisterRepository {
   @override
-  Future<RegisterResult> register({
+  Future<({String? accessToken, String? refreshToken})> register({
     required String name,
     required String email,
     required String password,
     required String confirmPassword,
     required String cityId,
   }) async {
-    return const RegisterResult(
-      message: 'ok',
+    return (
       accessToken: 'fake-access-token',
       refreshToken: 'fake-refresh-token',
     );

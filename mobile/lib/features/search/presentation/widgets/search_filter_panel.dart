@@ -1,15 +1,12 @@
 import 'package:conectaparana/core/network/api_client.dart';
-import 'package:conectaparana/features/register/data/models/services/city_model.dart';
+import 'package:conectaparana/features/register/data/models/city_model.dart';
 import 'package:conectaparana/features/search/data/search_repository.dart';
 import 'package:flutter/material.dart';
 
 typedef SearchCityLoader = Future<List<City>> Function();
 
 class SearchFilterValue {
-  const SearchFilterValue({
-    required this.city,
-    required this.type,
-  });
+  const SearchFilterValue({required this.city, required this.type});
 
   final City? city;
   final SearchResultType? type;
@@ -30,10 +27,7 @@ Future<List<City>> loadAllSearchCities() async {
     total = data['total'] as int? ?? items.length;
     cities.addAll(
       items.whereType<Map<String, dynamic>>().map(
-        (item) => City(
-          id: item['id'] as String,
-          name: item['name'] as String,
-        ),
+        (item) => City(id: item['id'] as String, name: item['name'] as String),
       ),
     );
     if (items.isEmpty) break;
@@ -90,7 +84,10 @@ class _SearchFilterPanelState extends State<SearchFilterPanel> {
                     style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
                   ),
                 ),
-                IconButton(onPressed: widget.onCancel, icon: const Icon(Icons.close)),
+                IconButton(
+                  onPressed: widget.onCancel,
+                  icon: const Icon(Icons.close),
+                ),
               ],
             ),
           ),
@@ -117,23 +114,24 @@ class _SearchFilterPanelState extends State<SearchFilterPanel> {
                     final cities = snapshot.data ?? const <City>[];
                     return RadioGroup<String>(
                       groupValue: _cityId ?? '',
-                      onChanged: (value) =>
-                          setState(() => _cityId = value?.isEmpty == true ? null : value),
+                      onChanged: (value) => setState(
+                        () => _cityId = value?.isEmpty == true ? null : value,
+                      ),
                       child: Column(
                         children: [
-                        const RadioListTile<String>(
-                          key: Key('search_all_cities_checkbox'),
-                          value: '',
-                          title: Text('Todas'),
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        for (final city in cities)
-                          RadioListTile<String>(
-                            key: Key('search_city_checkbox_${city.id}'),
-                            value: city.id,
-                            title: Text(city.name),
+                          const RadioListTile<String>(
+                            key: Key('search_all_cities_checkbox'),
+                            value: '',
+                            title: Text('Todas'),
                             contentPadding: EdgeInsets.zero,
                           ),
+                          for (final city in cities)
+                            RadioListTile<String>(
+                              key: Key('search_city_checkbox_${city.id}'),
+                              value: city.id,
+                              title: Text(city.name),
+                              contentPadding: EdgeInsets.zero,
+                            ),
                         ],
                       ),
                     );

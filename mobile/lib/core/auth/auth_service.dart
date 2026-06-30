@@ -4,7 +4,7 @@ import 'package:conectaparana/core/auth/auth_event.dart';
 import 'package:conectaparana/core/auth/auth_user.dart';
 import 'package:conectaparana/core/auth/jwt_decoder.dart';
 import 'package:conectaparana/core/auth/token_storage.dart';
-import 'package:conectaparana/features/register/data/models/services/city_service.dart';
+import 'package:conectaparana/features/register/data/services/city_service.dart';
 import 'package:flutter/material.dart';
 
 class AuthService {
@@ -56,7 +56,7 @@ class AuthService {
         cityId: payload.cityId,
         cityName: cityName,
       );
-    } catch (_) {
+    } catch (e) {
       await _storage.clear();
       currentUser.value = null;
     }
@@ -71,22 +71,26 @@ class AuthService {
       refreshToken: refreshToken,
     );
 
-    final payload = JwtDecoder.decode(accessToken);
+    await _storage.getTokens();
 
-    if (payload.role == 'ADMIN') {
-      await logout();
-      _eventController.add(AuthEvent.adminNotAllowed);
-      return;
+    try {
+      final payload = JwtDecoder.decode(accessToken);
+
+      if (payload.role == 'ADMIN') {
+        await logout();
+        _eventController.add(AuthEvent.adminNotAllowed);
+        return;
+      }
+
+      currentUser.value = AuthUser(
+        id: payload.sub,
+        role: payload.role,
+        cityId: payload.cityId,
+        cityName: await _resolveCityName(payload.cityId),
+      );
+    } catch (e) {
+      rethrow;
     }
-
-    final cityName = await _resolveCityName(payload.cityId);
-
-    currentUser.value = AuthUser(
-      id: payload.sub,
-      role: payload.role,
-      cityId: payload.cityId,
-      cityName: cityName,
-    );
   }
 
   Future<void> logout({bool expired = false}) async {

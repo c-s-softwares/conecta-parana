@@ -12,9 +12,10 @@ void main() async {
   Environment.initialize(Flavor.prod);
   ApiClient.instance.init();
 
+  ApiClient.instance.init();
   await AuthService.instance.init();
   await AppRouter.instance.init();
   await ConnectivityService.instance.init();
-  
+
   runApp(const App());
 }

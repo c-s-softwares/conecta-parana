@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:conectaparana/features/register/data/models/services/city_service.dart';
+import 'package:conectaparana/features/register/data/services/city_service.dart';
 import 'package:dio/dio.dart';
 
 const _validCityId = 'cit_01ARZ3NDEKTSV4RRFFQ69G5FAV';

@@ -1,4 +1,4 @@
-import 'package:conectaparana/features/register/data/models/services/register_repository.dart';
+import 'package:conectaparana/features/register/data/services/register_repository.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 

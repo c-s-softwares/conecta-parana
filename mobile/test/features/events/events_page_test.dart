@@ -3,7 +3,7 @@ import 'package:conectaparana/features/events/data/repository/event_repository.d
 import 'package:conectaparana/features/events/domain/entities/event_list_item.dart';
 import 'package:conectaparana/features/events/presentation/pages/events_page.dart';
 import 'package:conectaparana/features/events/presentation/widgets/event_featured_banner.dart';
-import 'package:conectaparana/features/register/data/models/services/city_model.dart';
+import 'package:conectaparana/features/register/data/models/city_model.dart';
 import 'package:conectaparana/shared/widgets/misc/section_header.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -147,9 +147,7 @@ void main() {
     );
     addTearDown(activeCity.dispose);
 
-    await tester.pumpWidget(
-      _wrap(repo, activeCityListenable: activeCity),
-    );
+    await tester.pumpWidget(_wrap(repo, activeCityListenable: activeCity));
     await tester.pumpAndSettle();
 
     expect(repo.calls, 1);

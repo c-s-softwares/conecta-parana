@@ -1,4 +1,4 @@
-import 'package:conectaparana/features/register/data/models/services/city_model.dart';
+import 'package:conectaparana/features/register/data/models/city_model.dart';
 import 'package:conectaparana/features/search/data/search_repository.dart';
 import 'package:conectaparana/features/search/presentation/pages/search_page.dart';
 import 'package:conectaparana/features/search/presentation/widgets/search_filter_panel.dart';
@@ -167,16 +167,20 @@ void main() {
     await tester.scrollUntilVisible(
       find.byKey(const Key('search_type_checkbox_news')),
       300,
-      scrollable: find.descendant(
-        of: find.byKey(const Key('search_filter_panel')),
-        matching: find.byType(Scrollable),
-      ).first,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const Key('search_filter_panel')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
     );
     await tester.drag(
-      find.descendant(
-        of: find.byKey(const Key('search_filter_panel')),
-        matching: find.byType(Scrollable),
-      ).first,
+      find
+          .descendant(
+            of: find.byKey(const Key('search_filter_panel')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
       const Offset(0, -120),
     );
     await tester.pumpAndSettle();
