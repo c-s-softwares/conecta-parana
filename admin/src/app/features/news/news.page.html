@@ -1,0 +1,242 @@
+<div class="space-y-6">
+  <!-- Cabeçalho Principal -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Notícias</h1>
+      <p class="text-sm text-gray-500 mt-1">
+        Conteúdo jornalístico, coberturas e atualizações oficiais.
+      </p>
+    </div>
+
+    <!-- Ações do Cabeçalho -->
+    <div class="flex items-center gap-3">
+      <!-- Input de Busca -->
+      <div class="relative">
+        <span
+          class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"
+        >
+          <ng-icon name="heroMagnifyingGlass" size="18"></ng-icon>
+        </span>
+        <input
+          type="text"
+          [formControl]="searchControl"
+          placeholder="Buscar em notícias..."
+          class="w-64 pl-10 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-400"
+        />
+      </div>
+
+      <!-- Botão de Filtros -->
+      <button
+        type="button"
+        (click)="toggleFilters()"
+        class="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition cursor-pointer"
+        [class.border-primary]="showFilters()"
+        [class.text-primary]="showFilters()"
+      >
+        <ng-icon name="heroAdjustmentsHorizontal" size="18"></ng-icon>
+        Filtros
+      </button>
+
+      <!-- Botão Criar -->
+      <button
+        type="button"
+        (click)="openCreate()"
+        class="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition cursor-pointer"
+      >
+        <ng-icon name="heroPlus" size="18"></ng-icon>
+        Nova notícia
+      </button>
+    </div>
+  </div>
+
+  <!-- Painel Colapsável de Filtros -->
+  @if (showFilters()) {
+    <div
+      class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-wrap gap-4 animate-in fade-in slide-in-from-top-2 duration-200"
+    >
+      <!-- Filtro de Tipo -->
+      <div class="w-48">
+        <label
+          for="filter-type"
+          class="block text-xs font-bold text-gray-500 uppercase mb-1"
+          >Tipo</label
+        >
+        <select
+          id="filter-type"
+          [formControl]="typeFilterControl"
+          class="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+        >
+          <option value="">Todos os tipos</option>
+          <option value="saude">Saúde</option>
+          <option value="educacao">Educação</option>
+          <option value="infra">Infraestrutura</option>
+          <option value="geral">Geral</option>
+          <option value="outros">Outros</option>
+        </select>
+      </div>
+
+      <!-- Filtro de Status -->
+      <div class="w-48">
+        <label
+          for="filter-status"
+          class="block text-xs font-bold text-gray-500 uppercase mb-1"
+          >Status</label
+        >
+        <select
+          id="filter-status"
+          [formControl]="statusFilterControl"
+          class="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+        >
+          <option value="">Todos os status</option>
+          <option value="true">Ativas</option>
+          <option value="false">Inativas</option>
+        </select>
+      </div>
+    </div>
+  }
+
+  <!-- Abas de Tipo de Link & Contador -->
+  <div class="flex items-center justify-between mt-6">
+    <div class="inline-flex rounded-lg bg-gray-100 p-1">
+      <button
+        type="button"
+        (click)="setLinkTypeTab('todas')"
+        class="rounded-md px-4 py-1.5 text-sm font-medium transition-all cursor-pointer"
+        [class]="
+          selectedLinkTypeTab() === 'todas'
+            ? 'bg-white text-gray-900 shadow-sm'
+            : 'text-gray-600 hover:text-gray-900'
+        "
+      >
+        Todas
+      </button>
+      <button
+        type="button"
+        (click)="setLinkTypeTab('interno')"
+        class="rounded-md px-4 py-1.5 text-sm font-medium transition-all cursor-pointer"
+        [class]="
+          selectedLinkTypeTab() === 'interno'
+            ? 'bg-white text-gray-900 shadow-sm'
+            : 'text-gray-600 hover:text-gray-900'
+        "
+      >
+        Internas
+      </button>
+      <button
+        type="button"
+        (click)="setLinkTypeTab('externo')"
+        class="rounded-md px-4 py-1.5 text-sm font-medium transition-all cursor-pointer"
+        [class]="
+          selectedLinkTypeTab() === 'externo'
+            ? 'bg-white text-gray-900 shadow-sm'
+            : 'text-gray-600 hover:text-gray-900'
+        "
+      >
+        Externas
+      </button>
+    </div>
+
+    <span class="text-sm text-gray-500 font-medium">
+      {{ totalItems() }} {{ totalItems() === 1 ? 'resultado' : 'resultados' }}
+    </span>
+  </div>
+
+  <!-- Listagem de Notícias -->
+  <app-data-list
+    [items]="$any(items())"
+    [total]="totalItems()"
+    [page]="page()"
+    [pageSize]="pageSize()"
+    [loading]="loading()"
+    emptyTitle="Nenhuma notícia encontrada"
+    emptyDescription="Tente mudar os filtros de busca ou crie uma nova notícia."
+    emptyIcon="heroNewspaper"
+    (pageChange)="onPageChange($event)"
+  >
+    <ng-template #row let-item>
+      <div class="list-item">
+        <div
+          class="thumb"
+          style="background: oklch(0.95 0.04 210 / 0.55); color: oklch(0.42 0.12 210)"
+        >
+          @if (item.photos?.length && item.photos[0].thumbUrl) {
+            <img
+              [src]="item.photos[0].thumbUrl"
+              alt=""
+              class="h-full w-full object-cover"
+            />
+          } @else {
+            <ng-icon
+              [name]="item.type === 'geral' ? 'heroMegaphone' : 'heroNewspaper'"
+              size="26"
+            />
+          }
+        </div>
+        <div class="body">
+          <div class="title-row">
+            <span class="title">{{ item.title }}</span>
+            <span class="badge badge-noticia">{{ item.type }}</span>
+            <span
+              class="badge badge-dot"
+              [class.badge-ativo]="item.isActive"
+              [class.badge-inativo]="!item.isActive"
+            >
+              {{ item.isActive ? 'Ativa' : 'Inativa' }}
+            </span>
+            <span
+              class="badge"
+              [class.badge-externo]="item.linkType === 'externo'"
+              [class.badge-interno]="item.linkType !== 'externo'"
+            >
+              {{ item.linkType }}
+            </span>
+          </div>
+          <p class="desc">{{ item.description }}</p>
+          <div class="meta">
+            <span>
+              <ng-icon name="heroMapPin" size="13" />
+              {{ item.cityName || 'Região' }}
+            </span>
+            <span>
+              <ng-icon name="heroCalendarDays" size="13" />
+              {{ item.createdAt | date: 'dd/MM/yyyy' }}
+            </span>
+          </div>
+        </div>
+        <div class="actions">
+          <button
+            type="button"
+            class="btn-icon"
+            (click)="openEdit(item)"
+            aria-label="Editar"
+          >
+            <ng-icon name="heroPencilSquare" size="16" />
+          </button>
+          <button
+            type="button"
+            class="btn-icon danger"
+            (click)="confirmDelete(item)"
+            aria-label="Excluir"
+          >
+            <ng-icon name="heroTrash" size="16" />
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </app-data-list>
+</div>
+
+<app-news-form-modal
+  [open]="formOpen()"
+  [news]="selectedItem()"
+  (saved)="onFormSaved()"
+  (closed)="onFormClosed()"
+/>
+
+<app-confirm-dialog
+  [visible]="!!deletingItem()"
+  title="Excluir notícia"
+  message="Tem certeza que deseja excluir esta notícia? Esta ação não pode ser desfeita."
+  (confirmed)="executeDelete()"
+  (cancelled)="cancelDelete()"
+/>

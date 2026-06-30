@@ -38,6 +38,8 @@ import {
   heroUsers,
   heroXMark,
   heroArrowsUpDown,
+  heroAdjustmentsHorizontal,
+  heroArchiveBox,
 } from '@ng-icons/heroicons/outline';
 
 import { routes } from './app.routes';
@@ -87,6 +89,8 @@ export const appConfig: ApplicationConfig = {
       heroUsers,
       heroXMark,
       heroArrowsUpDown,
+      heroAdjustmentsHorizontal,
+      heroArchiveBox,
     }),
   ],
 };

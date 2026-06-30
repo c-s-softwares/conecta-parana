@@ -44,7 +44,11 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/communicates/communicates.routes').then((m) => m.COMMUNICATES_ROUTES),
       },
-      { path: 'noticias', loadComponent: loadPlaceholder, data: { title: 'Notícias' } },
+      {
+        path: 'noticias',
+        loadChildren: () =>
+          import('./features/news/news.routes').then((m) => m.NEWS_ROUTES),
+      },
       { path: 'locais', loadComponent: loadPlaceholder, data: { title: 'Locais' } },
       { path: 'notificacoes', loadComponent: loadPlaceholder, data: { title: 'Notificações' } },
       {

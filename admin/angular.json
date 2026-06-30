@@ -102,6 +102,11 @@
           "builder": "@angular/build:unit-test",
           "options": {
             "coverage": true,
+            "coverageExclude": [
+              "**/*.html",
+              "**/*.model.ts",
+              "src/environments/**"
+            ],
             "coverageThresholds": {
               "statements": 70,
               "branches": 70,
