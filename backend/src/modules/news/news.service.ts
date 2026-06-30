@@ -118,12 +118,13 @@ export class NewsService extends BaseCrudService<
     return {
       ...(query.cityId !== undefined && { cityId: query.cityId }),
       ...(query.type !== undefined && { type: query.type }),
+      ...(query.linkType !== undefined && { linkType: query.linkType }),
       isActive: query.isActive !== undefined ? query.isActive === 'true' : true,
     };
   }
 
   protected override buildBaseWhere(): Record<string, unknown> {
-    return { isActive: true };
+    return {};
   }
 
   override async findAll(query: QueryNewsDto) {
