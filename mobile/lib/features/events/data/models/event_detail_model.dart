@@ -2,10 +2,8 @@ import 'package:conectaparana/core/media/media_photo.dart';
 import 'package:conectaparana/shared/models/author_summary.dart';
 
 class EventPhoto extends MediaPhoto {
-  @override
-  final String id;
-
-  const EventPhoto({required this.id, super.url, super.thumbUrl});
+  const EventPhoto({required String id, super.url, super.thumbUrl})
+    : super(id: id);
 
   factory EventPhoto.fromJson(Map<String, dynamic> json) {
     final photo = MediaPhoto.fromJson(json);

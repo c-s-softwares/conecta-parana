@@ -180,7 +180,12 @@ class _TicketPhotoViewerPageState extends State<TicketPhotoViewerPage> {
             imageProvider: NetworkImage(photos[index].url!),
             minScale: PhotoViewComputedScale.contained,
             maxScale: PhotoViewComputedScale.covered * 3,
-            heroAttributes: PhotoViewHeroAttributes(tag: photos[index].id),
+            heroAttributes: PhotoViewHeroAttributes(
+              tag:
+                  photos[index].id ??
+                  photos[index].fullSizeUrl ??
+                  'ticket-photo-$index',
+            ),
           );
         },
         loadingBuilder: (context, event) =>

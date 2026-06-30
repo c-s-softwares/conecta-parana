@@ -16,10 +16,8 @@ class TicketCoordinates {
 }
 
 class TicketPhoto extends MediaPhoto {
-  @override
-  final String id;
-
-  const TicketPhoto({required this.id, super.url, super.thumbUrl});
+  const TicketPhoto({required String id, super.url, super.thumbUrl})
+    : super(id: id);
 
   factory TicketPhoto.fromJson(Map<String, dynamic> json) {
     final photo = MediaPhoto.fromJson(json);
