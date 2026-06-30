@@ -538,7 +538,7 @@ class _InfoBox extends StatelessWidget {
               baseline: TextBaseline.alphabetic,
               child: GestureDetector(
                 onTap: () {
-                  context.go('/tickets');
+                  context.go('/profile/tickets');
                 },
                 child: const Text(
                   'Tickets.',

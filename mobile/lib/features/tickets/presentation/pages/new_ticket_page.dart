@@ -276,7 +276,7 @@ class _NewTicketPageState extends State<NewTicketPage> {
           ),
         ),
       );
-      context.go('/tickets/${ticket.id}');
+      context.go('/profile/tickets/${ticket.id}');
     } on TicketUserWithoutCityException {
       if (!mounted) return;
       _showSnackBar('Selecione sua cidade na Home antes de abrir tickets.');

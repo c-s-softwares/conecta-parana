@@ -72,6 +72,22 @@ class ProfilePage extends StatelessWidget {
               side: const BorderSide(color: Color(0xFFE5E5E5)),
             ),
             child: ListTile(
+              key: const Key('profile_tickets_tile'),
+              leading: const Icon(Icons.confirmation_number_outlined),
+              title: const Text('Meus Tickets'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/profile/tickets'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            margin: EdgeInsets.zero,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Color(0xFFE5E5E5)),
+            ),
+            child: ListTile(
               key: const Key('profile_favorites_tile'),
               leading: const Icon(Icons.bookmark_outline),
               title: const Text('Salvos'),

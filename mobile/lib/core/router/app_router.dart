@@ -52,8 +52,8 @@ abstract class AppRoutes {
   static const communicates = '/communicates';
   static const newsList = '/news';
   static const map = '/map';
-  static const tickets = '/tickets';
-  static const newTicket = '/tickets/new';
+  static const tickets = '/profile/tickets';
+  static const newTicket = '/profile/tickets/new';
   static const profile = '/profile';
   static const favorites = '/profile/favorites';
   static const notifications = '/notifications';
@@ -63,7 +63,7 @@ abstract class AppRoutes {
   static const comunicado = '/home/comunicado/:id';
   static const news = '/home/news/:id';
   static const local = '/map/:id';
-  static const ticket = '/tickets/:id';
+  static const ticket = '/profile/tickets/:id';
   static const notification = '/home/notification/:id';
 
   static const suggestions = '/profile/suggestions';
@@ -208,18 +208,6 @@ class AppRouter {
             ),
           ],
         ),
-        GoRoute(
-          path: AppRoutes.newsList,
-          builder: (context, state) =>
-              const ContentListPage(kind: ContentListKind.news),
-          routes: [
-            GoRoute(
-              path: ':id',
-              builder: (context, state) =>
-                  NewsDetailPage(id: state.pathParameters['id']!),
-            ),
-          ],
-        ),
         // DEV ONLY — abre EventDetailPage com dados mockados, sem backend
         GoRoute(
           path: AppRoutes.notifications,
@@ -321,22 +309,18 @@ class AppRouter {
               ],
             ),
 
-            // Tickets
+            // Notícias
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: AppRoutes.tickets,
-                  builder: (context, state) => const TicketsPage(),
+                  path: AppRoutes.newsList,
+                  builder: (context, state) =>
+                      const ContentListPage(kind: ContentListKind.news),
                   routes: [
                     GoRoute(
-                      path: 'new',
-                      builder: (context, state) => const NewTicketPage(),
-                    ),
-                    GoRoute(
                       path: ':id',
-                      builder: (context, state) => TicketDetailPage(
-                        ticketId: state.pathParameters['id']!,
-                      ),
+                      builder: (context, state) =>
+                          NewsDetailPage(id: state.pathParameters['id']!),
                     ),
                   ],
                 ),
@@ -365,6 +349,22 @@ class AppRouter {
                     GoRoute(
                       path: 'favorites',
                       builder: (context, state) => const FavoritesPage(),
+                    ),
+                    GoRoute(
+                      path: 'tickets',
+                      builder: (context, state) => const TicketsPage(),
+                      routes: [
+                        GoRoute(
+                          path: 'new',
+                          builder: (context, state) => const NewTicketPage(),
+                        ),
+                        GoRoute(
+                          path: ':id',
+                          builder: (context, state) => TicketDetailPage(
+                            ticketId: state.pathParameters['id']!,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

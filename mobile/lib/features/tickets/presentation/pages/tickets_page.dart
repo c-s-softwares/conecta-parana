@@ -124,7 +124,7 @@ class _TicketsPageState extends State<TicketsPage> {
   }
 
   void _handleTicketTap(Ticket ticket) {
-    context.push('/tickets/${ticket.id}');
+    context.push('/profile/tickets/${ticket.id}');
   }
 
   int _countByGroup(TicketStatusGroup group) {
