@@ -12,16 +12,11 @@ class DeepLinkParser {
 
     if (uri.scheme != 'https') return null;
 
-    if (uri.host == 'localhost' ||
+    final isLocalHost =
+        uri.host == 'localhost' ||
         uri.host == '127.0.0.1' ||
-        uri.host == '10.0.2.2') {
-      if (kDebugMode) {
-        debugPrint('[DeepLink] URL de localhost ignorada: $uri');
-      }
-      return null;
-    }
-
-    if (uri.host != _host) return null;
+        uri.host == '10.0.2.2';
+    if (uri.host != _host && !(kDebugMode && isLocalHost)) return null;
 
     final path = uri.path;
     if (!path.startsWith(_sharePrefix)) return null;

@@ -43,11 +43,12 @@ void main() {
     });
 
     for (final host in ['localhost', '127.0.0.1', '10.0.2.2']) {
-      test('retorna null para host $host (localhost dev)', () {
+      test('parseia host local $host em ambiente de desenvolvimento', () {
         final uri = Uri.parse('https://$host/share/event/evt_123');
         final result = DeepLinkParser.parse(uri);
 
-        expect(result, isNull);
+        expect(result, isNotNull);
+        expect(result!.path, '/events/evt_123');
       });
     }
 
