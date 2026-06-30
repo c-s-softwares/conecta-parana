@@ -3,28 +3,28 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angu
 import { merge } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { CrudPage } from '../../shared/utils/crud-page';
-import { PageHeader } from '../../shared/components/page-header/page-header';
-import { FormContainer } from '../../shared/components/form-container/form-container';
 import { FormField } from '../../shared/components/form-field/form-field';
-import { EntityList } from '../../shared/components/entity-list/entity-list';
+import { DataList } from '../../shared/components/data-list/data-list';
 import { ConfirmDialog } from '../../shared/components/confirm-dialog/confirm-dialog';
+import { ModalDialog } from '../../shared/components/modal-dialog/modal-dialog';
 import { NewsApi } from './news.api';
 import { ToastService } from '../../core/services/toast.service';
 import { AppError } from '../../core/interceptors/app-error';
 import { NewsForm, NewsItem } from './news.model';
-import { UpperCasePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
+import { NgIcon } from '@ng-icons/core';
 
 @Component({
   selector: 'app-news-page',
   standalone: true,
   imports: [
     ReactiveFormsModule,
-    PageHeader,
-    FormContainer,
     FormField,
-    EntityList,
+    DataList,
     ConfirmDialog,
-    UpperCasePipe,
+    ModalDialog,
+    DatePipe,
+    NgIcon,
   ],
   templateUrl: './news.page.html',
 })
@@ -36,11 +36,20 @@ export class NewsPage extends CrudPage<NewsForm> implements OnInit {
   readonly items = signal<NewsItem[]>([]);
   readonly deletingItem = signal<NewsItem | null>(null);
 
-  //
+  // Paginação e Carregamento
+  readonly page = signal(1);
+  readonly pageSize = signal(10);
+  readonly totalItems = signal(0);
+  readonly loading = signal(false);
+
+  // Filtros e Abas
+  protected readonly showFilters = signal(false);
+  protected readonly selectedLinkTypeTab = signal<'todas' | 'interno' | 'externo'>('todas');
   protected readonly searchControl = new FormControl('');
   protected readonly typeFilterControl = new FormControl('');
   protected readonly statusFilterControl = new FormControl('');
 
+  // Erros da API
   protected typeError = '';
   protected linkTypeError = '';
 
@@ -61,25 +70,65 @@ export class NewsPage extends CrudPage<NewsForm> implements OnInit {
       this.typeFilterControl.valueChanges,
       this.statusFilterControl.valueChanges
     ).subscribe(() => {
+      this.page.set(1);
       this.loadNews();
     });
   }
 
   loadNews(): void {
+    this.loading.set(true);
     const filters = {
       type: this.typeFilterControl.value || undefined,
       isActive: this.statusFilterControl.value === 'true' ? true : this.statusFilterControl.value === 'false' ? false : undefined,
+      linkType: this.selectedLinkTypeTab() !== 'todas' ? this.selectedLinkTypeTab() : undefined,
     };
 
     this.newsApi.list({
+      page: this.page(),
+      pageSize: this.pageSize(),
       search: this.searchControl.value || undefined,
       filters,
     }).subscribe({
       next: (res) => {
         this.items.set(res.items);
+        this.totalItems.set(res.total);
+        this.loading.set(false);
       },
       error: () => {
         this.toast.show('error', 'Erro ao carregar notícias.');
+        this.loading.set(false);
+      },
+    });
+  }
+
+  onPageChange(event: { page: number, pageSize: number }): void {
+    this.page.set(event.page);
+    this.pageSize.set(event.pageSize);
+    this.loadNews();
+  }
+
+  toggleFilters(): void {
+    this.showFilters.update((v) => !v);
+  }
+
+  setLinkTypeTab(tab: 'todas' | 'interno' | 'externo'): void {
+    this.selectedLinkTypeTab.set(tab);
+    this.page.set(1);
+    this.loadNews();
+  }
+
+  toggleStatus(item: NewsItem): void {
+    const updatedStatus = !item.isActive;
+    this.newsApi.update(item.id, { isActive: updatedStatus }).subscribe({
+      next: () => {
+        this.toast.show('success', `Notícia ${updatedStatus ? 'ativada' : 'desativada'} com sucesso.`);
+        this.loadNews();
+      },
+      error: (err: AppError) => {
+        if (err.status === 404) {
+          this.toast.show('error', 'Notícia não encontrada. Pode ter sido excluída por outro admin.');
+          this.loadNews();
+        }
       },
     });
   }

@@ -1,196 +1,354 @@
-@if (view() === 'list') {
-  <app-page-header title="NOTÍCIAS" buttonLabel="Criar notícia" (create)="openForm()" />
+<div class="space-y-6">
+  <!-- Cabeçalho Principal -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Notícias</h1>
+      <p class="text-sm text-gray-500 mt-1">Conteúdo jornalístico, coberturas e atualizações oficiais.</p>
+    </div>
 
+    <!-- Ações do Cabeçalho -->
+    <div class="flex items-center gap-3">
+      <!-- Input de Busca com Ícone -->
+      <div class="relative">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+          <ng-icon name="heroMagnifyingGlass" size="18"></ng-icon>
+        </span>
+        <input
+          type="text"
+          [formControl]="searchControl"
+          placeholder="Buscar em notícias..."
+          class="w-64 pl-10 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-400"
+        />
+      </div>
 
-  <div class="mt-4 flex flex-wrap gap-4 items-center bg-gray-100 p-4 rounded-lg">
+      <!-- Botão de Filtros -->
+      <button
+        type="button"
+        (click)="toggleFilters()"
+        class="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition cursor-pointer"
+        [class.border-primary]="showFilters()"
+        [class.text-primary]="showFilters()"
+      >
+        <ng-icon name="heroAdjustmentsHorizontal" size="18"></ng-icon>
+        Filtros
+      </button>
 
-    <div class="flex-1 min-w-[200px]">
+      <!-- Botão Criar -->
+      <button
+        type="button"
+        (click)="openForm()"
+        class="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition cursor-pointer"
+      >
+        <ng-icon name="heroPlus" size="18"></ng-icon>
+        Nova notícia
+      </button>
+    </div>
+  </div>
+
+  <!-- Painel Colapsável de Filtros -->
+  @if (showFilters()) {
+    <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-wrap gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
+      <!-- Filtro de Tipo -->
+      <div class="w-48">
+        <label for="filter-type" class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo</label>
+        <select
+          id="filter-type"
+          [formControl]="typeFilterControl"
+          class="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+        >
+          <option value="">Todos os tipos</option>
+          <option value="saude">Saúde</option>
+          <option value="educacao">Educação</option>
+          <option value="infra">Infraestrutura</option>
+          <option value="geral">Geral</option>
+          <option value="outros">Outros</option>
+        </select>
+      </div>
+
+      <!-- Filtro de Status -->
+      <div class="w-48">
+        <label for="filter-status" class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
+        <select
+          id="filter-status"
+          [formControl]="statusFilterControl"
+          class="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+        >
+          <option value="">Todos os status</option>
+          <option value="true">Ativas</option>
+          <option value="false">Inativas</option>
+        </select>
+      </div>
+    </div>
+  }
+
+  <!-- Controle de Abas Segmentadas & Contador -->
+  <div class="flex items-center justify-between mt-6">
+    <div class="inline-flex rounded-lg bg-gray-100 p-1">
+      <button
+        type="button"
+        (click)="setLinkTypeTab('todas')"
+        class="rounded-md px-4 py-1.5 text-sm font-medium transition-all cursor-pointer"
+        [class]="selectedLinkTypeTab() === 'todas' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
+      >
+        Todas
+      </button>
+      <button
+        type="button"
+        (click)="setLinkTypeTab('interno')"
+        class="rounded-md px-4 py-1.5 text-sm font-medium transition-all cursor-pointer"
+        [class]="selectedLinkTypeTab() === 'interno' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
+      >
+        Internas
+      </button>
+      <button
+        type="button"
+        (click)="setLinkTypeTab('externo')"
+        class="rounded-md px-4 py-1.5 text-sm font-medium transition-all cursor-pointer"
+        [class]="selectedLinkTypeTab() === 'externo' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
+      >
+        Externas
+      </button>
+    </div>
+
+    <span class="text-sm text-gray-500 font-medium">
+      {{ totalItems() }} {{ totalItems() === 1 ? 'resultado' : 'resultados' }}
+    </span>
+  </div>
+
+  <!-- Listagem Principal de Notícias (DataList) -->
+  <app-data-list
+    [items]="$any(items())"
+    [total]="totalItems()"
+    [page]="page()"
+    [pageSize]="pageSize()"
+    [loading]="loading()"
+    emptyTitle="Nenhuma notícia encontrada"
+    emptyDescription="Tente mudar os filtros de busca ou crie uma nova notícia."
+    emptyIcon="heroNewspaper"
+    (pageChange)="onPageChange($event)"
+  >
+    <ng-template #row let-item let-i="index">
+      <div class="list-item flex items-center justify-between rounded-lg bg-white border border-gray-100 p-5 shadow-sm">
+        <!-- Ícone e Conteúdo -->
+        <div class="flex items-start gap-4 min-w-0 flex-1">
+          <!-- Quadrado colorido com ícone -->
+          <div
+            class="w-12 h-12 shrink-0 rounded-lg flex items-center justify-center"
+            [class]="i % 2 === 0 ? 'bg-cyan-50 text-cyan-600' : 'bg-purple-50 text-purple-600'"
+          >
+            <ng-icon [name]="item.type === 'geral' ? 'heroMegaphone' : 'heroNewspaper'" size="24"></ng-icon>
+          </div>
+
+          <!-- Texto e Badges -->
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <h3 class="text-base font-bold text-gray-900 truncate">{{ item.title }}</h3>
+              
+              <!-- Badge de Status Ativo -->
+              <span
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider"
+                [class]="item.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'"
+              >
+                <span class="w-1.5 h-1.5 rounded-full" [class]="item.isActive ? 'bg-green-500' : 'bg-gray-400'"></span>
+                {{ item.isActive ? 'Ativa' : 'Inativa' }}
+              </span>
+
+              <!-- Badge de Tipo de Link -->
+              <span
+                class="px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider"
+                [class]="item.linkType === 'externo' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'"
+              >
+                {{ item.linkType }}
+              </span>
+            </div>
+
+            <!-- Descrição -->
+            <p class="mt-2 text-sm text-gray-600 line-clamp-2 leading-relaxed">
+              {{ item.description }}
+            </p>
+
+            <!-- Metadados da Notícia -->
+            <div class="mt-3 flex items-center gap-4 text-xs text-gray-500">
+              <span class="flex items-center gap-1">
+                <ng-icon name="heroMapPin" size="14"></ng-icon>
+                {{ item.cityName || 'Região' }}
+              </span>
+              <span class="flex items-center gap-1">
+                <ng-icon name="heroCalendarDays" size="14"></ng-icon>
+                {{ item.createdAt | date: 'dd MMM yyyy' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ações da Linha -->
+        <div class="ml-4 flex shrink-0 items-center gap-2">
+          <!-- Editar -->
+          <button
+            type="button"
+            (click)="openEditForm(item)"
+            class="btn-icon"
+            aria-label="Editar"
+          >
+            <ng-icon name="heroPencilSquare" size="16"></ng-icon>
+          </button>
+
+          <!-- Alterar Status (Arquivar/Desativar) -->
+          <button
+            type="button"
+            (click)="toggleStatus(item)"
+            class="btn-icon"
+            aria-label="Alterar status"
+          >
+            <ng-icon name="heroArchiveBox" size="16"></ng-icon>
+          </button>
+
+          <!-- Excluir -->
+          <button
+            type="button"
+            (click)="confirmDelete(item)"
+            class="btn-icon danger"
+            aria-label="Excluir"
+          >
+            <ng-icon name="heroTrash" size="16"></ng-icon>
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </app-data-list>
+</div>
+
+<!-- Modal de Criação / Edição -->
+<app-modal-dialog
+  [visible]="view() === 'form'"
+  [title]="isEditing ? 'EDITAR NOTÍCIA' : 'CRIAR NOTÍCIA'"
+  [footer]="true"
+  (cancelled)="closeForm()"
+>
+  <form id="news-form" [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+    <!-- Título -->
+    <app-form-field
+      label="Título"
+      fieldId="title"
+      [required]="true"
+      [showError]="titleTouched && !!titleError"
+      [errorMessage]="titleError"
+    >
       <input
+        id="title"
+        formControlName="title"
         type="text"
-        [formControl]="searchControl"
-        placeholder="Buscar por título..."
-        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+        placeholder="Digite o título da notícia"
+        class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
       />
-    </div>
+    </app-form-field>
 
-    <div class="w-48">
-      <select
-        [formControl]="typeFilterControl"
-        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+    <!-- Descrição -->
+    <app-form-field
+      label="Descrição"
+      fieldId="description"
+      [required]="true"
+      [showError]="descriptionTouched && !!descriptionError"
+      [errorMessage]="descriptionError"
+    >
+      <textarea
+        id="description"
+        formControlName="description"
+        rows="3"
+        placeholder="Digite a descrição da notícia"
+        class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+      ></textarea>
+    </app-form-field>
+
+    <div class="grid grid-cols-2 gap-4">
+      <!-- Tipo -->
+      <app-form-field
+        label="Tipo"
+        fieldId="type"
+        [required]="true"
+        [showError]="typeTouched && !!typeError"
+        [errorMessage]="typeError"
       >
-        <option value="">Todos os tipos</option>
-        <option value="saude">Saúde</option>
-        <option value="educacao">Educação</option>
-        <option value="infra">Infraestrutura</option>
-        <option value="geral">Geral</option>
-        <option value="outros">Outros</option>
-      </select>
-    </div>
+        <select
+          id="type"
+          formControlName="type"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+        >
+          <option value="">Selecione o tipo</option>
+          <option value="saude">Saúde</option>
+          <option value="educacao">Educação</option>
+          <option value="infra">Infraestrutura</option>
+          <option value="geral">Geral</option>
+          <option value="outros">Outros</option>
+        </select>
+      </app-form-field>
 
-    <div class="w-48">
-      <select
-        [formControl]="statusFilterControl"
-        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+      <!-- Tipo de link -->
+      <app-form-field
+        label="Tipo de link"
+        fieldId="linkType"
+        [required]="true"
+        [showError]="linkTypeTouched && !!linkTypeError"
+        [errorMessage]="linkTypeError"
       >
-        <option value="">Todos os status</option>
-        <option value="true">Ativas</option>
-        <option value="false">Inativas</option>
-      </select>
+        <select
+          id="linkType"
+          formControlName="linkType"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+        >
+          <option value="interno">Interno</option>
+          <option value="externo">Externo</option>
+        </select>
+      </app-form-field>
     </div>
-  </div>
 
-  <ng-template #newsRow let-item>
+    <!-- URL Externa (UI-only) -->
+    @if (form.get('linkType')?.value === 'externo') {
+      <app-form-field
+        label="URL Externa"
+        fieldId="externalUrl"
+        [required]="false"
+      >
+        <input
+          id="externalUrl"
+          formControlName="externalUrl"
+          type="text"
+          placeholder="https://exemplo.com"
+          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+        <span class="text-xs text-gray-500 mt-1 block">Em breve - este link ainda não será publicado.</span>
+      </app-form-field>
+    }
+
+    <!-- Ativo -->
     <div class="flex items-center gap-2">
-      <h3 class="truncate text-sm font-bold text-gray-900">{{ item.title }}</h3>
-      <span
-        class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
-        [class]="item.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
-      >
-        {{ item.isActive ? 'Ativa' : 'Inativa' }}
-      </span>
-      <span class="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
-        {{ item.type | uppercase }}
-      </span>
-      <span class="shrink-0 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
-        {{ item.linkType === 'externo' ? 'Externo' : 'Interno' }}
-      </span>
+      <input
+        id="isActive"
+        formControlName="isActive"
+        type="checkbox"
+        class="h-4 w-4 rounded border-gray-400 cursor-pointer"
+      />
+      <label for="isActive" class="text-sm font-medium text-gray-800 cursor-pointer">Notícia ativa</label>
     </div>
-    <p class="mt-1 truncate text-xs text-gray-600">{{ item.description }}</p>
-  </ng-template>
+  </form>
 
-  <app-entity-list
-    [items]="items()"
-    [rowTemplate]="newsRow"
-    (edit)="openEditForm($any($event))"
-    (delete)="confirmDelete($any($event))"
-  />
-}
-
-@if (view() === 'form') {
-  <div class="fixed inset-0 z-40 flex items-center justify-center bg-black/50">
-    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-      <app-form-container [title]="isEditing ? 'EDITAR NOTÍCIA' : 'CRIAR NOTÍCIA'">
-        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
-          <app-form-field
-            label="Título"
-            fieldId="title"
-            [required]="true"
-            [showError]="titleTouched && !!titleError"
-            [errorMessage]="titleError"
-          >
-            <input
-              id="title"
-              formControlName="title"
-              type="text"
-              placeholder="Digite o título da notícia"
-              class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </app-form-field>
-
-          <app-form-field
-            label="Descrição"
-            fieldId="description"
-            [required]="true"
-            [showError]="descriptionTouched && !!descriptionError"
-            [errorMessage]="descriptionError"
-          >
-            <textarea
-              id="description"
-              formControlName="description"
-              rows="3"
-              placeholder="Digite a descrição da notícia"
-              class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
-            ></textarea>
-          </app-form-field>
-
-          <div class="grid grid-cols-2 gap-4">
-            <app-form-field
-              label="Tipo"
-              fieldId="type"
-              [required]="true"
-              [showError]="typeTouched && !!typeError"
-              [errorMessage]="typeError"
-            >
-              <select
-                id="type"
-                formControlName="type"
-                class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
-              >
-                <option value="">Selecione o tipo</option>
-                <option value="saude">Saúde</option>
-                <option value="educacao">Educação</option>
-                <option value="infra">Infraestrutura</option>
-                <option value="geral">Geral</option>
-                <option value="outros">Outros</option>
-              </select>
-            </app-form-field>
-
-            <app-form-field
-              label="Tipo de link"
-              fieldId="linkType"
-              [required]="true"
-              [showError]="linkTypeTouched && !!linkTypeError"
-              [errorMessage]="linkTypeError"
-            >
-              <select
-                id="linkType"
-                formControlName="linkType"
-                class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
-              >
-                <option value="interno">Interno</option>
-                <option value="externo">Externo</option>
-              </select>
-            </app-form-field>
-          </div>
-
-          @if (form.get('linkType')?.value === 'externo') {
-            <app-form-field
-              label="URL Externa"
-              fieldId="externalUrl"
-              [required]="false"
-            >
-              <input
-                id="externalUrl"
-                formControlName="externalUrl"
-                type="text"
-                placeholder="https://exemplo.com"
-                class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <span class="text-xs text-gray-500 mt-1 block">Em breve - este link ainda não será publicado.</span>
-            </app-form-field>
-          }
-
-          <div class="flex items-center gap-2">
-            <input
-              id="isActive"
-              formControlName="isActive"
-              type="checkbox"
-              class="h-4 w-4 rounded border-gray-400 cursor-pointer"
-            />
-            <label for="isActive" class="text-sm font-medium text-gray-800 cursor-pointer">Notícia ativa</label>
-          </div>
-
-          <!-- acoes -->
-          <div class="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              (click)="closeForm()"
-              class="rounded-lg bg-btn-cancel px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-cancel-hover cursor-pointer"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              class="rounded-lg bg-btn-create px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-create-hover cursor-pointer"
-            >
-              {{ isEditing ? 'Salvar' : 'Criar' }}
-            </button>
-          </div>
-        </form>
-      </app-form-container>
-    </div>
+  <div modal-footer class="flex justify-end gap-2">
+    <button
+      type="button"
+      (click)="closeForm()"
+      class="btn btn-ghost"
+    >
+      Cancelar
+    </button>
+    <button
+      type="submit"
+      form="news-form"
+      class="btn btn-primary"
+    >
+      {{ isEditing ? 'Salvar' : 'Criar' }}
+    </button>
   </div>
-}
+</app-modal-dialog>
 
 <app-confirm-dialog
   [visible]="!!deletingItem()"
