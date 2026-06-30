@@ -1,0 +1,9 @@
+.modal-form {
+  display: grid;
+  gap: 16px;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 120px;
+}
