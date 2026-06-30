@@ -135,6 +135,7 @@ describe('EventsService', () => {
               select: { id: true, thumbUrl: true },
               orderBy: { id: 'asc' },
             },
+            user: { select: { id: true, name: true } },
           },
         }),
       );
@@ -490,6 +491,7 @@ describe('EventsService', () => {
               select: { id: true, url: true, thumbUrl: true },
               orderBy: { id: 'asc' },
             },
+            user: { select: { id: true, name: true } },
           },
         }),
       );

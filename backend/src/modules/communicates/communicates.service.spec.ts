@@ -81,7 +81,7 @@ describe('CommunicateService', () => {
       mockAdminUser,
     );
 
-    expect(result).toEqual({ ...MOCK_COMMUNICATE, photos: [] });
+    expect(result).toEqual({ ...MOCK_COMMUNICATE, user: null, photos: [] });
     expect(mockPrisma.client.communicate.create).toHaveBeenCalledWith({
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       data: expect.objectContaining({
@@ -168,7 +168,7 @@ describe('CommunicateService', () => {
       mockSuperAdminUser,
     );
 
-    expect(result).toEqual({ ...MOCK_COMMUNICATE, photos: [] });
+    expect(result).toEqual({ ...MOCK_COMMUNICATE, user: null, photos: [] });
     expect(mockPrisma.client.communicate.create).toHaveBeenCalledWith({
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       data: expect.objectContaining({
@@ -215,13 +215,13 @@ describe('CommunicateService', () => {
 
     const buildRow = (overrides: Record<string, unknown> = {}) => ({
       ...MOCK_COMMUNICATE,
-      user: { name: AUTHOR_NAME },
+      user: { id: MOCK_USER_ID, name: AUTHOR_NAME },
       photos: [],
       _count: { likes: 0 },
       ...overrides,
     });
 
-    it('anônimo: retorna authorName, photos e likesCount com flags=false', async () => {
+    it('anônimo: retorna user.name, photos e likesCount com flags=false', async () => {
       mockPrisma.client.communicate.findFirst.mockResolvedValue(
         buildRow({
           photos: [
@@ -237,7 +237,7 @@ describe('CommunicateService', () => {
 
       const result = await service.findOneDetail(MOCK_COMMUNICATE_ID);
 
-      expect(result.authorName).toBe(AUTHOR_NAME);
+      expect(result.user?.name).toBe(AUTHOR_NAME);
       expect(result.likesCount).toBe(7);
       expect(result.liked).toBe(false);
       expect(result.saved).toBe(false);
