@@ -60,16 +60,12 @@ export class SuggestionsPage implements OnInit {
       list = list.filter((item) => {
         const subject = item.subject.toLowerCase();
         const message = item.message.toLowerCase();
-        const category = this.getCategory(item.subject, item.message).toLowerCase();
-        const user = this.getUserName(item.userId).toLowerCase();
-        const idStr = `sg-${item.id.slice(-3)}`.toLowerCase();
+        const user = (item.user?.name ?? '').toLowerCase();
 
         return (
           subject.includes(query) ||
           message.includes(query) ||
-          category.includes(query) ||
           user.includes(query) ||
-          idStr.includes(query) ||
           item.id.toLowerCase().includes(query)
         );
       });
@@ -100,61 +96,6 @@ export class SuggestionsPage implements OnInit {
     });
   }
 
-  
-  getCategory(subject: string, message: string): string {
-    const text = `${subject} ${message}`.toLowerCase();
-    if (text.includes('árvore') || text.includes('parque') || text.includes('praça') || text.includes('verde') || text.includes('meio ambiente') || text.includes('jardim')) {
-      if (text.includes('parque') || text.includes('lazer') || text.includes('academia') || text.includes('quadra') || text.includes('playground')) return 'LAZER';
-      return 'MEIO AMBIENTE';
-    }
-    if (text.includes('ciclovia') || text.includes('trânsito') || text.includes('rua') || text.includes('avenida') || text.includes('calçada') || text.includes('mobilidade') || text.includes('sinalização') || text.includes('faixa')) {
-      return 'MOBILIDADE';
-    }
-    if (text.includes('ônibus') || text.includes('transporte') || text.includes('terminal') || text.includes('abrigo') || text.includes('linha')) {
-      return 'TRANSPORTE';
-    }
-    if (text.includes('iluminação') || text.includes('led') || text.includes('poste') || text.includes('asfalto') || text.includes('bueiro') || text.includes('infraestrutura') || text.includes('buraco') || text.includes('saneamento') || text.includes('esgoto')) {
-      return 'INFRAESTRUTURA';
-    }
-    if (text.includes('cmei') || text.includes('escola') || text.includes('creche') || text.includes('colégio') || text.includes('educação') || text.includes('ensino')) {
-      return 'EDUCAÇÃO';
-    }
-    if (text.includes('posto de saúde') || text.includes('upa') || text.includes('hospital') || text.includes('ubs') || text.includes('médico') || text.includes('saúde') || text.includes('consulta')) {
-      return 'SAÚDE';
-    }
-    if (text.includes('guarda') || text.includes('polícia') || text.includes('segurança') || text.includes('câmera') || text.includes('violência') || text.includes('assalto')) {
-      return 'SEGURANÇA';
-    }
-    return 'OUTROS';
-  }
-
-  getUserName(userId: string): string {
-    const names = [
-      'Camila Souza',
-      'Rafael Lima',
-      'Ana Paula',
-      'Carlos Mendes',
-      'Beatriz Costa',
-      'Mariana Silva',
-      'Lucas Oliveira',
-      'Fernanda Souza',
-      'Gustavo Santos',
-    ];
-    let hash = 0;
-    for (let i = 0; i < userId.length; i++) {
-      hash += userId.charCodeAt(i);
-    }
-    return names[hash % names.length];
-  }
-
-  formatId(id: string): string {
-    const suffix = id.slice(-3).toUpperCase();
-    if (/^\d+$/.test(suffix)) {
-      return `SG-${suffix}`;
-    }
-    return `SG-${suffix}`;
-  }
-
   formatDate(dateVal?: string | Date | null): string {
     if (!dateVal) return '';
     let date: Date;
@@ -162,8 +103,10 @@ export class SuggestionsPage implements OnInit {
       date = dateVal;
     } else {
       const str = String(dateVal);
-      if (str.startsWith('sgt_') || (str.length === 26 && !str.includes('-') && !str.includes(':'))) {
-        date = extractDateFromUlid(str) || new Date(str);
+      if (str.startsWith('sgt_')) {
+        const extracted = extractDateFromUlid(str);
+        if (!extracted) return '';
+        date = extracted;
       } else {
         let normalizedStr = str;
         if (!normalizedStr.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(normalizedStr)) {
@@ -189,7 +132,8 @@ export class SuggestionsPage implements OnInit {
       'nov',
       'dez',
     ];
-    return `${date.getDate()} ${months[date.getMonth()]}`;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${date.getDate()} ${months[date.getMonth()]} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
 
 
