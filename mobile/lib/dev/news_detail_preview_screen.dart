@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../features/news/data/news_detail_model.dart';
 import '../features/news/presentation/pages/news_detail_page.dart';
+import '../shared/models/author_summary.dart';
 
 class NewsDetailPreviewScreen extends StatelessWidget {
   const NewsDetailPreviewScreen({super.key});
@@ -25,8 +26,7 @@ class NewsDetailPreviewScreen extends StatelessWidget {
           'https://picsum.photos/800/500?random=2',
           'https://picsum.photos/800/500?random=3',
         ],
-        authorName: 'Prefeitura de Maringá',
-        authorSubtitle: 'Prefeitura Municipal',
+        author: const AuthorSummary(id: 'usr_preview', name: 'Prefeitura de Maringá'),
         createdAt: '2h atrás',
       ),
     );

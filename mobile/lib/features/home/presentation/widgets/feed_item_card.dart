@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:conectaparana/shared/widgets/media/app_network_image.dart';
+import 'package:conectaparana/shared/widgets/misc/avatar.dart';
 
 import '../../domain/entities/feed_item.dart';
 
@@ -122,7 +123,29 @@ class FeedItemCard extends StatelessWidget {
             color: Color(0xFF171A18),
           ),
         ),
-        if (item.subtitle != null && item.subtitle!.trim().isNotEmpty) ...[
+        if (item.authorName != null) ...[
+          const SizedBox(height: 7),
+          Row(
+            children: [
+              Avatar(size: 14, name: item.authorName),
+              const SizedBox(width: 5),
+              Flexible(
+                child: Text(
+                  item.authorName!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    height: 1.1,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF777E7A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ] else if (item.subtitle != null &&
+            item.subtitle!.trim().isNotEmpty) ...[
           const SizedBox(height: 7),
           Text(
             item.subtitle!,

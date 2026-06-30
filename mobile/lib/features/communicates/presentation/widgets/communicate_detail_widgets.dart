@@ -1,5 +1,6 @@
 import 'package:conectaparana/features/communicates/data/communicate_detail_model.dart';
 import 'package:conectaparana/core/formatters/app_date_formatter.dart';
+import 'package:conectaparana/shared/widgets/misc/avatar.dart';
 import 'package:flutter/material.dart';
 
 const communicateGreen = Color(0xFF006B39);
@@ -150,31 +151,18 @@ class CommunicateAuthorRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initial = item.authorName.trim().isEmpty
-        ? 'P'
-        : item.authorName.trim()[0].toUpperCase();
+    final authorName = item.author?.name ?? 'Prefeitura Municipal';
 
     return Row(
       children: [
-        CircleAvatar(
-          radius: 20,
-          backgroundColor: communicateGreen,
-          child: Text(
-            initial,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
+        Avatar(size: 40, name: item.author?.name),
         const SizedBox(width: 11),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                item.authorName,
+                authorName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(

@@ -2,6 +2,7 @@ import 'package:conectaparana/features/events/data/repository/event_repository.d
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:conectaparana/shared/widgets/media/app_network_image.dart';
+import 'package:conectaparana/shared/widgets/misc/avatar.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -221,6 +222,22 @@ class _EventDetailPageState extends State<EventDetailPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _TypeBadge(label: event.type),
+                      const SizedBox(height: 14),
+
+                      Row(
+                        children: [
+                          Avatar(size: 32, name: event.author?.name),
+                          const SizedBox(width: 8),
+                          Text(
+                            event.author?.name ?? 'Prefeitura Municipal',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1A1A1A),
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 14),
 
                       EventInfoCards(event: event),

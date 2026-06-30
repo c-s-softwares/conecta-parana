@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:conectaparana/core/formatters/app_date_formatter.dart';
 
 import '../../../../core/network/api_client.dart';
+import '../../../../shared/widgets/misc/avatar.dart';
 import '../../../engagement/data/engagement_service.dart';
 import '../../../engagement/widgets/engagement_bar.dart';
 import '../../data/news_detail_model.dart';
@@ -169,40 +170,22 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
 
                       Row(
                         children: [
-                          CircleAvatar(
-                            radius: 18,
-                            backgroundColor: const Color(0xFF006733),
-                            child: Text(
-                              (news.authorName ?? 'P')[0],
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ),
+                          Avatar(size: 36, name: news.author?.name),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  news.authorName ?? 'Prefeitura',
+                                  news.author?.name ?? 'Prefeitura Municipal',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 13,
                                   ),
                                 ),
-                                Text(
-                                  news.authorSubtitle ?? 'Prefeitura Municipal',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    fontSize: 12,
-                                  ),
-                                ),
                               ],
                             ),
                           ),
-                          // OutlinedButton(
-                          //   onPressed: () {},
-                          //   child: const Text('Seguir'),
-                          // ),
                         ],
                       ),
 

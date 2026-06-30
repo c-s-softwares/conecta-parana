@@ -109,7 +109,7 @@ class FeaturedBannerCard extends StatelessWidget {
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          const Avatar(size: 28),
+                          Avatar(size: 28, name: banner.authorName),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Row(
