@@ -36,7 +36,7 @@ class FeedItemCard extends StatelessWidget {
             ],
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(child: _buildContent()),
               const SizedBox(width: 12),
