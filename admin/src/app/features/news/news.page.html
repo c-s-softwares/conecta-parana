@@ -1,0 +1,201 @@
+@if (view() === 'list') {
+  <app-page-header title="NOTÍCIAS" buttonLabel="Criar notícia" (create)="openForm()" />
+
+
+  <div class="mt-4 flex flex-wrap gap-4 items-center bg-gray-100 p-4 rounded-lg">
+
+    <div class="flex-1 min-w-[200px]">
+      <input
+        type="text"
+        [formControl]="searchControl"
+        placeholder="Buscar por título..."
+        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+      />
+    </div>
+
+    <div class="w-48">
+      <select
+        [formControl]="typeFilterControl"
+        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+      >
+        <option value="">Todos os tipos</option>
+        <option value="saude">Saúde</option>
+        <option value="educacao">Educação</option>
+        <option value="infra">Infraestrutura</option>
+        <option value="geral">Geral</option>
+        <option value="outros">Outros</option>
+      </select>
+    </div>
+
+    <div class="w-48">
+      <select
+        [formControl]="statusFilterControl"
+        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+      >
+        <option value="">Todos os status</option>
+        <option value="true">Ativas</option>
+        <option value="false">Inativas</option>
+      </select>
+    </div>
+  </div>
+
+  <ng-template #newsRow let-item>
+    <div class="flex items-center gap-2">
+      <h3 class="truncate text-sm font-bold text-gray-900">{{ item.title }}</h3>
+      <span
+        class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
+        [class]="item.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+      >
+        {{ item.isActive ? 'Ativa' : 'Inativa' }}
+      </span>
+      <span class="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+        {{ item.type | uppercase }}
+      </span>
+      <span class="shrink-0 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+        {{ item.linkType === 'externo' ? 'Externo' : 'Interno' }}
+      </span>
+    </div>
+    <p class="mt-1 truncate text-xs text-gray-600">{{ item.description }}</p>
+  </ng-template>
+
+  <app-entity-list
+    [items]="items()"
+    [rowTemplate]="newsRow"
+    (edit)="openEditForm($any($event))"
+    (delete)="confirmDelete($any($event))"
+  />
+}
+
+@if (view() === 'form') {
+  <div class="fixed inset-0 z-40 flex items-center justify-center bg-black/50">
+    <div class="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+      <app-form-container [title]="isEditing ? 'EDITAR NOTÍCIA' : 'CRIAR NOTÍCIA'">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
+          <app-form-field
+            label="Título"
+            fieldId="title"
+            [required]="true"
+            [showError]="titleTouched && !!titleError"
+            [errorMessage]="titleError"
+          >
+            <input
+              id="title"
+              formControlName="title"
+              type="text"
+              placeholder="Digite o título da notícia"
+              class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </app-form-field>
+
+          <app-form-field
+            label="Descrição"
+            fieldId="description"
+            [required]="true"
+            [showError]="descriptionTouched && !!descriptionError"
+            [errorMessage]="descriptionError"
+          >
+            <textarea
+              id="description"
+              formControlName="description"
+              rows="3"
+              placeholder="Digite a descrição da notícia"
+              class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+            ></textarea>
+          </app-form-field>
+
+          <div class="grid grid-cols-2 gap-4">
+            <app-form-field
+              label="Tipo"
+              fieldId="type"
+              [required]="true"
+              [showError]="typeTouched && !!typeError"
+              [errorMessage]="typeError"
+            >
+              <select
+                id="type"
+                formControlName="type"
+                class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+              >
+                <option value="">Selecione o tipo</option>
+                <option value="saude">Saúde</option>
+                <option value="educacao">Educação</option>
+                <option value="infra">Infraestrutura</option>
+                <option value="geral">Geral</option>
+                <option value="outros">Outros</option>
+              </select>
+            </app-form-field>
+
+            <app-form-field
+              label="Tipo de link"
+              fieldId="linkType"
+              [required]="true"
+              [showError]="linkTypeTouched && !!linkTypeError"
+              [errorMessage]="linkTypeError"
+            >
+              <select
+                id="linkType"
+                formControlName="linkType"
+                class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+              >
+                <option value="interno">Interno</option>
+                <option value="externo">Externo</option>
+              </select>
+            </app-form-field>
+          </div>
+
+          @if (form.get('linkType')?.value === 'externo') {
+            <app-form-field
+              label="URL Externa"
+              fieldId="externalUrl"
+              [required]="false"
+            >
+              <input
+                id="externalUrl"
+                formControlName="externalUrl"
+                type="text"
+                placeholder="https://exemplo.com"
+                class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <span class="text-xs text-gray-500 mt-1 block">Em breve - este link ainda não será publicado.</span>
+            </app-form-field>
+          }
+
+          <div class="flex items-center gap-2">
+            <input
+              id="isActive"
+              formControlName="isActive"
+              type="checkbox"
+              class="h-4 w-4 rounded border-gray-400 cursor-pointer"
+            />
+            <label for="isActive" class="text-sm font-medium text-gray-800 cursor-pointer">Notícia ativa</label>
+          </div>
+
+          <!-- acoes -->
+          <div class="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              (click)="closeForm()"
+              class="rounded-lg bg-btn-cancel px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-cancel-hover cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="rounded-lg bg-btn-create px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-btn-create-hover cursor-pointer"
+            >
+              {{ isEditing ? 'Salvar' : 'Criar' }}
+            </button>
+          </div>
+        </form>
+      </app-form-container>
+    </div>
+  </div>
+}
+
+<app-confirm-dialog
+  [visible]="!!deletingItem()"
+  title="Excluir notícia"
+  message="Tem certeza que deseja excluir esta notícia? Esta ação não pode ser desfeita."
+  (confirmed)="executeDelete()"
+  (cancelled)="cancelDelete()"
+/>
