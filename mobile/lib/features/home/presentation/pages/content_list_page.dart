@@ -1,4 +1,5 @@
 import 'package:conectaparana/core/auth/auth_service.dart';
+import 'package:conectaparana/features/city_switcher/presentation/controllers/active_city_provider.dart';
 import 'package:conectaparana/features/home/data/repositories/content_list_repository.dart';
 import 'package:conectaparana/features/home/domain/entities/feed_item.dart';
 import 'package:conectaparana/features/home/presentation/widgets/feed_item_card.dart';
@@ -51,7 +52,9 @@ class _ContentListPageState extends State<ContentListPage> {
 
   Future<ContentListResult> _request(int page) => _repository.load(
     kind: widget.kind,
-    cityId: AuthService.instance.currentUser.value?.cityId,
+    cityId:
+        activeCityController.value?.id ??
+        AuthService.instance.currentUser.value?.cityId,
     page: page,
   );
 
