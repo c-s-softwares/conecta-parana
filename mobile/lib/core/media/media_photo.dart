@@ -11,17 +11,26 @@ class MediaPhoto {
   String? get fullSizeUrl => url ?? thumbUrl;
   bool get hasImage => displayUrl != null;
 
-  factory MediaPhoto.fromJson(dynamic json) {
+  factory MediaPhoto.fromJson(dynamic json, {String? loopbackBaseUrl}) {
     if (json is String) {
-      final url = MediaUrlResolver.resolve(json);
+      final url = MediaUrlResolver.resolve(
+        json,
+        loopbackBaseUrl: loopbackBaseUrl,
+      );
       return MediaPhoto(url: url, thumbUrl: url);
     }
     if (json is! Map) return const MediaPhoto();
 
     return MediaPhoto(
       id: json['id']?.toString(),
-      url: MediaUrlResolver.resolve(json['url']),
-      thumbUrl: MediaUrlResolver.resolve(json['thumbUrl']),
+      url: MediaUrlResolver.resolve(
+        json['url'],
+        loopbackBaseUrl: loopbackBaseUrl,
+      ),
+      thumbUrl: MediaUrlResolver.resolve(
+        json['thumbUrl'],
+        loopbackBaseUrl: loopbackBaseUrl,
+      ),
     );
   }
 

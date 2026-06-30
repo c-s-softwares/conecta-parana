@@ -25,10 +25,10 @@ void main() {
     expect(photos.single.displayUrl, 'https://cdn.test/legacy.jpg');
   });
 
-  test('troca localhost pela origem configurada no ambiente de debug', () {
+  test('troca localhost pela origem informada explicitamente', () {
     final photo = MediaPhoto.fromJson({
       'url': 'http://localhost:3000/dev-uploads/photo.webp',
-    });
+    }, loopbackBaseUrl: 'http://10.0.2.2:3000');
 
     expect(photo.url, 'http://10.0.2.2:3000/dev-uploads/photo.webp');
   });

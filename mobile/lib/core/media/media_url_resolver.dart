@@ -9,7 +9,7 @@ class MediaUrlResolver {
   );
   static const _homologationBaseUrl = 'https://api.dev.conectaparana.pr.gov.br';
 
-  static String? resolve(dynamic value) {
+  static String? resolve(dynamic value, {String? loopbackBaseUrl}) {
     if (value is! String || value.trim().isEmpty) return null;
 
     final raw = value.trim();
@@ -18,7 +18,8 @@ class MediaUrlResolver {
     if (!_isLoopback(uri.host)) return raw;
 
     final replacement = Uri.tryParse(
-      kReleaseMode ? _homologationBaseUrl : _configuredApiBaseUrl,
+      loopbackBaseUrl ??
+          (kReleaseMode ? _homologationBaseUrl : _configuredApiBaseUrl),
     );
     if (replacement == null || !replacement.hasAuthority) return raw;
 
