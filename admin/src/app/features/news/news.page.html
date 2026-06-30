@@ -3,14 +3,18 @@
   <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
     <div>
       <h1 class="text-3xl font-bold text-gray-900">Notícias</h1>
-      <p class="text-sm text-gray-500 mt-1">Conteúdo jornalístico, coberturas e atualizações oficiais.</p>
+      <p class="text-sm text-gray-500 mt-1">
+        Conteúdo jornalístico, coberturas e atualizações oficiais.
+      </p>
     </div>
 
     <!-- Ações do Cabeçalho -->
     <div class="flex items-center gap-3">
-      <!-- Input de Busca com Ícone -->
+      <!-- Input de Busca -->
       <div class="relative">
-        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+        <span
+          class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400"
+        >
           <ng-icon name="heroMagnifyingGlass" size="18"></ng-icon>
         </span>
         <input
@@ -36,7 +40,7 @@
       <!-- Botão Criar -->
       <button
         type="button"
-        (click)="openForm()"
+        (click)="openCreate()"
         class="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition cursor-pointer"
       >
         <ng-icon name="heroPlus" size="18"></ng-icon>
@@ -47,10 +51,16 @@
 
   <!-- Painel Colapsável de Filtros -->
   @if (showFilters()) {
-    <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-wrap gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
+    <div
+      class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-wrap gap-4 animate-in fade-in slide-in-from-top-2 duration-200"
+    >
       <!-- Filtro de Tipo -->
       <div class="w-48">
-        <label for="filter-type" class="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo</label>
+        <label
+          for="filter-type"
+          class="block text-xs font-bold text-gray-500 uppercase mb-1"
+          >Tipo</label
+        >
         <select
           id="filter-type"
           [formControl]="typeFilterControl"
@@ -67,7 +77,11 @@
 
       <!-- Filtro de Status -->
       <div class="w-48">
-        <label for="filter-status" class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
+        <label
+          for="filter-status"
+          class="block text-xs font-bold text-gray-500 uppercase mb-1"
+          >Status</label
+        >
         <select
           id="filter-status"
           [formControl]="statusFilterControl"
@@ -81,14 +95,18 @@
     </div>
   }
 
-  <!-- Controle de Abas Segmentadas & Contador -->
+  <!-- Abas de Tipo de Link & Contador -->
   <div class="flex items-center justify-between mt-6">
     <div class="inline-flex rounded-lg bg-gray-100 p-1">
       <button
         type="button"
         (click)="setLinkTypeTab('todas')"
         class="rounded-md px-4 py-1.5 text-sm font-medium transition-all cursor-pointer"
-        [class]="selectedLinkTypeTab() === 'todas' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
+        [class]="
+          selectedLinkTypeTab() === 'todas'
+            ? 'bg-white text-gray-900 shadow-sm'
+            : 'text-gray-600 hover:text-gray-900'
+        "
       >
         Todas
       </button>
@@ -96,7 +114,11 @@
         type="button"
         (click)="setLinkTypeTab('interno')"
         class="rounded-md px-4 py-1.5 text-sm font-medium transition-all cursor-pointer"
-        [class]="selectedLinkTypeTab() === 'interno' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
+        [class]="
+          selectedLinkTypeTab() === 'interno'
+            ? 'bg-white text-gray-900 shadow-sm'
+            : 'text-gray-600 hover:text-gray-900'
+        "
       >
         Internas
       </button>
@@ -104,7 +126,11 @@
         type="button"
         (click)="setLinkTypeTab('externo')"
         class="rounded-md px-4 py-1.5 text-sm font-medium transition-all cursor-pointer"
-        [class]="selectedLinkTypeTab() === 'externo' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'"
+        [class]="
+          selectedLinkTypeTab() === 'externo'
+            ? 'bg-white text-gray-900 shadow-sm'
+            : 'text-gray-600 hover:text-gray-900'
+        "
       >
         Externas
       </button>
@@ -115,7 +141,7 @@
     </span>
   </div>
 
-  <!-- Listagem Principal de Notícias (DataList) -->
+  <!-- Listagem de Notícias -->
   <app-data-list
     [items]="$any(items())"
     [total]="totalItems()"
@@ -127,90 +153,72 @@
     emptyIcon="heroNewspaper"
     (pageChange)="onPageChange($event)"
   >
-    <ng-template #row let-item let-i="index">
-      <div class="list-item flex items-center justify-between rounded-lg bg-white border border-gray-100 p-5 shadow-sm">
-        <!-- Ícone e Conteúdo -->
-        <div class="flex items-start gap-4 min-w-0 flex-1">
-          <!-- Quadrado colorido com ícone -->
-          <div
-            class="w-12 h-12 shrink-0 rounded-lg flex items-center justify-center"
-            [class]="i % 2 === 0 ? 'bg-cyan-50 text-cyan-600' : 'bg-purple-50 text-purple-600'"
-          >
-            <ng-icon [name]="item.type === 'geral' ? 'heroMegaphone' : 'heroNewspaper'" size="24"></ng-icon>
+    <ng-template #row let-item>
+      <div class="list-item">
+        <div
+          class="thumb"
+          style="background: oklch(0.95 0.04 210 / 0.55); color: oklch(0.42 0.12 210)"
+        >
+          @if (item.photos?.length && item.photos[0].thumbUrl) {
+            <img
+              [src]="item.photos[0].thumbUrl"
+              alt=""
+              class="h-full w-full object-cover"
+            />
+          } @else {
+            <ng-icon
+              [name]="item.type === 'geral' ? 'heroMegaphone' : 'heroNewspaper'"
+              size="26"
+            />
+          }
+        </div>
+        <div class="body">
+          <div class="title-row">
+            <span class="title">{{ item.title }}</span>
+            <span class="badge badge-noticia">{{ item.type }}</span>
+            <span
+              class="badge badge-dot"
+              [class.badge-ativo]="item.isActive"
+              [class.badge-inativo]="!item.isActive"
+            >
+              {{ item.isActive ? 'Ativa' : 'Inativa' }}
+            </span>
+            <span
+              class="badge"
+              [class.badge-externo]="item.linkType === 'externo'"
+              [class.badge-interno]="item.linkType !== 'externo'"
+            >
+              {{ item.linkType }}
+            </span>
           </div>
-
-          <!-- Texto e Badges -->
-          <div class="min-w-0 flex-1">
-            <div class="flex flex-wrap items-center gap-2">
-              <h3 class="text-base font-bold text-gray-900 truncate">{{ item.title }}</h3>
-              
-              <!-- Badge de Status Ativo -->
-              <span
-                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider"
-                [class]="item.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'"
-              >
-                <span class="w-1.5 h-1.5 rounded-full" [class]="item.isActive ? 'bg-green-500' : 'bg-gray-400'"></span>
-                {{ item.isActive ? 'Ativa' : 'Inativa' }}
-              </span>
-
-              <!-- Badge de Tipo de Link -->
-              <span
-                class="px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider"
-                [class]="item.linkType === 'externo' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'"
-              >
-                {{ item.linkType }}
-              </span>
-            </div>
-
-            <!-- Descrição -->
-            <p class="mt-2 text-sm text-gray-600 line-clamp-2 leading-relaxed">
-              {{ item.description }}
-            </p>
-
-            <!-- Metadados da Notícia -->
-            <div class="mt-3 flex items-center gap-4 text-xs text-gray-500">
-              <span class="flex items-center gap-1">
-                <ng-icon name="heroMapPin" size="14"></ng-icon>
-                {{ item.cityName || 'Região' }}
-              </span>
-              <span class="flex items-center gap-1">
-                <ng-icon name="heroCalendarDays" size="14"></ng-icon>
-                {{ item.createdAt | date: 'dd MMM yyyy' }}
-              </span>
-            </div>
+          <p class="desc">{{ item.description }}</p>
+          <div class="meta">
+            <span>
+              <ng-icon name="heroMapPin" size="13" />
+              {{ item.cityName || 'Região' }}
+            </span>
+            <span>
+              <ng-icon name="heroCalendarDays" size="13" />
+              {{ item.createdAt | date: 'dd/MM/yyyy' }}
+            </span>
           </div>
         </div>
-
-        <!-- Ações da Linha -->
-        <div class="ml-4 flex shrink-0 items-center gap-2">
-          <!-- Editar -->
+        <div class="actions">
           <button
             type="button"
-            (click)="openEditForm(item)"
             class="btn-icon"
+            (click)="openEdit(item)"
             aria-label="Editar"
           >
-            <ng-icon name="heroPencilSquare" size="16"></ng-icon>
+            <ng-icon name="heroPencilSquare" size="16" />
           </button>
-
-          <!-- Alterar Status (Arquivar/Desativar) -->
           <button
             type="button"
-            (click)="toggleStatus(item)"
-            class="btn-icon"
-            aria-label="Alterar status"
-          >
-            <ng-icon name="heroArchiveBox" size="16"></ng-icon>
-          </button>
-
-          <!-- Excluir -->
-          <button
-            type="button"
-            (click)="confirmDelete(item)"
             class="btn-icon danger"
+            (click)="confirmDelete(item)"
             aria-label="Excluir"
           >
-            <ng-icon name="heroTrash" size="16"></ng-icon>
+            <ng-icon name="heroTrash" size="16" />
           </button>
         </div>
       </div>
@@ -218,137 +226,12 @@
   </app-data-list>
 </div>
 
-<!-- Modal de Criação / Edição -->
-<app-modal-dialog
-  [visible]="view() === 'form'"
-  [title]="isEditing ? 'EDITAR NOTÍCIA' : 'CRIAR NOTÍCIA'"
-  [footer]="true"
-  (cancelled)="closeForm()"
->
-  <form id="news-form" [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
-    <!-- Título -->
-    <app-form-field
-      label="Título"
-      fieldId="title"
-      [required]="true"
-      [showError]="titleTouched && !!titleError"
-      [errorMessage]="titleError"
-    >
-      <input
-        id="title"
-        formControlName="title"
-        type="text"
-        placeholder="Digite o título da notícia"
-        class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
-      />
-    </app-form-field>
-
-    <!-- Descrição -->
-    <app-form-field
-      label="Descrição"
-      fieldId="description"
-      [required]="true"
-      [showError]="descriptionTouched && !!descriptionError"
-      [errorMessage]="descriptionError"
-    >
-      <textarea
-        id="description"
-        formControlName="description"
-        rows="3"
-        placeholder="Digite a descrição da notícia"
-        class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
-      ></textarea>
-    </app-form-field>
-
-    <div class="grid grid-cols-2 gap-4">
-      <!-- Tipo -->
-      <app-form-field
-        label="Tipo"
-        fieldId="type"
-        [required]="true"
-        [showError]="typeTouched && !!typeError"
-        [errorMessage]="typeError"
-      >
-        <select
-          id="type"
-          formControlName="type"
-          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
-        >
-          <option value="">Selecione o tipo</option>
-          <option value="saude">Saúde</option>
-          <option value="educacao">Educação</option>
-          <option value="infra">Infraestrutura</option>
-          <option value="geral">Geral</option>
-          <option value="outros">Outros</option>
-        </select>
-      </app-form-field>
-
-      <!-- Tipo de link -->
-      <app-form-field
-        label="Tipo de link"
-        fieldId="linkType"
-        [required]="true"
-        [showError]="linkTypeTouched && !!linkTypeError"
-        [errorMessage]="linkTypeError"
-      >
-        <select
-          id="linkType"
-          formControlName="linkType"
-          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
-        >
-          <option value="interno">Interno</option>
-          <option value="externo">Externo</option>
-        </select>
-      </app-form-field>
-    </div>
-
-    <!-- URL Externa (UI-only) -->
-    @if (form.get('linkType')?.value === 'externo') {
-      <app-form-field
-        label="URL Externa"
-        fieldId="externalUrl"
-        [required]="false"
-      >
-        <input
-          id="externalUrl"
-          formControlName="externalUrl"
-          type="text"
-          placeholder="https://exemplo.com"
-          class="w-full rounded-md border-0 bg-input-bg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-        <span class="text-xs text-gray-500 mt-1 block">Em breve - este link ainda não será publicado.</span>
-      </app-form-field>
-    }
-
-    <!-- Ativo -->
-    <div class="flex items-center gap-2">
-      <input
-        id="isActive"
-        formControlName="isActive"
-        type="checkbox"
-        class="h-4 w-4 rounded border-gray-400 cursor-pointer"
-      />
-      <label for="isActive" class="text-sm font-medium text-gray-800 cursor-pointer">Notícia ativa</label>
-    </div>
-  </form>
-
-  <div modal-footer class="flex justify-end gap-2">
-    <button
-      type="button"
-      (click)="closeForm()"
-      class="btn btn-ghost"
-    >
-      Cancelar
-    </button>
-    <button
-      type="submit"
-      form="news-form"
-      class="btn btn-primary"
-    >
-      {{ isEditing ? 'Salvar' : 'Criar' }}
-    </button>
-  </div>
-</app-modal-dialog>
+<app-news-form-modal
+  [open]="formOpen()"
+  [news]="selectedItem()"
+  (saved)="onFormSaved()"
+  (closed)="onFormClosed()"
+/>
 
 <app-confirm-dialog
   [visible]="!!deletingItem()"
