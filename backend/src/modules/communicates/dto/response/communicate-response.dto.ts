@@ -1,6 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PhotoResponseDto } from '../../../uploads/dto/response/photo-response.dto';
 import { PhotoThumbDto } from '../../../../common/dto/response/photo.dto';
+import { UserSummaryDto } from '../../../../common/dto/response/user-summary.dto';
 
 export class CommunicateResponse {
   @ApiProperty({
@@ -33,6 +34,13 @@ export class CommunicateResponse {
   })
   userId!: string;
 
+  @ApiPropertyOptional({
+    type: () => UserSummaryDto,
+    nullable: true,
+    description: 'Admin autor do comunicado. Null quando o autor foi removido.',
+  })
+  user?: UserSummaryDto | null;
+
   @ApiProperty({
     type: [PhotoThumbDto],
     description: 'Fotos do comunicado em formato leve (apenas miniatura).',
@@ -41,11 +49,6 @@ export class CommunicateResponse {
 }
 
 export class CommunicateDetailResponse extends CommunicateResponse {
-  @ApiProperty({
-    example: 'João da Silva',
-    description: 'Nome do administrador que publicou o comunicado.',
-  })
-  authorName!: string;
 
   @ApiProperty({
     type: () => [PhotoResponseDto],

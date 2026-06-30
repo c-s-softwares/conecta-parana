@@ -3,6 +3,7 @@ import {
   PhotoSummaryDto,
   PhotoThumbDto,
 } from '../../../../common/dto/response/photo.dto';
+import { UserSummaryDto } from '../../../../common/dto/response/user-summary.dto';
 
 export class EventResponse {
   @ApiProperty({ example: 'event_01HZX...', description: 'ID do evento' })
@@ -43,6 +44,13 @@ export class EventResponse {
     description: 'ID do usuário criador',
   })
   userId!: string;
+
+  @ApiPropertyOptional({
+    type: () => UserSummaryDto,
+    nullable: true,
+    description: 'Admin autor do evento. Null quando o autor foi removido.',
+  })
+  user?: UserSummaryDto | null;
 
   @ApiPropertyOptional({
     example: 'local_01HZX...',
