@@ -49,9 +49,11 @@ export class NewsService extends BaseCrudService<
   protected toResponse(entity: unknown): NewsResponse {
     const news = entity as NewsResponse & {
       photos?: { id: string; thumbUrl: string | null }[];
+      user?: { id: string; name: string } | null;
     };
     return {
       ...news,
+      user: news.user ?? null,
       photos: (news.photos ?? []).map((photo) => ({
         id: photo.id,
         thumbUrl: photo.thumbUrl,
@@ -140,7 +142,10 @@ export class NewsService extends BaseCrudService<
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy: { createdAt: 'desc' },
-        include: { photos: { select: { id: true, thumbUrl: true } } },
+        include: {
+          photos: { select: { id: true, thumbUrl: true } },
+          user: { select: { id: true, name: true } },
+        },
       }),
       this.prisma.client.news.count({ where }),
     ]);
@@ -205,6 +210,7 @@ export class NewsService extends BaseCrudService<
       where: { id, isActive: true },
       include: {
         photos: true,
+        user: { select: { id: true, name: true } },
         _count: { select: { likes: true } },
       },
     });
@@ -239,6 +245,8 @@ export class NewsService extends BaseCrudService<
       linkUrl: news.linkUrl,
       isActive: news.isActive,
       cityId: news.cityId,
+      userId: news.userId,
+      user: news.user ?? null,
       createdAt: news.createdAt,
       updatedAt: news.updatedAt,
       photos: news.photos.map((p) => ({

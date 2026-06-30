@@ -49,7 +49,6 @@ export class CommunicateResponse {
 }
 
 export class CommunicateDetailResponse extends CommunicateResponse {
-
   @ApiProperty({
     type: () => [PhotoResponseDto],
     description: 'Fotos anexadas ao comunicado (max 10).',
