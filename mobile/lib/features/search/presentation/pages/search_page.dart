@@ -49,6 +49,7 @@ class _SearchPageState extends State<SearchPage> {
   List<SearchResultItem> _items = const [];
   int _total = 0;
   bool _showFilterPanel = false;
+  bool _isNavigating = false;
 
   City? get _userCity {
     final user = AuthService.instance.currentUser.value;
@@ -127,6 +128,12 @@ class _SearchPageState extends State<SearchPage> {
       _showFilterPanel = false;
     });
     _search();
+  }
+
+  void _openResult(SearchResultItem item) {
+    if (_isNavigating || item.detailRoute.isEmpty) return;
+    _isNavigating = true;
+    context.go(item.detailRoute);
   }
 
   @override
@@ -313,7 +320,7 @@ class _SearchPageState extends State<SearchPage> {
             SearchResultCard(
               item: item,
               cityName: _city?.name,
-              onTap: () => context.push(item.detailRoute),
+              onTap: () => _openResult(item),
             ),
             const SizedBox(height: 10),
           ],
