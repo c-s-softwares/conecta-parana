@@ -1,22 +1,22 @@
+import 'package:conectaparana/features/register/data/models/city_model.dart';
+import 'package:conectaparana/features/register/data/services/city_service.dart';
+import 'package:conectaparana/features/register/data/services/register_repository.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:dio/dio.dart';
-import 'package:conectaparana/features/register/data/models/services/register_repository.dart';
 import 'package:conectaparana/core/auth/auth_service.dart';
 import 'package:conectaparana/core/auth/auth_user.dart';
 import 'package:conectaparana/core/auth/auth_event.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:conectaparana/core/auth/presentation/register_screen.dart';
-import 'package:conectaparana/features/register/data/models/services/city_service.dart';
-import 'package:conectaparana/features/register/data/models/services/city_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FakeCityService extends CityService {
   @override
   Future<List<City>> getCities() async {
     return [
-      const City(id: '1', name: 'Curitiba'),
-      const City(id: '2', name: 'Maringá'),
+      const City(id: '1', name: 'Curitiba', state: 'PR'),
+      const City(id: '2', name: 'Maringá', state: 'PR'),
     ];
   }
 }
@@ -243,9 +243,7 @@ void main() {
       expect(fakeAuth.lastAccessToken, 'fake-access-token');
       expect(fakeAuth.lastRefreshToken, 'fake-refresh-token');
       expect(find.text('Styleguide'), findsOneWidget);
-    },
-    skip: true,
-    );
+    }, skip: true);
   });
 }
 
@@ -258,10 +256,11 @@ class _ErrorCityService extends CityService {
 
 class _EmailExistsRepository extends RegisterRepository {
   @override
-  Future<({String accessToken, String refreshToken})> register({
+  Future<({String? accessToken, String? refreshToken})> register({
     required String name,
     required String email,
     required String password,
+    required String confirmPassword,   
     required String cityId,
   }) async {
     throw DioException(
@@ -277,10 +276,11 @@ class _EmailExistsRepository extends RegisterRepository {
 
 class _HappyRepository extends RegisterRepository {
   @override
-  Future<({String accessToken, String refreshToken})> register({
+  Future<({String? accessToken, String? refreshToken})> register({
     required String name,
     required String email,
     required String password,
+    required String confirmPassword, 
     required String cityId,
   }) async {
     return (

@@ -1,6 +1,6 @@
+import 'package:conectaparana/features/register/data/services/city_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:conectaparana/features/register/data/models/services/city_service.dart';
 
 void main() {
   setUp(() async {

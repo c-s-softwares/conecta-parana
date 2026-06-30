@@ -234,6 +234,52 @@ Está Autenticado?
 * **Termos não aceitos:** botão `"Criar conta"` permanece desabilitado.
 * **Erro de rede genérico (timeout, sem conexão, 5xx):** SnackBar vermelho `"Erro ao criar conta. Verifique sua conexão e tente novamente."` no rodapé da tela.
 
+## Fluxo de Onboarding
+
+O onboarding é exibido após o cadastro (com verificação de email) ou quando o usuário autenticado não possui `cityId` no perfil.
+
+### Quando é acionado
+
+- Após cadastro bem-sucedido e verificação de email (`/register` → verificação → `/onboarding`)
+- No boot, quando `isLogged == true` e `hasCity == false`
+
+### Verificação de email (pré-onboarding)
+
+Após o cadastro, o backend **não** retorna sessão — exige verificar o email primeiro. O fluxo é:
+
+1. `POST /auth/register` cria a conta e dispara um código de 6 dígitos por email
+2. O app navega para a tela **"Digite o código"**, recebendo email e senha do cadastro
+3. Usuário digita o código → `POST /auth/verify-email` `{ email, code }`
+4. Verificado → o app faz login automático (`POST /auth/login`) e navega para `/onboarding`
+5. **Reenviar código:** `POST /auth/resend-verification` `{ email }`, com cooldown de 60s na UI (rate-limited por email no backend)
+
+> O código é enviado por email (depende do `MAIL_DRIVER` do ambiente). Em ambientes com driver mock, o código aparece no log do backend. O reenvio é limitado por email — use emails distintos ao testar repetidamente.
+
+### Passos do wizard
+
+| Passo | Tela | Obrigatório |
+|-------|------|-------------|
+| 1 | Confirmar cidade (`PUT /users/me/city`) | Sim |
+| 2 | Informar bairro (`PUT /users/me`) | Não — pode pular |
+| 3 | Permissões (localização e notificações) | Não — pode pular |
+
+### Comportamento
+
+- Botão **"Pular"** disponível nos passos 2 e 3
+- Permissões negadas não bloqueiam a finalização
+- Ao concluir, navega para `/home`
+- Se o usuário veio do cadastro com cidade já selecionada, o passo 1 vem preenchido
+
+### Cenários de erro tratados
+
+| Cenário | Comportamento |
+|---------|---------------|
+| `POST /auth/verify-email` retorna 400 `invalid_or_expired_code` | Mensagem inline "Código inválido ou expirado" |
+| `PUT /users/me/city` retorna 429 `update_too_frequent` | Snackbar amarelo + botão "Próximo" desabilitado por 60s |
+| `PUT /users/me` falha | Snackbar genérico + usuário pode tentar novamente ou pular |
+| Permissão negada pelo usuário | Onboarding segue normalmente |
+| Usuário nega permissão e tenta novamente | Abre configurações do app (`openAppSettings`) |
+
 ## Roteamento com pendingDeepLink no AppRouter
 
 #### Fluxo:
@@ -244,8 +290,6 @@ Está Autenticado?
 4. App navega para `/login`
 5. Login bem-sucedido → `AppRouter.consumePendingDeepLink()` retorna o path e limpa o estado
 6. `context.go(path)` leva o usuário ao destino original
-
----
 
 ## Custom scheme como fallback de deep links
 

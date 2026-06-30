@@ -1,10 +1,11 @@
+import 'package:conectaparana/features/register/data/models/city_model.dart';
+import 'package:conectaparana/features/register/data/services/city_service.dart';
+import 'package:conectaparana/features/register/data/services/register_repository.dart';
+import 'package:conectaparana/shared/widgets/pages/webview_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:conectaparana/shared/widgets/pages/webview_screen.dart';
-import 'package:conectaparana/features/register/data/models/services/register_repository.dart';
-import 'package:conectaparana/features/register/data/models/services/city_service.dart';
-import 'package:conectaparana/features/register/data/models/services/city_model.dart';
-import 'package:go_router/go_router.dart';
+import 'package:conectaparana/features/onboarding/presentation/steps/verify_email_screen.dart';
+import 'package:dio/dio.dart';
 
 class _PasswordRules {
   static final _especial = RegExp(
@@ -157,15 +158,57 @@ class RegisterScreenState extends State<RegisterScreen> {
   void validateForTest() => _validate();
 
   Future<void> _register() async {
-    if (!_validate()) return;
+    if (!_validate()) {
+      return;
+    }
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
 
-    await Future.delayed(const Duration(seconds: 1));
-    if (mounted) {
-      setState(() => _isLoading = false);
-      context.go('/styleguide');
+    try {
+      await (widget.repository ?? RegisterRepository()).register(
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        confirmPassword: _confirmController.text,
+        cityId: _selectedCity!.id,
+      );
+
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VerifyEmailScreen(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          ),
+        ),
+      );
+    } on DioException catch (e) {
+      if (!mounted) return;
+      final code = e.response?.data is Map
+          ? (e.response?.data as Map)['code']
+          : null;
+      if (e.response?.statusCode == 409 || code == 'email_exists') {
+        setState(() => _emailExists = true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Não foi possível criar a conta. Tente novamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Algo deu errado. Tente novamente.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

@@ -1,5 +1,5 @@
-import 'package:conectaparana/features/register/data/models/services/city_model.dart';
-import 'package:conectaparana/features/register/data/models/services/city_service.dart';
+import 'package:conectaparana/features/register/data/models/city_model.dart';
+import 'package:conectaparana/features/register/data/services/city_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
