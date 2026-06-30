@@ -7,6 +7,7 @@ class FeedItem {
   final FeedItemType type;
   final String title;
   final String? subtitle;
+  final String? authorName;
   final String? imageUrl;
   final String? category;
   final DateTime? date;
@@ -18,6 +19,7 @@ class FeedItem {
     required this.type,
     required this.title,
     this.subtitle,
+    this.authorName,
     this.imageUrl,
     this.category,
     this.date,

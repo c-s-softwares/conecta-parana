@@ -1,4 +1,5 @@
 import 'package:conectaparana/core/media/media_photo.dart';
+import 'package:conectaparana/shared/models/author_summary.dart';
 
 class NewsDetailModel {
   final String id;
@@ -11,8 +12,7 @@ class NewsDetailModel {
   final bool isActive;
   final List<String> photos;
   final List<MediaPhoto> photoItems;
-  final String? authorName;
-  final String? authorSubtitle;
+  final AuthorSummary? author;
   final String? createdAt;
   final int likesCount;
   final bool liked;
@@ -31,8 +31,7 @@ class NewsDetailModel {
     required this.isActive,
     required this.photos,
     this.photoItems = const [],
-    this.authorName,
-    this.authorSubtitle,
+    this.author,
     this.createdAt,
     this.likesCount = 0,
     this.liked = false,
@@ -55,8 +54,7 @@ class NewsDetailModel {
           .whereType<String>()
           .toList(growable: false),
       photoItems: photoItems,
-      authorName: json['authorName'],
-      authorSubtitle: json['authorSubtitle'],
+      author: AuthorSummary.fromJson(json['user'] as Map<String, dynamic>?),
       createdAt: (json['publishedAt'] ?? json['createdAt'])?.toString(),
       likesCount: json['likesCount'] as int? ?? 0,
       liked:

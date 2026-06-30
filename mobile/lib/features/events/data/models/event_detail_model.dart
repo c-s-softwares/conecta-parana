@@ -1,4 +1,5 @@
 import 'package:conectaparana/core/media/media_photo.dart';
+import 'package:conectaparana/shared/models/author_summary.dart';
 
 class EventPhoto extends MediaPhoto {
   @override
@@ -53,6 +54,7 @@ class EventDetail {
   final String cityId;
   final EventCoordinates? coordinates;
   final EventLocal? local;
+  final AuthorSummary? author;
   final List<EventPhoto> photos;
   final int likesCount;
   final bool likedByMe;
@@ -70,6 +72,7 @@ class EventDetail {
     required this.cityId,
     this.coordinates,
     this.local,
+    this.author,
     required this.photos,
     required this.likesCount,
     required this.likedByMe,
@@ -99,6 +102,7 @@ class EventDetail {
       local: json['local'] != null
           ? EventLocal.fromJson(json['local'] as Map<String, dynamic>)
           : null,
+      author: AuthorSummary.fromJson(json['user'] as Map<String, dynamic>?),
       photos: (json['photos'] as List<dynamic>? ?? const [])
           .map((p) => EventPhoto.fromJson(p as Map<String, dynamic>))
           .where((photo) => photo.hasImage)
@@ -130,6 +134,7 @@ class EventDetail {
       cityId: cityId,
       coordinates: coordinates,
       local: local,
+      author: author,
       photos: photos,
       likesCount: likesCount ?? this.likesCount,
       likedByMe: likedByMe ?? this.likedByMe,

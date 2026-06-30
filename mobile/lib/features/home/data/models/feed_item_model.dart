@@ -52,8 +52,9 @@ class FeedResponseModel {
   static FeedItem _communicateToItem(Map<String, dynamic> data) {
     final createdAt =
         _parseDate(data['createdAt']) ?? _parseDate(data['updatedAt']);
+    final userMap = data['user'] as Map<String, dynamic>?;
     final author =
-        data['authorName'] as String? ??
+        userMap?['name'] as String? ??
         data['sourceName'] as String? ??
         'Prefeitura Municipal';
     final timeLabel = _relativeTimeLabel(createdAt);
@@ -63,6 +64,7 @@ class FeedResponseModel {
       id: data['id'] as String,
       type: FeedItemType.comunicado,
       title: data['title'] as String? ?? '',
+      authorName: author,
       subtitle: timeLabel.isEmpty ? author : '$author · $timeLabel',
       imageUrl:
           photos.firstOrNull?.displayUrl ??
@@ -79,13 +81,14 @@ class FeedResponseModel {
     final type = data['type'] as String?;
     final updatedAt =
         _parseDate(data['updatedAt']) ?? _parseDate(data['createdAt']);
+    final userMap = data['user'] as Map<String, dynamic>?;
 
     return HomeFeaturedBanner(
       id: id,
       tags: [if (type != null && type.isNotEmpty) type.toUpperCase()],
       highlightText: 'Noticia em destaque',
       title: data['title'] as String? ?? '',
-      authorName: 'Prefeitura',
+      authorName: userMap?['name'] as String? ?? 'Prefeitura Municipal',
       timeLabel: _relativeTimeLabel(updatedAt),
       detailRoute: '/home/news/$id',
       photos: MediaPhoto.listFromJson(data['photos']),

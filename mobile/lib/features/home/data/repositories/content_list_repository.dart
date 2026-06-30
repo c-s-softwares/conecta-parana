@@ -42,14 +42,18 @@ class ContentListRepository {
   FeedItem _mapItem(ContentListKind kind, Map<String, dynamic> json) {
     final createdAt = DateTime.tryParse(json['createdAt']?.toString() ?? '');
     final photos = MediaPhoto.listFromJson(json['photos']);
+    final userMap = json['user'] as Map<String, dynamic>?;
+    final authorName =
+        userMap?['name'] as String? ?? 'Prefeitura Municipal';
     return FeedItem(
       id: json['id'] as String,
       type: kind == ContentListKind.communicates
           ? FeedItemType.comunicado
           : FeedItemType.news,
       title: json['title'] as String? ?? '',
+      authorName: kind == ContentListKind.communicates ? authorName : null,
       subtitle: kind == ContentListKind.communicates
-          ? 'Prefeitura Municipal'
+          ? authorName
           : json['description'] as String?,
       category: json['type'] as String?,
       date: createdAt,

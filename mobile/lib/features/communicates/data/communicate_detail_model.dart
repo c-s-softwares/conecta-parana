@@ -1,11 +1,12 @@
 import 'package:conectaparana/core/media/media_photo.dart';
+import 'package:conectaparana/shared/models/author_summary.dart';
 
 class CommunicateDetailModel {
   const CommunicateDetailModel({
     required this.id,
     required this.title,
     required this.description,
-    required this.authorName,
+    this.author,
     required this.isActive,
     required this.photos,
     this.photoItems = const [],
@@ -23,7 +24,7 @@ class CommunicateDetailModel {
   final String id;
   final String title;
   final String description;
-  final String authorName;
+  final AuthorSummary? author;
   final bool isActive;
   final List<String> photos;
   final List<MediaPhoto> photoItems;
@@ -62,7 +63,7 @@ class CommunicateDetailModel {
       id: json['id'] as String? ?? '',
       title: json['title'] as String? ?? '',
       description: description,
-      authorName: json['authorName'] as String? ?? 'Prefeitura Municipal',
+      author: AuthorSummary.fromJson(json['user'] as Map<String, dynamic>?),
       isActive: json['isActive'] as bool? ?? true,
       photos: photoItems
           .map((photo) => photo.fullSizeUrl)
