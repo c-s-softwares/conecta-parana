@@ -197,42 +197,6 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
 
-                      const SizedBox(height: 16),
-
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F3),
-                          borderRadius: BorderRadius.circular(8),
-                          border: const Border(
-                            left: BorderSide(
-                              color: Color(0xFF008F4C),
-                              width: 3,
-                            ),
-                          ),
-                        ),
-                        child: const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '"O prazo médio de licenciamento reduz de 90 para 30 dias com a digitalização."',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(height: 6),
-                            Text(
-                              '— Sec. do Meio Ambiente',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                       if (news.linkType == 'externo' &&
                           news.externalUrl != null &&
                           news.externalUrl!.isNotEmpty) ...[
