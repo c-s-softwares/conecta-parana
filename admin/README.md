@@ -378,3 +378,12 @@ O painel possui 3 páginas de erro dedicadas e um banner de conectividade:
 
 > **Nota:** O `error.interceptor` continua exibindo toasts para erros HTTP (403, 5xx, offline). As páginas dedicadas cobrem apenas navegação direta (URL colada, acesso restrito, etc.).
 
+## Feature: Notícias (MVP)
+
+No MVP da feature de notícias, temos o seguinte alinhamento com o backend:
+
+- **Valores válidos para `type`**: `saude`, `educacao`, `infra`, `geral`, `outros`.
+- **Valores válidos para `linkType`**: `interno`, `externo`.
+- **Campo `externalUrl` (UI-only)**: Quando `linkType` for `externo`, a interface exibe o campo `externalUrl` acompanhado de um aviso (*"Em breve - este link ainda não será publicado."*). Como a persistência de links externos (`linkUrl`) ainda não está implementada no schema Prisma do backend, este valor **não é enviado no payload** das requisições de criação e edição da API.
+
+
