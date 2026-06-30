@@ -18,7 +18,7 @@ class FeedItemCard extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          height: 104,
+          constraints: const BoxConstraints(minHeight: 104),
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
