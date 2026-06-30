@@ -168,4 +168,103 @@ describe('NewsFormModal', () => {
 
     expect(component['form'].get('type')?.errors?.['serverType']).toBe(true);
   });
+
+  it('deve chamar api.update no modo de edição', () => {
+    newsApiMock.update.mockReturnValue(of({ ...CREATED_ITEM, title: 'Editado' }));
+
+    fixture.componentRef.setInput('news', CREATED_ITEM);
+    fixture.componentRef.setInput('open', false);
+    fixture.detectChanges();
+    fixture.componentRef.setInput('open', true);
+    fixture.detectChanges();
+
+    component['onSubmit']();
+
+    expect(newsApiMock.update).toHaveBeenCalledWith(
+      NEWS_ID,
+      expect.objectContaining({ title: CREATED_ITEM.title, linkType: 'interno' }),
+    );
+  });
+
+  it('deve emitir closed quando api.get falha no initialize', () => {
+    newsApiMock.get.mockReturnValue(throwError(() => new Error('not found')));
+
+    const closedSpy = vi.fn();
+    fixture.componentInstance.closed.subscribe(closedSpy);
+
+    fixture.componentRef.setInput('news', CREATED_ITEM);
+    fixture.componentRef.setInput('open', false);
+    fixture.detectChanges();
+    fixture.componentRef.setInput('open', true);
+    fixture.detectChanges();
+
+    expect(closedSpy).toHaveBeenCalled();
+  });
+
+  it('deve definir serverLinkType quando API retorna invalid_link_type', () => {
+    newsApiMock.create.mockReturnValue(
+      throwError(() => ({
+        status: 400,
+        details: { code: 'invalid_link_type' },
+      })),
+    );
+
+    component['form'].patchValue({
+      title: CREATED_ITEM.title,
+      description: CREATED_ITEM.description,
+      type: 'saude',
+      linkType: 'interno',
+      isActive: true,
+    });
+
+    component['onSubmit']();
+
+    expect(component['form'].get('linkType')?.errors?.['serverLinkType']).toBe(true);
+  });
+
+  it('deve emitir closed quando API retorna 403', () => {
+    newsApiMock.create.mockReturnValue(
+      throwError(() => ({ status: 403, details: null })),
+    );
+
+    const closedSpy = vi.fn();
+    fixture.componentInstance.closed.subscribe(closedSpy);
+
+    component['form'].patchValue({
+      title: CREATED_ITEM.title,
+      description: CREATED_ITEM.description,
+      type: 'saude',
+      linkType: 'interno',
+      isActive: true,
+    });
+
+    component['onSubmit']();
+
+    expect(closedSpy).toHaveBeenCalled();
+  });
+
+  it('deve definir erro de url quando validation_failed menciona linkUrl', () => {
+    newsApiMock.create.mockReturnValue(
+      throwError(() => ({
+        status: 400,
+        details: {
+          code: 'validation_failed',
+          message: ['linkUrl must be a URL address'],
+        },
+      })),
+    );
+
+    component['form'].patchValue({
+      title: CREATED_ITEM.title,
+      description: CREATED_ITEM.description,
+      type: 'geral',
+      linkType: 'externo',
+      linkUrl: EXTERNAL_URL,
+      isActive: true,
+    });
+
+    component['onSubmit']();
+
+    expect(component['form'].get('linkUrl')?.errors?.['url']).toBe(true);
+  });
 });

@@ -126,4 +126,68 @@ describe('NewsPage', () => {
       'Notícia não encontrada. Pode ter sido excluída por outro admin.',
     );
   });
+
+  it('should show error toast when loading news fails', () => {
+    newsApiMock.list.mockReturnValue(throwError(() => new Error('network')));
+    component.loadNews();
+    expect(toastServiceMock.show).toHaveBeenCalledWith('error', 'Erro ao carregar notícias.');
+  });
+
+  it('should apply externo tab to linkType filter', () => {
+    component.setLinkTypeTab('externo');
+    expect(newsApiMock.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        filters: expect.objectContaining({ linkType: 'externo' }),
+      }),
+    );
+  });
+
+  it('should omit linkType from filters when tab is "todas"', () => {
+    component.setLinkTypeTab('externo');
+    component.setLinkTypeTab('todas');
+    expect(newsApiMock.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        filters: expect.objectContaining({ linkType: undefined }),
+      }),
+    );
+  });
+
+  it('should pass isActive:true when status filter value is "true"', () => {
+    component['statusFilterControl'].setValue('true');
+    expect(newsApiMock.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        filters: expect.objectContaining({ isActive: true }),
+      }),
+    );
+  });
+
+  it('should pass isActive:false when status filter value is "false"', () => {
+    component['statusFilterControl'].setValue('false');
+    expect(newsApiMock.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        filters: expect.objectContaining({ isActive: false }),
+      }),
+    );
+  });
+
+  it('should call list with new page on onPageChange', () => {
+    component.onPageChange({ page: 3, pageSize: 20 });
+    expect(newsApiMock.list).toHaveBeenLastCalledWith(
+      expect.objectContaining({ page: 3, pageSize: 20 }),
+    );
+  });
+
+  it('should clear deletingItem on cancelDelete', () => {
+    component.confirmDelete(NEWS_ITEM);
+    component.cancelDelete();
+    expect(component.deletingItem()).toBeNull();
+  });
+
+  it('should toggle showFilters', () => {
+    expect(component['showFilters']()).toBe(false);
+    component['toggleFilters']();
+    expect(component['showFilters']()).toBe(true);
+    component['toggleFilters']();
+    expect(component['showFilters']()).toBe(false);
+  });
 });
