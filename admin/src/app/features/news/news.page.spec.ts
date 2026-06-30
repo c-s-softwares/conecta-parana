@@ -2,12 +2,25 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NewsPage } from './news.page';
 import { NewsApi } from './news.api';
 import { ToastService } from '../../core/services/toast.service';
+import { UploadsApi } from '../../core/services/uploads.api';
 import { of, throwError } from 'rxjs';
 import { ReactiveFormsModule } from '@angular/forms';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { AppError } from '../../core/interceptors/app-error';
 import { NewsItem } from './news.model';
+
+const NEWS_ID = 'nws_1';
+
+const NEWS_ITEM: NewsItem = {
+  id: NEWS_ID,
+  title: 'Título da Notícia',
+  description: 'Descrição longa o suficiente',
+  type: 'saude',
+  linkType: 'interno',
+  isActive: true,
+  photos: [],
+};
 
 describe('NewsPage', () => {
   let component: NewsPage;
@@ -18,21 +31,30 @@ describe('NewsPage', () => {
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
+    get: vi.fn(),
   };
 
   const toastServiceMock = {
     show: vi.fn(),
   };
 
+  const uploadsApiMock = {
+    upload: vi.fn(),
+    remove: vi.fn(),
+  };
+
   beforeEach(async () => {
     vi.clearAllMocks();
-    newsApiMock.list.mockReturnValue(of({ items: [], total: 0, page: 1, pageSize: 10 }));
+    newsApiMock.list.mockReturnValue(
+      of({ items: [NEWS_ITEM], total: 1, page: 1, pageSize: 10 }),
+    );
 
     await TestBed.configureTestingModule({
       imports: [NewsPage, ReactiveFormsModule],
       providers: [
         { provide: NewsApi, useValue: newsApiMock },
         { provide: ToastService, useValue: toastServiceMock },
+        { provide: UploadsApi, useValue: uploadsApiMock },
         provideHttpClient(),
         provideHttpClientTesting(),
       ],
@@ -47,79 +69,61 @@ describe('NewsPage', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should create news with linkType = interno', () => {
-    newsApiMock.create.mockReturnValue(of({ id: 'nws_1' } as unknown as NewsItem));
-
-    component.openForm();
-    component['form'].patchValue({
-      title: 'Título da Notícia Interna',
-      description: 'Descrição longa o suficiente para passar na validação de 10 caracteres.',
-      type: 'saude',
-      linkType: 'interno',
-      isActive: true,
-    });
-
-    component.onSubmit();
-
-    expect(newsApiMock.create).toHaveBeenCalledWith({
-      title: 'Título da Notícia Interna',
-      description: 'Descrição longa o suficiente para passar na validação de 10 caracteres.',
-      type: 'saude',
-      linkType: 'interno',
-      isActive: true,
-    });
-    expect(toastServiceMock.show).toHaveBeenCalledWith('success', 'Notícia criada com sucesso.');
+  it('should load news on init', () => {
+    expect(newsApiMock.list).toHaveBeenCalled();
+    expect(component.items()).toHaveLength(1);
+    expect(component.totalItems()).toBe(1);
   });
 
-  it('should create news with linkType = externo and verify externalUrl is NOT sent in payload', () => {
-    newsApiMock.create.mockReturnValue(of({ id: 'nws_2' } as unknown as NewsItem));
-
-    component.openForm();
-    component['form'].patchValue({
-      title: 'Título da Notícia Externa',
-      description: 'Descrição longa o suficiente para passar na validação de 10 caracteres.',
-      type: 'geral',
-      linkType: 'externo',
-      externalUrl: 'https://exemplo.com',
-      isActive: true,
-    });
-
-    component.onSubmit();
-
-    expect(newsApiMock.create).toHaveBeenCalledWith({
-      title: 'Título da Notícia Externa',
-      description: 'Descrição longa o suficiente para passar na validação de 10 caracteres.',
-      type: 'geral',
-      linkType: 'externo',
-      isActive: true,
-    });
-    expect(toastServiceMock.show).toHaveBeenCalledWith('success', 'Notícia criada com sucesso.');
+  it('should open create form with no selected item', () => {
+    component.openCreate();
+    expect(component.formOpen()).toBe(true);
+    expect(component.selectedItem()).toBeNull();
   });
 
-  it('should handle invalid_type error from API', () => {
+  it('should open edit form with the selected item', () => {
+    component.openEdit(NEWS_ITEM);
+    expect(component.formOpen()).toBe(true);
+    expect(component.selectedItem()).toEqual(NEWS_ITEM);
+  });
+
+  it('should close form and reload on saved', () => {
+    component.openEdit(NEWS_ITEM);
+    component.onFormSaved();
+    expect(component.formOpen()).toBe(false);
+    expect(component.selectedItem()).toBeNull();
+    expect(newsApiMock.list).toHaveBeenCalledTimes(2);
+  });
+
+  it('should close form on cancelled', () => {
+    component.openCreate();
+    component.onFormClosed();
+    expect(component.formOpen()).toBe(false);
+  });
+
+  it('should show success toast and reload after delete', () => {
+    newsApiMock.delete.mockReturnValue(of(undefined));
+    component.confirmDelete(NEWS_ITEM);
+    component.executeDelete();
+    expect(newsApiMock.delete).toHaveBeenCalledWith(NEWS_ID);
+    expect(toastServiceMock.show).toHaveBeenCalledWith(
+      'success',
+      'Notícia excluída com sucesso.',
+    );
+  });
+
+  it('should show error toast on 404 delete', () => {
     const apiError: AppError = {
-      status: 400,
-      message: 'Bad Request',
-      details: {
-        code: 'invalid_type',
-        message: 'Tipo de notícia inválido.',
-      },
+      status: 404,
+      message: 'Not Found',
+      details: null,
     };
-
-    newsApiMock.create.mockReturnValue(throwError(() => apiError));
-
-    component.openForm();
-    component['form'].patchValue({
-      title: 'Título da Notícia',
-      description: 'Descrição longa o suficiente para passar na validação de 10 caracteres.',
-      type: 'saude',
-      linkType: 'interno',
-      isActive: true,
-    });
-
-    component.onSubmit();
-
-    expect(component['typeError']).toBe('Tipo de notícia inválido.');
-    expect(component['form'].controls.type.hasError('invalid')).toBe(true);
+    newsApiMock.delete.mockReturnValue(throwError(() => apiError));
+    component.confirmDelete(NEWS_ITEM);
+    component.executeDelete();
+    expect(toastServiceMock.show).toHaveBeenCalledWith(
+      'error',
+      'Notícia não encontrada. Pode ter sido excluída por outro admin.',
+    );
   });
 });
