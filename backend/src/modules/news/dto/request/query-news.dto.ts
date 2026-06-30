@@ -39,4 +39,3 @@ export class QueryNewsDto extends PaginationQueryDto {
   @IsString()
   linkType?: string;
 }
-
