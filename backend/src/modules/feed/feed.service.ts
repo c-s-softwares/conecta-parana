@@ -36,6 +36,7 @@ type EventEntity = {
   localId: string | null;
   createdAt: Date;
   updatedAt: Date;
+  user?: { id: string; name: string } | null;
   photos?: { id: string; thumbUrl: string | null }[];
 };
 
@@ -137,7 +138,10 @@ export class FeedService {
     const news = await this.prisma.client.news.findFirst({
       where: { cityId, isActive: true },
       orderBy: { id: 'desc' },
-      include: { photos: { select: { id: true, thumbUrl: true } } },
+      include: {
+        photos: { select: { id: true, thumbUrl: true } },
+        user: { select: { id: true, name: true } },
+      },
     });
     if (!news) return null;
     return {
@@ -148,6 +152,8 @@ export class FeedService {
       linkType: news.linkType,
       isActive: news.isActive,
       cityId: news.cityId,
+      userId: news.userId,
+      user: news.user ?? null,
       createdAt: news.createdAt,
       updatedAt: news.updatedAt,
       photos: news.photos.map((photo) => ({
@@ -167,6 +173,7 @@ export class FeedService {
       },
       orderBy: { eventDate: 'asc' },
       take: EVENTS_LIMIT,
+      include: { user: { select: { id: true, name: true } } },
     });
     const withPhotos = await this.attachEventPhotos(events);
     return withPhotos.map((event) => this.toEventResponse(event));
@@ -195,6 +202,7 @@ export class FeedService {
       },
       orderBy: { eventDate: 'asc' },
       take: EVENTS_LIMIT,
+      include: { user: { select: { id: true, name: true } } },
     });
     const withPhotos = await this.attachEventPhotos(events);
     return withPhotos.map((event) => this.toEventResponse(event));
@@ -236,7 +244,26 @@ export class FeedService {
       LIMIT ${EVENTS_LIMIT}
     `;
     const withPhotos = await this.attachEventPhotos(rows);
-    return withPhotos.map((row) => this.toEventResponse(row));
+    const withUsers = await this.attachEventUsers(withPhotos);
+    return withUsers.map((row) => this.toEventResponse(row));
+  }
+
+  private async attachEventUsers(
+    events: EventEntity[],
+  ): Promise<EventEntity[]> {
+    if (events.length === 0) return events;
+
+    const userIds = [...new Set(events.map((e) => e.userId))];
+    const users = await this.prisma.client.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, name: true },
+    });
+
+    const byId = new Map(users.map((u) => [u.id, u]));
+    return events.map((event) => ({
+      ...event,
+      user: byId.get(event.userId) ?? null,
+    }));
   }
 
   private async attachEventPhotos(
@@ -274,7 +301,10 @@ export class FeedService {
       where: { cityId, isActive: true },
       orderBy: { id: 'desc' },
       take: COMMUNICATES_LIMIT,
-      include: { photos: { select: { id: true, thumbUrl: true } } },
+      include: {
+        photos: { select: { id: true, thumbUrl: true } },
+        user: { select: { id: true, name: true } },
+      },
     });
     return items.map((item) => ({
       id: item.id,
@@ -283,6 +313,7 @@ export class FeedService {
       isActive: item.isActive,
       cityId: item.cityId,
       userId: item.userId,
+      user: item.user,
       photos: item.photos.map((photo) => ({
         id: photo.id,
         thumbUrl: photo.thumbUrl,
@@ -301,6 +332,7 @@ export class FeedService {
       cityId: event.cityId,
       userId: event.userId,
       localId: event.localId,
+      user: event.user ?? null,
       createdAt: event.createdAt,
       updatedAt: event.updatedAt,
       photos: (event.photos ?? []).map((photo) => ({
