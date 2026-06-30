@@ -51,7 +51,7 @@ class ContentListRepository {
           ? FeedItemType.comunicado
           : FeedItemType.news,
       title: json['title'] as String? ?? '',
-      authorName: kind == ContentListKind.communicates ? authorName : null,
+      authorName: authorName,
       subtitle: kind == ContentListKind.communicates
           ? authorName
           : json['description'] as String?,

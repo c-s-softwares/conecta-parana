@@ -2,6 +2,7 @@ import 'package:conectaparana/core/auth/auth_service.dart';
 import 'package:conectaparana/features/home/data/repositories/content_list_repository.dart';
 import 'package:conectaparana/features/home/domain/entities/feed_item.dart';
 import 'package:conectaparana/features/home/presentation/widgets/feed_item_card.dart';
+import 'package:conectaparana/features/home/presentation/widgets/news_list_card.dart';
 import 'package:conectaparana/shared/widgets/misc/empty_state.dart';
 import 'package:conectaparana/shared/widgets/misc/loading_spinner.dart';
 import 'package:flutter/material.dart';
@@ -136,13 +137,18 @@ class _ContentListPageState extends State<ContentListPage> {
                           );
                         }
                         final item = _items[index];
+                        final route = widget.kind == ContentListKind.communicates
+                            ? '/communicates/${item.id}'
+                            : '/news/${item.id}';
+                        if (widget.kind == ContentListKind.news) {
+                          return NewsListCard(
+                            item: item,
+                            onTap: () => context.push(route),
+                          );
+                        }
                         return FeedItemCard(
                           item: item,
-                          onTap: () => context.push(
-                            widget.kind == ContentListKind.communicates
-                                ? '/communicates/${item.id}'
-                                : '/news/${item.id}',
-                          ),
+                          onTap: () => context.push(route),
                         );
                       },
                     ),
