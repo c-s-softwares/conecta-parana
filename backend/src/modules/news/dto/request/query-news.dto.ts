@@ -29,4 +29,14 @@ export class QueryNewsDto extends PaginationQueryDto {
   @IsOptional()
   @IsBooleanString()
   isActive?: string;
+
+  @ApiPropertyOptional({
+    example: 'interno',
+    enum: ['interno', 'externo'],
+    description: 'Filtrar notícias por tipo de link',
+  })
+  @IsOptional()
+  @IsString()
+  linkType?: string;
 }
+
