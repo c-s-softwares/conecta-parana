@@ -1,5 +1,6 @@
 import 'package:conectaparana/features/news/data/news_detail_model.dart';
 import 'package:conectaparana/features/news/presentation/pages/news_detail_page.dart';
+import 'package:conectaparana/shared/models/author_summary.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -19,8 +20,7 @@ void main() {
       externalUrl: null,
       isActive: true,
       photos: [],
-      authorName: 'Prefeitura de Maringá',
-      authorSubtitle: 'Prefeitura Municipal',
+      author: const AuthorSummary(id: 'usr_1', name: 'Prefeitura de Maringá'),
       createdAt: '2h atrás',
     );
 
@@ -47,8 +47,7 @@ void main() {
       externalUrl: 'https://flutter.dev',
       isActive: true,
       photos: [],
-      authorName: 'Prefeitura',
-      authorSubtitle: 'Municipal',
+      author: const AuthorSummary(id: 'usr_1', name: 'Prefeitura Municipal'),
       createdAt: '1h atrás',
     );
 
@@ -71,8 +70,7 @@ void main() {
       externalUrl: null,
       isActive: false,
       photos: [],
-      authorName: 'Prefeitura',
-      authorSubtitle: 'Municipal',
+      author: const AuthorSummary(id: 'usr_1', name: 'Prefeitura Municipal'),
       createdAt: '1h atrás',
     );
 
@@ -95,8 +93,7 @@ void main() {
       externalUrl: null,
       isActive: true,
       photos: [],
-      authorName: 'Prefeitura',
-      authorSubtitle: 'Municipal',
+      author: const AuthorSummary(id: 'usr_1', name: 'Prefeitura Municipal'),
       createdAt: '1h atrás',
     );
 
@@ -117,8 +114,7 @@ void main() {
       externalUrl: null,
       isActive: true,
       photos: ['https://picsum.photos/800/500?1'],
-      authorName: 'Prefeitura',
-      authorSubtitle: 'Municipal',
+      author: const AuthorSummary(id: 'usr_1', name: 'Prefeitura Municipal'),
       createdAt: '1h atrás',
     );
 
@@ -178,8 +174,7 @@ void main() {
         externalUrl: 'https://google.com',
         isActive: true,
         photos: [],
-        authorName: 'Prefeitura',
-        authorSubtitle: 'Municipal',
+        author: const AuthorSummary(id: 'usr_1', name: 'Prefeitura Municipal'),
         createdAt: '1h atrás',
       );
 

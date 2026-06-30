@@ -1,4 +1,5 @@
 import 'package:conectaparana/features/communicates/data/communicate_detail_model.dart';
+import 'package:conectaparana/shared/models/author_summary.dart';
 import 'package:conectaparana/features/communicates/data/communicate_repository.dart';
 import 'package:conectaparana/features/communicates/presentation/pages/communicate_detail_page.dart';
 import 'package:conectaparana/features/engagement/data/engagement_service.dart';
@@ -44,7 +45,7 @@ CommunicateDetailModel _item({bool liked = true, bool saved = true}) {
     title: 'Coleta de lixo será reorganizada por bairro',
     description:
         'A coleta doméstica será reorganizada a partir de segunda-feira.\n\nConfira os horários no aplicativo.',
-    authorName: 'Prefeitura de Curitiba',
+    author: const AuthorSummary(id: 'usr_1', name: 'Prefeitura de Curitiba'),
     isActive: true,
     photos: const [],
     likesCount: 67,
