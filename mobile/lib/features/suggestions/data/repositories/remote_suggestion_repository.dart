@@ -72,8 +72,8 @@ class RemoteSuggestionRepository implements SuggestionRepository {
           ? null
           : SuggestionReply(
               authorName:
-                  json['respondedByName'] as String? ??
-                  json['authorName'] as String?,
+                  (json['respondedBy'] as Map<String, dynamic>?)?['name']
+                      as String?,
               date: respondedAt ?? DateTime.now(),
               message: response,
             ),

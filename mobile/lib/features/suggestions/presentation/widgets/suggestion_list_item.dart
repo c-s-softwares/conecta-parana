@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:conectaparana/shared/widgets/misc/avatar.dart';
 import 'package:conectaparana/shared/widgets/misc/badge.dart';
 import '../../domain/entities/suggestion.dart';
 import 'package:conectaparana/core/formatters/app_date_formatter.dart';
@@ -145,10 +146,10 @@ class _ReplyBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authorName = reply.authorName?.trim();
-    final displayName = authorName == null || authorName.isEmpty
-        ? 'Equipe responsável'
-        : authorName;
+    final displayName =
+        reply.authorName?.trim().isNotEmpty == true
+            ? reply.authorName!
+            : 'Equipe responsável';
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -161,18 +162,7 @@ class _ReplyBlock extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 15,
-                backgroundColor: const Color(0xFF006733),
-                child: Text(
-                  displayName[0].toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
+              Avatar(size: 30, name: reply.authorName),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
