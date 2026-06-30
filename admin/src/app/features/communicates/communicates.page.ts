@@ -3,15 +3,23 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
+import { Observable, catchError, EMPTY, finalize, forkJoin, of } from 'rxjs';
 
 import { ToastService } from '../../core/services/toast.service';
+import { AuthService } from '../../core/services/auth.service';
 import { FormField } from '../../shared/components/form-field/form-field';
 import { ModalDialog } from '../../shared/components/modal-dialog/modal-dialog';
 import { ComunicadosApi } from './communicates.api';
-import { ComunicadoItem, CreateCommunicateDto } from './communicates.model';
+import { CommunicatePhoto, ComunicadoItem, CreateCommunicateDto } from './communicates.model';
 import { DataList, DataListPageEvent } from '../../shared/components/data-list/data-list';
-import { catchError, EMPTY, finalize, of } from 'rxjs';
 import { UploadsApi } from '../../core/services/uploads.api';
+
+const MAX_PHOTOS = 10;
+
+interface PendingFile {
+  file: File;
+  previewUrl: string;
+}
 
 @Component({
   selector: 'app-communicates-page',
@@ -23,12 +31,23 @@ import { UploadsApi } from '../../core/services/uploads.api';
 export class CommunicatesPage {
   private readonly api = inject(ComunicadosApi);
   private readonly toast = inject(ToastService);
+  private readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly uploads = inject(UploadsApi);
 
-  protected readonly selectedFile = signal<File | null>(null);
-  protected readonly previewUrl = signal<string | null>(null);
+  protected readonly maxPhotos = MAX_PHOTOS;
+
+  private readonly existingPhotos = signal<CommunicatePhoto[]>([]);
+  private readonly removedIds = signal<string[]>([]);
+  protected readonly newFiles = signal<PendingFile[]>([]);
+
+  protected readonly visiblePhotos = computed(() =>
+    this.existingPhotos().filter((photo) => !this.removedIds().includes(photo.id)),
+  );
+  protected readonly totalPhotos = computed(
+    () => this.visiblePhotos().length + this.newFiles().length,
+  );
 
   protected readonly items = signal<ComunicadoItem[]>([]);
   protected readonly loading = signal(false);
@@ -77,6 +96,7 @@ export class CommunicatesPage {
     this.loading.set(true);
 
     const active = this.isActive();
+    const cityId = this.auth.currentUser()?.cityId ?? undefined;
 
     this.api
       .list({
@@ -85,6 +105,7 @@ export class CommunicatesPage {
         search: this.search().trim(),
         filters: {
           isActive: active === '' ? undefined : active === 'true',
+          cityId,
         },
       })
       .pipe(
@@ -129,7 +150,9 @@ export class CommunicatesPage {
   }
 
   protected openCreate(): void {
-    this.removeSelectedFile();
+    this.clearNewFiles();
+    this.removedIds.set([]);
+    this.existingPhotos.set([]);
     this.submitted.set(false);
     this.editing.set(null);
     this.form.set({
@@ -142,7 +165,9 @@ export class CommunicatesPage {
 
   protected openEdit(item: ComunicadoItem): void {
     this.submitted.set(false);
-    this.removeSelectedFile();
+    this.clearNewFiles();
+    this.removedIds.set([]);
+    this.existingPhotos.set(item.photos ?? []);
     this.editing.set(item);
     this.form.set({
       title: item.title,
@@ -179,16 +204,13 @@ export class CommunicatesPage {
 
     const request = current ? this.api.update(current.id, dto) : this.api.create(dto);
 
-    request
-      .pipe(
-        catchError((error) => {
-          this.handleWriteError(error);
-          return EMPTY;
-        }),
-      )
-      .subscribe((communicate) => {
-        this.persistPhoto(communicate.id, current !== null);
-      });
+    request.subscribe({
+      next: (communicate) => this.persistPhotos(communicate.id, current !== null),
+      error: (error: unknown) => {
+        this.saving.set(false);
+        this.handleWriteError(error);
+      },
+    });
   }
 
   protected save(): void {
@@ -201,31 +223,32 @@ export class CommunicatesPage {
     this.load();
   }
 
-  protected onFileSelected(event: Event): void {
+  protected onFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const file = input.files?.[0] ?? null;
+    const files = input.files ? Array.from(input.files) : [];
     input.value = '';
 
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      this.toast.show('error', 'Selecione uma imagem válida.');
-      return;
+    const remaining = MAX_PHOTOS - this.totalPhotos();
+    if (files.length > remaining) {
+      this.toast.show('error', `Limite de ${MAX_PHOTOS} fotos por comunicado atingido.`);
     }
 
-    const currentPreview = this.previewUrl();
-    if (currentPreview) URL.revokeObjectURL(currentPreview);
-
-    this.selectedFile.set(file);
-    this.previewUrl.set(URL.createObjectURL(file));
+    for (const file of files.slice(0, Math.max(0, remaining))) {
+      this.newFiles.update((list) => [
+        ...list,
+        { file, previewUrl: URL.createObjectURL(file) },
+      ]);
+    }
   }
 
-  protected removeSelectedFile(): void {
-    const currentPreview = this.previewUrl();
-    if (currentPreview) URL.revokeObjectURL(currentPreview);
+  protected removeExisting(id: string): void {
+    this.removedIds.update((list) => [...list, id]);
+  }
 
-    this.selectedFile.set(null);
-    this.previewUrl.set(null);
+  protected removeNew(index: number): void {
+    const target = this.newFiles()[index];
+    if (target) URL.revokeObjectURL(target.previewUrl);
+    this.newFiles.update((list) => list.filter((_, i) => i !== index));
   }
 
   protected delete(item: ComunicadoItem): void {
@@ -277,8 +300,17 @@ export class CommunicatesPage {
     });
   }
 
-  private persistPhoto(communicateId: string, wasEditing: boolean): void {
-    const file = this.selectedFile();
+  private persistPhotos(communicateId: string, wasEditing: boolean): void {
+    const ops: Observable<unknown>[] = [
+      ...this.removedIds().map((id) =>
+        this.uploads.remove(id).pipe(catchError(() => of(null))),
+      ),
+      ...this.newFiles().map((item) =>
+        this.uploads
+          .upload(item.file, 'communicate', communicateId)
+          .pipe(catchError(() => of(null))),
+      ),
+    ];
 
     const finish = () => {
       this.saving.set(false);
@@ -287,19 +319,20 @@ export class CommunicatesPage {
         wasEditing ? 'Comunicado atualizado com sucesso.' : 'Comunicado criado com sucesso.',
       );
       this.modalOpen.set(false);
-      this.removeSelectedFile();
+      this.clearNewFiles();
       this.load();
     };
 
-    if (!file) {
+    if (ops.length === 0) {
       finish();
       return;
     }
+    forkJoin(ops).subscribe(() => finish());
+  }
 
-    this.uploads
-      .upload(file, 'communicate', communicateId)
-      .pipe(catchError(() => of(null)))
-      .subscribe(() => finish());
+  private clearNewFiles(): void {
+    for (const item of this.newFiles()) URL.revokeObjectURL(item.previewUrl);
+    this.newFiles.set([]);
   }
 
   private handleWriteError(error: unknown): void {

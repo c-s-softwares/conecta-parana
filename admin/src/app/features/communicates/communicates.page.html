@@ -74,7 +74,15 @@
           class="thumb"
           style="background: oklch(0.95 0.05 195 / 0.55); color: oklch(0.45 0.13 195)"
         >
-          <ng-icon name="heroMegaphone" size="26" />
+          @if (item.photos?.length && item.photos[0].thumbUrl) {
+            <img
+              [src]="item.photos[0].thumbUrl"
+              alt=""
+              class="h-full w-full object-cover"
+            />
+          } @else {
+            <ng-icon name="heroMegaphone" size="26" />
+          }
         </div>
 
         <div class="body">
@@ -114,7 +122,7 @@
   <app-modal-dialog
     [visible]="modalOpen()"
     [title]="modalTitle()"
-    subtitle="Preencha os campos abaixo para publicar."
+    [eyebrow]="editing() ? 'Edição' : 'Cadastro'"
     size="l"
     [footer]="true"
     (cancelled)="closeModal()"
@@ -151,48 +159,97 @@
           class="input textarea"
           rows="5"
           placeholder="Escreva aqui..."
+          style="height: 104px; resize: none"
           [ngModel]="form().description"
           name="description"
           (ngModelChange)="updateForm('description', $event)"
         ></textarea>
       </app-form-field>
-      <div class="cover-upload">
-        <span class="cover-label">Imagem de capa</span>
 
-        <label class="cover-box">
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            class="sr-only"
-            (change)="onFileSelected($event)"
-          />
+      <div class="flex flex-col gap-2">
+        <span class="field-label">Fotos</span>
 
-          @if (previewUrl()) {
-            <img [src]="previewUrl()" alt="" class="cover-preview" />
-          } @else {
-            <span class="cover-icon">
-              <ng-icon name="heroPhoto" size="20"></ng-icon>
-            </span>
-
-            <strong>Arraste uma imagem ou clique para enviar</strong>
-            <small>PNG, JPG até 5MB · Recomendado 1600x900</small>
-          }
-        </label>
-
-        @if (previewUrl()) {
-          <button type="button" class="btn btn-ghost btn-sm" (click)="removeSelectedFile()">
-            Remover imagem
-          </button>
+        @if (totalPhotos() > 0) {
+          <div class="grid grid-cols-3 gap-3 sm:grid-cols-4">
+            @for (photo of visiblePhotos(); track photo.id) {
+              <div
+                class="relative aspect-square overflow-hidden rounded-lg border border-[var(--border)]"
+              >
+                @if (photo.thumbUrl) {
+                  <img
+                    [src]="photo.thumbUrl"
+                    alt=""
+                    class="h-full w-full object-cover"
+                  />
+                }
+                <button
+                  type="button"
+                  class="btn-icon danger absolute right-1 top-1"
+                  style="width: 28px; height: 28px"
+                  (click)="removeExisting(photo.id)"
+                  aria-label="Remover foto"
+                >
+                  <ng-icon name="heroTrash" size="14" />
+                </button>
+              </div>
+            }
+            @for (item of newFiles(); track item.previewUrl; let i = $index) {
+              <div
+                class="relative aspect-square overflow-hidden rounded-lg border border-[var(--border)]"
+              >
+                <img
+                  [src]="item.previewUrl"
+                  alt=""
+                  class="h-full w-full object-cover"
+                />
+                <button
+                  type="button"
+                  class="btn-icon danger absolute right-1 top-1 bg-white/90"
+                  style="width: 28px; height: 28px"
+                  (click)="removeNew(i)"
+                  aria-label="Remover foto"
+                >
+                  <ng-icon name="heroTrash" size="14" />
+                </button>
+              </div>
+            }
+          </div>
         }
+
+        <button
+          type="button"
+          class="dropzone"
+          [disabled]="totalPhotos() >= maxPhotos"
+          (click)="fileInput.click()"
+        >
+          <span
+            class="ic-bubble bubble-brand"
+            style="width: 44px; height: 44px; margin-bottom: 0"
+          >
+            <ng-icon name="heroCloudArrowUp" size="20" aria-hidden="true" />
+          </span>
+          <span class="dropzone-title">Clique para adicionar fotos</span>
+          <span class="dropzone-hint">
+            PNG, JPG até 5MB · {{ totalPhotos() }}/{{ maxPhotos }}
+          </span>
+        </button>
+        <input
+          #fileInput
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          multiple
+          class="hidden"
+          (change)="onFilesSelected($event)"
+        />
       </div>
     </form>
 
-    <div modal-footer>
-      <button type="button" class="btn btn-secondary" [disabled]="saving()" (click)="closeModal()">
+    <div class="flex justify-end gap-2" modal-footer>
+      <button type="button" class="btn btn-ghost" [disabled]="saving()" (click)="closeModal()">
         Cancelar
       </button>
 
-      <button type="button" class="btn btn-secondary" [disabled]="saving()" (click)="saveAs(false)">
+      <button type="button" class="btn btn-ghost" [disabled]="saving()" (click)="saveAs(false)">
         Salvar rascunho
       </button>
 

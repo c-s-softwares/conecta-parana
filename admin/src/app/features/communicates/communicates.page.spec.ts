@@ -13,12 +13,14 @@ const items: ComunicadoItem[] = [
     title: 'Comunicado ativo',
     description: 'Descrição do comunicado ativo',
     isActive: true,
+    photos: [],
   },
   {
     id: 'com_2',
     title: 'Comunicado inativo',
     description: 'Descrição do comunicado inativo',
     isActive: false,
+    photos: [],
   },
 ];
 
