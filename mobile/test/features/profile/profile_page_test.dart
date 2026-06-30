@@ -25,10 +25,14 @@ void main() {
         findsOneWidget,
       );
       expect(find.byKey(const Key('profile_suggestions_tile')), findsOneWidget);
+      expect(find.byKey(const Key('profile_tickets_tile')), findsOneWidget);
       expect(find.byKey(const Key('profile_favorites_tile')), findsOneWidget);
 
       final suggestionsY = tester
           .getTopLeft(find.byKey(const Key('profile_suggestions_tile')))
+          .dy;
+      final ticketsY = tester
+          .getTopLeft(find.byKey(const Key('profile_tickets_tile')))
           .dy;
       final favoritesY = tester
           .getTopLeft(find.byKey(const Key('profile_favorites_tile')))
@@ -36,7 +40,8 @@ void main() {
       final logoutY = tester
           .getTopLeft(find.byKey(const Key('profile_logout_button')))
           .dy;
-      expect(suggestionsY, lessThan(favoritesY));
+      expect(suggestionsY, lessThan(ticketsY));
+      expect(ticketsY, lessThan(favoritesY));
       expect(favoritesY, lessThan(logoutY));
     });
 

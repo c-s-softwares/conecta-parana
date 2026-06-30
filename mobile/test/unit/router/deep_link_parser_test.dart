@@ -10,7 +10,7 @@ void main() {
         ('comunicado', 'com_456', '/home/comunicado/com_456'),
         ('news', 'news_789', '/home/news/news_789'),
         ('local', 'loc_abc', '/map/loc_abc'),
-        ('ticket', 'tkt_def', '/tickets/tkt_def'),
+        ('ticket', 'tkt_def', '/profile/tickets/tkt_def'),
         ('notification', 'ntf_ghi', '/home/notification/ntf_ghi'),
       ];
 

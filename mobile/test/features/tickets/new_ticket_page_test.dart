@@ -87,7 +87,7 @@ Widget _buildTestWidget({
         ),
       ),
       GoRoute(
-        path: '/tickets/:id',
+        path: '/profile/tickets/:id',
         builder: (context, state) =>
             Scaffold(body: Text('ticket:${state.pathParameters['id']}')),
       ),
