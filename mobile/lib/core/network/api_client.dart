@@ -31,10 +31,13 @@ class ApiClient {
   }
 
   BaseOptions _buildOptions() {
-    const baseUrl = String.fromEnvironment(
-      'API_BASE_URL',
-      defaultValue: 'http://10.0.2.2:3000',
-    );
+    const envUrl = String.fromEnvironment('API_BASE_URL');
+    final baseUrl =
+        envUrl.isNotEmpty
+            ? envUrl
+            : kIsWeb
+            ? 'http://localhost:3000'
+            : 'http://10.0.2.2:3000';
 
     if (kDebugMode) {
       debugPrint('API BASE URL → $baseUrl');
