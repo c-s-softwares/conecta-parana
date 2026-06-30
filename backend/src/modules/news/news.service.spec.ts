@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   BadRequestException,
   ForbiddenException,
@@ -7,10 +6,18 @@ import {
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { PrismaService } from '../../config/prisma.service';
+import { UploadsService } from '../uploads/uploads.service';
 
 import { NewsService } from './news.service';
+import {
+  NewsDetailResponse,
+  NewsResponse,
+} from './dto/response/news-response.dto';
 import { CreateNewsDto } from './dto/request/create-news.dto';
 import type { JwtPayload } from '../auth/strategies/jwt.strategy';
+
+const NEWS_ID = 'nws_123';
+const CITY_ID = 'cit_jwt';
 
 const BASE_DTO = {
   title: 'Título válido',
@@ -23,7 +30,7 @@ const BASE_DTO = {
 const CITY_ADMIN_USER = {
   sub: 'usr_123',
   role: 'ADMIN',
-  cityId: 'cit_jwt',
+  cityId: CITY_ID,
 } as unknown as JwtPayload;
 
 const SUPER_ADMIN_USER = {
@@ -54,16 +61,18 @@ describe('NewsService', () => {
     },
   };
 
+  const mockUploads = {
+    removeAllForEntity: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         NewsService,
-        {
-          provide: PrismaService,
-          useValue: mockPrisma,
-        },
+        { provide: PrismaService, useValue: mockPrisma },
+        { provide: UploadsService, useValue: mockUploads },
       ],
     }).compile();
 
@@ -87,10 +96,10 @@ describe('NewsService', () => {
 
   it('deve usar cityId do JWT para ADMIN', async () => {
     mockPrisma.client.news.create.mockResolvedValue({
-      id: 'nws_123',
+      id: NEWS_ID,
       ...BASE_DTO,
       isActive: true,
-      cityId: CITY_ADMIN_USER.cityId,
+      cityId: CITY_ID,
     });
 
     await service.create(
@@ -101,47 +110,50 @@ describe('NewsService', () => {
     expect(mockPrisma.client.news.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          cityId: CITY_ADMIN_USER.cityId,
-        }),
+          cityId: CITY_ID,
+        }) as Record<string, unknown>,
       }),
     );
   });
 
   it('deve criar uma notícia com sucesso', async () => {
     mockPrisma.client.news.create.mockResolvedValue({
-      id: 'nws_123',
+      id: NEWS_ID,
       ...BASE_DTO,
       isActive: true,
     });
 
-    const result = await service.create(BASE_DTO, SUPER_ADMIN_USER);
+    const result: NewsResponse = await service.create(
+      BASE_DTO,
+      SUPER_ADMIN_USER,
+    );
 
-    expect(result).toHaveProperty('id', 'nws_123');
+    expect(result).toHaveProperty('id', NEWS_ID);
     expect(mockPrisma.client.news.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           title: BASE_DTO.title,
           cityId: BASE_DTO.cityId,
-        }),
+        }) as Record<string, unknown>,
       }),
     );
   });
 
   it('deve atualizar os campos da notícia', async () => {
     mockPrisma.client.news.findFirst.mockResolvedValue({
-      id: 'nws_123',
+      id: NEWS_ID,
       ...BASE_DTO,
       isActive: true,
     });
     mockPrisma.client.news.update.mockResolvedValue({
-      id: 'nws_123',
+      id: NEWS_ID,
       ...BASE_DTO,
       title: 'Novo título',
       isActive: true,
     });
 
-    const result = await service.update(
-      'nws_123',
+    const result: NewsResponse = await service.update(
+      NEWS_ID,
       { title: 'Novo título' },
       SUPER_ADMIN_USER,
     );
@@ -149,27 +161,33 @@ describe('NewsService', () => {
     expect(result.title).toBe('Novo título');
     expect(mockPrisma.client.news.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 'nws_123' },
+        where: { id: NEWS_ID },
         data: expect.objectContaining({
           title: 'Novo título',
-        }),
+        }) as Record<string, unknown>,
       }),
     );
   });
 
-  it('deve fazer soft-delete via isActive = false', async () => {
+  it('deve fazer soft-delete via deletedAt', async () => {
     mockPrisma.client.news.findFirst.mockResolvedValue({
-      id: 'nws_123',
+      id: NEWS_ID,
       ...BASE_DTO,
       isActive: true,
     });
 
-    await service.remove('nws_123', SUPER_ADMIN_USER);
+    await service.remove(NEWS_ID, SUPER_ADMIN_USER);
 
+    expect(mockUploads.removeAllForEntity).toHaveBeenCalledWith(
+      'news',
+      NEWS_ID,
+    );
     expect(mockPrisma.client.news.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 'nws_123' },
-        data: { isActive: false },
+        where: { id: NEWS_ID },
+        data: expect.objectContaining({
+          deletedAt: expect.any(Date) as Date,
+        }) as Record<string, unknown>,
       }),
     );
   });
@@ -184,16 +202,16 @@ describe('NewsService', () => {
 
   it('deve lançar ForbiddenException quando ADMIN tentar modificar notícia de outra cidade', async () => {
     mockPrisma.client.news.findFirst.mockResolvedValue({
-      id: 'nws_123',
+      id: NEWS_ID,
       ...BASE_DTO,
       cityId: 'outra_cidade',
       isActive: true,
     });
 
     await expect(
-      service.update('nws_123', { title: 'T' }, CITY_ADMIN_USER),
+      service.update(NEWS_ID, { title: 'T' }, CITY_ADMIN_USER),
     ).rejects.toThrow(ForbiddenException);
-    await expect(service.remove('nws_123', CITY_ADMIN_USER)).rejects.toThrow(
+    await expect(service.remove(NEWS_ID, CITY_ADMIN_USER)).rejects.toThrow(
       ForbiddenException,
     );
   });
@@ -207,7 +225,7 @@ describe('NewsService', () => {
   describe('linkUrl', () => {
     it('persiste linkUrl quando linkType=externo', async () => {
       mockPrisma.client.news.create.mockResolvedValue({
-        id: 'nws_123',
+        id: NEWS_ID,
         ...BASE_DTO,
         isActive: true,
       });
@@ -226,14 +244,14 @@ describe('NewsService', () => {
           data: expect.objectContaining({
             linkType: 'externo',
             linkUrl: 'https://exemplo.com/x',
-          }),
+          }) as Record<string, unknown>,
         }),
       );
     });
 
     it('ignora linkUrl quando linkType=interno (persiste null)', async () => {
       mockPrisma.client.news.create.mockResolvedValue({
-        id: 'nws_123',
+        id: NEWS_ID,
         ...BASE_DTO,
         isActive: true,
       });
@@ -252,18 +270,18 @@ describe('NewsService', () => {
           data: expect.objectContaining({
             linkType: 'interno',
             linkUrl: null,
-          }),
+          }) as Record<string, unknown>,
         }),
       );
     });
   });
 
   describe('findOneDetail', () => {
-    const NEWS_ID = 'nws_detail';
+    const DETAIL_NEWS_ID = 'nws_detail';
     const USER_ID = 'usr_detail';
 
     const buildNewsRow = (overrides: Record<string, unknown> = {}) => ({
-      id: NEWS_ID,
+      id: DETAIL_NEWS_ID,
       title: 'Notícia',
       description: 'Descrição da notícia',
       type: 'saude',
@@ -292,7 +310,8 @@ describe('NewsService', () => {
         }),
       );
 
-      const result = await service.findOneDetail(NEWS_ID);
+      const result: NewsDetailResponse =
+        await service.findOneDetail(DETAIL_NEWS_ID);
 
       expect(result.likesCount).toBe(12);
       expect(result.liked).toBe(false);
@@ -301,7 +320,7 @@ describe('NewsService', () => {
       expect(result.photos[0]).toMatchObject({
         id: 'pho_1',
         entityType: 'news',
-        entityId: NEWS_ID,
+        entityId: DETAIL_NEWS_ID,
       });
       expect(mockPrisma.client.like.findFirst).not.toHaveBeenCalled();
       expect(mockPrisma.client.save.findFirst).not.toHaveBeenCalled();
@@ -312,16 +331,19 @@ describe('NewsService', () => {
       mockPrisma.client.like.findFirst.mockResolvedValue({ id: 'lke_1' });
       mockPrisma.client.save.findFirst.mockResolvedValue({ id: 'sav_1' });
 
-      const result = await service.findOneDetail(NEWS_ID, USER_ID);
+      const result: NewsDetailResponse = await service.findOneDetail(
+        DETAIL_NEWS_ID,
+        USER_ID,
+      );
 
       expect(result.liked).toBe(true);
       expect(result.saved).toBe(true);
       expect(mockPrisma.client.like.findFirst).toHaveBeenCalledWith({
-        where: { userId: USER_ID, newsId: NEWS_ID },
+        where: { userId: USER_ID, newsId: DETAIL_NEWS_ID },
         select: { id: true },
       });
       expect(mockPrisma.client.save.findFirst).toHaveBeenCalledWith({
-        where: { userId: USER_ID, newsId: NEWS_ID },
+        where: { userId: USER_ID, newsId: DETAIL_NEWS_ID },
         select: { id: true },
       });
     });
@@ -331,18 +353,21 @@ describe('NewsService', () => {
       mockPrisma.client.like.findFirst.mockResolvedValue(null);
       mockPrisma.client.save.findFirst.mockResolvedValue(null);
 
-      const result = await service.findOneDetail(NEWS_ID, USER_ID);
+      const result: NewsDetailResponse = await service.findOneDetail(
+        DETAIL_NEWS_ID,
+        USER_ID,
+      );
 
       expect(result.liked).toBe(false);
       expect(result.saved).toBe(false);
     });
 
-    it('lança NotFoundException quando a notícia não existe ou está inativa', async () => {
+    it('lança NotFoundException quando a notícia não existe ou foi excluída', async () => {
       mockPrisma.client.news.findFirst.mockResolvedValue(null);
 
-      await expect(service.findOneDetail(NEWS_ID, USER_ID)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.findOneDetail(DETAIL_NEWS_ID, USER_ID),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });
