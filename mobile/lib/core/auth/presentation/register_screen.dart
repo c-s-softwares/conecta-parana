@@ -5,10 +5,8 @@ import 'package:conectaparana/features/register/data/services/register_repositor
 import 'package:conectaparana/features/register/data/services/city_service.dart';
 import 'package:conectaparana/features/register/data/models/city_model.dart';
 import 'package:conectaparana/features/onboarding/presentation/steps/verify_email_screen.dart';
-import 'package:conectaparana/core/router/app_router.dart';
 import 'package:conectaparana/shared/widgets/feedback/app_toast.dart';
 import 'package:dio/dio.dart';
-import 'package:go_router/go_router.dart';
 
 class _PasswordRules {
   static final _especial = RegExp(
@@ -293,14 +291,6 @@ class RegisterScreenState extends State<RegisterScreen> {
     });
 
     return hasUnmappedError;
-  }
-
-  void _goToLogin() {
-    try {
-      context.go(AppRoutes.login);
-    } catch (_) {
-      Navigator.pushReplacementNamed(context, AppRoutes.login);
-    }
   }
 
   void _showFeedback(String message, AppToastVariant variant) {
