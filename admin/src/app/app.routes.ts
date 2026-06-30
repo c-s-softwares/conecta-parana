@@ -34,13 +34,17 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.routes').then((m) => m.DASHBOARD_ROUTES),
       },
       {
+        path: 'noticias',
+        loadChildren: () =>
+          import('./features/news/news.routes').then((m) => m.NEWS_ROUTES),
+      },
+      {
         path: 'eventos',
         loadComponent: () =>
           import('./features/events/events.page').then((m) => m.EventsPage),
         data: { title: 'Eventos' },
       },
       { path: 'comunicados', loadComponent: loadPlaceholder, data: { title: 'Comunicados' } },
-      { path: 'noticias', loadComponent: loadPlaceholder, data: { title: 'Notícias' } },
       { path: 'locais', loadComponent: loadPlaceholder, data: { title: 'Locais' } },
       { path: 'notificacoes', loadComponent: loadPlaceholder, data: { title: 'Notificações' } },
       { path: 'sugestoes', loadComponent: loadPlaceholder, data: { title: 'Sugestões' } },
