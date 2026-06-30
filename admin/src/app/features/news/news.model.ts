@@ -1,15 +1,26 @@
-export interface NewsForm {
+export interface NewsPhoto {
+  id: string;
+  thumbUrl: string | null;
+  url?: string;
+}
+
+export interface NewsItem {
+  id: string;
   title: string;
   description: string;
   type: 'saude' | 'educacao' | 'infra' | 'geral' | 'outros';
   linkType: 'interno' | 'externo';
-  externalUrl?: string; // so visu
+  linkUrl?: string | null;
   isActive: boolean;
-}
-
-export interface NewsItem extends Omit<NewsForm, 'externalUrl'> {
-  id: string;
   cityId?: string;
+  cityName?: string;
   createdAt?: string;
   updatedAt?: string;
+  photos: NewsPhoto[];
+}
+
+export interface NewsDetail extends NewsItem {
+  likesCount: number;
+  liked: boolean;
+  saved: boolean;
 }
