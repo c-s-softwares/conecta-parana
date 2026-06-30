@@ -12,11 +12,11 @@ void main() {
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, __) => const Scaffold(body: Text('Home')),
+          builder: (_, _) => const Scaffold(body: Text('Home')),
         ),
         GoRoute(
           path: '/notifications',
-          builder: (_, __) => const NotificationsPage(),
+          builder: (_, _) => const NotificationsPage(),
         ),
       ],
     );

@@ -391,19 +391,19 @@ class _TicketHeaderCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  // OutlinedButton.icon(
-                  //   key: const Key('open-maps-button'),
-                  //   onPressed: () => onOpenMaps(ticket),
-                  //   icon: const Icon(Icons.map_outlined, size: 18),
-                  //   label: const Text('Abrir no app de mapas'),
-                  //   style: OutlinedButton.styleFrom(
-                  //     foregroundColor: _primaryGreen,
-                  //     side: const BorderSide(color: _primaryGreen),
-                  //     shape: RoundedRectangleBorder(
-                  //       borderRadius: BorderRadius.circular(10),
-                  //     ),
-                  //   ),
-                  // ),
+                  OutlinedButton.icon(
+                    key: const Key('open-maps-button'),
+                    onPressed: () => onOpenMaps(ticket),
+                    icon: const Icon(Icons.map_outlined, size: 18),
+                    label: const Text('Abrir no app de mapas'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _primaryGreen,
+                      side: const BorderSide(color: _primaryGreen),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
                 ],
               ],
             ),

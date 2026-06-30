@@ -261,32 +261,32 @@ class CommunicateHighlightsCard extends StatelessWidget {
   }
 }
 
-// class CommunicateAlertButton extends StatelessWidget {
-//   const CommunicateAlertButton({super.key, this.onPressed});
+class CommunicateAlertButton extends StatelessWidget {
+  const CommunicateAlertButton({super.key, this.onPressed});
 
-//   final VoidCallback? onPressed;
+  final VoidCallback? onPressed;
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return SizedBox(
-//       width: double.infinity,
-//       height: 48,
-//       child: ElevatedButton.icon(
-//         key: const Key('communicate_alert_button'),
-//         onPressed: onPressed,
-//         icon: const Icon(Icons.notifications_none, size: 18),
-//         label: const Text('Ativar alerta desta secretaria'),
-//         style: ElevatedButton.styleFrom(
-//           backgroundColor: communicateGreen,
-//           foregroundColor: Colors.white,
-//           elevation: 0,
-//           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-//           textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
-//         ),
-//       ),
-//     );
-//   }
-// }
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton.icon(
+        key: const Key('communicate_alert_button'),
+        onPressed: onPressed,
+        icon: const Icon(Icons.notifications_none, size: 18),
+        label: const Text('Ativar alerta desta secretaria'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: communicateGreen,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+        ),
+      ),
+    );
+  }
+}
 
 class _CircleAction extends StatelessWidget {
   const _CircleAction({

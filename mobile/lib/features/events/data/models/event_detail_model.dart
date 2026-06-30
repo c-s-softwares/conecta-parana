@@ -1,6 +1,7 @@
 import 'package:conectaparana/core/media/media_photo.dart';
 
 class EventPhoto extends MediaPhoto {
+  @override
   final String id;
 
   const EventPhoto({required this.id, super.url, super.thumbUrl});

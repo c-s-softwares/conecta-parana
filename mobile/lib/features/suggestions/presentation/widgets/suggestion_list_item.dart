@@ -163,7 +163,7 @@ class _ReplyBlock extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 15,
-                backgroundColor: Color(0xFF006733),
+                backgroundColor: const Color(0xFF006733),
                 child: Text(
                   displayName[0].toUpperCase(),
                   style: const TextStyle(

@@ -260,7 +260,7 @@ class _CommunicateDetailPageState extends State<CommunicateDetailPage> {
           const SizedBox(height: 12),
         ],
         const SizedBox(height: 4),
-        // CommunicateAlertButton(onPressed: _showComingSoon),
+        CommunicateAlertButton(onPressed: _showComingSoon),
       ],
     );
   }

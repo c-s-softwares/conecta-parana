@@ -24,8 +24,8 @@ class AppNetworkImage extends StatelessWidget {
       fit: fit,
       width: width,
       height: height,
-      placeholder: (_, __) => const _MediaSkeleton(),
-      errorWidget: (_, __, ___) => fallback,
+      placeholder: (_, _) => const _MediaSkeleton(),
+      errorWidget: (_, _, _) => fallback,
     );
   }
 }

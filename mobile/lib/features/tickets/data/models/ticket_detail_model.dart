@@ -16,6 +16,7 @@ class TicketCoordinates {
 }
 
 class TicketPhoto extends MediaPhoto {
+  @override
   final String id;
 
   const TicketPhoto({required this.id, super.url, super.thumbUrl});
