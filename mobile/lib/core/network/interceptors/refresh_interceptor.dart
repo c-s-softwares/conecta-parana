@@ -66,8 +66,13 @@ class RefreshInterceptor extends Interceptor {
         data: {'refresh_token': refreshToken},
       );
 
-      final newAccessToken = response.data['accessToken'];
-      final newRefreshToken = response.data['refreshToken'];
+      final data = response.data as Map<String, dynamic>;
+      final newAccessToken = data['access_token'] ?? data['accessToken'];
+      final newRefreshToken = data['refresh_token'] ?? data['refreshToken'];
+
+      if (newAccessToken is! String || newRefreshToken is! String) {
+        throw Exception('Invalid refresh response');
+      }
 
       await _authService.saveTokens(
         accessToken: newAccessToken,

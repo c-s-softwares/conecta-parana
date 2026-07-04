@@ -1,6 +1,12 @@
 import 'package:conectaparana/core/network/api_client.dart';
+import 'package:conectaparana/features/register/data/models/city_model.dart';
+import 'package:dio/dio.dart';
 
 class RegisterRepository {
+  RegisterRepository({Dio? dio}) : _dio = dio ?? ApiClient.instance.dio;
+
+  final Dio _dio;
+
   Future<({String? accessToken, String? refreshToken})> register({
     required String name,
     required String email,
@@ -8,14 +14,19 @@ class RegisterRepository {
     required String confirmPassword,
     required String cityId,
   }) async {
-    final response = await ApiClient.instance.dio.post(
+    final normalizedCityId = cityId.trim();
+    if (!City.isValidBackendId(normalizedCityId)) {
+      throw const InvalidRegistrationCityException();
+    }
+
+    final response = await _dio.post(
       '/auth/register',
       data: {
         'name': name,
         'email': email,
         'password': password,
         'confirmPassword': confirmPassword,
-        'cityId': cityId,
+        'cityId': normalizedCityId,
       },
     );
 
@@ -66,4 +77,8 @@ class RegisterRepository {
 
     return (accessToken: access, refreshToken: refresh);
   }
+}
+
+class InvalidRegistrationCityException implements Exception {
+  const InvalidRegistrationCityException();
 }

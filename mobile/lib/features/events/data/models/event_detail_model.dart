@@ -1,15 +1,16 @@
-class EventPhoto {
-  final String id;
-  final String url;
-  final String? thumbUrl;
+import 'package:conectaparana/core/media/media_photo.dart';
+import 'package:conectaparana/shared/models/author_summary.dart';
 
-  const EventPhoto({required this.id, required this.url, this.thumbUrl});
+class EventPhoto extends MediaPhoto {
+  const EventPhoto({required String id, super.url, super.thumbUrl})
+    : super(id: id);
 
   factory EventPhoto.fromJson(Map<String, dynamic> json) {
+    final photo = MediaPhoto.fromJson(json);
     return EventPhoto(
-      id: json['id'] as String,
-      url: json['url'] as String,
-      thumbUrl: json['thumbUrl'] as String?,
+      id: json['id']?.toString() ?? '',
+      url: photo.url,
+      thumbUrl: photo.thumbUrl,
     );
   }
 }
@@ -51,6 +52,7 @@ class EventDetail {
   final String cityId;
   final EventCoordinates? coordinates;
   final EventLocal? local;
+  final AuthorSummary? author;
   final List<EventPhoto> photos;
   final int likesCount;
   final bool likedByMe;
@@ -68,6 +70,7 @@ class EventDetail {
     required this.cityId,
     this.coordinates,
     this.local,
+    this.author,
     required this.photos,
     required this.likesCount,
     required this.likedByMe,
@@ -80,7 +83,9 @@ class EventDetail {
       title: json['title'] as String,
       description: json['description'] as String,
       type: json['type'] as String,
-      status: json['status'] as String,
+      status:
+          json['status'] as String? ??
+          ((json['isActive'] as bool? ?? true) ? 'publicado' : 'cancelado'),
       eventDate: DateTime.parse(json['eventDate'] as String),
       eventEndDate: json['eventEndDate'] != null
           ? DateTime.parse(json['eventEndDate'] as String)
@@ -95,12 +100,22 @@ class EventDetail {
       local: json['local'] != null
           ? EventLocal.fromJson(json['local'] as Map<String, dynamic>)
           : null,
-      photos: (json['photos'] as List<dynamic>)
+      author: AuthorSummary.fromJson(json['user'] as Map<String, dynamic>?),
+      photos: (json['photos'] as List<dynamic>? ?? const [])
           .map((p) => EventPhoto.fromJson(p as Map<String, dynamic>))
+          .where((photo) => photo.hasImage)
           .toList(),
-      likesCount: json['likesCount'] as int,
-      likedByMe: json['likedByMe'] as bool,
-      savedByMe: json['savedByMe'] as bool,
+      likesCount: json['likesCount'] as int? ?? 0,
+      likedByMe:
+          json['liked'] as bool? ??
+          json['isLiked'] as bool? ??
+          json['likedByMe'] as bool? ??
+          false,
+      savedByMe:
+          json['saved'] as bool? ??
+          json['isSaved'] as bool? ??
+          json['savedByMe'] as bool? ??
+          false,
     );
   }
 
@@ -117,6 +132,7 @@ class EventDetail {
       cityId: cityId,
       coordinates: coordinates,
       local: local,
+      author: author,
       photos: photos,
       likesCount: likesCount ?? this.likesCount,
       likedByMe: likedByMe ?? this.likedByMe,

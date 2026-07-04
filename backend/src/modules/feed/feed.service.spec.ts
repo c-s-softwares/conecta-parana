@@ -78,6 +78,7 @@ const makeNewsEntity = () => ({
 const PHOTOS_THUMB_INCLUDE = {
   photos: { select: { id: true, thumbUrl: true } },
 };
+const USER_SELECT_INCLUDE = { user: { select: { id: true, name: true } } };
 
 describe('FeedService', () => {
   let service: FeedService;
@@ -88,6 +89,7 @@ describe('FeedService', () => {
       communicate: { findMany: jest.Mock };
       news: { findFirst: jest.Mock };
       photo: { findMany: jest.Mock };
+      user: { findMany: jest.Mock };
       $queryRaw: jest.Mock;
     };
   };
@@ -109,6 +111,7 @@ describe('FeedService', () => {
         communicate: { findMany: jest.fn() },
         news: { findFirst: jest.fn() },
         photo: { findMany: jest.fn() },
+        user: { findMany: jest.fn() },
         $queryRaw: jest.fn(),
       },
     };
@@ -129,6 +132,7 @@ describe('FeedService', () => {
     mockPrisma.client.communicate.findMany.mockResolvedValue([]);
     mockPrisma.client.news.findFirst.mockResolvedValue(null);
     mockPrisma.client.photo.findMany.mockResolvedValue([]);
+    mockPrisma.client.user.findMany.mockResolvedValue([]);
     mockPrisma.client.$queryRaw.mockResolvedValue([]);
     mockCache.get.mockResolvedValue(null);
     mockCache.set.mockResolvedValue(undefined);
@@ -314,7 +318,7 @@ describe('FeedService', () => {
       expect(mockPrisma.client.news.findFirst).toHaveBeenCalledWith({
         where: { cityId: MOCK_CITY_ID, isActive: true },
         orderBy: { id: 'desc' },
-        include: PHOTOS_THUMB_INCLUDE,
+        include: { ...PHOTOS_THUMB_INCLUDE, ...USER_SELECT_INCLUDE },
       });
     });
   });
@@ -331,7 +335,7 @@ describe('FeedService', () => {
         where: { cityId: MOCK_CITY_ID, isActive: true },
         orderBy: { id: 'desc' },
         take: 4,
-        include: PHOTOS_THUMB_INCLUDE,
+        include: { ...PHOTOS_THUMB_INCLUDE, ...USER_SELECT_INCLUDE },
       });
       expect(result.communicates.map((c) => c.id)).toEqual([
         COMMUNICATE_RECENT_ID,

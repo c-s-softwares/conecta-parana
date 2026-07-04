@@ -35,7 +35,8 @@ export const routes: Routes = [
       },
       {
         path: 'eventos',
-        loadComponent: () => import('./features/events/events.page').then((m) => m.EventsPage),
+        loadComponent: () =>
+          import('./features/events/events.page').then((m) => m.EventsPage),
         data: { title: 'Eventos' },
       },
       {

@@ -4,7 +4,7 @@ enum ShellTab {
   home,
   events,
   map,
-  tickets,
+  news,
   profile;
 
   String get label {
@@ -15,8 +15,8 @@ enum ShellTab {
         return 'Eventos';
       case ShellTab.map:
         return 'Mapa';
-      case ShellTab.tickets:
-        return 'Tickets';
+      case ShellTab.news:
+        return 'Notícias';
       case ShellTab.profile:
         return 'Perfil';
     }
@@ -30,8 +30,8 @@ enum ShellTab {
         return Icons.calendar_today_outlined;
       case ShellTab.map:
         return Icons.map_outlined;
-      case ShellTab.tickets:
-        return Icons.confirmation_number_outlined;
+      case ShellTab.news:
+        return Icons.article_outlined;
       case ShellTab.profile:
         return Icons.person_outline;
     }
@@ -45,8 +45,8 @@ enum ShellTab {
         return '/events';
       case ShellTab.map:
         return '/map';
-      case ShellTab.tickets:
-        return '/tickets';
+      case ShellTab.news:
+        return '/news';
       case ShellTab.profile:
         return '/profile';
     }

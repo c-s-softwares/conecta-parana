@@ -14,10 +14,16 @@ const MOCK_CITIZEN_ID = `${TABLE_PREFIX.USER}01HZX3Y4Q9F8TAB1C2DKEYH9ZZ`;
 const MOCK_CITY_ID = `${TABLE_PREFIX.CITY}01HZX3Y4Q9F8TAB1C2DKEYH9CC`;
 const MOCK_SUGGESTION_ID = `${TABLE_PREFIX.SUGGESTION}01HZX3Y4Q9F8TAB1C2DKEYH9MN`;
 const MOCK_ADMIN_ID = `${TABLE_PREFIX.USER}01HZX3Y4Q9F8TAB1C2DKEYH9AA`;
+const CITIZEN_NAME = 'Cidadão Teste';
+
+const SUGGESTION_INCLUDE = {
+  user: { select: { id: true, name: true } },
+  respondedBy: { select: { id: true, name: true } },
+};
 
 const MOCK_USER = {
   id: MOCK_CITIZEN_ID,
-  name: 'Cidadão Teste',
+  name: CITIZEN_NAME,
   email: 'citizen@test.com',
   password: 'hash',
   role: Role.CIDADAO,
@@ -34,6 +40,8 @@ const MOCK_SUGGESTION = {
   response: null,
   respondedAt: null,
   respondedById: null,
+  user: { id: MOCK_CITIZEN_ID, name: CITIZEN_NAME },
+  respondedBy: null,
 };
 
 const mockPrisma = {
@@ -141,6 +149,7 @@ describe('SuggestionsService', () => {
       expect(mockPrisma.client.suggestion.findMany).toHaveBeenCalledWith({
         where: { userId: MOCK_CITIZEN_ID },
         orderBy: { id: 'desc' },
+        include: SUGGESTION_INCLUDE,
       });
     });
   });
@@ -156,6 +165,7 @@ describe('SuggestionsService', () => {
       expect(mockPrisma.client.suggestion.findMany).toHaveBeenCalledWith({
         where: { cityId: MOCK_CITY_ID },
         orderBy: { id: 'desc' },
+        include: SUGGESTION_INCLUDE,
       });
     });
 
@@ -169,6 +179,7 @@ describe('SuggestionsService', () => {
       expect(mockPrisma.client.suggestion.findMany).toHaveBeenCalledWith({
         where: {},
         orderBy: { id: 'desc' },
+        include: SUGGESTION_INCLUDE,
       });
     });
   });

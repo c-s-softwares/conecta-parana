@@ -18,6 +18,10 @@ class SuggestionUserWithoutCityException implements Exception {
   const SuggestionUserWithoutCityException();
 }
 
+class SuggestionSubjectTooLongException implements Exception {
+  const SuggestionSubjectTooLongException();
+}
+
 class SuggestionMessageTooLongException implements Exception {
   const SuggestionMessageTooLongException();
 }

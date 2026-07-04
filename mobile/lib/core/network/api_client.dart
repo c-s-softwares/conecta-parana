@@ -17,7 +17,12 @@ class ApiClient {
 
   late final Dio refreshDio = Dio(_options);
 
+  bool _initialized = false;
+
   void init() {
+    if (_initialized) return;
+    _initialized = true;
+
     dio.interceptors.addAll([
       AuthInterceptor(),
       RefreshInterceptor(dio, refreshDio),
@@ -26,10 +31,13 @@ class ApiClient {
   }
 
   BaseOptions _buildOptions() {
-    const baseUrl = String.fromEnvironment(
-      'API_BASE_URL',
-      defaultValue: 'https://api.dev.conectaparana.pr.gov.br',
-    );
+    const envUrl = String.fromEnvironment('API_BASE_URL');
+    final baseUrl =
+        envUrl.isNotEmpty
+            ? envUrl
+            : kIsWeb
+            ? 'http://localhost:3000'
+            : 'http://10.0.2.2:3000';
 
     if (kDebugMode) {
       debugPrint('API BASE URL → $baseUrl');

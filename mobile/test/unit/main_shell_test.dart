@@ -61,8 +61,8 @@ GoRouter _buildTestRouter() {
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
-              path: AppRoutes.tickets,
-              builder: (context, state) => const _TabPage(label: 'Tickets', key: ValueKey('tickets')),
+              path: AppRoutes.newsList,
+              builder: (context, state) => const _TabPage(label: 'Notícias', key: ValueKey('news')),
             ),
           ]),
           StatefulShellBranch(routes: [
@@ -100,7 +100,7 @@ void main() {
       await tester.pumpWidget(_buildTestApp(_buildTestRouter()));
       await tester.pumpAndSettle();
 
-      final tabs = ['Eventos', 'Mapa', 'Tickets', 'Perfil'];
+      final tabs = ['Eventos', 'Mapa', 'Notícias', 'Perfil'];
       for (final label in tabs) {
         await tester.tap(find.text(label).last);
         await tester.pumpAndSettle();
@@ -165,7 +165,7 @@ void main() {
       expect(ShellTab.fromPath('/home/comunicado/abc'), equals(ShellTab.home));
       expect(ShellTab.fromPath('/events/evt_123'), equals(ShellTab.events));
       expect(ShellTab.fromPath('/map/loc_456'), equals(ShellTab.map));
-      expect(ShellTab.fromPath('/tickets/tkt_789'), equals(ShellTab.tickets));
+      expect(ShellTab.fromPath('/news/news_789'), equals(ShellTab.news));
       expect(ShellTab.fromPath('/profile'), equals(ShellTab.profile));
     });
 
@@ -178,7 +178,7 @@ void main() {
       expect(ShellTab.home.rootPath, equals('/home'));
       expect(ShellTab.events.rootPath, equals('/events'));
       expect(ShellTab.map.rootPath, equals('/map'));
-      expect(ShellTab.tickets.rootPath, equals('/tickets'));
+      expect(ShellTab.news.rootPath, equals('/news'));
       expect(ShellTab.profile.rootPath, equals('/profile'));
     });
   });

@@ -1,3 +1,6 @@
+import 'package:conectaparana/core/media/media_photo.dart';
+import 'package:conectaparana/shared/models/author_summary.dart';
+
 class NewsDetailModel {
   final String id;
   final String title;
@@ -8,9 +11,14 @@ class NewsDetailModel {
   final String? externalUrl;
   final bool isActive;
   final List<String> photos;
-  final String? authorName;
-  final String? authorSubtitle;
+  final List<MediaPhoto> photoItems;
+  final AuthorSummary? author;
   final String? createdAt;
+  final int likesCount;
+  final bool liked;
+  final bool saved;
+
+  DateTime? get createdDate => DateTime.tryParse(createdAt ?? '');
 
   NewsDetailModel({
     required this.id,
@@ -22,12 +30,16 @@ class NewsDetailModel {
     this.externalUrl,
     required this.isActive,
     required this.photos,
-    this.authorName,
-    this.authorSubtitle,
+    this.photoItems = const [],
+    this.author,
     this.createdAt,
+    this.likesCount = 0,
+    this.liked = false,
+    this.saved = false,
   });
 
   factory NewsDetailModel.fromJson(Map<String, dynamic> json) {
+    final photoItems = MediaPhoto.listFromJson(json['photos']);
     return NewsDetailModel(
       id: json['id'] ?? '',
       title: json['title'] ?? '',
@@ -35,12 +47,26 @@ class NewsDetailModel {
       summary: json['summary'],
       type: json['type'],
       linkType: json['linkType'],
-      externalUrl: json['externalUrl'],
+      externalUrl: json['linkUrl'] ?? json['externalUrl'],
       isActive: json['isActive'] ?? true,
-      photos: List<String>.from(json['photos'] ?? []),
-      authorName: json['authorName'],
-      authorSubtitle: json['authorSubtitle'],
-      createdAt: json['createdAt'],
+      photos: photoItems
+          .map((photo) => photo.fullSizeUrl)
+          .whereType<String>()
+          .toList(growable: false),
+      photoItems: photoItems,
+      author: AuthorSummary.fromJson(json['user'] as Map<String, dynamic>?),
+      createdAt: (json['publishedAt'] ?? json['createdAt'])?.toString(),
+      likesCount: json['likesCount'] as int? ?? 0,
+      liked:
+          json['liked'] as bool? ??
+          json['isLiked'] as bool? ??
+          json['likedByMe'] as bool? ??
+          false,
+      saved:
+          json['saved'] as bool? ??
+          json['isSaved'] as bool? ??
+          json['savedByMe'] as bool? ??
+          false,
     );
   }
 }

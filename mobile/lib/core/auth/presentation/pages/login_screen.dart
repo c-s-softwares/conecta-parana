@@ -1,10 +1,11 @@
 import 'package:conectaparana/core/router/app_router.dart';
+import 'package:conectaparana/core/network/api_client.dart';
+import 'package:conectaparana/shared/widgets/feedback/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:dio/dio.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/auth/auth_service.dart';
-import '../../../../dev/fakes/fake_jwt.dart';
 
 class LoginScreen extends StatefulWidget {
   final Future<void> Function(String email, String senha)? mockLogin;
@@ -68,12 +69,30 @@ class _LoginScreenState extends State<LoginScreen> {
           _passwordController.text,
         );
       } else {
-        final fakeAccessToken = generateFakeJwt();
-        final fakeRefreshToken = generateFakeJwt();
+        final response = await ApiClient.instance.dio
+            .post<Map<String, dynamic>>(
+              '/auth/login',
+              data: {
+                'email': _emailController.text.trim(),
+                'password': _passwordController.text,
+              },
+            );
+
+        final data = response.data ?? const {};
+        final accessToken = data['access_token'] ?? data['accessToken'];
+        final refreshToken = data['refresh_token'] ?? data['refreshToken'];
+
+        if (accessToken is! String || refreshToken is! String) {
+          throw DioException(
+            requestOptions: response.requestOptions,
+            response: response,
+            type: DioExceptionType.badResponse,
+          );
+        }
 
         await AuthService.instance.login(
-          accessToken: fakeAccessToken,
-          refreshToken: fakeRefreshToken,
+          accessToken: accessToken,
+          refreshToken: refreshToken,
         );
       }
 
@@ -82,26 +101,26 @@ class _LoginScreenState extends State<LoginScreen> {
         context.go(pending ?? AppRoutes.home);
       }
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
+      final code = e.response?.data is Map<String, dynamic>
+          ? (e.response?.data as Map<String, dynamic>)['code'] as String?
+          : null;
+
+      if (code == 'email_not_verified') {
+        _showError('Confirme seu email antes de entrar.');
+      } else if (e.response?.statusCode == 401) {
         _passwordController.clear();
         _passwordFocus.requestFocus();
-        _showSnackbar('Email ou senha inválidos.');
+        _showError('E-mail ou senha inválidos.');
       } else {
-        _showSnackbar('Sem conexão. Tente novamente.');
+        _showError('Sem conexão. Tente novamente.');
       }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: const Color(0xFF006733),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+  void _showError(String message) {
+    AppToast.show(context, message: message, variant: AppToastVariant.error);
   }
 
   @override
@@ -125,30 +144,13 @@ class _LoginScreenState extends State<LoginScreen> {
           Positioned.fill(
             child: Container(
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.centerRight,
-                  end: Alignment.centerLeft,
-                  colors: [Color.fromARGB(255, 7, 47, 111), Color(0xFF003D1A)],
-                ),
-              ),
-            ),
-          ),
-
-          Positioned(
-            left: -80,
-            top: -80,
-            child: Container(
-              width: 380,
-              height: 380,
-              decoration: BoxDecoration(
                 gradient: RadialGradient(
+                  center: Alignment.center,
                   colors: [
-                    const Color(0xFF00E676).withValues(alpha: 0.55),
-                    const Color(0xFF00C853).withValues(alpha: 0.2),
-                    Colors.transparent,
+                    Color(0xFF1B6B3A), // verde escuro médio no centro
+                    Color(0xFF0D3D20), // verde bem escuro nas bordas
                   ],
-                  stops: const [0.0, 0.35, 1.0],
-                  radius: 0.65,
+                  radius: 1.2,
                 ),
               ),
             ),

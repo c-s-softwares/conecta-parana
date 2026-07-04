@@ -127,6 +127,35 @@ class FakeTicketRepository implements TicketRepository {
       createdAt: DateTime.now(),
     );
   }
+
+  @override
+  Future<Ticket> createTicket(CreateTicketRequest request) async {
+    await Future.delayed(delay);
+    if (simulateNetworkError) throw TicketNetworkException();
+
+    final now = DateTime.now();
+    final ticket = Ticket(
+      id: 'tkt_fake_${now.microsecondsSinceEpoch}',
+      title: request.title,
+      description: request.description,
+      type: request.type,
+      status: 'aberto',
+      address: request.address,
+      createdAt: now,
+      updatedAt: now,
+    );
+    tickets.insert(0, ticket);
+    return ticket;
+  }
+
+  @override
+  Future<void> uploadTicketPhoto({
+    required String ticketId,
+    required TicketPhotoUpload photo,
+  }) async {
+    await Future.delayed(delay);
+    if (simulateNetworkError) throw TicketNetworkException();
+  }
 }
 
 Map<String, TicketDetail> _defaultDetails() {

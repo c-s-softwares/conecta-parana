@@ -21,15 +21,28 @@ class _FakeRepository implements TicketRepository {
   }
 
   @override
-  Future<TicketDetail> getTicketDetail(String id) async =>
-      throw UnimplementedError();
+  Future<TicketDetail> getTicketDetail(String id) async {
+    throw UnimplementedError();
+  }
 
   @override
   Future<TicketComment> addComment({
     required String ticketId,
     required String message,
-  }) async =>
-      throw UnimplementedError();
+  }) async => throw UnimplementedError();
+
+  @override
+  Future<Ticket> createTicket(CreateTicketRequest request) async {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> uploadTicketPhoto({
+    required String ticketId,
+    required TicketPhotoUpload photo,
+  }) async {
+    throw UnimplementedError();
+  }
 }
 
 Ticket _makeTicket({
@@ -56,7 +69,11 @@ Widget _buildTestWidget(TicketsPage page) {
     routes: [
       GoRoute(path: '/', builder: (context, state) => page),
       GoRoute(
-        path: '/tickets/:id',
+        path: '/profile/tickets/new',
+        builder: (context, state) => const Scaffold(body: Text('new-ticket')),
+      ),
+      GoRoute(
+        path: '/profile/tickets/:id',
         builder: (context, state) =>
             Scaffold(body: Text('ticket:${state.pathParameters['id']}')),
       ),
@@ -252,7 +269,7 @@ void main() {
       expect(repo.callCount, 2);
     });
 
-    testWidgets('botão Abrir novo ticket exibe snackbar "Em breve"', (
+    testWidgets('botão Abrir novo ticket navega para novo ticket', (
       tester,
     ) async {
       final repo = _FakeRepository(ticketsToReturn: const []);
@@ -263,9 +280,9 @@ void main() {
       expect(find.text('Abrir novo ticket'), findsOneWidget);
 
       await tester.tap(find.text('Abrir novo ticket'));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      expect(find.text('Em breve'), findsOneWidget);
+      expect(find.text('new-ticket'), findsOneWidget);
     });
 
     testWidgets('filtros alteram a lista exibida', (tester) async {
@@ -337,13 +354,26 @@ class _FakeRepositoryWithRetry implements TicketRepository {
   Future<List<Ticket>> getMyTickets() async => onLoad();
 
   @override
-  Future<TicketDetail> getTicketDetail(String id) async =>
-      throw UnimplementedError();
+  Future<TicketDetail> getTicketDetail(String id) async {
+    throw UnimplementedError();
+  }
 
   @override
   Future<TicketComment> addComment({
     required String ticketId,
     required String message,
-  }) async =>
-      throw UnimplementedError();
+  }) async => throw UnimplementedError();
+
+  @override
+  Future<Ticket> createTicket(CreateTicketRequest request) async {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> uploadTicketPhoto({
+    required String ticketId,
+    required TicketPhotoUpload photo,
+  }) async {
+    throw UnimplementedError();
+  }
 }

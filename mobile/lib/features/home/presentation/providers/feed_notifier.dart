@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../domain/entities/feed_item.dart';
+import '../../domain/entities/home_highlights.dart';
 import '../../domain/repositories/feed_repository.dart';
 
 enum FeedStatus {
@@ -17,6 +18,7 @@ enum FeedStatus {
 class FeedState {
   final FeedStatus status;
   final List<FeedItem> items;
+  final HomeHighlights highlights;
   final String? cursor;
   final bool hasMore;
   final bool redirectToOnboarding;
@@ -24,6 +26,7 @@ class FeedState {
   const FeedState({
     this.status = FeedStatus.initial,
     this.items = const [],
+    this.highlights = const HomeHighlights(),
     this.cursor,
     this.hasMore = false,
     this.redirectToOnboarding = false,
@@ -32,6 +35,7 @@ class FeedState {
   FeedState copyWith({
     FeedStatus? status,
     List<FeedItem>? items,
+    HomeHighlights? highlights,
     String? cursor,
     bool? hasMore,
     bool? redirectToOnboarding,
@@ -40,6 +44,7 @@ class FeedState {
     return FeedState(
       status: status ?? this.status,
       items: items ?? this.items,
+      highlights: highlights ?? this.highlights,
       cursor: clearCursor ? null : (cursor ?? this.cursor),
       hasMore: hasMore ?? this.hasMore,
       redirectToOnboarding: redirectToOnboarding ?? this.redirectToOnboarding,
@@ -100,10 +105,18 @@ class FeedNotifier extends ValueNotifier<FeedState> {
       final merged = isRefresh || cursor == null
           ? page.items
           : [...value.items, ...page.items];
+      final hasHighlights =
+          page.highlights.alert != null ||
+          page.highlights.featuredBanner != null ||
+          page.highlights.services.isNotEmpty ||
+          page.highlights.events.isNotEmpty;
 
       value = value.copyWith(
-        status: merged.isEmpty ? FeedStatus.empty : FeedStatus.success,
+        status: merged.isEmpty && !hasHighlights
+            ? FeedStatus.empty
+            : FeedStatus.success,
         items: merged,
+        highlights: page.highlights,
         cursor: page.nextCursor,
         hasMore: page.hasMore,
       );

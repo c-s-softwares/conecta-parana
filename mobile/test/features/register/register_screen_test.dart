@@ -1,22 +1,22 @@
-import 'package:conectaparana/features/register/data/models/city_model.dart';
-import 'package:conectaparana/features/register/data/services/city_service.dart';
-import 'package:conectaparana/features/register/data/services/register_repository.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:conectaparana/features/register/data/services/register_repository.dart';
 import 'package:conectaparana/core/auth/auth_service.dart';
 import 'package:conectaparana/core/auth/auth_user.dart';
 import 'package:conectaparana/core/auth/auth_event.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:conectaparana/core/auth/presentation/register_screen.dart';
+import 'package:conectaparana/features/register/data/services/city_service.dart';
+import 'package:conectaparana/features/register/data/models/city_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FakeCityService extends CityService {
   @override
   Future<List<City>> getCities() async {
     return [
-      const City(id: '1', name: 'Curitiba', state: 'PR'),
-      const City(id: '2', name: 'Maringá', state: 'PR'),
+      const City(id: 'cit_01ARZ3NDEKTSV4RRFFQ69G5FAV', name: 'Curitiba'),
+      const City(id: 'cit_01ARZ3NDEKTSV4RRFFQ69G5FAW', name: 'Maringá'),
     ];
   }
 }
@@ -161,6 +161,92 @@ void main() {
       }
     });
 
+    testWidgets('erro de formato do cityId nao e atribuido ao campo de senha', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RegisterScreen(
+            cityService: FakeCityService(),
+            repository: _ValidationErrorRepository(['Formato de id inválido']),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await preencherFormValido(tester);
+
+      await scrollAndTap(
+        tester,
+        find.byKey(const Key('register_submit_button')),
+      );
+
+      final city = tester.widget<DropdownButtonFormField<City>>(
+        find.byType(DropdownButtonFormField<City>),
+      );
+      expect(
+        find.text('A senha não atende os critérios mínimos'),
+        findsNothing,
+      );
+      expect(city.decoration.errorText, 'Cidade selecionada inválida.');
+      expect(find.text('Formato de id inválido'), findsNothing);
+    });
+
+    testWidgets('erro geral da API usa o AppToast oficial', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RegisterScreen(
+            cityService: FakeCityService(),
+            repository: _ValidationErrorRepository([
+              'Falha de validação sem campo',
+            ]),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await preencherFormValido(tester);
+
+      await scrollAndTap(
+        tester,
+        find.byKey(const Key('register_submit_button')),
+      );
+
+      expect(
+        find.text('Confira os dados informados e tente novamente.'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('A senha não atende os critérios mínimos'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('erro de senha da API permanece no campo de senha', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RegisterScreen(
+            cityService: FakeCityService(),
+            repository: _ValidationErrorRepository([
+              'A senha deve atender aos critérios de segurança',
+            ]),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await preencherFormValido(tester);
+
+      await scrollAndTap(
+        tester,
+        find.byKey(const Key('register_submit_button')),
+      );
+
+      expect(
+        find.text('A senha não atende os critérios mínimos'),
+        findsOneWidget,
+      );
+    });
+
     testWidgets(
       'erro inline + botão Fazer login quando backend retorna email_exists (409)',
       (tester) async {
@@ -260,7 +346,7 @@ class _EmailExistsRepository extends RegisterRepository {
     required String name,
     required String email,
     required String password,
-    required String confirmPassword,   
+    required String confirmPassword,
     required String cityId,
   }) async {
     throw DioException(
@@ -274,13 +360,38 @@ class _EmailExistsRepository extends RegisterRepository {
   }
 }
 
+class _ValidationErrorRepository extends RegisterRepository {
+  _ValidationErrorRepository(this.messages);
+
+  final List<String> messages;
+
+  @override
+  Future<({String? accessToken, String? refreshToken})> register({
+    required String name,
+    required String email,
+    required String password,
+    required String confirmPassword,
+    required String cityId,
+  }) async {
+    final options = RequestOptions(path: '/auth/register');
+    throw DioException(
+      requestOptions: options,
+      response: Response(
+        requestOptions: options,
+        statusCode: 400,
+        data: {'code': 'validation_failed', 'message': messages},
+      ),
+    );
+  }
+}
+
 class _HappyRepository extends RegisterRepository {
   @override
   Future<({String? accessToken, String? refreshToken})> register({
     required String name,
     required String email,
     required String password,
-    required String confirmPassword, 
+    required String confirmPassword,
     required String cityId,
   }) async {
     return (
@@ -310,7 +421,12 @@ class _FakeAuthService implements AuthService {
     loginCalled = true;
     lastAccessToken = accessToken;
     lastRefreshToken = refreshToken;
-    currentUser.value = AuthUser(id: 'user-1', role: 'USER', cityId: '1', cityName: 'Maringá');
+    currentUser.value = AuthUser(
+      id: 'user-1',
+      role: 'USER',
+      cityId: '1',
+      cityName: 'Maringá',
+    );
   }
 
   @override

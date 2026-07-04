@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:conectaparana/shared/widgets/media/app_network_image.dart';
 import 'communicate_photo_viewer.dart';
 
 class CommunicatePhotoCarousel extends StatefulWidget {
@@ -44,10 +45,19 @@ class _CommunicatePhotoCarouselState extends State<CommunicatePhotoCarousel> {
                 },
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: Image.network(
-                    photo,
+                  child: AppNetworkImage(
+                    imageUrl: photo,
                     width: double.infinity,
                     fit: BoxFit.cover,
+                    fallback: const ColoredBox(
+                      color: Color(0xFF005A30),
+                      child: Center(
+                        child: Icon(
+                          Icons.broken_image_outlined,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               );

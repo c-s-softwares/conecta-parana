@@ -7,6 +7,7 @@ import 'package:conectaparana/features/tickets/data/repository/ticket_repository
 import 'package:conectaparana/features/tickets/presentation/widgets/ticket_list_item.dart';
 import 'package:conectaparana/features/tickets/presentation/widgets/ticket_summary_card.dart';
 import 'package:conectaparana/features/tickets/presentation/widgets/ticket_ui_mapper.dart';
+import 'package:conectaparana/core/router/app_router.dart';
 import 'package:conectaparana/shared/widgets/feedback/app_toast.dart';
 import 'package:conectaparana/shared/widgets/misc/app_chip.dart';
 import 'package:conectaparana/shared/widgets/misc/empty_state.dart';
@@ -119,11 +120,11 @@ class _TicketsPageState extends State<TicketsPage> {
   }
 
   void _handleNewTicket() {
-    AppToast.show(context, message: 'Em breve', variant: AppToastVariant.info);
+    context.push(AppRoutes.newTicket);
   }
 
   void _handleTicketTap(Ticket ticket) {
-    context.push('/tickets/${ticket.id}');
+    context.push('/profile/tickets/${ticket.id}');
   }
 
   int _countByGroup(TicketStatusGroup group) {
@@ -206,7 +207,8 @@ class _TicketsPageState extends State<TicketsPage> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               sliver: SliverList.separated(
                 itemCount: filtered.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 12),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final ticket = filtered[index];
                   return TicketListItem(

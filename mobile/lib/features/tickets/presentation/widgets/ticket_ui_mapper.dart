@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:conectaparana/shared/widgets/misc/badge.dart';
+import 'package:conectaparana/core/formatters/app_date_formatter.dart';
 
 enum TicketStatusGroup { aberto, emAnalise, respondido, concluido }
 
@@ -89,8 +90,6 @@ class TicketUiMapper {
     }
   }
 
-
-
   static String statusExactLabel(String status) {
     switch (status) {
       case 'aberto':
@@ -126,44 +125,14 @@ class TicketUiMapper {
   }
 
   static String formatDateTime(DateTime date) {
-    final day = date.day.toString().padLeft(2, '0');
-    final month = _months[date.month - 1];
-    final hour = date.hour.toString().padLeft(2, '0');
-    final minute = date.minute.toString().padLeft(2, '0');
-    return '$day $month · $hour:$minute';
+    return AppDateFormatter.shortDateTime(date);
   }
 
-  static const _months = [
-    'jan',
-    'fev',
-    'mar',
-    'abr',
-    'mai',
-    'jun',
-    'jul',
-    'ago',
-    'set',
-    'out',
-    'nov',
-    'dez',
-  ];
-
   static String formatShortDate(DateTime date) {
-    return '${date.day} ${_months[date.month - 1]}';
+    return AppDateFormatter.dayMonth(date);
   }
 
   static String formatRelative(DateTime date, {DateTime? now}) {
-    final reference = now ?? DateTime.now();
-    final diff = reference.difference(date);
-
-    if (diff.inMinutes < 60) {
-      final minutes = diff.inMinutes < 1 ? 1 : diff.inMinutes;
-      return '${minutes}min';
-    }
-    if (diff.inHours < 24) {
-      return '${diff.inHours}h';
-    }
-    final days = diff.inDays;
-    return days == 1 ? '1 dia' : '$days dias';
+    return AppDateFormatter.relative(date, now: now);
   }
 }

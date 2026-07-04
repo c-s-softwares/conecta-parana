@@ -47,6 +47,7 @@ type EventEntity = {
   updatedAt: Date;
   deletedAt: Date | null;
 
+  user?: { id: string; name: string } | null;
   photos?: { id: string; thumbUrl: string | null; url?: string }[];
 };
 
@@ -85,6 +86,7 @@ export class EventsService extends BaseCrudService<
       cityId: event.cityId,
       userId: event.userId,
       localId: event.localId,
+      user: event.user ?? null,
       createdAt: event.createdAt,
       updatedAt: event.updatedAt,
       photos: (event.photos ?? []).map((photo) => ({
@@ -152,6 +154,7 @@ export class EventsService extends BaseCrudService<
             select: { id: true, thumbUrl: true },
             orderBy: { id: 'asc' },
           },
+          user: { select: { id: true, name: true } },
         },
       }),
       this.prisma.client.event.count({ where }),
@@ -298,6 +301,7 @@ export class EventsService extends BaseCrudService<
           select: { id: true, url: true, thumbUrl: true },
           orderBy: { id: 'asc' },
         },
+        user: { select: { id: true, name: true } },
       },
     });
 

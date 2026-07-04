@@ -54,11 +54,14 @@ class _PhotoViewerPageState extends State<PhotoViewerPage> {
         onPageChanged: (index) => setState(() => _currentIndex = index),
         builder: (context, index) {
           return PhotoViewGalleryPageOptions(
-            imageProvider: NetworkImage(widget.photos[index].url),
+            imageProvider: NetworkImage(widget.photos[index].fullSizeUrl!),
             minScale: PhotoViewComputedScale.contained,
             maxScale: PhotoViewComputedScale.covered * 3,
             heroAttributes: PhotoViewHeroAttributes(
-              tag: widget.photos[index].id,
+              tag:
+                  widget.photos[index].id ??
+                  widget.photos[index].fullSizeUrl ??
+                  'event-photo-$index',
             ),
           );
         },

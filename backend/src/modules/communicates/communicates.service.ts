@@ -23,8 +23,7 @@ import { Role } from '@prisma/client';
 import { ENTITY_TYPES } from '../uploads/constants/entity-type';
 
 type AuthUser = {
-  sub?: string;
-  id?: string;
+  id: string;
   cityId?: string | null;
   role: Role;
 };
@@ -57,6 +56,7 @@ export class CommunicateService extends BaseCrudService<
       isActive: boolean;
       cityId: string;
       userId: string;
+      user?: { id: string; name: string } | null;
       photos?: { id: string; thumbUrl: string | null }[];
     };
 
@@ -67,6 +67,7 @@ export class CommunicateService extends BaseCrudService<
       isActive: communicate.isActive,
       cityId: communicate.cityId,
       userId: communicate.userId,
+      user: communicate.user ?? null,
       photos: (communicate.photos ?? []).map((photo) => ({
         id: photo.id,
         thumbUrl: photo.thumbUrl,
@@ -122,7 +123,7 @@ export class CommunicateService extends BaseCrudService<
         description: dto.description,
         isActive: dto.isActive ?? true,
         cityId,
-        userId: this.resolveUserId(currentUser),
+        userId: currentUser.id,
       },
     });
 
@@ -172,7 +173,10 @@ export class CommunicateService extends BaseCrudService<
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy: { id: 'desc' },
-        include: { photos: { select: { id: true, thumbUrl: true } } },
+        include: {
+          photos: { select: { id: true, thumbUrl: true } },
+          user: { select: { id: true, name: true } },
+        },
       }),
       this.getDelegate().count({ where }),
     ]);
@@ -199,7 +203,7 @@ export class CommunicateService extends BaseCrudService<
       where: { id, isActive: true },
       include: {
         photos: true,
-        user: { select: { name: true } },
+        user: { select: { id: true, name: true } },
         _count: { select: { likes: true } },
       },
     });
@@ -234,7 +238,7 @@ export class CommunicateService extends BaseCrudService<
       isActive: communicate.isActive,
       cityId: communicate.cityId,
       userId: communicate.userId,
-      authorName: communicate.user.name,
+      user: communicate.user,
       photos: communicate.photos.map((p) => ({
         id: p.id,
         url: p.url,
@@ -298,15 +302,5 @@ export class CommunicateService extends BaseCrudService<
     }
 
     return user;
-  }
-
-  private resolveUserId(user: AuthUser): string {
-    const userId = user.id ?? user.sub;
-
-    if (!userId) {
-      throw new UnauthorizedException(apiError(SHARED_ERRORS.UNAUTHENTICATED));
-    }
-
-    return userId;
   }
 }

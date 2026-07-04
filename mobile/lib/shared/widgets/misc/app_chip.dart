@@ -21,6 +21,7 @@ class AppChip extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
+          alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: isSelected ? const Color(0xFF006733) : Colors.white,

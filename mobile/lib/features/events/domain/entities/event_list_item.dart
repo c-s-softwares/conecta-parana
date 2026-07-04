@@ -1,3 +1,5 @@
+import 'package:conectaparana/core/media/media_photo.dart';
+
 class EventListItem {
   final String id;
   final String title;
@@ -8,8 +10,12 @@ class EventListItem {
   final String location;
   final bool isFree;
   final bool isFeatured;
+  final int likesCount;
+  final bool liked;
+  final bool saved;
   final List<String> gradientColors;
   final String detailRoute;
+  final List<MediaPhoto> photos;
 
   const EventListItem({
     required this.id,
@@ -21,7 +27,11 @@ class EventListItem {
     required this.location,
     this.isFree = false,
     this.isFeatured = false,
+    this.likesCount = 0,
+    this.liked = false,
+    this.saved = false,
     this.gradientColors = const ['0xFF006733', '0xFF004D26'],
     required this.detailRoute,
+    this.photos = const [],
   });
 }

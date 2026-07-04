@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:conectaparana/features/events/data/models/event_detail_model.dart';
 import 'package:go_router/go_router.dart';
+import 'package:conectaparana/core/formatters/app_date_formatter.dart';
 
 class EventInfoCards extends StatelessWidget {
   final EventDetail event;
@@ -9,8 +10,11 @@ class EventInfoCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateLabel = _formatDate(event.eventDate);
-    final timeLabel = _formatTime(event.eventDate, event.eventEndDate);
+    final dateLabel = AppDateFormatter.eventDate(event.eventDate);
+    final timeLabel = AppDateFormatter.timeRange(
+      event.eventDate,
+      event.eventEndDate,
+    );
     final localName = event.local?.name;
     final entrance = event.entranceInfo;
 
@@ -70,31 +74,6 @@ class EventInfoCards extends StatelessWidget {
         ],
       ],
     );
-  }
-
-  String _formatDate(DateTime d) {
-    const months = [
-      'jan',
-      'fev',
-      'mar',
-      'abr',
-      'mai',
-      'jun',
-      'jul',
-      'ago',
-      'set',
-      'out',
-      'nov',
-      'dez',
-    ];
-    return '${d.day} de ${months[d.month - 1]} · ${d.year}';
-  }
-
-  String _formatTime(DateTime start, DateTime? end) {
-    String hm(DateTime dt) =>
-        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-    if (end == null) return hm(start);
-    return '${hm(start)} – ${hm(end)}';
   }
 }
 

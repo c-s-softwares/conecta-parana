@@ -58,7 +58,12 @@ void main() {
     await tester.tap(find.text('Entrar'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Email ou senha inválidos.'), findsOneWidget);
+    expect(find.text('E-mail ou senha inválidos.'), findsOneWidget);
+    expect(find.byIcon(Icons.error_outline), findsOneWidget);
+    expect(
+      tester.widget<SnackBar>(find.byType(SnackBar)).backgroundColor,
+      const Color(0xFFE53935),
+    );
   });
 
   testWidgets('Deve navegar para /home quando login for bem sucedido', (

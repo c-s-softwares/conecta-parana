@@ -18,7 +18,8 @@ class EngagementService {
     try {
       await _dio.post(
         '/likes/toggle',
-        data: {'entityType': entityType, 'entityId': entityId},
+        data: {_targetKey(entityType): entityId},
+        options: Options(extra: {'auth': true}),
       );
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
@@ -36,7 +37,8 @@ class EngagementService {
     try {
       await _dio.post(
         '/saves/toggle',
-        data: {'entityType': entityType, 'entityId': entityId},
+        data: {_targetKey(entityType): entityId},
+        options: Options(extra: {'auth': true}),
       );
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
@@ -45,5 +47,15 @@ class EngagementService {
 
       throw EngagementException('Sem conexão. Tente novamente.');
     }
+  }
+
+  String _targetKey(String entityType) {
+    return switch (entityType) {
+      'event' => 'eventId',
+      'communicate' => 'communicateId',
+      'news' => 'newsId',
+      'local' => 'localId',
+      _ => throw EngagementException('Tipo de conteúdo inválido.'),
+    };
   }
 }

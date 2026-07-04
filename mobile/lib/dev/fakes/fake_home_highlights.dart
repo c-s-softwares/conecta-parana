@@ -4,15 +4,16 @@
 // Será substituído pela integração com o backend real quando disponível.
 
 import 'package:conectaparana/features/home/domain/entities/home_highlights.dart';
+import 'package:conectaparana/features/events/domain/entities/event_list_item.dart';
 
-const fakeHomeHighlights = HomeHighlights(
-  alert: HomeAlert(
+final fakeHomeHighlights = HomeHighlights(
+  alert: const HomeAlert(
     title: 'Alagamento na Av. Brasil',
     description:
         'Trecho entre Av. Cerro Azul e Centro interditado. Evite a região.',
     timeLabel: 'agora',
   ),
-  featuredBanner: HomeFeaturedBanner(
+  featuredBanner: const HomeFeaturedBanner(
     id: 'dec_1064_2025',
     tags: ['DECRETO', 'Meio ambiente'],
     highlightText: 'DECRETO Nº 1064/2025',
@@ -22,39 +23,47 @@ const fakeHomeHighlights = HomeHighlights(
     detailRoute: '/home/comunicado/dec_1064_2025',
   ),
   services: [
-    HomeService(id: 'ubs', label: 'UBS', icon: 'local_hospital_outlined', route: '/map'),
-    HomeService(id: 'escolas', label: 'Escolas', icon: 'school_outlined', route: '/map'),
-    HomeService(id: 'parques', label: 'Parques', icon: 'park_outlined', route: '/map'),
-    HomeService(id: 'transporte', label: 'Transporte', icon: 'directions_bus_outlined', route: '/map'),
-    HomeService(id: 'iptu', label: 'IPTU', icon: 'receipt_long_outlined', route: '/profile'),
-    HomeService(id: 'iluminacao', label: 'Iluminação', icon: 'lightbulb_outline', route: '/map'),
-    HomeService(id: 'coleta', label: 'Coleta', icon: 'delete_outline', route: '/map'),
-    HomeService(id: 'docs', label: 'Docs', icon: 'description_outlined', route: '/profile'),
+    const HomeService(id: 'ubs', label: 'UBS', icon: 'local_hospital_outlined', route: '/map'),
+    const HomeService(id: 'escolas', label: 'Escolas', icon: 'school_outlined', route: '/map'),
+    const HomeService(id: 'parques', label: 'Parques', icon: 'park_outlined', route: '/map'),
+    const HomeService(id: 'transporte', label: 'Transporte', icon: 'directions_bus_outlined', route: '/map'),
+    const HomeService(id: 'iptu', label: 'IPTU', icon: 'receipt_long_outlined', route: '/profile'),
+    const HomeService(id: 'iluminacao', label: 'Iluminação', icon: 'lightbulb_outline', route: '/map'),
+    const HomeService(id: 'coleta', label: 'Coleta', icon: 'delete_outline', route: '/map'),
+    const HomeService(id: 'docs', label: 'Docs', icon: 'description_outlined', route: '/profile'),
   ],
   events: [
-    HomeHighlightEvent(
+    EventListItem(
       id: 'evt_aniversario',
       title: 'Aniversário da cidade',
+      category: 'evento',
+      date: DateTime(2026, 5, 10),
       dateLabel: '10 MAI',
-      location: 'Aniversário de Maringá · Praça da Catedral',
+      time: '00:00',
+      location: 'Praça da Catedral',
       gradientColors: ['0xFF1B3A66', '0xFF274B82'],
       detailRoute: '/events/evt_aniversario',
     ),
-    HomeHighlightEvent(
+    EventListItem(
       id: 'evt_festival_nipo',
       title: 'Festival Nipo',
+      category: 'evento',
+      date: DateTime(2026, 5, 15),
       dateLabel: '15–17 MAI',
-      location: 'Festival Nipo-Brasileiro · Parque do Ingá',
+      time: '00:00',
+      location: 'Parque do Ingá',
       gradientColors: ['0xFFB3215A', '0xFF6E1640'],
       detailRoute: '/events/evt_festival_nipo',
     ),
-    HomeHighlightEvent(
+    EventListItem(
       id: 'evt_feira_organica',
       title: 'Parque do Ingá',
+      category: 'evento',
+      date: DateTime(2026, 5, 20),
       dateLabel: 'TODA QUARTA',
-      location: 'Feira Orgânica do Parque · Parque dos Pioneiros',
+      time: '07:00',
+      location: 'Parque dos Pioneiros',
       gradientColors: ['0xFF2E7D32', '0xFF1B5E20'],
-      badgeLabel: 'TODA QUARTA',
       detailRoute: '/events/evt_feira_organica',
     ),
   ],

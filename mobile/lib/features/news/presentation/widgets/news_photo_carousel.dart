@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:conectaparana/shared/widgets/media/app_network_image.dart';
 import 'news_photo_viewer.dart';
 
 class NewsPhotoCarousel extends StatefulWidget {
@@ -53,19 +54,17 @@ class _NewsPhotoCarouselState extends State<NewsPhotoCarousel> {
                     ),
                   );
                 },
-                child: Image.network(
-                  widget.photos[index],
+                child: AppNetworkImage(
+                  imageUrl: widget.photos[index],
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: double.infinity,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: const Color(0xFFE8F5EE),
-                      child: const Center(
-                        child: Icon(Icons.broken_image_outlined),
-                      ),
-                    );
-                  },
+                  fallback: Container(
+                    color: const Color(0xFFE8F5EE),
+                    child: const Center(
+                      child: Icon(Icons.broken_image_outlined),
+                    ),
+                  ),
                 ),
               );
             },

@@ -1,3 +1,5 @@
+import 'package:conectaparana/core/media/media_photo.dart';
+
 enum FeedItemType { event, comunicado, news }
 
 class FeedItem {
@@ -5,20 +7,24 @@ class FeedItem {
   final FeedItemType type;
   final String title;
   final String? subtitle;
+  final String? authorName;
   final String? imageUrl;
   final String? category;
   final DateTime? date;
   final bool isPriority;
+  final List<MediaPhoto> photos;
 
   const FeedItem({
     required this.id,
     required this.type,
     required this.title,
     this.subtitle,
+    this.authorName,
     this.imageUrl,
     this.category,
     this.date,
     this.isPriority = false,
+    this.photos = const [],
   });
 
   String get detailRoute {

@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PhotoResponseDto } from '../../../uploads/dto/response/photo-response.dto';
 import { PhotoThumbDto } from '../../../../common/dto/response/photo.dto';
+import { UserSummaryDto } from '../../../../common/dto/response/user-summary.dto';
 
 export class NewsResponse {
   @ApiProperty({
@@ -62,6 +63,13 @@ export class NewsResponse {
     description: 'Usuário que criou a notícia',
   })
   userId?: string | null;
+
+  @ApiPropertyOptional({
+    type: () => UserSummaryDto,
+    nullable: true,
+    description: 'Admin autor da notícia. Null quando o autor foi removido.',
+  })
+  user?: UserSummaryDto | null;
 
   @ApiProperty({
     example: '2026-06-08T01:00:00.000Z',

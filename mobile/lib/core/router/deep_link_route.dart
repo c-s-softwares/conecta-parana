@@ -31,7 +31,7 @@ class DeepLinkRoute {
       case DeepLinkType.local:
         return '/map/$id';
       case DeepLinkType.ticket:
-        return '/tickets/$id';
+        return '/profile/tickets/$id';
       case DeepLinkType.notification:
         return '/home/notification/$id';
     }

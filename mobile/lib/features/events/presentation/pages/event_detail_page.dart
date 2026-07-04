@@ -1,6 +1,8 @@
 import 'package:conectaparana/features/events/data/repository/event_repository.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:conectaparana/shared/widgets/media/app_network_image.dart';
+import 'package:conectaparana/shared/widgets/misc/avatar.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -8,6 +10,7 @@ import 'package:conectaparana/features/events/data/models/event_detail_model.dar
 import 'package:conectaparana/features/events/presentation/pages/photo_viewer_page.dart';
 import 'package:conectaparana/features/events/presentation/widgets/event_info_cards.dart';
 import 'package:conectaparana/features/events/presentation/widgets/event_static_map.dart';
+import 'package:conectaparana/features/engagement/widgets/engagement_bar.dart';
 import 'package:conectaparana/shared/widgets/misc/empty_state.dart';
 import 'package:conectaparana/shared/widgets/misc/loading_spinner.dart';
 
@@ -48,6 +51,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
           _state = _PageState.loaded;
         });
       }
+    } on EventNotFoundException {
+      if (mounted) setState(() => _state = _PageState.notFound);
     } on DioException catch (e) {
       if (!mounted) return;
       setState(
@@ -217,6 +222,22 @@ class _EventDetailPageState extends State<EventDetailPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _TypeBadge(label: event.type),
+                      const SizedBox(height: 14),
+
+                      Row(
+                        children: [
+                          Avatar(size: 32, name: event.author?.name),
+                          const SizedBox(width: 8),
+                          Text(
+                            event.author?.name ?? 'Prefeitura Municipal',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1A1A1A),
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 14),
 
                       EventInfoCards(event: event),
@@ -393,11 +414,10 @@ class _PhotosBackground extends StatelessWidget {
                   PhotoViewerPage(photos: photos, initialIndex: index),
             ),
           ),
-          child: Image.network(
-            photo.thumbUrl ?? photo.url,
+          child: AppNetworkImage(
+            imageUrl: photo.fullSizeUrl!,
             fit: BoxFit.cover,
-            // ignore: unnecessary_underscores
-            errorBuilder: (_, __, ___) => Container(
+            fallback: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topRight,
@@ -496,113 +516,39 @@ class _BottomBar extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton.icon(
-              onPressed: () {
-              },
-              icon: const Icon(Icons.calendar_month_outlined, size: 18),
-              label: const Text(
-                'Adicionar à agenda',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF006733),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
-          ),
+          // SizedBox(
+          //   width: double.infinity,
+          //   height: 50,
+          //   child: ElevatedButton.icon(
+          //     onPressed: () {},
+          //     icon: const Icon(Icons.calendar_month_outlined, size: 18),
+          //     label: const Text(
+          //       'Adicionar à agenda',
+          //       style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          //     ),
+          //     style: ElevatedButton.styleFrom(
+          //       backgroundColor: const Color(0xFF006733),
+          //       foregroundColor: Colors.white,
+          //       elevation: 0,
+          //       shape: RoundedRectangleBorder(
+          //         borderRadius: BorderRadius.circular(10),
+          //       ),
+          //     ),
+          //   ),
+          // ),
           const SizedBox(height: 10),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _ActionButton(
-                key: const Key('engagement_like'),
-                icon: event.likedByMe ? Icons.favorite : Icons.favorite_border,
-                label: '${event.likesCount}',
-                color: event.likedByMe
-                    ? const Color(0xFFE53935)
-                    : const Color(0xFF555555),
-                isLoading: likeLoading,
-                onTap: onLike,
-              ),
-              _ActionButton(
-                key: const Key('engagement_save'),
-                icon: event.savedByMe ? Icons.bookmark : Icons.bookmark_border,
-                label: 'Salvar',
-                color: event.savedByMe
-                    ? const Color(0xFF006733)
-                    : const Color(0xFF555555),
-                isLoading: saveLoading,
-                onTap: onSave,
-              ),
-              _ActionButton(
-                key: const Key('engagement_share'),
-                icon: Icons.share_outlined,
-                label: 'Compartilhar',
-                color: const Color(0xFF555555),
-                isLoading: false,
-                onTap: onShare,
-              ),
-            ],
+          EngagementActions(
+            liked: event.likedByMe,
+            saved: event.savedByMe,
+            likesCount: event.likesCount,
+            likeLoading: likeLoading,
+            saveLoading: saveLoading,
+            onLike: onLike,
+            onSave: onSave,
+            onShare: onShare,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final bool isLoading;
-  final VoidCallback onTap;
-
-  const _ActionButton({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.isLoading,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: isLoading ? null : onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isLoading)
-              SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2, color: color),
-              )
-            else
-              Icon(icon, size: 18, color: color),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

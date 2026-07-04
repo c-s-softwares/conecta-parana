@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../shared/widgets/misc/avatar.dart';
+import '../../../../shared/widgets/media/app_network_image.dart';
 import '../../domain/entities/home_highlights.dart';
 
 class FeaturedBannerCard extends StatelessWidget {
@@ -11,6 +12,7 @@ class FeaturedBannerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final photoUrl = banner.photos.firstOrNull?.displayUrl;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Semantics(
@@ -49,7 +51,16 @@ class FeaturedBannerCard extends StatelessWidget {
                       ),
                     ),
                     child: Stack(
+                      fit: StackFit.expand,
                       children: [
+                        if (photoUrl != null)
+                          AppNetworkImage(
+                            imageUrl: photoUrl,
+                            fit: BoxFit.cover,
+                            fallback: const SizedBox.shrink(),
+                          ),
+                        if (photoUrl != null)
+                          const ColoredBox(color: Color(0x52000000)),
                         Positioned(
                           left: 12,
                           top: 12,
@@ -64,9 +75,7 @@ class FeaturedBannerCard extends StatelessWidget {
                         ),
                         Center(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
                             child: Text(
                               banner.highlightText,
                               textAlign: TextAlign.center,
@@ -100,7 +109,7 @@ class FeaturedBannerCard extends StatelessWidget {
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          const Avatar(size: 28),
+                          Avatar(size: 28, name: banner.authorName),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Row(

@@ -1,3 +1,6 @@
+import '../../../events/domain/entities/event_list_item.dart';
+import 'package:conectaparana/core/media/media_photo.dart';
+
 class HomeAlert {
   final String title;
   final String description;
@@ -18,6 +21,7 @@ class HomeFeaturedBanner {
   final String authorName;
   final String timeLabel;
   final String detailRoute;
+  final List<MediaPhoto> photos;
 
   const HomeFeaturedBanner({
     required this.id,
@@ -27,6 +31,7 @@ class HomeFeaturedBanner {
     required this.authorName,
     required this.timeLabel,
     required this.detailRoute,
+    this.photos = const [],
   });
 }
 
@@ -44,31 +49,11 @@ class HomeService {
   });
 }
 
-class HomeHighlightEvent {
-  final String id;
-  final String title;
-  final String dateLabel;
-  final String location;
-  final List<String> gradientColors;
-  final String? badgeLabel;
-  final String detailRoute;
-
-  const HomeHighlightEvent({
-    required this.id,
-    required this.title,
-    required this.dateLabel,
-    required this.location,
-    required this.gradientColors,
-    this.badgeLabel,
-    required this.detailRoute,
-  });
-}
-
 class HomeHighlights {
   final HomeAlert? alert;
   final HomeFeaturedBanner? featuredBanner;
   final List<HomeService> services;
-  final List<HomeHighlightEvent> events;
+  final List<EventListItem> events;
 
   const HomeHighlights({
     this.alert,

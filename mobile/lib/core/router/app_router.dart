@@ -13,9 +13,15 @@ import 'package:conectaparana/dev/fakes/fake_ticket_repository.dart';
 import 'package:conectaparana/features/events/presentation/pages/events_page.dart';
 import 'package:conectaparana/features/events/presentation/pages/event_detail_page.dart';
 import 'package:conectaparana/features/home/presentation/pages/home_page.dart';
+import 'package:conectaparana/features/home/presentation/pages/content_list_page.dart';
+import 'package:conectaparana/features/home/data/repositories/content_list_repository.dart';
+import 'package:conectaparana/features/home/presentation/pages/services_list_page.dart';
 import 'package:conectaparana/features/map/presentation/pages/map_page.dart';
+import 'package:conectaparana/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:conectaparana/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:conectaparana/features/profile/presentation/pages/profile_page.dart';
+import 'package:conectaparana/features/search/presentation/pages/search_page.dart';
+import 'package:conectaparana/features/tickets/presentation/pages/new_ticket_page.dart';
 import 'package:conectaparana/features/tickets/presentation/pages/ticket_detail_page.dart';
 import 'package:conectaparana/features/tickets/presentation/pages/tickets_page.dart';
 import 'package:conectaparana/shared/widgets/feedback/app_toast.dart';
@@ -28,7 +34,6 @@ import 'package:go_router/go_router.dart';
 import '../../features/news/presentation/pages/news_detail_page.dart';
 import 'package:conectaparana/features/communicates/presentation/pages/communicate_detail_page.dart';
 import 'package:conectaparana/features/suggestions/presentation/pages/suggestions_page.dart';
-import 'package:conectaparana/dev/fakes/fake_suggestion_repository.dart';
 import 'package:conectaparana/features/suggestions/presentation/pages/new_suggestion_page.dart';
 import 'package:conectaparana/features/favorites/pages/favorites_page.dart';
 
@@ -42,17 +47,23 @@ abstract class AppRoutes {
 
   static const home = '/home';
   static const events = '/events';
+  static const services = '/services';
+  static const search = '/search';
+  static const communicates = '/communicates';
+  static const newsList = '/news';
   static const map = '/map';
-  static const tickets = '/tickets';
+  static const tickets = '/profile/tickets';
+  static const newTicket = '/profile/tickets/new';
   static const profile = '/profile';
   static const favorites = '/profile/favorites';
+  static const notifications = '/notifications';
 
   static const event = '/events/:id';
   static const homeEvent = '/home/event/:id';
   static const comunicado = '/home/comunicado/:id';
   static const news = '/home/news/:id';
   static const local = '/map/:id';
-  static const ticket = '/tickets/:id';
+  static const ticket = '/profile/tickets/:id';
   static const notification = '/home/notification/:id';
 
   static const suggestions = '/profile/suggestions';
@@ -171,8 +182,37 @@ class AppRouter {
           path: AppRoutes.styleguide,
           builder: (context, state) => const StyleguideScreen(),
         ),
-
+        GoRoute(
+          path: AppRoutes.services,
+          builder: (context, state) => const ServicesListPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.search,
+          builder: (context, state) => SearchPage(
+            initialQuery: state.uri.queryParameters['q'] ?? '',
+            initialCategory: state.uri.queryParameters['category'] == 'events'
+                ? SearchInitialCategory.events
+                : null,
+          ),
+        ),
+        GoRoute(
+          path: AppRoutes.communicates,
+          builder: (context, state) =>
+              const ContentListPage(kind: ContentListKind.communicates),
+          routes: [
+            GoRoute(
+              path: ':id',
+              builder: (context, state) => CommunicateDetailPage(
+                communicateId: state.pathParameters['id']!,
+              ),
+            ),
+          ],
+        ),
         // DEV ONLY — abre EventDetailPage com dados mockados, sem backend
+        GoRoute(
+          path: AppRoutes.notifications,
+          builder: (context, state) => const NotificationsPage(),
+        ),
         GoRoute(
           path: AppRoutes.devEventDetail,
           builder: (context, state) => EventDetailPage(
@@ -236,16 +276,16 @@ class AppRouter {
               routes: [
                 GoRoute(
                   path: AppRoutes.events,
-                  builder: (context, state) => const EventsPage(),
+                  builder: (context, state) => EventsPage(
+                    initialFilter: _eventFilterFromQuery(
+                      state.uri.queryParameters['filter'],
+                    ),
+                  ),
                   routes: [
                     GoRoute(
                       path: ':id',
-                      builder: (context, state) => EventDetailPage(
-                        eventId: state.pathParameters['id']!,
-                        repository: kDebugMode
-                            ? const FakeEventRepository()
-                            : null,
-                      ),
+                      builder: (context, state) =>
+                          EventDetailPage(eventId: state.pathParameters['id']!),
                     ),
                   ],
                 ),
@@ -269,23 +309,18 @@ class AppRouter {
               ],
             ),
 
-            // Tickets
+            // Notícias
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: AppRoutes.tickets,
-                  builder: (context, state) => TicketsPage(
-                    repository: FakeTicketRepository(),
-                  ), // const TicketsPage()
+                  path: AppRoutes.newsList,
+                  builder: (context, state) =>
+                      const ContentListPage(kind: ContentListKind.news),
                   routes: [
                     GoRoute(
                       path: ':id',
-                      builder: (context, state) => TicketDetailPage(
-                        ticketId: state.pathParameters['id']!,
-                        repository: kDebugMode
-                            ? FakeTicketRepository()
-                            : null,
-                      ),
+                      builder: (context, state) =>
+                          NewsDetailPage(id: state.pathParameters['id']!),
                     ),
                   ],
                 ),
@@ -306,15 +341,30 @@ class AppRouter {
                         GoRoute(
                           parentNavigatorKey: navigatorKey,
                           path: 'new',
-                          builder: (context, state) => const NewSuggestionPage(
-                            repository: FakeSuggestionRepository(),
-                          ),
+                          builder: (context, state) =>
+                              const NewSuggestionPage(),
                         ),
                       ],
                     ),
                     GoRoute(
                       path: 'favorites',
                       builder: (context, state) => const FavoritesPage(),
+                    ),
+                    GoRoute(
+                      path: 'tickets',
+                      builder: (context, state) => const TicketsPage(),
+                      routes: [
+                        GoRoute(
+                          path: 'new',
+                          builder: (context, state) => const NewTicketPage(),
+                        ),
+                        GoRoute(
+                          path: ':id',
+                          builder: (context, state) => TicketDetailPage(
+                            ticketId: state.pathParameters['id']!,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -340,7 +390,7 @@ class AppRouter {
       AppRoutes.forgotPassword,
       AppRoutes.styleguide,
     };
-    
+
     final isPublic = publicRoutes.contains(location);
 
     if (isLoggedIn && isPublic) {
@@ -367,5 +417,15 @@ class AppRouter {
       appBar: AppBar(title: Text('$type: $id')),
       body: Center(child: Text('Detalhe de $type — $id')),
     );
+  }
+
+  static EventListFilter _eventFilterFromQuery(String? value) {
+    return switch (value) {
+      'upcoming' => EventListFilter.proximos,
+      'week' => EventListFilter.estaSemana,
+      'today' => EventListFilter.hoje,
+      'month' => EventListFilter.esteMes,
+      _ => EventListFilter.todos,
+    };
   }
 }

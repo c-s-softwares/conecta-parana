@@ -5,6 +5,7 @@
 import 'package:conectaparana/features/events/data/repository/event_repository.dart';
 import 'package:dio/dio.dart';
 import 'package:conectaparana/features/events/data/models/event_detail_model.dart';
+import 'package:conectaparana/dev/fakes/fake_event_list.dart';
 
 final _eventCompleto = EventDetail(
   id: 'evt_fake_completo',
@@ -193,6 +194,30 @@ class FakeEventRepository implements EventRepository {
     this.simulateNetworkError = false,
     this.simulateNotFound = false,
   });
+
+  @override
+  Future<EventListPage> getEvents({
+    String? cityId,
+    DateTime? from,
+    DateTime? to,
+    int page = 1,
+    int pageSize = 10,
+  }) async {
+    await Future.delayed(delay);
+    if (simulateNetworkError) {
+      throw DioException(
+        requestOptions: RequestOptions(path: '/events'),
+        type: DioExceptionType.connectionError,
+      );
+    }
+
+    return EventListPage(
+      items: fakeEventListItems,
+      total: fakeEventListItems.length,
+      page: page,
+      pageSize: pageSize,
+    );
+  }
 
   @override
   Future<EventDetail> getEvent(String id) async {

@@ -1,3 +1,12 @@
+# == PLATAFORMAS NAO SUPORTADAS =========================================================
+# Este app tem como alvo apenas Android e iOS.
+# As pastas abaixo sao geradas pelo Flutter e nao devem ser rastreadas.
+
+windows/
+web/
+linux/
+macos/
+
 # == DART ===============================================================================
 
 # Pub package manager

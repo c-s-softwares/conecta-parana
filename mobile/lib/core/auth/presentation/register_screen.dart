@@ -1,10 +1,11 @@
-import 'package:conectaparana/features/register/data/models/city_model.dart';
-import 'package:conectaparana/features/register/data/services/city_service.dart';
-import 'package:conectaparana/features/register/data/services/register_repository.dart';
-import 'package:conectaparana/shared/widgets/pages/webview_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:conectaparana/shared/widgets/pages/webview_screen.dart';
+import 'package:conectaparana/features/register/data/services/register_repository.dart';
+import 'package:conectaparana/features/register/data/services/city_service.dart';
+import 'package:conectaparana/features/register/data/models/city_model.dart';
 import 'package:conectaparana/features/onboarding/presentation/steps/verify_email_screen.dart';
+import 'package:conectaparana/shared/widgets/feedback/app_toast.dart';
 import 'package:dio/dio.dart';
 
 class _PasswordRules {
@@ -44,11 +45,13 @@ class RegisterScreen extends StatefulWidget {
 
 class RegisterScreenState extends State<RegisterScreen> {
   late final CityService _cityService;
+  late final RegisterRepository _repository;
 
   @override
   void initState() {
     super.initState();
     _cityService = widget.cityService ?? CityService();
+    _repository = widget.repository ?? RegisterRepository();
     _loadCities();
   }
 
@@ -74,6 +77,8 @@ class RegisterScreenState extends State<RegisterScreen> {
   String? _nameError;
   String? _emailError;
   String? _passwordError;
+  String? _confirmError;
+  String? _cityError;
 
   bool _emailExists = false;
   bool _isLoading = false;
@@ -117,6 +122,8 @@ class RegisterScreenState extends State<RegisterScreen> {
       _nameError = null;
       _emailError = null;
       _passwordError = null;
+      _confirmError = null;
+      _cityError = null;
 
       if (_nameController.text.trim().isEmpty) {
         _nameError = 'Informe seu nome';
@@ -130,13 +137,21 @@ class RegisterScreenState extends State<RegisterScreen> {
       if (!_passwordForte()) {
         _passwordError = 'A senha não atende os critérios mínimos';
       }
+
+      if (_confirmController.text != _passwordController.text) {
+        _confirmError = 'As senhas não coincidem';
+      }
+
+      if (_selectedCity == null) {
+        _cityError = 'Selecione sua cidade';
+      }
     });
 
-    final senhasIguais = _passwordController.text == _confirmController.text;
     return _nameError == null &&
         _emailError == null &&
         _passwordError == null &&
-        senhasIguais &&
+        _confirmError == null &&
+        _cityError == null &&
         _acceptedTerms;
   }
 
@@ -158,15 +173,13 @@ class RegisterScreenState extends State<RegisterScreen> {
   void validateForTest() => _validate();
 
   Future<void> _register() async {
-    if (!_validate()) {
-      return;
-    }
+    if (!_validate()) return;
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
 
     try {
-      await (widget.repository ?? RegisterRepository()).register(
+      await _repository.register(
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
@@ -175,41 +188,113 @@ class RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
           builder: (_) => VerifyEmailScreen(
             email: _emailController.text.trim(),
             password: _passwordController.text,
           ),
         ),
       );
-    } on DioException catch (e) {
-      if (!mounted) return;
-      final code = e.response?.data is Map
-          ? (e.response?.data as Map)['code']
-          : null;
-      if (e.response?.statusCode == 409 || code == 'email_exists') {
-        setState(() => _emailExists = true);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Não foi possível criar a conta. Tente novamente.'),
-            backgroundColor: Colors.red,
-          ),
+    } on InvalidRegistrationCityException {
+      await CityService.clearCache();
+      await _loadCities();
+      if (mounted) {
+        setState(() {
+          _selectedCity = null;
+          _cityError = 'Selecione novamente uma cidade válida.';
+        });
+        _showFeedback(
+          'A lista de cidades foi atualizada. Selecione sua cidade novamente.',
+          AppToastVariant.error,
         );
       }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Algo deu errado. Tente novamente.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    } on DioException catch (e) {
+      _handleRegisterError(e);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _handleRegisterError(DioException e) {
+    final data = e.response?.data;
+    final code = data is Map<String, dynamic> ? data['code'] as String? : null;
+    final messages = _validationMessages(
+      data is Map<String, dynamic> ? data['message'] : null,
+    );
+
+    if (code == 'validation_failed' && messages.isNotEmpty) {
+      final hasUnmappedError = _applyValidationErrors(messages);
+      if (hasUnmappedError) {
+        _showFeedback(
+          'Confira os dados informados e tente novamente.',
+          AppToastVariant.error,
+        );
+      }
+      return;
+    }
+
+    if (code == 'city_not_found') {
+      setState(() => _cityError = 'Cidade selecionada não encontrada.');
+      _showFeedback(
+        'Cidade não encontrada. Atualize a lista e tente novamente.',
+        AppToastVariant.error,
+      );
+      return;
+    }
+
+    if (code == 'email_exists') {
+      setState(() => _emailExists = true);
+      return;
+    }
+
+    _showFeedback(
+      'Não foi possível criar a conta. Tente novamente.',
+      AppToastVariant.error,
+    );
+  }
+
+  List<String> _validationMessages(dynamic value) {
+    if (value is List) {
+      return value.map((item) => item.toString()).toList(growable: false);
+    }
+    if (value is String && value.trim().isNotEmpty) return [value];
+    return const [];
+  }
+
+  bool _applyValidationErrors(List<String> messages) {
+    var hasUnmappedError = false;
+
+    setState(() {
+      for (final message in messages) {
+        final normalized = message.toLowerCase();
+
+        if (normalized.contains('confirmpassword') ||
+            normalized.contains('confirma')) {
+          _confirmError = 'As senhas não coincidem';
+        } else if (normalized.contains('password') ||
+            normalized.contains('senha')) {
+          _passwordError = 'A senha não atende os critérios mínimos';
+        } else if (normalized.contains('email') ||
+            normalized.contains('e-mail')) {
+          _emailError = 'Informe um email válido';
+        } else if (normalized.contains('name') || normalized.contains('nome')) {
+          _nameError = 'Verifique o nome informado';
+        } else if (normalized.contains('city') ||
+            normalized.contains('cidade') ||
+            normalized.contains('formato de id inválido')) {
+          _cityError = 'Cidade selecionada inválida.';
+        } else {
+          hasUnmappedError = true;
+        }
+      }
+    });
+
+    return hasUnmappedError;
+  }
+
+  void _showFeedback(String message, AppToastVariant variant) {
+    AppToast.show(context, message: message, variant: variant);
   }
 
   @override
@@ -408,14 +493,15 @@ class RegisterScreenState extends State<RegisterScreen> {
           focusNode: _confirmFocus,
           obscureText: _obscureConfirm,
           textInputAction: TextInputAction.done,
-          onChanged: (_) => setState(() {}),
+          onChanged: (_) => setState(() => _confirmError = null),
           decoration: _inputDecoration(
             hint: 'Repita a senha',
             errorText:
-                _confirmController.text.isNotEmpty &&
-                    _confirmController.text != _passwordController.text
-                ? 'As senhas não coincidem'
-                : null,
+                _confirmError ??
+                (_confirmController.text.isNotEmpty &&
+                        _confirmController.text != _passwordController.text
+                    ? 'As senhas não coincidem'
+                    : null),
             suffix: TextButton(
               onPressed: () =>
                   setState(() => _obscureConfirm = !_obscureConfirm),
@@ -805,12 +891,15 @@ class RegisterScreenState extends State<RegisterScreen> {
         'Selecione sua cidade',
         style: TextStyle(color: Colors.black38),
       ),
-      decoration: _inputDecoration(hint: ''),
+      decoration: _inputDecoration(hint: '', errorText: _cityError),
       borderRadius: BorderRadius.circular(16),
       items: _cities.map((city) {
         return DropdownMenuItem<City>(value: city, child: Text(city.name));
       }).toList(),
-      onChanged: (city) => setState(() => _selectedCity = city),
+      onChanged: (city) => setState(() {
+        _selectedCity = city;
+        _cityError = null;
+      }),
     );
   }
 }

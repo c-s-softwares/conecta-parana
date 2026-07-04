@@ -1,92 +1,107 @@
 import 'dart:convert';
+
 import 'package:conectaparana/core/network/api_client.dart';
 import 'package:conectaparana/features/register/data/models/city_model.dart';
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CityService {
-  static const _kCacheKey = 'cities_cache_v1';
-  static const _kCacheTimestampKey = 'cities_cache_ts_v1';
+  CityService({Dio? dio}) : _dio = dio ?? ApiClient.instance.dio;
+
+  final Dio _dio;
+
+  static const _cacheKey = 'cities_cache_v1';
+  static const _cacheTimestampKey = 'cities_cache_ts_v1';
   static const _ttl = Duration(hours: 1);
+  static const _pageSize = 100;
 
-  static const _kPageSize = 100;
+  static List<City>? _memoryCache;
+  static DateTime? _memoryCacheTime;
 
-  static List<City>? _memCache;
-  static DateTime? _memCacheTime;
+  static bool _hasBackendIds(List<City> cities) {
+    return cities.isNotEmpty && cities.every((city) => city.hasValidBackendId);
+  }
 
-  static const List<City> _demoCities = [
-    City(id: 'maringa', name: 'Maringá', state: 'PR'),
-    City(id: 'sarandi', name: 'Sarandi', state: 'PR'),
-    City(id: 'paicandu', name: 'Paiçandu', state: 'PR'),
-    City(id: 'curitiba', name: 'Curitiba', state: 'PR'),
-  ];
+  static List<City> _parseCitiesResponse(dynamic data) {
+    final raw = switch (data) {
+      final List<dynamic> list => list,
+      final Map<String, dynamic> map =>
+        map['items'] as List<dynamic>? ?? const [],
+      _ => const <dynamic>[],
+    };
+
+    return raw
+        .whereType<Map<String, dynamic>>()
+        .map(City.fromJson)
+        .toList(growable: false);
+  }
 
   Future<List<City>> getCities() async {
     final now = DateTime.now();
-
-    if (_memCache != null && _memCacheTime != null) {
-      if (now.difference(_memCacheTime!) < _ttl) {
-        return _memCache!;
-      }
+    final memoryCache = _memoryCache;
+    final memoryCacheTime = _memoryCacheTime;
+    if (memoryCache != null &&
+        memoryCacheTime != null &&
+        now.difference(memoryCacheTime) < _ttl &&
+        _hasBackendIds(memoryCache)) {
+      return memoryCache;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    final cachedJson = prefs.getString(_kCacheKey);
-    final cachedTs = prefs.getInt(_kCacheTimestampKey);
-
-    if (cachedJson != null && cachedTs != null) {
-      final age = now.millisecondsSinceEpoch - cachedTs;
-
-      if (age < _ttl.inMilliseconds) {
+    final preferences = await SharedPreferences.getInstance();
+    final cachedJson = preferences.getString(_cacheKey);
+    final cachedTimestamp = preferences.getInt(_cacheTimestampKey);
+    if (cachedJson != null && cachedTimestamp != null) {
+      final cacheTime = DateTime.fromMillisecondsSinceEpoch(cachedTimestamp);
+      if (now.difference(cacheTime) < _ttl) {
         try {
-          final list = (jsonDecode(cachedJson) as List)
-              .map((e) => City.fromJson(e as Map<String, dynamic>))
-              .toList();
-
-          _memCache = list;
-          _memCacheTime = DateTime.fromMillisecondsSinceEpoch(cachedTs);
-
-          return list;
+          final cachedCities = (jsonDecode(cachedJson) as List<dynamic>)
+              .whereType<Map<String, dynamic>>()
+              .map(City.fromJson)
+              .toList(growable: false);
+          if (_hasBackendIds(cachedCities)) {
+            _memoryCache = cachedCities;
+            _memoryCacheTime = cacheTime;
+            return cachedCities;
+          }
         } catch (_) {
-          await prefs.remove(_kCacheKey);
-          await prefs.remove(_kCacheTimestampKey);
+          // Invalid cache is removed before fetching fresh data.
         }
+        await _clearDiskCache(preferences);
       }
     }
 
-    try {
-      final response = await ApiClient.instance.dio.get(
-        '/cities',
-        queryParameters: {'page': 1, 'pageSize': _kPageSize},
-      );
-
-      final items = response.data['items'] as List;
-      final cities = items
-          .map((e) => City.fromJson(e as Map<String, dynamic>))
-          .toList();
-
-      _memCache = cities;
-      _memCacheTime = now;
-
-      await prefs.setString(
-        _kCacheKey,
-        jsonEncode(cities.map((c) => c.toJson()).toList()),
-      );
-
-      await prefs.setInt(_kCacheTimestampKey, now.millisecondsSinceEpoch);
-
-      return cities;
-    } catch (_) {
-      return _demoCities;
+    final response = await _dio.get(
+      '/cities',
+      queryParameters: {'page': 1, 'pageSize': _pageSize},
+    );
+    final cities = _parseCitiesResponse(response.data);
+    if (!_hasBackendIds(cities)) {
+      await _clearDiskCache(preferences);
+      throw const InvalidCitiesResponseException();
     }
+
+    _memoryCache = cities;
+    _memoryCacheTime = now;
+    await preferences.setString(
+      _cacheKey,
+      jsonEncode(cities.map((city) => city.toJson()).toList()),
+    );
+    await preferences.setInt(_cacheTimestampKey, now.millisecondsSinceEpoch);
+    return cities;
   }
 
   static Future<void> clearCache() async {
-    _memCache = null;
-    _memCacheTime = null;
-
-    final prefs = await SharedPreferences.getInstance();
-
-    await prefs.remove(_kCacheKey);
-    await prefs.remove(_kCacheTimestampKey);
+    _memoryCache = null;
+    _memoryCacheTime = null;
+    await _clearDiskCache(await SharedPreferences.getInstance());
   }
+
+  static Future<void> _clearDiskCache(SharedPreferences preferences) async {
+    await preferences.remove(_cacheKey);
+    await preferences.remove(_cacheTimestampKey);
+  }
+}
+
+class InvalidCitiesResponseException implements Exception {
+  const InvalidCitiesResponseException();
 }

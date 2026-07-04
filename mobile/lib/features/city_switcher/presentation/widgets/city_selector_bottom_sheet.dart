@@ -8,6 +8,8 @@ Future<City?> showCitySelectorBottomSheet(
   BuildContext context, {
   String? selectedCityId,
   CityLoader? loadCities,
+  String description =
+      'A troca muda o feed agora e será salva no perfil após 5 minutos.',
 }) {
   return showModalBottomSheet<City>(
     context: context,
@@ -18,38 +20,54 @@ Future<City?> showCitySelectorBottomSheet(
       return CitySelectorBottomSheet(
         selectedCityId: selectedCityId,
         loadCities: loadCities ?? _loadCitiesFromApi,
+        description: description,
       );
     },
   );
 }
 
 Future<List<City>> _loadCitiesFromApi() async {
-  final response = await ApiClient.instance.dio.get<Map<String, dynamic>>(
-    '/cities',
-    queryParameters: {'page': 1, 'pageSize': 100},
-  );
+  const pageSize = 100;
+  var page = 1;
+  var total = 0;
+  final cities = <City>[];
 
-  final items = (response.data?['items'] as List<dynamic>?) ?? <dynamic>[];
-
-  return items
-      .map(
+  do {
+    final response = await ApiClient.instance.dio.get<Map<String, dynamic>>(
+      '/cities',
+      queryParameters: {'page': page, 'pageSize': pageSize},
+    );
+    final data = response.data ?? const <String, dynamic>{};
+    final items = data['items'] as List<dynamic>? ?? const <dynamic>[];
+    total = data['total'] as int? ?? items.length;
+    cities.addAll(
+      items.whereType<Map<String, dynamic>>().map(
         (item) => City(
-          id: (item as Map<String, dynamic>)['id'] as String,
-          name: item['name'] as String, state: '',
+          id: item['id'] as String,
+          name: item['name'] as String,
+          state: (item['estado'] ?? item['state'] ?? 'PR') as String,
         ),
-      )
-      .toList();
+      ),
+    );
+    if (items.isEmpty) break;
+    page++;
+  } while (cities.length < total);
+
+  return cities;
 }
 
 class CitySelectorBottomSheet extends StatefulWidget {
   const CitySelectorBottomSheet({
     super.key,
     required this.loadCities,
+    this.description =
+        'A troca muda o feed agora e será salva no perfil após 5 minutos.',
     this.selectedCityId,
   });
 
   final CityLoader loadCities;
   final String? selectedCityId;
+  final String description;
 
   @override
   State<CitySelectorBottomSheet> createState() =>
@@ -93,7 +111,7 @@ class _CitySelectorBottomSheetState extends State<CitySelectorBottomSheet> {
         _isLoading = false;
       });
     } catch (e) {
-      debugPrint('[CitySelector] /cities falhou: $e'); 
+      debugPrint('[CitySelector] /cities falhou: $e');
       if (!mounted) return;
 
       setState(() {
@@ -167,11 +185,11 @@ class _CitySelectorBottomSheetState extends State<CitySelectorBottomSheet> {
                 ],
               ),
               const SizedBox(height: 8),
-              const Align(
+              Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'A troca muda o feed agora e será salva no perfil após 5 minutos.',
-                  style: TextStyle(
+                  widget.description,
+                  style: const TextStyle(
                     fontSize: 13,
                     color: Color(0xFF607067),
                     height: 1.35,

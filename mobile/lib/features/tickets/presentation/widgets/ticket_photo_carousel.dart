@@ -2,6 +2,7 @@ import 'package:conectaparana/features/tickets/data/models/ticket_detail_model.d
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:conectaparana/shared/widgets/media/app_network_image.dart';
 
 class TicketPhotoCarousel extends StatefulWidget {
   final List<TicketPhoto> photos;
@@ -41,13 +42,13 @@ class _TicketPhotoCarouselState extends State<TicketPhotoCarousel> {
                   onTap: photo.url == null
                       ? null
                       : () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => TicketPhotoViewerPage(
-                                photos: widget.photos,
-                                initialIndex: index,
-                              ),
+                          MaterialPageRoute(
+                            builder: (_) => TicketPhotoViewerPage(
+                              photos: widget.photos,
+                              initialIndex: index,
                             ),
                           ),
+                        ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: _PhotoTile(photo: photo),
@@ -98,20 +99,17 @@ class _PhotoTile extends StatelessWidget {
         child: const Center(
           child: Text(
             'Foto anexada',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-            ),
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
           ),
         ),
       );
     }
 
-    return Image.network(
-      url,
+    return AppNetworkImage(
+      imageUrl: url,
       fit: BoxFit.cover,
       width: double.infinity,
-      errorBuilder: (context, error, stackTrace) => Container(
+      fallback: Container(
         color: const Color(0xFFF5F5F5),
         child: const Icon(
           Icons.image_not_supported_outlined,
@@ -119,13 +117,6 @@ class _PhotoTile extends StatelessWidget {
           color: Colors.grey,
         ),
       ),
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return Container(
-          color: const Color(0xFFF5F5F5),
-          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        );
-      },
     );
   }
 }
@@ -189,7 +180,12 @@ class _TicketPhotoViewerPageState extends State<TicketPhotoViewerPage> {
             imageProvider: NetworkImage(photos[index].url!),
             minScale: PhotoViewComputedScale.contained,
             maxScale: PhotoViewComputedScale.covered * 3,
-            heroAttributes: PhotoViewHeroAttributes(tag: photos[index].id),
+            heroAttributes: PhotoViewHeroAttributes(
+              tag:
+                  photos[index].id ??
+                  photos[index].fullSizeUrl ??
+                  'ticket-photo-$index',
+            ),
           );
         },
         loadingBuilder: (context, event) =>

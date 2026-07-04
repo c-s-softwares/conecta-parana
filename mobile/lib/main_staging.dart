@@ -10,6 +10,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   Environment.initialize(Flavor.staging);
+  ApiClient.instance.init();
 
   ApiClient.instance.init();
   await AuthService.instance.init();

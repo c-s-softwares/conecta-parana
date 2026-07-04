@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:conectaparana/shared/widgets/misc/avatar.dart';
 import 'package:conectaparana/shared/widgets/misc/badge.dart';
 import '../../domain/entities/suggestion.dart';
-
-const _months = [
-  'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
-  'jul', 'ago', 'set', 'out', 'nov', 'dez',
-];
-
-String _dayMonth(DateTime d) => '${d.day} ${_months[d.month - 1]}';
+import 'package:conectaparana/core/formatters/app_date_formatter.dart';
 
 class SuggestionListItem extends StatefulWidget {
   const SuggestionListItem({super.key, required this.suggestion});
@@ -51,7 +46,7 @@ class _SuggestionListItemState extends State<SuggestionListItem> {
                   children: [
                     Expanded(
                       child: Text(
-                        '#${s.id} · ${s.category}',
+                        s.category,
                         style: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFF9E9E9E),
@@ -76,7 +71,7 @@ class _SuggestionListItemState extends State<SuggestionListItem> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Enviada ${_dayMonth(s.createdAt)}',
+                        'Enviada ${AppDateFormatter.dayMonth(s.createdAt)}',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFF9E9E9E),
@@ -138,6 +133,8 @@ class _SuggestionListItemState extends State<SuggestionListItem> {
         return ('Lida', AppBadgeVariant.neutral);
       case SuggestionStatus.arquivada:
         return ('Arquivada', AppBadgeVariant.neutral);
+      case SuggestionStatus.concluida:
+        return ('Concluída', AppBadgeVariant.green);
     }
   }
 }
@@ -149,6 +146,10 @@ class _ReplyBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final displayName =
+        reply.authorName?.trim().isNotEmpty == true
+            ? reply.authorName!
+            : 'Equipe responsável';
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -161,32 +162,21 @@ class _ReplyBlock extends StatelessWidget {
         children: [
           Row(
             children: [
-              const CircleAvatar(
-                radius: 15,
-                backgroundColor: Color(0xFF006733),
-                child: Text(
-                  'P',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
+              Avatar(size: 30, name: reply.authorName),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      reply.authorName,
+                      displayName,
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     Text(
-                      _dayMonth(reply.date),
+                      AppDateFormatter.shortDateTime(reply.date),
                       style: const TextStyle(
                         fontSize: 11,
                         color: Color(0xFF9E9E9E),

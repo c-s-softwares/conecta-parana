@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:conectaparana/core/formatters/app_date_formatter.dart';
 
 import '../../../../core/network/api_client.dart';
+import '../../../../shared/widgets/misc/avatar.dart';
+import '../../../engagement/data/engagement_service.dart';
+import '../../../engagement/widgets/engagement_bar.dart';
 import '../../data/news_detail_model.dart';
 import '../../data/news_repository.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -105,35 +109,6 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                     ),
                   ),
                 ),
-                actions: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: CircleAvatar(
-                      backgroundColor: Colors.black45,
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.bookmark_border,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {},
-                      ),
-                    ),
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: CircleAvatar(
-                      backgroundColor: Colors.black45,
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.share_outlined,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {},
-                      ),
-                    ),
-                  ),
-                ],
                 flexibleSpace: FlexibleSpaceBar(
                   collapseMode: CollapseMode.parallax,
                   background: NewsPhotoCarousel(photos: news.photos),
@@ -173,7 +148,11 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                           const Spacer(),
                           if (news.createdAt != null)
                             Text(
-                              news.createdAt!,
+                              news.createdDate == null
+                                  ? news.createdAt!
+                                  : AppDateFormatter.publication(
+                                      news.createdDate!,
+                                    ),
                               style: TextStyle(
                                 color: Colors.grey.shade600,
                                 fontSize: 12,
@@ -191,39 +170,21 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
 
                       Row(
                         children: [
-                          CircleAvatar(
-                            radius: 18,
-                            backgroundColor: const Color(0xFF006733),
-                            child: Text(
-                              (news.authorName ?? 'P')[0],
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ),
+                          Avatar(size: 36, name: news.author?.name),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  news.authorName ?? 'Prefeitura',
+                                  news.author?.name ?? 'Prefeitura Municipal',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 13,
                                   ),
                                 ),
-                                Text(
-                                  news.authorSubtitle ?? 'Prefeitura Municipal',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    fontSize: 12,
-                                  ),
-                                ),
                               ],
                             ),
-                          ),
-                          OutlinedButton(
-                            onPressed: () {},
-                            child: const Text('Seguir'),
                           ),
                         ],
                       ),
@@ -236,42 +197,6 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
 
-                      const SizedBox(height: 16),
-
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F3),
-                          borderRadius: BorderRadius.circular(8),
-                          border: const Border(
-                            left: BorderSide(
-                              color: Color(0xFF008F4C),
-                              width: 3,
-                            ),
-                          ),
-                        ),
-                        child: const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '"O prazo médio de licenciamento reduz de 90 para 30 dias com a digitalização."',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(height: 6),
-                            Text(
-                              '— Sec. do Meio Ambiente',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                       if (news.linkType == 'externo' &&
                           news.externalUrl != null &&
                           news.externalUrl!.isNotEmpty) ...[
@@ -289,45 +214,13 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
 
                       const SizedBox(height: 24),
 
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        alignment: WrapAlignment.start,
-                        children: [
-                          OutlinedButton.icon(
-                            onPressed: () {},
-                            icon: const Icon(Icons.favorite_border, size: 16),
-                            label: const Text('142'),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 15,
-                              ),
-                              minimumSize: const Size(0, 36),
-                            ),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: () {},
-                            icon: const Icon(Icons.bookmark_border, size: 16),
-                            label: const Text('Salvar'),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 15,
-                              ),
-                              minimumSize: const Size(0, 36),
-                            ),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: () {},
-                            icon: const Icon(Icons.share_outlined, size: 16),
-                            label: const Text('28'),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 15,
-                              ),
-                              minimumSize: const Size(0, 36),
-                            ),
-                          ),
-                        ],
+                      EngagementBar(
+                        entityType: 'news',
+                        entityId: news.id,
+                        liked: news.liked,
+                        saved: news.saved,
+                        likesCount: news.likesCount,
+                        service: EngagementService(ApiClient.instance.dio),
                       ),
 
                       const SizedBox(height: 32),

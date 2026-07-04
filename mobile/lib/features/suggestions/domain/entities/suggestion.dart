@@ -1,24 +1,24 @@
-enum SuggestionStatus { enviada, lida, respondida, arquivada }
+enum SuggestionStatus { enviada, lida, respondida, arquivada, concluida }
 
 class SuggestionReply {
-  final String authorName; 
+  final String? authorName;
   final DateTime date;
   final String message;
 
   const SuggestionReply({
-    required this.authorName,
+    this.authorName,
     required this.date,
     required this.message,
   });
 }
 
 class Suggestion {
-  final String id;         
-  final String category;  
-  final String subject;   
+  final String id;
+  final String category;
+  final String subject;
   final SuggestionStatus status;
-  final DateTime createdAt; 
-  final String message;     
+  final DateTime createdAt;
+  final String message;
   final SuggestionReply? reply;
 
   const Suggestion({

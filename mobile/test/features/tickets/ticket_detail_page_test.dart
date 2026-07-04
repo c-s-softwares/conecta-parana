@@ -40,6 +40,16 @@ class _FakeDetailRepository implements TicketRepository {
       createdAt: DateTime(2026, 6, 12, 8),
     );
   }
+
+  @override
+  Future<Ticket> createTicket(CreateTicketRequest request) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> uploadTicketPhoto({
+    required String ticketId,
+    required TicketPhotoUpload photo,
+  }) async => throw UnimplementedError();
 }
 
 TicketDetail _makeDetail({
@@ -292,6 +302,25 @@ void main() {
         find.byKey(const Key('send-comment-button')),
       );
       expect(sendButton.onPressed, isNull);
+    });
+
+    testWidgets('acao de mapa exibe aviso do escopo MVP', (tester) async {
+      final repo = _FakeDetailRepository(detail: _makeDetail());
+
+      await tester.pumpWidget(_buildPage(repo));
+      await tester.pumpAndSettle();
+
+      await _scrollUntilVisible(
+        tester,
+        find.byKey(const Key('open-maps-button')),
+      );
+      await tester.tap(find.byKey(const Key('open-maps-button')));
+      await tester.pump();
+
+      expect(
+        find.text('A função de mapa estará disponível em breve!'),
+        findsOneWidget,
+      );
     });
   });
 }

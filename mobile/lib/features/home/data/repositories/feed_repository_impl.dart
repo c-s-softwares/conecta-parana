@@ -1,4 +1,5 @@
 import 'package:conectaparana/core/network/api_client.dart';
+import 'package:conectaparana/features/events/data/services/event_address_resolver.dart';
 import 'package:dio/dio.dart';
 
 import '../models/feed_item_model.dart';
@@ -7,8 +8,11 @@ import '../../domain/repositories/feed_repository.dart';
 
 class FeedRepositoryImpl implements FeedRepository {
   final Dio _dio;
+  late final EventAddressResolver _addressResolver;
 
-  FeedRepositoryImpl({Dio? dio}) : _dio = dio ?? ApiClient.instance.dio;
+  FeedRepositoryImpl({Dio? dio}) : _dio = dio ?? ApiClient.instance.dio {
+    _addressResolver = EventAddressResolver(_dio);
+  }
 
   @override
   Future<FeedPage> getFeed({
@@ -19,46 +23,59 @@ class FeedRepositoryImpl implements FeedRepository {
     int limit = 20,
   }) async {
     try {
-      // ignore: use_null_aware_elements
       final queryParams = <String, dynamic>{
         'cityId': cityId,
-        'limit': limit.clamp(1, 50),
         // ignore: use_null_aware_elements
         if (lat != null) 'lat': lat,
         // ignore: use_null_aware_elements
         if (lng != null) 'lng': lng,
-        // ignore: use_null_aware_elements
-        if (cursor != null) 'cursor': cursor,
       };
 
-      final response = await _dio.get<Map<String, dynamic>>(
-        '/feed',
-        queryParameters: queryParams,
-      );
+      final responses = await Future.wait([
+        _dio.get<Map<String, dynamic>>('/feed', queryParameters: queryParams),
+        _dio.get<Map<String, dynamic>>(
+          '/categories',
+          queryParameters: const {'page': 1, 'pageSize': 8},
+        ),
+      ]);
 
-      final data = response.data;
-      if (data == null) throw const FeedNetworkException();
+      final feedData = responses[0].data;
+      final categoriesData = responses[1].data;
+      if (feedData == null) throw const FeedNetworkException();
 
-      final rawItems = data['items'] as List<dynamic>? ?? [];
-      final items = rawItems
-          .map((e) => FeedItemModel.fromJson(e as Map<String, dynamic>).toDomain())
+      final rawEvents = (feedData['events'] as List<dynamic>? ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .toList();
+      final addresses = await _addressResolver.resolve(rawEvents);
+      final mappedFeedData = Map<String, dynamic>.from(feedData)
+        ..['events'] = [
+          for (final event in rawEvents)
+            {
+              ...event,
+              'address': _addressResolver.addressFor(event, addresses),
+            },
+        ];
+
+      final rawCategories = categoriesData?['items'] as List<dynamic>? ?? [];
+      final categories = rawCategories
+          .whereType<Map<String, dynamic>>()
           .toList();
 
-      return FeedPage(
-        items: items,
-        nextCursor: data['nextCursor'] as String?,
-        hasMore: data['hasMore'] as bool? ?? data['nextCursor'] != null,
-      );
+      return FeedResponseModel.fromJson(
+        mappedFeedData,
+        categories: categories,
+      ).toDomain();
     } on DioException catch (e) {
       final statusCode = e.response?.statusCode;
       final errorCode = e.response?.data?['code'] as String?;
 
-      if (statusCode == 400 && errorCode == 'city_required') {
+      if (statusCode == 400 &&
+          (errorCode == 'city_required' || errorCode == 'validation_failed')) {
         throw const FeedCityRequiredException();
       }
 
-      if (statusCode == 400 && errorCode == 'invalid_cursor') {
-        throw const FeedInvalidCursorException();
+      if (statusCode == 404 && errorCode == 'city_not_found') {
+        throw const FeedCityRequiredException();
       }
 
       throw const FeedNetworkException();

@@ -39,9 +39,13 @@ class Avatar extends StatelessWidget {
   }
 
   Widget _buildInitials() {
-    final initials = name != null && name!.isNotEmpty
-        ? name!.trim().split(' ').map((e) => e[0]).take(2).join().toUpperCase()
-        : '?';
+    String initials = '?';
+    if (name != null && name!.isNotEmpty) {
+      final parts = name!.trim().split(RegExp(r'\s+'));
+      final first = parts.first[0];
+      final last = parts.length > 1 ? parts.last[0] : '';
+      initials = '$first$last'.toUpperCase();
+    }
 
     return Center(
       child: Text(

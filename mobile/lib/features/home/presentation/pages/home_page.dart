@@ -1,17 +1,15 @@
-import 'package:conectaparana/features/register/data/models/city_model.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:conectaparana/core/auth/auth_service.dart';
 import 'package:conectaparana/core/router/app_router.dart';
+import 'package:conectaparana/features/register/data/models/city_model.dart';
 import 'package:conectaparana/shared/widgets/feedback/app_toast.dart';
 import 'package:conectaparana/shared/widgets/misc/empty_state.dart';
 import 'package:conectaparana/shared/widgets/misc/section_header.dart';
 import 'package:conectaparana/shared/widgets/navigation/app_header.dart';
-import 'package:conectaparana/dev/fakes/fake_feed_repository.dart';
-import 'package:conectaparana/dev/fakes/fake_home_highlights.dart';
 import '../../data/repositories/feed_repository_impl.dart';
+import '../../domain/entities/home_highlights.dart';
 import '../../domain/repositories/feed_repository.dart';
 import '../providers/feed_notifier.dart';
 import '../widgets/alert_banner.dart';
@@ -41,8 +39,11 @@ class _HomePageState extends State<HomePage> {
   double? _lastLng;
   final ScrollController _scrollController = ScrollController();
   bool _ready = false;
+  bool _ownsNotifier = false;
+  bool _notifierHasListener = false;
+  bool _listensToActiveCity = false;
 
-  static const int _notificationBadge = 3;
+  static const int _notificationBadge = 0;
 
   @override
   void initState() {
@@ -52,6 +53,7 @@ class _HomePageState extends State<HomePage> {
       _notifier = widget.mockNotifier!;
       _scrollController.addListener(_onScroll);
       _notifier.addListener(_onStateChange);
+      _notifierHasListener = true;
       _ready = true;
       return;
     }
@@ -60,7 +62,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   FeedRepository _feedRepository() {
-    if (kDebugMode) return const FakeFeedRepository();
     return FeedRepositoryImpl();
   }
 
@@ -80,6 +81,7 @@ class _HomePageState extends State<HomePage> {
         if (mounted) context.go(AppRoutes.onboarding);
       });
       _notifier = FeedNotifier(repository: _feedRepository(), cityId: '');
+      _ownsNotifier = true;
       return;
     }
 
@@ -107,12 +109,27 @@ class _HomePageState extends State<HomePage> {
       lat: lat,
       lng: lng,
     );
+    _ownsNotifier = true;
 
     _scrollController.addListener(_onScroll);
     _notifier.addListener(_onStateChange);
+    _notifierHasListener = true;
     activeCityController.addListener(_onActiveCityChanged);
+    _listensToActiveCity = true;
     if (mounted) setState(() => _ready = true);
     _notifier.load();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    if (_notifierHasListener) _notifier.removeListener(_onStateChange);
+    if (_ownsNotifier) _notifier.dispose();
+    if (_listensToActiveCity) {
+      activeCityController.removeListener(_onActiveCityChanged);
+    }
+    super.dispose();
   }
 
   void _onActiveCityChanged() {
@@ -181,7 +198,8 @@ class _HomePageState extends State<HomePage> {
                     await activeCityController.setActiveCity(selected);
                   }
                 },
-                onNotificationTap: () {},
+                onNotificationTap: () => context.push(AppRoutes.notifications),
+                onSearchTap: () => context.push(AppRoutes.search),
               ),
             ),
             Expanded(
@@ -205,7 +223,7 @@ class _HomePageState extends State<HomePage> {
         return ListView(
           padding: EdgeInsets.zero,
           children: [
-            ..._highlightSections(),
+            ..._highlightSections(state.highlights),
             const SectionHeader(title: 'Mais comunicados'),
             const DelayedDisplay(child: FeedSkeleton()),
           ],
@@ -215,7 +233,7 @@ class _HomePageState extends State<HomePage> {
         return ListView(
           padding: EdgeInsets.zero,
           children: [
-            ..._highlightSections(),
+            ..._highlightSections(state.highlights),
             const SectionHeader(title: 'Mais comunicados'),
             EmptyState(
               icon: Icons.inbox_outlined,
@@ -232,8 +250,8 @@ class _HomePageState extends State<HomePage> {
         return ListView(
           padding: EdgeInsets.zero,
           children: [
-            ..._highlightSections(),
-            const SectionHeader(title: 'Mais comunicados'),
+            ..._highlightSections(state.highlights),
+            // const SectionHeader(title: 'Mais comunicados'),
             EmptyState(
               icon: Icons.cloud_off_outlined,
               title: 'Não foi possível carregar o feed.',
@@ -252,9 +270,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  List<Widget> _highlightSections() {
-    const highlights = fakeHomeHighlights;
-
+  List<Widget> _highlightSections(HomeHighlights highlights) {
     return [
       const HomeGreetingHeader(),
       if (highlights.alert != null) AlertBanner(alert: highlights.alert!),
@@ -263,10 +279,24 @@ class _HomePageState extends State<HomePage> {
           banner: highlights.featuredBanner!,
           onTap: () => context.push(highlights.featuredBanner!.detailRoute),
         ),
-      const SectionHeader(title: 'Serviços', actionLabel: 'Todos'),
-      ServicesGrid(services: highlights.services),
-      const SectionHeader(title: 'Eventos próximos', actionLabel: 'Ver tudo'),
-      EventsCarousel(events: highlights.events),
+      if (highlights.services.isNotEmpty)
+        SectionHeader(
+          key: const Key('home_services_all_button'),
+          title: 'Serviços',
+          actionLabel: 'Todos',
+          onActionTap: () => context.push(AppRoutes.services),
+        ),
+      if (highlights.services.isNotEmpty)
+        ServicesGrid(services: highlights.services),
+      if (highlights.events.isNotEmpty)
+        SectionHeader(
+          key: const Key('home_events_see_all_button'),
+          title: 'Eventos próximos',
+          actionLabel: 'Ver tudo',
+          onActionTap: () => context.go(AppRoutes.events),
+        ),
+      if (highlights.events.isNotEmpty)
+        EventsCarousel(events: highlights.events),
       const SizedBox(height: 8),
     ];
   }
@@ -275,8 +305,9 @@ class _HomePageState extends State<HomePage> {
     final showFooter =
         state.status == FeedStatus.loadingMore ||
         state.status == FeedStatus.errorMore;
+    final showFeedItems = state.items.isNotEmpty;
 
-    final sections = _highlightSections();
+    final sections = _highlightSections(state.highlights);
 
     return RefreshIndicator(
       color: const Color(0xFF006733),
@@ -289,20 +320,23 @@ class _HomePageState extends State<HomePage> {
         // ignore: deprecated_member_use
         cacheExtent: 3000,
         itemCount:
-            sections.length + 1 + state.items.length + (showFooter ? 1 : 0),
+            sections.length +
+            (showFeedItems ? 1 + state.items.length : 0) +
+            (showFooter ? 1 : 0),
         itemBuilder: (context, index) {
           if (index < sections.length) {
             return sections[index];
           }
 
-          if (index == sections.length) {
-            return const SectionHeader(
+          if (showFeedItems && index == sections.length) {
+            return SectionHeader(
               title: 'Mais comunicados',
               actionLabel: 'Ver tudo',
+              onActionTap: () => context.push(AppRoutes.communicates),
             );
           }
 
-          final itemIndex = index - sections.length - 1;
+          final itemIndex = index - sections.length - (showFeedItems ? 1 : 0);
 
           if (itemIndex < state.items.length) {
             final item = state.items[itemIndex];
@@ -376,7 +410,7 @@ class _ErrorMoreFooter extends StatelessWidget {
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => const NewsDetailPreviewScreen(), 
+                      builder: (_) => const NewsDetailPreviewScreen(),
                     ),
                   );
                 },

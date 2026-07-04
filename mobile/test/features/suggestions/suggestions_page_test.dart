@@ -55,7 +55,10 @@ void main() {
 
     expect(find.text('Ciclovia na Av. Brasil'), findsOneWidget);
     expect(find.text('Mais arvores na rua'), findsOneWidget);
-    expect(find.text('Respondida'), findsOneWidget); 
+    expect(find.text('Respondida'), findsOneWidget);
+    expect(find.textContaining('#S12'), findsNothing);
+    expect(find.textContaining('#S11'), findsNothing);
+    expect(find.text('Mobilidade'), findsNWidgets(2));
   });
 
   testWidgets('Expande o card e mostra a resposta do admin ao tocar', (
@@ -90,6 +93,33 @@ void main() {
 
     expect(find.text('Resposta da prefeitura ao cidadao.'), findsOneWidget);
     expect(find.text('Prefeitura'), findsOneWidget);
+  });
+
+  testWidgets('usa fallback quando resposta nao possui nome do atendente', (
+    tester,
+  ) async {
+    final repo = _MockSuggestionRepository();
+    when(() => repo.getMySuggestions()).thenAnswer(
+      (_) async => [
+        _suggestion(
+          reply: SuggestionReply(
+            date: DateTime(2026, 4, 26),
+            message: 'Resposta sem autor nominal.',
+          ),
+        ),
+      ],
+    );
+
+    final notifier = SuggestionsNotifier(repository: repo);
+    addTearDown(notifier.dispose);
+    await notifier.load();
+
+    await tester.pumpWidget(_wrap(SuggestionsPage(mockNotifier: notifier)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ciclovia na Av. Brasil'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Equipe responsável'), findsOneWidget);
   });
 
   testWidgets('Mostra o estado vazio quando nao ha sugestoes', (tester) async {

@@ -24,6 +24,7 @@ describe('SuggestionsPage', () => {
       status: 'enviada',
       userId: 'usr_1',
       cityId: 'cit_1',
+      user: { id: 'usr_1', name: 'Camila Souza' },
     },
     {
       id: 'sgt_002',
@@ -32,6 +33,7 @@ describe('SuggestionsPage', () => {
       status: 'lida',
       userId: 'usr_2',
       cityId: 'cit_1',
+      user: { id: 'usr_2', name: 'Rafael Lima' },
       response: 'Vamos analisar.',
     },
     {
@@ -41,6 +43,7 @@ describe('SuggestionsPage', () => {
       status: 'respondida',
       userId: 'usr_3',
       cityId: 'cit_1',
+      user: { id: 'usr_3', name: 'Ana Paula' },
       response: 'Resposta inicial.',
     },
     {
@@ -50,6 +53,7 @@ describe('SuggestionsPage', () => {
       status: 'concluída',
       userId: 'usr_4',
       cityId: 'cit_1',
+      user: { id: 'usr_4', name: 'Carlos Mendes' },
       response: 'Instalada com sucesso.',
     },
     {
@@ -59,6 +63,7 @@ describe('SuggestionsPage', () => {
       status: 'arquivada',
       userId: 'usr_5',
       cityId: 'cit_1',
+      user: { id: 'usr_5', name: 'Beatriz Costa' },
     },
   ];
 
@@ -140,7 +145,7 @@ describe('SuggestionsPage', () => {
   });
 
   it('should respond to a suggestion successfully', () => {
-    const item = mockSuggestions[1]; 
+    const item = mockSuggestions[1];
     const responseText = 'Obrigado pelo contato. Vamos agir.';
     const updatedItem = { ...item, status: 'respondida', response: responseText };
 
@@ -192,7 +197,7 @@ describe('SuggestionsPage', () => {
   });
 
   it('should keep action buttons disabled if response is empty', () => {
-    const item = mockSuggestions[0]; 
+    const item = mockSuggestions[0];
     component.toggleExpand(item);
 
     component.responseForm.controls.response.setValue('');
@@ -235,32 +240,22 @@ describe('SuggestionsPage', () => {
   });
 
   describe('Helpers and Mappings', () => {
-    it('should map categories correctly based on subject and message keywords', () => {
-      expect(component.getCategory('Ciclovia nova', '')).toBe('MOBILIDADE');
-      expect(component.getCategory('Novas árvores', '')).toBe('MEIO AMBIENTE');
-      expect(component.getCategory('Terminal de ônibus', '')).toBe('TRANSPORTE');
-      expect(component.getCategory('Poste com luz LED', '')).toBe('INFRAESTRUTURA');
-      expect(component.getCategory('Parque de diversão', '')).toBe('LAZER');
-      expect(component.getCategory('Qualquer coisa', '')).toBe('OUTROS');
-    });
-
-    it('should return a deterministic username', () => {
-      const name1 = component.getUserName('user_abc');
-      const name2 = component.getUserName('user_abc');
-      expect(name1).toBe(name2);
-      expect(typeof name1).toBe('string');
-    });
-
-    it('should format ID correctly', () => {
-      expect(component.formatId('sgt_abc123')).toBe('SG-123');
-      expect(component.formatId('sgt_xyz')).toBe('SG-XYZ');
-    });
-
-    it('should format date correctly', () => {
+    it('should format date with time correctly', () => {
       expect(component.formatDate(null)).toBe('');
       expect(component.formatDate(undefined)).toBe('');
-      const formatted = component.formatDate('2026-04-22T10:00:00Z');
-      expect(formatted).toBe('22 abr');
+
+      const iso = '2026-04-22T10:05:00Z';
+      const expectedDate = new Date(iso);
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const expected = `22 abr ${pad(expectedDate.getHours())}:${pad(expectedDate.getMinutes())}`;
+
+      expect(component.formatDate(iso)).toBe(expected);
+    });
+
+    it('should filter suggestions by user name', () => {
+      component.searchQuery.set('Rafael');
+      expect(component.filteredSuggestions().length).toBe(1);
+      expect(component.filteredSuggestions()[0].id).toBe('sgt_002');
     });
   });
 
@@ -299,8 +294,8 @@ describe('SuggestionsPage', () => {
 
     it('should execute executeBulkArchive and update status', () => {
       const mockEvent = { stopPropagation: vi.fn() } as any;
-      component.toggleSelect('sgt_001', mockEvent); 
-      component.toggleSelect('sgt_002', mockEvent); 
+      component.toggleSelect('sgt_001', mockEvent);
+      component.toggleSelect('sgt_002', mockEvent);
 
       const updated1 = { ...mockSuggestions[0], status: 'arquivada' };
       const updated2 = { ...mockSuggestions[1], status: 'arquivada' };
