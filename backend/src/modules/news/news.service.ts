@@ -1,18 +1,13 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
-
-import { Role } from '@prisma/client';
 
 import { PrismaService } from '../../config/prisma.service';
 import { BaseCrudService } from '../../common/services/base-crud.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 import { apiError } from '../../common/errors/api-error';
-import { SHARED_ERRORS } from '../../common/errors/shared-errors';
 
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
@@ -164,7 +159,7 @@ export class NewsService extends BaseCrudService<
 
   async create(dto: CreateNewsDto, user?: JwtPayload): Promise<NewsResponse> {
     const currentUser = this.requireUser(user);
-    const cityId = this.resolveCityId(dto.cityId, currentUser);
+    const cityId = this.resolveTenantCityId(dto.cityId, currentUser);
 
     return super.create({
       ...dto,
@@ -181,7 +176,7 @@ export class NewsService extends BaseCrudService<
     const currentUser = this.requireUser(user);
     const current = await this.findOne(id);
 
-    this.validateAdminCityScope(current.cityId, currentUser);
+    this.assertTenantCityScope(current.cityId, currentUser);
 
     return super.update(id, {
       ...dto,
@@ -192,7 +187,7 @@ export class NewsService extends BaseCrudService<
     const currentUser = this.requireUser(user);
     const current = await this.findOne(id);
 
-    this.validateAdminCityScope(current.cityId, currentUser);
+    this.assertTenantCityScope(current.cityId, currentUser);
 
     await this.uploads.removeAllForEntity(ENTITY_TYPES.NEWS, id);
 
@@ -271,32 +266,6 @@ export class NewsService extends BaseCrudService<
       liked,
       saved,
     };
-  }
-
-  private requireUser(user?: JwtPayload): JwtPayload {
-    if (!user) {
-      throw new UnauthorizedException(apiError(SHARED_ERRORS.UNAUTHENTICATED));
-    }
-
-    return user;
-  }
-
-  private resolveCityId(cityId: string | undefined, user: JwtPayload): string {
-    if (user.role === Role.ADMIN && user.cityId) {
-      return user.cityId;
-    }
-
-    if (!cityId) {
-      throw new BadRequestException(apiError(SHARED_ERRORS.CITY_REQUIRED));
-    }
-
-    return cityId;
-  }
-
-  private validateAdminCityScope(cityId: string, user: JwtPayload): void {
-    if (user.role === Role.ADMIN && user.cityId && user.cityId !== cityId) {
-      throw new ForbiddenException(apiError(SHARED_ERRORS.CITY_SCOPE_DENIED));
-    }
   }
 
   private validateType(type: string): void {
