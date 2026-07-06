@@ -216,6 +216,10 @@ export class EventsService extends BaseCrudService<
 
     this.assertTenantCityScope(current.cityId, currentUser);
 
+    if (dto.cityId !== undefined) {
+      this.assertTenantCityScope(dto.cityId, currentUser);
+    }
+
     if (dto.type) this.validateType(dto.type);
 
     const cityId = dto.cityId ?? current.cityId;
