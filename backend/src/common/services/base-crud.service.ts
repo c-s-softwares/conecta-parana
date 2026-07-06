@@ -17,7 +17,7 @@ import { SHARED_ERRORS } from '../errors/shared-errors';
 type TablePrefix = (typeof TABLE_PREFIX)[keyof typeof TABLE_PREFIX];
 
 /**
- * Recorte minimo do usuario autenticado necessario para o escopo por cidade.
+ * Recorte mínimo do usuário autenticado necessário para o escopo por cidade.
  * ADMIN municipal tem cityId preenchido; Super Admin tem cityId null.
  */
 export interface CityScopedUser {
@@ -146,12 +146,12 @@ export abstract class BaseCrudService<TResponse, TCreateDto, TUpdateDto> {
   }
 
   // =========================================================================
-  // Multi-tenancy: escopo por cidade (fonte unica de verdade)
+  // Multi-tenancy: escopo por cidade (fonte única de verdade)
   // =========================================================================
 
   /**
-   * Garante que ha um usuario autenticado. Lanca 401 quando ausente.
-   * Usado pelos modulos tenant-scoped antes de resolver ou validar a cidade.
+   * Garante que há um usuário autenticado. Lança 401 quando ausente.
+   * Usado pelos módulos tenant-scoped antes de resolver ou validar a cidade.
    */
   protected requireUser<U>(user: U | null | undefined): U {
     if (!user) {
@@ -162,8 +162,8 @@ export abstract class BaseCrudService<TResponse, TCreateDto, TUpdateDto> {
   }
 
   /**
-   * Resolve a cidade efetiva de um recurso na criacao.
-   * ADMIN municipal sempre grava na propria cidade (ignora o payload);
+   * Resolve a cidade efetiva de um recurso na criação.
+   * ADMIN municipal sempre grava na própria cidade (ignora o payload);
    * Super Admin precisa informar a cidade explicitamente no payload.
    */
   protected resolveTenantCityId(
@@ -182,7 +182,7 @@ export abstract class BaseCrudService<TResponse, TCreateDto, TUpdateDto> {
   }
 
   /**
-   * Valida, em update/remove, que o ADMIN municipal so atua na propria cidade.
+   * Valida, em update/remove, que o ADMIN municipal só atua na própria cidade.
    * Super Admin (sem cityId) atua em qualquer cidade.
    */
   protected assertTenantCityScope(

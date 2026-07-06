@@ -16,8 +16,8 @@ const MUNICIPAL_ADMIN: CityScopedUser = { cityId: OWN_CITY_ID };
 const SUPER_ADMIN: CityScopedUser = { cityId: null };
 
 /**
- * Subclasse concreta minima que expoe os helpers protected para teste direto,
- * sem depender de nenhum modulo de dominio.
+ * Subclasse concreta mínima que expõe os helpers protected para teste direto,
+ * sem depender de nenhum módulo de domínio.
  */
 class TestCrudService extends BaseCrudService<unknown, unknown, unknown> {
   protected getDelegate() {
@@ -54,12 +54,12 @@ describe('BaseCrudService tenant scope', () => {
   });
 
   describe('requireUser', () => {
-    it('retorna o usuario quando presente', () => {
+    it('retorna o usuário quando presente', () => {
       const user = { cityId: OWN_CITY_ID };
       expect(service.callRequireUser(user)).toBe(user);
     });
 
-    it('lanca UnauthorizedException quando ausente', () => {
+    it('lança UnauthorizedException quando ausente', () => {
       expect(() => service.callRequireUser(undefined)).toThrow(
         UnauthorizedException,
       );
@@ -67,7 +67,7 @@ describe('BaseCrudService tenant scope', () => {
   });
 
   describe('resolveTenantCityId', () => {
-    it('ADMIN municipal grava na propria cidade ignorando o payload', () => {
+    it('ADMIN municipal grava na própria cidade ignorando o payload', () => {
       expect(
         service.callResolveTenantCityId(PAYLOAD_CITY_ID, MUNICIPAL_ADMIN),
       ).toBe(OWN_CITY_ID);
@@ -93,7 +93,7 @@ describe('BaseCrudService tenant scope', () => {
       ).toThrow(ForbiddenException);
     });
 
-    it('permite ADMIN municipal na propria cidade', () => {
+    it('permite ADMIN municipal na própria cidade', () => {
       expect(() =>
         service.callAssertTenantCityScope(OWN_CITY_ID, MUNICIPAL_ADMIN),
       ).not.toThrow();
