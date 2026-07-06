@@ -10,21 +10,13 @@ import {
   Post,
   Query,
   Req,
-  UseGuards,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
-import { Role } from '@prisma/client';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 
 import { BaseCrudController } from '../../common/controllers/base-crud.controller';
+import { AdminRoute } from '../../common/decorators/admin-route.decorator';
 import { Public } from '../../common/decorators/public.decorator';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { RolesGuard } from '../../common/guards/roles.guard';
 
 import type { JwtPayload } from '../auth/strategies/jwt.strategy';
 
@@ -79,9 +71,7 @@ export class CommunicateController extends BaseCrudController<
   }
 
   @Post()
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @ApiBearerAuth()
+  @AdminRoute()
   @ApiOperation({ summary: 'Criar comunicado (ADMIN)' })
   @ApiResponse({
     status: 201,
@@ -99,9 +89,7 @@ export class CommunicateController extends BaseCrudController<
   }
 
   @Patch(':id')
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @ApiBearerAuth()
+  @AdminRoute()
   @ApiOperation({ summary: 'Atualizar comunicado (ADMIN da cidade)' })
   @ApiResponse({
     status: 200,
@@ -122,9 +110,7 @@ export class CommunicateController extends BaseCrudController<
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @ApiBearerAuth()
+  @AdminRoute()
   @ApiOperation({
     summary: 'Deletar comunicado (soft delete, ADMIN da cidade)',
   })
