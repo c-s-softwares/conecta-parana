@@ -346,6 +346,25 @@ describe('EventsService', () => {
       ).rejects.toThrow(ForbiddenException);
     });
 
+    it('deve lançar ForbiddenException quando ADMIN municipal tentar mover evento para outra cidade', async () => {
+      mockPrisma.client.event.findFirst.mockResolvedValue(MOCK_EVENT);
+
+      await expect(
+        service.update(
+          MOCK_EVENT_ID,
+          {
+            cityId: `${TABLE_PREFIX.CITY}OUTRACIDADE12345678901234`,
+            updatedAt: MOCK_EVENT.updatedAt.toISOString(),
+          },
+          {
+            sub: 'usr_123',
+            role: 'ADMIN',
+            cityId: MOCK_CITY_ID,
+          } as never,
+        ),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
     it('deve atualizar evento com sucesso', async () => {
       mockPrisma.client.event.findFirst.mockResolvedValue(MOCK_EVENT);
 

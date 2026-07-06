@@ -1,4 +1,10 @@
-import { NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  NotFoundException,
+  ConflictException,
+  UnauthorizedException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../config/prisma.service';
 import { generateId } from '../utils/ulid.util';
@@ -6,8 +12,17 @@ import { TABLE_PREFIX } from '../types/ulid.types';
 import { PaginationQueryDto } from '../dto/request/pagination-query.dto';
 import { PaginatedResponseDto } from '../dto/response/paginated-response.dto';
 import { apiError } from '../errors/api-error';
+import { SHARED_ERRORS } from '../errors/shared-errors';
 
 type TablePrefix = (typeof TABLE_PREFIX)[keyof typeof TABLE_PREFIX];
+
+/**
+ * Recorte mínimo do usuário autenticado necessário para o escopo por cidade.
+ * ADMIN municipal tem cityId preenchido; Super Admin tem cityId null.
+ */
+export interface CityScopedUser {
+  cityId?: string | null;
+}
 
 /**
  * Contrato mínimo que todos os delegates gerados pelo Prisma Client para cada model implementam.
@@ -128,6 +143,55 @@ export abstract class BaseCrudService<TResponse, TCreateDto, TUpdateDto> {
   protected afterDelete(id: string): Promise<void> {
     void id;
     return Promise.resolve();
+  }
+
+  // =========================================================================
+  // Multi-tenancy: escopo por cidade (fonte única de verdade)
+  // =========================================================================
+
+  /**
+   * Garante que há um usuário autenticado. Lança 401 quando ausente.
+   * Usado pelos módulos tenant-scoped antes de resolver ou validar a cidade.
+   */
+  protected requireUser<U>(user: U | null | undefined): U {
+    if (!user) {
+      throw new UnauthorizedException(apiError(SHARED_ERRORS.UNAUTHENTICATED));
+    }
+
+    return user;
+  }
+
+  /**
+   * Resolve a cidade efetiva de um recurso na criação.
+   * ADMIN municipal sempre grava na própria cidade (ignora o payload);
+   * Super Admin precisa informar a cidade explicitamente no payload.
+   */
+  protected resolveTenantCityId(
+    payloadCityId: string | undefined,
+    user: CityScopedUser,
+  ): string {
+    if (user.cityId) {
+      return user.cityId;
+    }
+
+    if (!payloadCityId) {
+      throw new BadRequestException(apiError(SHARED_ERRORS.CITY_REQUIRED));
+    }
+
+    return payloadCityId;
+  }
+
+  /**
+   * Valida, em update/remove, que o ADMIN municipal só atua na própria cidade.
+   * Super Admin (sem cityId) atua em qualquer cidade.
+   */
+  protected assertTenantCityScope(
+    entityCityId: string,
+    user: CityScopedUser,
+  ): void {
+    if (user.cityId && user.cityId !== entityCityId) {
+      throw new ForbiddenException(apiError(SHARED_ERRORS.CITY_SCOPE_DENIED));
+    }
   }
 
   // =========================================================================

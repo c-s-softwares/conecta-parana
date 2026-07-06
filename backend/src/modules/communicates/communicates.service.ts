@@ -1,16 +1,8 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 import { BaseCrudService } from '../../common/services/base-crud.service';
-import { generateId } from '../../common/utils/ulid.util';
 import { apiError } from '../../common/errors/api-error';
-import { SHARED_ERRORS } from '../../common/errors/shared-errors';
 import { COMUNICADOS_ERRORS } from './communicates.errors';
 import { CreateCommunicateDto } from './dto/request/create-communicate.dto';
 import { UpdateCommunicateDto } from './dto/request/update-communicate.dto';
@@ -19,14 +11,8 @@ import {
   CommunicateDetailResponse,
   CommunicateResponse,
 } from './dto/response/communicate-response.dto';
-import { Role } from '@prisma/client';
+import { JwtPayload } from '../auth/strategies/jwt.strategy';
 import { ENTITY_TYPES } from '../uploads/constants/entity-type';
-
-type AuthUser = {
-  id: string;
-  cityId?: string | null;
-  role: Role;
-};
 
 @Injectable()
 export class CommunicateService extends BaseCrudService<
@@ -75,12 +61,15 @@ export class CommunicateService extends BaseCrudService<
     };
   }
 
-  protected toCreateData(dto: CreateCommunicateDto): Record<string, unknown> {
+  protected toCreateData(
+    dto: CreateCommunicateDto & { userId?: string },
+  ): Record<string, unknown> {
     return {
       title: dto.title,
       description: dto.description,
       isActive: dto.isActive ?? true,
       cityId: dto.cityId,
+      userId: dto.userId,
     };
   }
 
@@ -109,36 +98,29 @@ export class CommunicateService extends BaseCrudService<
     };
   }
 
-  async createWithUser(
+  async create(
     dto: CreateCommunicateDto,
-    user?: AuthUser,
+    user?: JwtPayload,
   ): Promise<CommunicateResponse> {
     const currentUser = this.requireUser(user);
-    const cityId = this.resolveCityId(dto.cityId, currentUser);
+    const cityId = this.resolveTenantCityId(dto.cityId, currentUser);
 
-    const communicate = await this.prisma.client.communicate.create({
-      data: {
-        id: generateId(TABLE_PREFIX.COMMUNICATE),
-        title: dto.title,
-        description: dto.description,
-        isActive: dto.isActive ?? true,
-        cityId,
-        userId: currentUser.id,
-      },
-    });
-
-    return this.toResponse(communicate);
+    return super.create({
+      ...dto,
+      cityId,
+      userId: currentUser.sub,
+    } as CreateCommunicateDto);
   }
 
-  async updateWithUser(
+  async update(
     id: string,
     dto: UpdateCommunicateDto,
-    user?: AuthUser,
+    user?: JwtPayload,
   ): Promise<CommunicateResponse> {
     const currentUser = this.requireUser(user);
     const communicate = await this.findCommunicateOrFail(id);
 
-    this.validateCityScope(communicate.cityId, currentUser);
+    this.assertTenantCityScope(communicate.cityId, currentUser);
 
     const updated = await this.prisma.client.communicate.update({
       where: { id },
@@ -148,11 +130,11 @@ export class CommunicateService extends BaseCrudService<
     return this.toResponse(updated);
   }
 
-  async removeWithUser(id: string, user?: AuthUser): Promise<void> {
+  async remove(id: string, user?: JwtPayload): Promise<void> {
     const currentUser = this.requireUser(user);
     const communicate = await this.findCommunicateOrFail(id);
 
-    this.validateCityScope(communicate.cityId, currentUser);
+    this.assertTenantCityScope(communicate.cityId, currentUser);
 
     await this.prisma.client.communicate.update({
       where: { id },
@@ -264,43 +246,5 @@ export class CommunicateService extends BaseCrudService<
     }
 
     return communicate;
-  }
-
-  private resolveCityId(
-    payloadCityId: string | undefined,
-    user: AuthUser,
-  ): string {
-    const isSuperAdmin = user.role === Role.ADMIN && user.cityId === null;
-    if (isSuperAdmin) {
-      if (!payloadCityId) {
-        throw new BadRequestException(apiError(SHARED_ERRORS.CITY_REQUIRED));
-      }
-      return payloadCityId;
-    }
-
-    if (!user.cityId) {
-      throw new ForbiddenException(apiError(SHARED_ERRORS.CITY_SCOPE_DENIED));
-    }
-
-    return user.cityId;
-  }
-
-  private validateCityScope(entityCityId: string, user: AuthUser): void {
-    const isSuperAdmin = user.role === Role.ADMIN && user.cityId === null;
-    if (isSuperAdmin) {
-      return;
-    }
-
-    if (entityCityId !== user.cityId) {
-      throw new ForbiddenException(apiError(SHARED_ERRORS.CITY_SCOPE_DENIED));
-    }
-  }
-
-  private requireUser(user?: AuthUser): AuthUser {
-    if (!user) {
-      throw new UnauthorizedException(apiError(SHARED_ERRORS.UNAUTHENTICATED));
-    }
-
-    return user;
   }
 }

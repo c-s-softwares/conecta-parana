@@ -10,21 +10,15 @@ import {
   Post,
   Query,
   Req,
-  UseGuards,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
-import { Role } from '@prisma/client';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 
 import { BaseCrudController } from '../../common/controllers/base-crud.controller';
+import { AdminRoute } from '../../common/decorators/admin-route.decorator';
 import { Public } from '../../common/decorators/public.decorator';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { RolesGuard } from '../../common/guards/roles.guard';
+
+import type { JwtPayload } from '../auth/strategies/jwt.strategy';
 
 import { CommunicateService } from './communicates.service';
 import { CreateCommunicateDto } from './dto/request/create-communicate.dto';
@@ -36,12 +30,7 @@ import {
 } from './dto/response/communicate-response.dto';
 
 type AuthRequest = Request & {
-  user: {
-    id: string;
-    sub?: string;
-    cityId?: string | null;
-    role: Role;
-  };
+  user?: JwtPayload;
 };
 
 @ApiTags('communicates')
@@ -82,9 +71,7 @@ export class CommunicateController extends BaseCrudController<
   }
 
   @Post()
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @ApiBearerAuth()
+  @AdminRoute()
   @ApiOperation({ summary: 'Criar comunicado (ADMIN)' })
   @ApiResponse({
     status: 201,
@@ -98,13 +85,11 @@ export class CommunicateController extends BaseCrudController<
   @ApiResponse({ status: 401, description: 'unauthenticated' })
   @ApiResponse({ status: 403, description: 'role_denied | city_scope_denied' })
   override create(@Body() dto: CreateCommunicateDto, @Req() req?: AuthRequest) {
-    return this.communicateService.createWithUser(dto, req?.user);
+    return this.communicateService.create(dto, req?.user);
   }
 
   @Patch(':id')
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @ApiBearerAuth()
+  @AdminRoute()
   @ApiOperation({ summary: 'Atualizar comunicado (ADMIN da cidade)' })
   @ApiResponse({
     status: 200,
@@ -120,14 +105,12 @@ export class CommunicateController extends BaseCrudController<
     @Body() dto: UpdateCommunicateDto,
     @Req() req?: AuthRequest,
   ) {
-    return this.communicateService.updateWithUser(id, dto, req?.user);
+    return this.communicateService.update(id, dto, req?.user);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(RolesGuard)
-  @Roles(Role.ADMIN)
-  @ApiBearerAuth()
+  @AdminRoute()
   @ApiOperation({
     summary: 'Deletar comunicado (soft delete, ADMIN da cidade)',
   })
@@ -136,6 +119,6 @@ export class CommunicateController extends BaseCrudController<
   @ApiResponse({ status: 403, description: 'role_denied | city_scope_denied' })
   @ApiResponse({ status: 404, description: 'comunicado_not_found' })
   override remove(@Param('id') id: string, @Req() req?: AuthRequest) {
-    return this.communicateService.removeWithUser(id, req?.user);
+    return this.communicateService.remove(id, req?.user);
   }
 }

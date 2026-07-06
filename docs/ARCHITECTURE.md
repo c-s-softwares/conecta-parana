@@ -173,17 +173,26 @@ O enum `Role` tem apenas dois valores: `ADMIN` e `CIDADAO`. O Super Admin não �
 
 - `JwtAuthGuard`: autentica (401 `unauthenticated`).
 - `RolesGuard` (`@Roles(...)`): exige a role do endpoint (403 `role_denied`).
-- `CityScopeGuard` (`@RequireCityScope({ source?, field? })`): aplica o escopo de cidade. Lê o `cityId` do ator no JWT e o `cityId` alvo do request (`body`/`params`/`query`, padrão `body.cityId`). Roda após o `JwtAuthGuard`.
+- `@AdminRoute()`: atalho para `RolesGuard + @Roles(ADMIN) + ApiBearerAuth` nas rotas de escrita administrativas.
+- `CityScopeGuard` (`@RequireCityScope({ source?, field? })`): valida o `cityId` alvo do request (`body`/`params`/`query`, padrão `body.cityId`) contra o JWT. Uso remanescente apenas em `POST /locals`; nos demais módulos o escopo de cidade é imposto na camada de service.
 
-### Matriz de permissões (CityScopeGuard)
+### Escopo de cidade (camada de service)
 
-| Persona | cityId alvo | Resultado |
+O escopo por cidade das operações de escrita é centralizado em helpers protected do `BaseCrudService` (`backend/src/common/services/base-crud.service.ts`), usados por `news`, `events` e `communicates`:
+
+- `requireUser(user)`: 401 `unauthenticated` quando não há usuário autenticado.
+- `resolveTenantCityId(payloadCityId, user)`: na criação, ADMIN municipal grava sempre na própria cidade (payload ignorado); Super Admin precisa informar `cityId` (400 `city_required`).
+- `assertTenantCityScope(entityCityId, user)`: em update/remove, ADMIN municipal só atua na própria cidade (403 `city_scope_denied`); Super Admin atua em qualquer cidade.
+
+### Matriz de permissões (escopo de cidade)
+
+| Persona | Situação | Resultado |
 |---|---|---|
-| Cidadão (`CIDADAO`) | qualquer | Liberado (escopo não se aplica; role tratada pelo `@Roles`) |
-| Super Admin | ausente | 400 `city_required` |
-| Super Admin | informado | Liberado |
-| Admin municipal | igual à própria cidade ou ausente | Liberado |
-| Admin municipal | diferente da própria cidade | 403 `city_scope_denied` |
+| Super Admin | criação sem `cityId` no payload | 400 `city_required` |
+| Super Admin | escrita em qualquer cidade | Liberado |
+| Admin municipal | criação (qualquer `cityId` no payload) | Grava na própria cidade (payload ignorado) |
+| Admin municipal | update/remove em registro da própria cidade | Liberado |
+| Admin municipal | update/remove em registro de outra cidade, ou mover registro para outra cidade | 403 `city_scope_denied` |
 
 ### Códigos de erro (contrato backend)
 
@@ -200,7 +209,7 @@ Exemplos representativos:
 |---|---|---|
 | `unauthenticated` | 401 | global (`JwtAuthGuard`) |
 | `validation_failed` | 400 | global (`ValidationPipe`) - `message` é o array de erros de campo |
-| `city_scope_denied` | 403 | global (`CityScopeGuard`) |
+| `city_scope_denied` | 403 | global (`BaseCrudService` / `CityScopeGuard`) |
 | `<modulo>_<motivo>` | varia | catálogo do módulo (ex: `city_not_found`, `invalid_or_expired_code`) |
 
 Para a lista completa, consultar os catálogos. Codes `role_denied` e `validation_failed` têm `message` dinâmica e são tratados como caso especial em `apiError()`.

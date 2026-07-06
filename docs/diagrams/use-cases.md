@@ -8,7 +8,7 @@ Casos de uso derivados do estado real do backend (`backend/src/modules/*/*.contr
 |---|---|---|
 | **Visitante** | Usuário não autenticado (app ou web). | `@Public()` |
 | **Cidadão** | Usuário autenticado com papel `CIDADAO`, vinculado a uma cidade. | `@Roles(CIDADAO)` ou rota apenas autenticada |
-| **Admin de cidade** | Usuário `ADMIN` com `cityId` definido; atua no escopo da própria cidade. | `@AdminRoute()` / `@Roles(ADMIN)` + `@RequireCityScope()` |
+| **Admin de cidade** | Usuário `ADMIN` com `cityId` definido; atua no escopo da própria cidade. | `@AdminRoute()` (escopo de cidade imposto no service via `BaseCrudService`) |
 | **Super Admin** | Usuário `ADMIN` com `cityId` nulo; gerencia dados globais. | `SuperAdminGuard` |
 
 A herança de atores é cumulativa: Cidadão também executa os casos de Visitante; Admin de cidade também executa os de Cidadão; Super Admin acessa as rotas globais protegidas por `SuperAdminGuard`.

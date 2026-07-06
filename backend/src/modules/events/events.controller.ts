@@ -10,22 +10,13 @@ import {
   Put,
   Query,
   Req,
-  UseGuards,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
-import { Role } from '@prisma/client';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 
 import { EventsService } from './events.service';
 
-import { Roles } from '../../common/decorators/roles.decorator';
-import { RequireCityScope } from '../../common/decorators/require-city-scope.decorator';
-import { RolesGuard } from '../../common/guards/roles.guard';
+import { AdminRoute } from '../../common/decorators/admin-route.decorator';
 
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
@@ -81,10 +72,7 @@ export class EventsController {
   }
 
   @Post()
-  @UseGuards(RolesGuard)
-  @RequireCityScope()
-  @Roles(Role.ADMIN)
-  @ApiBearerAuth()
+  @AdminRoute()
   @ApiOperation({ summary: 'Criar evento (ADMIN)' })
   @ApiResponse({
     status: 201,
@@ -104,10 +92,7 @@ export class EventsController {
   }
 
   @Put(':id')
-  @UseGuards(RolesGuard)
-  @RequireCityScope()
-  @Roles(Role.ADMIN)
-  @ApiBearerAuth()
+  @AdminRoute()
   @ApiOperation({ summary: 'Atualizar evento (ADMIN da cidade)' })
   @ApiResponse({
     status: 200,
@@ -135,10 +120,7 @@ export class EventsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(RolesGuard)
-  @RequireCityScope()
-  @Roles(Role.ADMIN)
-  @ApiBearerAuth()
+  @AdminRoute()
   @ApiOperation({ summary: 'Deletar evento (soft delete, ADMIN da cidade)' })
   @ApiResponse({ status: 204, description: 'Evento deletado com sucesso' })
   @ApiResponse({ status: 401, description: 'unauthenticated' })
