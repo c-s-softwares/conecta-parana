@@ -7,8 +7,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Role } from '@prisma/client';
-
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
 import { generateId } from '../../common/utils/ulid.util';
@@ -169,12 +167,12 @@ export class EventsService extends BaseCrudService<
   }
 
   async create(dto: CreateEventDto, user?: JwtPayload): Promise<EventResponse> {
-    if (!user) throw new ForbiddenException();
+    const currentUser = this.requireUser(user);
 
     this.validateType(dto.type);
     this.validateEventDate(dto.eventDate);
 
-    const cityId = this.resolveCityId(dto.cityId, user);
+    const cityId = this.resolveTenantCityId(dto.cityId, currentUser);
 
     if (dto.localId) {
       await this.validateLocalBelongsToCity(dto.localId, cityId);
@@ -189,7 +187,7 @@ export class EventsService extends BaseCrudService<
         isActive: dto.isActive ?? true,
         eventDate: new Date(dto.eventDate),
         cityId,
-        userId: user.sub,
+        userId: currentUser.sub,
         localId: dto.localId,
       },
     });
@@ -203,7 +201,7 @@ export class EventsService extends BaseCrudService<
     dto: UpdateEventDto,
     user?: JwtPayload,
   ): Promise<EventResponse> {
-    if (!user) throw new ForbiddenException();
+    const currentUser = this.requireUser(user);
 
     const current = (await this.prisma.client.event.findFirst({
       where: {
@@ -216,7 +214,7 @@ export class EventsService extends BaseCrudService<
       throw new NotFoundException(apiError(EVENT_ERRORS.EVENT_NOT_FOUND));
     }
 
-    this.validateAdminCityScope(current.cityId, user);
+    this.assertTenantCityScope(current.cityId, currentUser);
 
     if (dto.type) this.validateType(dto.type);
 
@@ -260,7 +258,7 @@ export class EventsService extends BaseCrudService<
   }
 
   async remove(id: string, user?: JwtPayload): Promise<void> {
-    if (!user) throw new ForbiddenException();
+    const currentUser = this.requireUser(user);
 
     const event = (await this.prisma.client.event.findFirst({
       where: {
@@ -273,7 +271,7 @@ export class EventsService extends BaseCrudService<
       throw new NotFoundException(apiError(EVENT_ERRORS.EVENT_NOT_FOUND));
     }
 
-    this.validateAdminCityScope(event.cityId, user);
+    this.assertTenantCityScope(event.cityId, currentUser);
 
     await this.checkBeforeDelete(id);
 
@@ -337,24 +335,6 @@ export class EventsService extends BaseCrudService<
       liked,
       saved,
     };
-  }
-
-  private resolveCityId(cityId: string | undefined, user: JwtPayload): string {
-    if (user.role !== Role.ADMIN) {
-      return cityId as string;
-    }
-
-    if (user.cityId) {
-      return user.cityId;
-    }
-
-    return cityId as string;
-  }
-
-  private validateAdminCityScope(cityId: string, user: JwtPayload): void {
-    if (user.role === Role.ADMIN && user.cityId && user.cityId !== cityId) {
-      throw new ForbiddenException(apiError(SHARED_ERRORS.CITY_SCOPE_DENIED));
-    }
   }
 
   private async validateLocalBelongsToCity(
