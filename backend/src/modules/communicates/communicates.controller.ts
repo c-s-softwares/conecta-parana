@@ -26,6 +26,8 @@ import { Public } from '../../common/decorators/public.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 
+import type { JwtPayload } from '../auth/strategies/jwt.strategy';
+
 import { CommunicateService } from './communicates.service';
 import { CreateCommunicateDto } from './dto/request/create-communicate.dto';
 import { UpdateCommunicateDto } from './dto/request/update-communicate.dto';
@@ -36,12 +38,7 @@ import {
 } from './dto/response/communicate-response.dto';
 
 type AuthRequest = Request & {
-  user: {
-    id: string;
-    sub?: string;
-    cityId?: string | null;
-    role: Role;
-  };
+  user?: JwtPayload;
 };
 
 @ApiTags('communicates')
@@ -98,7 +95,7 @@ export class CommunicateController extends BaseCrudController<
   @ApiResponse({ status: 401, description: 'unauthenticated' })
   @ApiResponse({ status: 403, description: 'role_denied | city_scope_denied' })
   override create(@Body() dto: CreateCommunicateDto, @Req() req?: AuthRequest) {
-    return this.communicateService.createWithUser(dto, req?.user);
+    return this.communicateService.create(dto, req?.user);
   }
 
   @Patch(':id')
@@ -120,7 +117,7 @@ export class CommunicateController extends BaseCrudController<
     @Body() dto: UpdateCommunicateDto,
     @Req() req?: AuthRequest,
   ) {
-    return this.communicateService.updateWithUser(id, dto, req?.user);
+    return this.communicateService.update(id, dto, req?.user);
   }
 
   @Delete(':id')
@@ -136,6 +133,6 @@ export class CommunicateController extends BaseCrudController<
   @ApiResponse({ status: 403, description: 'role_denied | city_scope_denied' })
   @ApiResponse({ status: 404, description: 'comunicado_not_found' })
   override remove(@Param('id') id: string, @Req() req?: AuthRequest) {
-    return this.communicateService.removeWithUser(id, req?.user);
+    return this.communicateService.remove(id, req?.user);
   }
 }

@@ -9,6 +9,7 @@ import { Role } from '@prisma/client';
 import { CommunicateService } from './communicates.service';
 import { PrismaService } from '../../config/prisma.service';
 import { TABLE_PREFIX } from '../../common/types/ulid.types';
+import type { JwtPayload } from '../auth/strategies/jwt.strategy';
 
 const MOCK_COMMUNICATE_ID = `${TABLE_PREFIX.COMMUNICATE}01HZX3Y4Q9F8TAB1C2DKEYH9MN`;
 const MOCK_CITY_ID = `${TABLE_PREFIX.CITY}01HZX3Y4Q9F8TAB1C2DKEYH9MN`;
@@ -43,16 +44,16 @@ const mockPrisma = {
 };
 
 const mockAdminUser = {
-  id: MOCK_USER_ID,
-  cityId: MOCK_CITY_ID,
+  sub: MOCK_USER_ID,
   role: Role.ADMIN,
-};
+  cityId: MOCK_CITY_ID,
+} as unknown as JwtPayload;
 
 const mockSuperAdminUser = {
-  id: `${TABLE_PREFIX.USER}SUPERADMIN`,
-  cityId: null,
+  sub: `${TABLE_PREFIX.USER}SUPERADMIN`,
   role: Role.ADMIN,
-};
+  cityId: null,
+} as unknown as JwtPayload;
 
 describe('CommunicateService', () => {
   let service: CommunicateService;
@@ -72,7 +73,7 @@ describe('CommunicateService', () => {
   it('deve criar comunicado usando cityId e userId do ADMIN autenticado', async () => {
     mockPrisma.client.communicate.create.mockResolvedValue(MOCK_COMMUNICATE);
 
-    const result = await service.createWithUser(
+    const result = await service.create(
       {
         title: 'Nova ferramenta disponível',
         description: 'A nova ferramenta já está disponível para os cidadãos.',
@@ -103,7 +104,7 @@ describe('CommunicateService', () => {
       title: 'Título atualizado',
     });
 
-    const result = await service.updateWithUser(
+    const result = await service.update(
       MOCK_COMMUNICATE_ID,
       { title: 'Título atualizado' },
       mockAdminUser,
@@ -121,7 +122,7 @@ describe('CommunicateService', () => {
       isActive: false,
     });
 
-    await service.removeWithUser(MOCK_COMMUNICATE_ID, mockAdminUser);
+    await service.remove(MOCK_COMMUNICATE_ID, mockAdminUser);
 
     expect(mockPrisma.client.communicate.update).toHaveBeenCalledWith({
       where: { id: MOCK_COMMUNICATE_ID },
@@ -133,7 +134,7 @@ describe('CommunicateService', () => {
     mockPrisma.client.communicate.findUnique.mockResolvedValue(null);
 
     await expect(
-      service.updateWithUser(
+      service.update(
         MOCK_COMMUNICATE_ID,
         { title: 'Título atualizado' },
         mockAdminUser,
@@ -148,7 +149,7 @@ describe('CommunicateService', () => {
     });
 
     await expect(
-      service.updateWithUser(
+      service.update(
         MOCK_COMMUNICATE_ID,
         { title: 'Título atualizado' },
         mockAdminUser,
@@ -159,7 +160,7 @@ describe('CommunicateService', () => {
   it('deve criar comunicado usando cityId enviado no payload se Super Admin', async () => {
     mockPrisma.client.communicate.create.mockResolvedValue(MOCK_COMMUNICATE);
 
-    const result = await service.createWithUser(
+    const result = await service.create(
       {
         title: 'Nova ferramenta disponível',
         description: 'A nova ferramenta já está disponível para os cidadãos.',
@@ -173,14 +174,14 @@ describe('CommunicateService', () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       data: expect.objectContaining({
         cityId: MOCK_CITY_ID,
-        userId: mockSuperAdminUser.id,
+        userId: mockSuperAdminUser.sub,
       }),
     });
   });
 
   it('deve lançar city_required se Super Admin não informar cityId na criação', async () => {
     await expect(
-      service.createWithUser(
+      service.create(
         {
           title: 'Nova ferramenta disponível',
           description: 'A nova ferramenta já está disponível para os cidadãos.',
@@ -200,7 +201,7 @@ describe('CommunicateService', () => {
       title: 'Título atualizado',
     });
 
-    const result = await service.updateWithUser(
+    const result = await service.update(
       MOCK_COMMUNICATE_ID,
       { title: 'Título atualizado' },
       mockSuperAdminUser,
